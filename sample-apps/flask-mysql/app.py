@@ -21,7 +21,7 @@ def homepage():
 @app.route('/dogpage/<int:dog_id>')
 def get_dogpage(dog_id):
     cursor = mysql.get_db().cursor()
-    cursor.execute("SELECT * FROM db.dogs")
+    cursor.execute("SELECT * FROM db.dogs WHERE id = " + str(dog_id))
     dog = cursor.fetchmany(1)[0]
     return render_template('dogpage.html', title=f'Dog', dog=dog)
 
@@ -29,6 +29,6 @@ def get_dogpage(dog_id):
 def create_dog(dog_name):
     connection = mysql.get_db()
     cursor = connection.cursor()
-    cursor.execute(''' INSERT INTO dogs (dog_name) VALUES(%s)''',(dog_name))
+    cursor.execute(f"INSERT INTO dogs (dog_name) VALUES('%s')" % (dog_name))
     connection.commit()
     return f'Dog {(dog_name)}'
