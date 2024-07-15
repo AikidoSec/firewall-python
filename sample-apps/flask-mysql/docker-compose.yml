@@ -1,0 +1,38 @@
+version: '3'
+services:
+  db:
+    image: mysql
+    container_name: flask_mysql_db
+    restart: always
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./init.sql:/data/application/init.sql
+    environment:
+      MYSQL_DATABASE: 'db'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+    command: --init-file /data/application/init.sql
+    ports:
+      # <Port exposed> : <MySQL Port running inside container>
+      - '3306:3306'
+    expose:
+      # Opens port 3306 on the container
+      - '3306'
+
+  backend:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: flask_mysql_backend
+    command: sh -c "flask --app app run --debug --host=0.0.0.0"
+    restart: always
+    volumes:
+      - .:/app
+    ports:
+      - "8080:5000"
+    depends_on:
+      - db
+
+volumes:
+  db_data:
