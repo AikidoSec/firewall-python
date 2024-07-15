@@ -13,8 +13,9 @@ class AikidoMiddleware(object):
 
 
 
-@importhook.on_import('django.core')
+@importhook.on_import('django.core.handlers.base')
 def on_django_import(django):
+    # Wrap `load_middleware` function
     modified_django = importhook.copy_module(django)
 
     #prev_django_init = copy.deepcopy(django.django.__init__)
