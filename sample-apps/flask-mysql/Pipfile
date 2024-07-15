@@ -7,6 +7,7 @@ name = "pypi"
 flask = "==2.3.3"
 flask-mysql = "*"
 cryptography = "*"
+importhook = "*"
 
 [dev-packages]
 
