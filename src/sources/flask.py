@@ -1,5 +1,6 @@
 import importhook
-from flask import Flask
+from importlib.metadata import version
+
 class AikidoMiddleware(object):
     def __init__(self, app):
         self.app = app
@@ -9,7 +10,8 @@ class AikidoMiddleware(object):
         return response
 
 def aikido_flask_init(_self, *args, **kwargs):
-        super(Flask, _self).__init__(*args, **kwargs)
+        super(_self.__class__, _self).__init__(*args, **kwargs)
+        print("Flask version : ", version("flask"))
         _self.wsgi_app = AikidoMiddleware(_self.wsgi_app)
 
 @importhook.on_import('flask')
