@@ -1,3 +1,5 @@
+import src # Aikido package import
+
 from flask import Flask, render_template
 from flaskext.mysql import MySQL
 
