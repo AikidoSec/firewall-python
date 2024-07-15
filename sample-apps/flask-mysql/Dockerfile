@@ -15,6 +15,3 @@ WORKDIR /app
 # Install dependencies
 COPY ./sample-apps/flask-mysql/Pipfile ./
 RUN pip install --no-cache-dir pipenv && pipenv install
-
-# Copy the project code into the container
-COPY sample-apps/flask-mysql ./
