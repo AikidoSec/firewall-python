@@ -8,6 +8,7 @@ django = "*"
 pymysql = "*"
 python-decouple = "==3.8"
 cryptography = "*"
+importhook = "*"
 
 [dev-packages]
 
