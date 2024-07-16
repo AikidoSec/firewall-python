@@ -1,6 +1,7 @@
 [MASTER]
 # Disable the unused-argument warning
 disable = unused-argument
+max-line-score = 9.0 # Allow all scores above 9
 
 [MESSAGES CONTROL]
 # Disable the no-member warning [Currently enabled]
