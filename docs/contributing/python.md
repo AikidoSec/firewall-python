@@ -19,3 +19,9 @@ When you're done or when you want to clean up use :
 ```bash
 make clean
 ```
+
+# Linting
+We use `black` and `pylint`. To run these tools use :
+```bash
+make lint
+```

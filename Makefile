@@ -8,4 +8,5 @@ clean:
 
 .PHONY: lint
 lint:
+	poetry run black aikido_firewall/
 	poetry run pylint aikido_firewall/
