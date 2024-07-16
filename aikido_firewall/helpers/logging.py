@@ -13,7 +13,7 @@ APPLICATION_NAME = "aikido_firewall"
 aikido_debug_env = os.getenv("AIKIDO_DEBUG")
 LOG_LEVEL = logging.INFO
 if aikido_debug_env is not None:
-    debug = aikido_debug_env.lower() in ["true", "1"]
+    debug = aikido_debug_env.lower() in ["True", "1"]
     LOG_LEVEL = logging.DEBUG if debug else logging.INFO
 
 # Create a logger
