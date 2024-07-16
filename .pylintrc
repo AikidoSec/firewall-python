@@ -1,0 +1,7 @@
+[MASTER]
+# Disable the unused-argument warning
+disable = unused-argument
+
+[MESSAGES CONTROL]
+# Disable the no-member warning [Currently enabled]
+#disable = no-member

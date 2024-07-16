@@ -1,0 +1,9 @@
+# EditorConfig helps developers define and maintain consistent coding styles between different editors and IDEs
+# For more information about the EditorConfig project, please visit http://editorconfig.org
+
+# Top-most EditorConfig file
+root = true
+
+# Ensure there is a final newline at the end of the file
+[*]
+insert_final_newline = true
