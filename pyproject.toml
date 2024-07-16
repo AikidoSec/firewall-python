@@ -11,6 +11,9 @@ importhook = "^1.0.9"
 pylint = "^3.2.5"
 
 
+[tool.poetry.group.dev.dependencies]
+black = "^24.4.2"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
