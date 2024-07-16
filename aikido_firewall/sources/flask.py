@@ -4,8 +4,8 @@ Flask source module, intercepts flask import and adds Aikido middleware
 
 import copy
 from importlib.metadata import version
-import logging
 import importhook
+from aikido_firewall.helpers.logging import logger
 
 
 class AikidoMiddleware:  # pylint: disable=too-few-public-methods
@@ -17,7 +17,7 @@ class AikidoMiddleware:  # pylint: disable=too-few-public-methods
         self.app = app
 
     def __call__(self, environ, start_response):
-        logging.critical("[AIK] Aikido middleware is working")
+        logger.debug("Aikido middleware for `flask` was called")
         response = self.app(environ, start_response)
         return response
 
@@ -35,11 +35,10 @@ def on_flask_import(flask):
 
     def aikido_flask_init(_self, *args, **kwargs):
         prev_flask_init(_self, *args, **kwargs)
-        print("[AIK] Flask version : ", version("flask"))
+        logger.debug("Wrapper - `flask` version : %s", version("flask"))
         _self.wsgi_app = AikidoMiddleware(_self.wsgi_app)
-        print(_self)
 
     # pylint: disable=no-member
     setattr(modified_flask.Flask, "__init__", aikido_flask_init)
-    print("[AIK] Modified flask")
+    logger.debug("Wrapped `flask` module")
     return modified_flask

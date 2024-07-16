@@ -3,6 +3,8 @@ Django source module, intercepts django import and adds Aikido middleware
 """
 
 import importhook
+from aikido_firewall.helpers.logging import logger
+
 
 AIKIDO_MIDDLEWARE_ADDR = "aikido_firewall.middleware.django.AikidoMiddleware"
 
@@ -19,5 +21,5 @@ def on_django_import(django):
 
     # pylint: disable=no-member
     setattr(modified_django.settings, "MIDDLEWARE", new_middleware_array)
-    print("[AIK] Modified Django")
+    logger.debug("Wrapped `django` module")
     return modified_django
