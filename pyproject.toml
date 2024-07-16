@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "aikido-firewall"
+name = "aikido_firewall"
 version = "0.1.0"
 description = "Aikido RASP for Python"
 authors = ["Aikido"]
