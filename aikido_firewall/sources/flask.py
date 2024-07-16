@@ -13,7 +13,8 @@ class AikidoMiddleware(object):
         return response
 
 
-
+# Hook 'n wrap on `flask.app`
+# Our goal is to wrap the __init__ function of the "Flask" class, so we can insert our middleware
 @importhook.on_import('flask.app')
 def on_flask_import(flask):
     modified_flask = importhook.copy_module(flask)
