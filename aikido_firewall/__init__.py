@@ -1,2 +1,2 @@
-import src.sources.django
-import src.sources.flask
+import aikido_firewall.sources.django
+import aikido_firewall.sources.flask
