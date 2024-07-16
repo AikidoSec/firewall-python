@@ -1,19 +1,20 @@
 import importhook
 import copy
 from importlib.metadata import version
+import logging
 
 class AikidoMiddleware(object):
     def __init__(self, app):
         self.app = app
 
     def __call__(self, environ, start_response):
-        print("[AIK] Aikido middleware is working")
+        logging.critical("[AIK] Aikido middleware is working")
         response = self.app(environ, start_response)
         return response
 
 
 
-@importhook.on_import('flask')
+@importhook.on_import('flask.app')
 def on_flask_import(flask):
     modified_flask = importhook.copy_module(flask)
 
@@ -22,6 +23,7 @@ def on_flask_import(flask):
         prev_flask_init(_self, *args, **kwargs)
         print("[AIK] Flask version : ", version("flask"))
         _self.wsgi_app = AikidoMiddleware(_self.wsgi_app)
+        print(_self)
     
     setattr(modified_flask.Flask, "__init__", aikido_flask_init)
     print("[AIK] Modified flask")

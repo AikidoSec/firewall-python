@@ -4,11 +4,11 @@ class AikidoMiddleware:
         self.get_response = get_response
 
     def __call__(self, request, *args, **kwargs):
-        logging.info("[AIK] Aikido middleware : call")
+        logging.critical("[AIK] Aikido middleware : call")
         return self.get_response(request)
 
     def process_exception(self, request, exception):
-        logging.info("[AIK] Aikido middleware : exception")
+        logging.critical("[AIK] Aikido middleware : exception")
     
     def process_request(self, request):
-        logging.info("[AIK] Aikido middleware : request")
+        logging.critical("[AIK] Aikido middleware : request")
