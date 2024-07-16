@@ -9,6 +9,8 @@ readme = "README.md"
 python = "^3.12"
 importhook = "^1.0.9"
 pytest = "^8.2.2"
+pytest-cov = "^5.0.0"
+pytest-mock = "^3.14.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"
