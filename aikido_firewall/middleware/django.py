@@ -26,6 +26,6 @@ class AikidoMiddleware:
 
     def process_request(self, request):
         """
-        Not entirely sure, but should be executed when django receives requests
+        executed during the request phase of the Django request-response cycle.
         """
         logging.critical("[AIK] Aikido middleware : request")
