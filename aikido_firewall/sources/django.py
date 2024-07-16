@@ -8,7 +8,7 @@ AIKIDO_MIDDLEWARE_ADDR = "aikido_firewall.middleware.django.AikidoMiddleware"
 @importhook.on_import('django.conf')
 def on_django_import(django):
     modified_django = importhook.copy_module(django)
-    new_middleware_array = django.settings.MIDDLEWARE + [AIKIDO_MIDDLEWARE_ADDR]
+    new_middleware_array = [AIKIDO_MIDDLEWARE_ADDR] + django.settings.MIDDLEWARE
 
     setattr(modified_django.settings, "MIDDLEWARE", new_middleware_array)
     print("[AIK] Modified Django")
