@@ -2,30 +2,14 @@ import importhook
 import copy
 from importlib.metadata import version
 
-class AikidoMiddleware(object):
-    def __init__(self, app):
-        self.app = app
-
-    def __call__(self, environ, start_response):
-        print("[AIK] Aikido middleware is working")
-        response = self.app(environ, start_response)
-        return response
-
+AIKIDO_MIDDLEWARE_ADDR = "aikido_firewall.middleware.django.AikidoMiddleware"
 
 
 @importhook.on_import('django.conf')
 def on_django_import(django):
-    # Wrap `load_middleware` function
     modified_django = importhook.copy_module(django)
-    #print(modified_django.settings["MIDDLEWARE"])
-    modified_django.settings.MIDDLEWARE += "aikido.django.middleware"
+    new_middleware_array = django.settings.MIDDLEWARE + [AIKIDO_MIDDLEWARE_ADDR]
 
-    #prev_django_init = copy.deepcopy(django.django.__init__)
-    #def aikido_django_init(_self, *args, **kwargs):
-    #    prev_django_init(_self, *args, **kwargs)
-    #    print("[AIK] django version : ", version("django"))
-    #    _self.wsgi_app = AikidoMiddleware(_self.wsgi_app)
-    
-    #setattr(modified_django.django, "__init__", aikido_django_init)
+    setattr(modified_django.settings, "MIDDLEWARE", new_middleware_array)
     print("[AIK] Modified Django")
     return modified_django
