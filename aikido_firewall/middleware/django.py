@@ -2,11 +2,15 @@
 Django WSGI Aikido Middleware
 uses headers, body, etc. as sources
 """
+
 import logging
+
+
 class AikidoMiddleware:
     """
     Same as docstring above
     """
+
     def __init__(self, get_response):
         self.get_response = get_response
 

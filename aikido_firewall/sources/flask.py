@@ -1,15 +1,18 @@
 """
 Flask source module, intercepts flask import and adds Aikido middleware
 """
+
 import copy
 from importlib.metadata import version
 import logging
 import importhook
 
-class AikidoMiddleware: # pylint: disable=too-few-public-methods
+
+class AikidoMiddleware:  # pylint: disable=too-few-public-methods
     """
     Aikido WSGI Middleware | uses headers, body, etc. as sources
     """
+
     def __init__(self, app):
         self.app = app
 
@@ -19,7 +22,7 @@ class AikidoMiddleware: # pylint: disable=too-few-public-methods
         return response
 
 
-@importhook.on_import('flask.app')
+@importhook.on_import("flask.app")
 def on_flask_import(flask):
     """
     Hook 'n wrap on `flask.app`
@@ -29,12 +32,14 @@ def on_flask_import(flask):
     modified_flask = importhook.copy_module(flask)
 
     prev_flask_init = copy.deepcopy(flask.Flask.__init__)
+
     def aikido_flask_init(_self, *args, **kwargs):
         prev_flask_init(_self, *args, **kwargs)
         print("[AIK] Flask version : ", version("flask"))
         _self.wsgi_app = AikidoMiddleware(_self.wsgi_app)
         print(_self)
 
-    setattr(modified_flask.Flask, "__init__", aikido_flask_init) # pylint: disable=no-member
+    # pylint: disable=no-member
+    setattr(modified_flask.Flask, "__init__", aikido_flask_init)
     print("[AIK] Modified flask")
     return modified_flask
