@@ -29,7 +29,6 @@ services:
     restart: always
     volumes:
       - .:/app
-      - ./../../src:/app/src
     ports:
       - "8080:5000"
     depends_on:
