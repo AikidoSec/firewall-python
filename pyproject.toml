@@ -8,6 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.12"
 importhook = "^1.0.9"
+pytest = "^8.2.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"
