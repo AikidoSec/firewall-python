@@ -1,10 +1,21 @@
-# Python configuration
+# Poetry
 
-To install and keep track of packages we use "pipenv", so installing packages goes as follows : 
+To run scripts, run pylint, etc. enter the virtualenv using :
 ```bash
-pipenv shell
+poetry shell
 ```
-And from now on you can install all packages with :
+
+When adding new packages, add them using :
+```bash
+poetry add <pacakge_name>
 ```
-pipenv install <your_package_name>
+
+# Building
+If you want to build this python package you can execute :
+```bash
+make build
+```
+When you're done or when you want to clean up use :
+```bash
+make clean
 ```
