@@ -1,20 +1,21 @@
 # Use an official Python runtime as a parent image
 FROM python:3
 
-ENV VIRTUAL_ENV=/opt/venv
-RUN python3 -m venv $VIRTUAL_ENV
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+#Copy code base
+COPY ./ /tmp
 
 # Set the working directory
 WORKDIR /app
 
 # Install dependencies
-COPY Pipfile ./
-RUN pip install --no-cache-dir pipenv && pipenv install
+RUN mv /tmp/sample-apps/flask-mysql/requirements.txt ./
+RUN pip install -r requirements.txt
 
-# Copy the project code into the container
-COPY . /app/
+# Build and install aikido_firewall from source
+WORKDIR /tmp
+RUN pip install poetry
+RUN make build
+RUN pip install ./dist/aikido_firewall-0.1.0.tar.gz
+RUN pip list
+
+WORKDIR /app

@@ -22,8 +22,8 @@ services:
 
   backend:
     build: 
-      context: .
-      dockerfile: Dockerfile
+      context: ./../../
+      dockerfile: ./sample-apps/flask-mysql/Dockerfile
     container_name: flask_mysql_backend
     command: sh -c "flask --app app run --debug --host=0.0.0.0"
     restart: always

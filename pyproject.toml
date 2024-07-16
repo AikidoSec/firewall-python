@@ -1,3 +1,15 @@
+[tool.poetry]
+name = "aikido_firewall"
+version = "0.1.0"
+description = "Aikido RASP for Python"
+authors = ["Aikido"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+importhook = "^1.0.9"
+
+
 [build-system]
-requires = ['setuptools>=42']
-build-backend = 'setuptools.build_meta'
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
