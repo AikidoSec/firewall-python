@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """Django's command-line utility for administrative tasks."""
-import src # Aikido module
+import aikido_firewall # Aikido module
 import os
 import sys
 

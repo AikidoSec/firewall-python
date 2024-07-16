@@ -11,6 +11,11 @@ WORKDIR /app
 RUN mv /tmp/sample-apps/django-mysql/requirements.txt ./
 RUN pip install -r requirements.txt
 
-# Install aikido_firewall from source
-#RUN pip install /tmp
+# Build and install aikido_firewall from source
+WORKDIR /tmp
+RUN pip install poetry
+RUN make build
+RUN pip install ./dist/aikido_firewall-0.1.0.tar.gz
 RUN pip list
+
+WORKDIR /app
