@@ -23,7 +23,6 @@ from aikido_firewall.agent import start_agent
 # Load environment variables
 load_dotenv()
 
-
 def protect():
     """Start Aikido agent"""
     logger.info("Aikido python firewall started")
