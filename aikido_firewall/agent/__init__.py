@@ -41,10 +41,22 @@ class AikidoThread:
             logger.error("Action `%s` is not defined. (Aikido Agent)", action)
 
 
+# pylint: disable=invalid-name # This variable does change
+agent = None
+
+
+def get_agent():
+    """Returns the globally stored agent"""
+    return agent
+
+
 def start_agent():
     """
     Starts a thread to handle incoming/outgoing data
     """
+    # pylint: disable=global-statement # We need this to be global
+    global agent
+
     # This creates a queue for Inter-Process Communication
     logger.debug("Creating IPC Queue")
     q = queue.Queue()
@@ -52,7 +64,7 @@ def start_agent():
     logger.debug("Starting a new agent thread")
     agent_thread = Thread(target=AikidoThread, args=(q,))
     agent_thread.start()
-    return Agent(q)
+    agent = Agent(q)
 
 
 class Agent:
