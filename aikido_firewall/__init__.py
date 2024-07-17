@@ -17,7 +17,14 @@ import aikido_firewall.middleware.django
 # Import logger
 from aikido_firewall.helpers.logging import logger
 
+# Import agent
+from aikido_firewall.agent import start_agent
+
 # Load environment variables
 load_dotenv()
 
-logger.info("Aikido python firewall started")
+
+def protect():
+    """Start Aikido agent"""
+    logger.info("Aikido python firewall started")
+    start_agent()
