@@ -9,6 +9,7 @@ def test_escape_string_regexp():
         == "\\\\ \\^ \\$ \\* \\+ \\? \\. \\( \\) \\| \\{ \\} \\[ \\]"
     )
 
+
 def test_escape_hyphen_pcre():
     assert escape_string_regexp("foo - bar") == "foo \\x2d bar"
 
