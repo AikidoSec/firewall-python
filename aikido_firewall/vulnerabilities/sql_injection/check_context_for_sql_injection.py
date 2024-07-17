@@ -4,6 +4,7 @@ This will check the context of the request for SQL Injections
 
 SOURCES = ["STILL_NEED_TO_DO_SOMETHING_HERE"]
 
+
 def check_context_for_sql_injection(sql, operation, context, dialect):
     """
     This will check the context of the request for SQL Injections
