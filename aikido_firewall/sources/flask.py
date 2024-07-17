@@ -5,9 +5,8 @@ Flask source module, intercepts flask import and adds Aikido middleware
 import copy
 from importlib.metadata import version
 import importhook
+from werkzeug.wrappers import Request
 from aikido_firewall.helpers.logging import logger
-from aikido_firewall.helpers import parse_query_params
-
 
 class AikidoMiddleware:  # pylint: disable=too-few-public-methods
     """
@@ -19,11 +18,18 @@ class AikidoMiddleware:  # pylint: disable=too-few-public-methods
 
     def __call__(self, environ, start_response):
         logger.debug("Aikido middleware for `flask` was called")
+        request = Request(environ)
         context = {
-            "method": environ.get("REQUEST_METHOD"),
-            "headers": environ.get("HTTP_HEADERS", {}),
-            "query": parse_query_params(environ.get("QUERY_STRING")),
+            "method": request.method,
+            "remote_address": request.remote_addr,
+            "url": request.url,
+            "body": request.form,
+            "headers": request.headers,
+            "query": request.args,
+            "cookies": request.cookies,
+            "source": "flask",
         }
+        print(context)
         response = self.app(environ, start_response)
         return response
 
