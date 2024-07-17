@@ -8,6 +8,9 @@ from dotenv import load_dotenv
 import aikido_firewall.sources.django
 import aikido_firewall.sources.flask
 
+# Import sinks
+import aikido_firewall.sinks.pymysql
+
 # Import middleware
 import aikido_firewall.middleware.django
 
