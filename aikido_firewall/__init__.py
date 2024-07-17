@@ -23,5 +23,6 @@ def protect():
 
     # Import sinks
     import aikido_firewall.sinks.pymysql
+
     logger.info("Aikido python firewall started")
     start_agent()
