@@ -34,8 +34,8 @@ def start(agent):
     def on_flask_import(flask):
         """
         Hook 'n wrap on `flask.app`
-        Our goal is to wrap the __init__ function of the "Flask" class, so we can insert our middleware
-        Returns : Modified flask.app object
+        Our goal is to wrap the __init__ function of the "Flask" class,
+        so we can insert our middleware. Returns : Modified flask.app object
         """
         modified_flask = importhook.copy_module(flask)
 
