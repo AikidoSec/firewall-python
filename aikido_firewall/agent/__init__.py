@@ -11,15 +11,34 @@ AIKIDO_IPC_PORT = 49155
 AGENT_SEC_INTERVAL = 0.05
 
 
-def thread_function(q):
+class AikidoThread:
     """
-    Function that will be the starting point of our new thread
+    Our agent thread
     """
-    while True:
-        while not q.empty():
-            item = q.get()
-            logger.debug("Agent %s", item)
+
+    def __init__(self, q):
+        logger.debug("Agent thread started")
+        while True:
+            while not q.empty():
+                self.process_data(q.get())
         time.sleep(AGENT_SEC_INTERVAL)
+        self.q = q
+        self.current_context = None
+
+    def process_data(self, item):
+        """Will process the data added to the queue"""
+        action, data = item
+        logger.debug("Action %s, Data %s", action, data)
+        if action == "WEB_CONTEXT":
+            if hasattr(self, "current_context"):
+                logger.debug("Replacing current context with new context")
+            self.current_context = data
+        elif action == "SQL_STATEMENT":
+            logger.debug(
+                "Sql statement, dialect : %s, SQL Statement : `%s`", data[0], data[1]
+            )
+        else:
+            logger.error("Action `%s` is not defined. (Aikido Agent)", action)
 
 
 def start_agent():
@@ -31,9 +50,8 @@ def start_agent():
     q = queue.Queue()
 
     logger.debug("Starting a new agent thread")
-    agent_thread = Thread(target=thread_function, args=(q,))
+    agent_thread = Thread(target=AikidoThread, args=(q,))
     agent_thread.start()
-    logger.debug("Agent thread started")
     return Agent(q)
 
 
