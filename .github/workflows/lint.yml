@@ -16,8 +16,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install poetry
-        poetry install
+        make install
 
     - name: Run Pylint
       run: |
