@@ -15,7 +15,7 @@ class TestAikidoMiddleware:
         app = mocker.MagicMock()
         middleware = aik_flask.AikidoMiddleware(app)
         assert middleware.app == app
-    
+
     def test_aikido_middleware_call(self, mocker):
         """Testing for AikidoMiddleware __call__ function"""
         app = mocker.MagicMock()
