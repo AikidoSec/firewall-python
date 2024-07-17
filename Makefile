@@ -10,3 +10,8 @@ clean:
 lint:
 	poetry run black aikido_firewall/
 	poetry run pylint aikido_firewall/
+
+.PHONY: install
+install:
+	pip install poetry
+	poetry install
