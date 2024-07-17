@@ -2,7 +2,7 @@
 Still need to figure out what to put here lol
 """
 
-import re
+import regex as re
 from aikido_firewall.vulnerabilities.sql_injection.consts import (
     SQL_DANGEROUS_IN_STRING,
     COMMON_SQL_KEYWORDS,
@@ -41,7 +41,8 @@ def build_regex(dialect):
         gen_match_sql_functions(),
         gen_match_dangerous_strings(dialect),
     ]
-    return re.compile("|".join(match_strings), re.I | re.M)
+    print("|".join(match_strings))
+    return re.compile("|".join(match_strings), re.VERBOSE)
 
 
 def gen_match_sql_keywords(dialect):
@@ -49,15 +50,15 @@ def gen_match_sql_keywords(dialect):
     Generate the string which matches sql keywords (dialect included)
     """
     escaped_kw_with_dialect = map(
-        escape_string_regexp, SQL_KEYWORDS + dialect.getKeywords()
+        escape_string_regexp, SQL_KEYWORDS + dialect.get_keywords()
     )
     match_sql_keywords = [
         # Lookbehind : if the keywords are preceded by one or more letters, it should not match
-        "(?<![a-z])(",
+        r"(?<![a-z])(",
         # Look for SQL Keywords
         "|".join(escaped_kw_with_dialect),
         # Lookahead : if the keywords are followed by one or more letters, it should not match
-        ")(?![a-z])",
+        r")(?![a-z])",
     ]
     return "".join(match_sql_keywords)
 
@@ -66,7 +67,7 @@ def gen_match_sql_operators():
     """
     Generate the string which matches sql operators
     """
-    return "(" + "|".join(map(escape_string_regexp, SQL_OPERATORS)) + ")"
+    return "(" + "|".join(map(re.escape, SQL_OPERATORS)) + ")"
 
 
 def gen_match_sql_functions():
@@ -75,14 +76,14 @@ def gen_match_sql_functions():
     """
     match_sql_functions = [
         # Lookbehind : A sql function should be preceded by spaces, dots,
-        "(?<=([\\s|.|",
+        r"(?<=([\s.",
         # Or sql operators
         "|".join(map(escape_string_regexp, SQL_OPERATORS)),
-        "]|^)+)",
+        r"]|^)+)",
         # The name of a sql function can include letters, numbers, "_" and "-"
-        "([a-z0-9_-]+)",
+        r"([a-z0-9_-]+)",
         # Lookahead : A sql function should be followed by a "(" , spaces are allowed.
-        "(?=[\\s]*\\()",
+        r"(?=[\s]*\()",
     ]
     return "".join(match_sql_functions)
 
