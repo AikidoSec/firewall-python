@@ -8,6 +8,7 @@ import importhook
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.context import Context
 
+
 class AikidoMiddleware:  # pylint: disable=too-few-public-methods
     """
     Aikido WSGI Middleware | uses headers, body, etc. as sources
