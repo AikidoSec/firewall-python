@@ -21,3 +21,18 @@ class Context:
         self.query = request.args
         self.cookies = request.cookies
         self.source = "flask"
+
+    def __reduce__(self):
+        return (
+            self.__class__,
+            (
+                self.method,
+                self.remote_address,
+                self.url,
+                self.body,
+                self.headers,
+                self.query,
+                self.cookies,
+                self.source,
+            ),
+        )

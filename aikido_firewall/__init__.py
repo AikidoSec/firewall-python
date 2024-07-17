@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 # Import sources
 import aikido_firewall.sources.django
-import aikido_firewall.sources.flask
+from aikido_firewall.sources.flask import start as flask_start
 
 # Import sinks
 import aikido_firewall.sinks.pymysql
@@ -23,7 +23,9 @@ from aikido_firewall.agent import start_agent
 # Load environment variables
 load_dotenv()
 
+
 def protect():
     """Start Aikido agent"""
     logger.info("Aikido python firewall started")
-    start_agent()
+    agent = start_agent()
+    flask_start(agent)
