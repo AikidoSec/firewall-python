@@ -5,25 +5,27 @@ Flask source module, intercepts flask import and adds Aikido middleware
 import copy
 from importlib.metadata import version
 import importhook
+from flask_http_middleware import MiddlewareManager, BaseHTTPMiddleware
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.context import Context
 from aikido_firewall.agent import get_agent
 
 
-class AikidoMiddleware:  # pylint: disable=too-few-public-methods
+class AikidoMiddleware(BaseHTTPMiddleware):  # pylint: disable=too-few-public-methods
     """
     Aikido WSGI Middleware | uses headers, body, etc. as sources
     """
 
-    def __init__(self, app):
-        self.app = app
+    def __init__(self):
+        super().__init__()
 
-    def __call__(self, environ, start_response):
+    def dispatch(self, request, call_next):
+        """Dispatch function"""
         logger.debug("Aikido middleware for `flask` was called")
-        context = Context(environ)
-        logger.debug(context)
+        context = Context(request)
         get_agent().report(context, "WEB_CONTEXT")
-        response = self.app(environ, start_response)
+
+        response = call_next(request)
         return response
 
 
@@ -41,7 +43,8 @@ def on_flask_import(flask):
     def aikido_flask_init(_self, *args, **kwargs):
         prev_flask_init(_self, *args, **kwargs)
         logger.debug("Wrapper - `flask` version : %s", version("flask"))
-        _self.wsgi_app = AikidoMiddleware(_self.wsgi_app)
+        _self.wsgi_app = MiddlewareManager(_self)
+        _self.wsgi_app.add_middleware(AikidoMiddleware)
 
     # pylint: disable=no-member
     setattr(modified_flask.Flask, "__init__", aikido_flask_init)

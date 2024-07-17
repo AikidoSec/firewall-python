@@ -2,8 +2,6 @@
 Provides all the functionality for contexts
 """
 
-from werkzeug.wrappers import Request
-
 
 class Context:
     """
@@ -11,15 +9,14 @@ class Context:
     for vulnerability detection
     """
 
-    def __init__(self, environ):
-        request = Request(environ)
-        self.method = request.method
-        self.remote_address = request.remote_addr
-        self.url = request.url
-        self.body = request.form
-        self.headers = request.headers
-        self.query = request.args
-        self.cookies = request.cookies
+    def __init__(self, req):
+        self.method = req.method
+        self.remote_address = req.remote_addr
+        self.url = req.url
+        self.body = req.form
+        self.headers = req.headers
+        self.query = req.args
+        self.cookies = req.cookies
         self.source = "flask"
 
     def __reduce__(self):
