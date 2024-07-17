@@ -22,7 +22,7 @@ jobs:
 
     - name: Run tests with coverage
       run: |
-        pytest --cov=./ --cov-report=xml
+        make cov
 
     - name: Upload coverage report to Codecov
       uses: codecov/codecov-action@v4

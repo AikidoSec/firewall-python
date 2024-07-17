@@ -15,3 +15,11 @@ lint:
 install:
 	pip install poetry
 	poetry install
+
+.PHONY: test
+test:
+	poetry run pytest
+
+.PHONY: cov
+cov:
+	poetry run pytest --cov=aikido_firewall --cov-report=xml
