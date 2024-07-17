@@ -11,6 +11,8 @@ from aikido_firewall.vulnerabilities.sql_injection.consts import (
 )
 from aikido_firewall.helpers import escape_string_regexp
 
+cached_regexes = {}
+
 
 def userinput_contains_sqlsyntax(user_input, dialect):
     """
