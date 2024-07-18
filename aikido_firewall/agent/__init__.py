@@ -28,14 +28,9 @@ class AikidoThread:
         """Will process the data added to the queue"""
         action, data = item
         logger.debug("Action %s, Data %s", action, data)
-        if action == "WEB_CONTEXT":
-            if hasattr(self, "current_context"):
-                logger.debug("Replacing current context with new context")
+        if action == "REPORT":
+            logger.debug("Report")
             self.current_context = data
-        elif action == "SQL_STATEMENT":
-            logger.debug(
-                "Sql statement, dialect : %s, SQL Statement : `%s`", data[0], data[1]
-            )
         else:
             logger.error("Action `%s` is not defined. (Aikido Agent)", action)
 
