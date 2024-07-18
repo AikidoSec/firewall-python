@@ -10,6 +10,7 @@ from aikido_firewall.vulnerabilities.sql_injection.consts import (
     SQL_OPERATORS,
 )
 from aikido_firewall.helpers import escape_string_regexp
+from aikido_firewall.helpers.logging import logger
 
 cached_regexes = {}
 
@@ -28,13 +29,17 @@ def userinput_contains_sqlsyntax(user_input, dialect):
     if user_input.upper() in COMMON_SQL_KEYWORDS:
         return False
 
-    regex = cached_regexes.get(dialect.__class__.__name__)
+    regexes = cached_regexes.get(dialect.__class__.__name__)
 
-    if not regex:
-        regex = build_regex(dialect)
-        cached_regexes[dialect.__class__.__name__] = regex
-
-    return bool(regex.search(user_input))
+    if not regexes:
+        logger.debug("Regex not found in cache")
+        regexes = build_regex(dialect)
+        cached_regexes[dialect.__class__.__name__] = regexes
+    for regex in regexes:
+        if regex.search(user_input):
+            logger.debug("Match with %s", regex)
+            return True
+    return False
 
 
 def build_regex(dialect):
@@ -47,8 +52,8 @@ def build_regex(dialect):
         gen_match_sql_functions(),
         gen_match_dangerous_strings(dialect),
     ]
-    print("|".join(match_strings))
-    return re.compile("|".join(match_strings), re.VERBOSE)
+    logger.debug(match_strings)
+    return match_strings
 
 
 def gen_match_sql_keywords(dialect):
@@ -66,14 +71,17 @@ def gen_match_sql_keywords(dialect):
         # Lookahead : if the keywords are followed by one or more letters, it should not match
         r")(?![a-z])",
     ]
-    return "".join(match_sql_keywords)
+    return re.compile("".join(match_sql_keywords))
 
 
 def gen_match_sql_operators():
     """
     Generate the string which matches sql operators
     """
-    return "(" + "|".join(map(re.escape, SQL_OPERATORS)) + ")"
+    logger.debug(
+        "match sql operator : %s", "(" + "|".join(map(re.escape, SQL_OPERATORS)) + ")"
+    )
+    return re.compile("(" + "|".join(map(re.escape, SQL_OPERATORS)) + ")")
 
 
 def gen_match_sql_functions():
@@ -91,7 +99,8 @@ def gen_match_sql_functions():
         # Lookahead : A sql function should be followed by a "(" , spaces are allowed.
         r"(?=[\s]*\()",
     ]
-    return "".join(match_sql_functions)
+    logger.debug("Match sql function %s", "".join(match_sql_functions))
+    return re.compile("".join(match_sql_functions))
 
 
 def gen_match_dangerous_strings(dialect):
@@ -99,4 +108,10 @@ def gen_match_dangerous_strings(dialect):
     Generate the regex string which matches dangerous sql strings
     """
     dangerous_strings = SQL_DANGEROUS_IN_STRING + dialect.get_dangerous_strings()
-    return "|".join(map(escape_string_regexp, dangerous_strings))
+    logger.debug(
+        "Match_dangerous_strings %s",
+        "|".join(map(escape_string_regexp, dangerous_strings)),
+    )
+    return re.compile(
+        "(" + "|".join(map(escape_string_regexp, dangerous_strings)) + ")"
+    )

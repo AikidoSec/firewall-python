@@ -36,6 +36,8 @@ def on_flask_import(mysql):
         result = check_context_for_sql_injection(sql, "Test_op", context, MySQL())
         logger.critical("SQL RESULTS : ")
         logger.critical(json.dumps(result))
+        if result:
+            raise Exception("SQL Injection [aikido_firewall]")
         return prev_query_function(_self, sql, unbuffered=False)
 
     # pylint: disable=no-member
