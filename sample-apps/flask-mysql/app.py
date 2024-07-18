@@ -1,9 +1,12 @@
 import aikido_firewall # Aikido package import
+aikido_firewall.protect()
 
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flaskext.mysql import MySQL
 
 app = Flask(__name__)
+if __name__ == '__main__':
+    app.run(threaded=True) # Run threaded so we can test our agent's capabilities
 mysql = MySQL()
 
 app.config['MYSQL_DATABASE_HOST'] = 'db'
@@ -27,10 +30,15 @@ def get_dogpage(dog_id):
     dog = cursor.fetchmany(1)[0]
     return render_template('dogpage.html', title=f'Dog', dog=dog, isAdmin=("Yes" if dog[2] else "No"))
 
-@app.route('/create/<dog_name>')
-def create_dog(dog_name):
+@app.route("/create", methods=['GET'])
+def show_create_dog_form():
+    return render_template('create_dog.html')
+
+@app.route("/create", methods=['POST'])
+def create_dog():
+    dog_name = request.form['dog_name']
     connection = mysql.get_db()
     cursor = connection.cursor()
-    cursor.execute(f'INSERT INTO dogs (dog_name, isAdmin) VALUES("%s", 0)' % (dog_name))
+    cursor.execute(f'INSERT INTO dogs (dog_name, isAdmin) VALUES ("%s", 0)' % (dog_name))
     connection.commit()
-    return f'Dog {(dog_name)}'
+    return f'Dog {dog_name} created successfully'
