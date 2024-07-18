@@ -18,7 +18,6 @@ def test_returns_payload_for_invalid_JWT():
     assert try_decode_as_jwt("/;ping%20localhost;.W10=.") == (True, [])
 
 
-
 def test_returns_decoded_JWT_for_valid_JWT():
     assert try_decode_as_jwt(
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwidXNlcm5hbWUiOnsiJG5lIjpudWxsfSwiaWF0IjoxNTE2MjM5MDIyfQ._jhGJw9WzB6gHKPSozTFHDo9NOHs3CNOlvJ8rWy6VrQ"
