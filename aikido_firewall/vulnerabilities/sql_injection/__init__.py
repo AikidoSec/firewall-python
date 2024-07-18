@@ -14,7 +14,10 @@ from aikido_firewall.vulnerabilities.sql_injection.uinput_occ_safely_encapsulate
 )
 
 
-def detectSQLInjection(query, user_input, dialect):
+def detect_sql_injection(query, user_input, dialect):
+    """
+    Execute this to check if the query is actually a SQL injection
+    """
     if len(user_input) <= 1:
         # We ignore single characters since they are only able to crash the SQL Server,
         # And don't pose a big threat.

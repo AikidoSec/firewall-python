@@ -3,7 +3,7 @@ Helper function file, see funtion definition
 """
 
 
-def extract_strings_from_user_input(obj, path_to_payload):
+def extract_strings_from_user_input(obj, path_to_payload=None):
     """
     Extracts strings from an object (user input)
     """
