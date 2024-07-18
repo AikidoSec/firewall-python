@@ -8,7 +8,7 @@ from threading import Thread
 from aikido_firewall.helpers.logging import logger
 
 AIKIDO_IPC_PORT = 49155
-AGENT_SEC_INTERVAL = 0.05
+AGENT_SEC_INTERVAL = 60
 
 
 class AikidoThread:
