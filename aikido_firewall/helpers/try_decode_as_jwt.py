@@ -21,5 +21,5 @@ def try_decode_as_jwt(jwt):
     try:
         jwt = json.loads(base64.b64decode(str.encode(parts[1]) + b"==").decode("utf-8"))
         return (True, jwt)
-    except Exception as e:
+    except Exception:
         return (False, None)
