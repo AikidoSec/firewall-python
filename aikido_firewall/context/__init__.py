@@ -2,13 +2,14 @@
 Provides all the functionality for contexts
 """
 
-# pylint: disable=invalid-name # This is not a const
-current_context = None
+import threading
+
+local = threading.local()
 
 
 def get_current_context():
     """Returns the current context"""
-    return current_context
+    return local.current_context
 
 
 class Context:
@@ -46,7 +47,4 @@ class Context:
         """
         Set the current context
         """
-        # pylint: disable=global-statement # We need this so that
-        # Sinks can access context
-        global current_context
-        current_context = self
+        local.current_context = self
