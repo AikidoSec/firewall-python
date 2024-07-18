@@ -8,7 +8,7 @@ COPY ./ /tmp
 WORKDIR /app
 
 # Install dependencies
-RUN mv /tmp/sample-apps/flask-mysql/requirements.txt ./
+RUN mv /tmp/sample-apps/flask-mysql-uwsgi/requirements.txt ./
 RUN pip install -r requirements.txt
 
 # Build and install aikido_firewall from source

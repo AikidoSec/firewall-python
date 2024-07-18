@@ -23,7 +23,7 @@ services:
   backend:
     build: 
       context: ./../../
-      dockerfile: ./sample-apps/flask-mysql/Dockerfile
+      dockerfile: ./sample-apps/flask-mysql-uwsgi/Dockerfile
     container_name: flask_mysql_uwsgi_backend
     command: sh -c "uwsgi --ini uwsgi.ini"
     restart: always

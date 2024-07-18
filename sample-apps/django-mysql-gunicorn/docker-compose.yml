@@ -21,7 +21,7 @@ services:
   backend:
     build: 
       context: ./../../
-      dockerfile: ./sample-apps/django-mysql/Dockerfile
+      dockerfile: ./sample-apps/django-mysql-gunicorn/Dockerfile
     container_name: django_mysql_gunicorn_backend
     command: sh -c "python3 manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
     restart: always
