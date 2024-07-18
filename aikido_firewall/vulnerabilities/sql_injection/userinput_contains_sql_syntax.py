@@ -16,9 +16,15 @@ cached_regexes = {}
 
 def userinput_contains_sqlsyntax(user_input, dialect):
     """
-    Checks if the user input contains any SQL, dialect is provided
-    so we can also check if the user input contains dialect-specific SQL
+    This function is the first check in order to determine if a SQL injection is happening,
+    If the user input contains the necessary characters or words for a SQL injection, this
+    function returns true.
     """
+
+    # e.g. SELECT * FROM table WHERE column = 'value' LIMIT 1
+    # If a query parameter is ?LIMIT=1 it would be blocked
+    # If the body contains "LIMIT" or "SELECT" it would be blocked
+    # These are common SQL keywords and appear in almost any SQL query
     if user_input.upper() in COMMON_SQL_KEYWORDS:
         return False
 
