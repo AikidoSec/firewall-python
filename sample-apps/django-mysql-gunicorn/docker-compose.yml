@@ -1,0 +1,38 @@
+version: '3'
+services:
+  db:
+    image: mysql
+    container_name: django_mysql_gunicorn_mariadb
+    restart: always
+    volumes:
+      - db_data:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: 'db'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      # <Port exposed> : <MySQL Port running inside container>
+      - '3306:3306'
+    expose:
+      # Opens port 3306 on the container
+      - '3306'
+
+  backend:
+    build: 
+      context: ./../../
+      dockerfile: ./sample-apps/django-mysql/Dockerfile
+    container_name: django_mysql_gunicorn_backend
+    command: sh -c "python3 manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
+    restart: always
+    volumes:
+      - .:/app
+    ports:
+      - "8080:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+volumes:
+  db_data:
