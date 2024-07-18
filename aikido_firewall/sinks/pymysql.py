@@ -7,6 +7,10 @@ import logging
 from importlib.metadata import version
 import importhook
 from aikido_firewall.context import get_current_context
+from aikido_firewall.vulnerabilities.sql_injection.check_context_for_sql_injection import (
+    check_context_for_sql_injection,
+)
+from aikido_firewall.vulnerabilities.sql_injection.dialects import MySQL
 
 logger = logging.getLogger("aikido_firewall")
 
@@ -28,6 +32,7 @@ def on_flask_import(mysql):
         logger.debug("Sql : %s", sql)
         context = get_current_context()
         logger.debug("Context according to MySQL wrapper : %s", context)
+        result = check_context_for_sql_injection(sql, "Test_op", context, MySQL())
         return prev_query_function(_self, sql, unbuffered=False)
 
     # pylint: disable=no-member
