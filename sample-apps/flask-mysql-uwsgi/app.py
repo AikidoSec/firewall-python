@@ -6,7 +6,7 @@ from flaskext.mysql import MySQL
 
 app = Flask(__name__)
 if __name__ == '__main__':
-    app.run(threaded=True) # Run threaded so we can test our agent's capabilities
+    app.run() # Run threaded so we can test our agent's capabilities
 mysql = MySQL()
 
 app.config['MYSQL_DATABASE_HOST'] = 'db'
