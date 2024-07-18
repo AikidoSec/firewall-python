@@ -34,6 +34,5 @@ def detect_sql_injection(query, user_input, dialect):
 
     if uinput_occ_safely_encapsulated(query, user_input):
         return False
-
     # Executing our final check with the massive RegEx
     return userinput_contains_sqlsyntax(user_input, dialect)
