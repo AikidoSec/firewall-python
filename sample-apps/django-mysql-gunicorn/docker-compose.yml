@@ -2,7 +2,7 @@ version: '3'
 services:
   db:
     image: mysql
-    container_name: django_mysql_mariadb
+    container_name: django_mysql_gunicorn_mariadb
     restart: always
     volumes:
       - db_data:/var/lib/mysql
@@ -21,9 +21,9 @@ services:
   backend:
     build: 
       context: ./../../
-      dockerfile: ./sample-apps/django-mysql/Dockerfile
-    container_name: django_mysql_backend
-    command: sh -c "python3 manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
+      dockerfile: ./sample-apps/django-mysql-gunicorn/Dockerfile
+    container_name: django_mysql_gunicorn_backend
+    command: sh -c "python manage.py migrate && gunicorn --workers 4 --threads 2 --log-level debug --access-logfile '-' --error-logfile '-' --bind 0.0.0.0:8000 sample-django-mysql-gunicorn-app.wsgi"
     restart: always
     volumes:
       - .:/app
