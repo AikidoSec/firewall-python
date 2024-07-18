@@ -2,7 +2,7 @@ version: '3'
 services:
   db:
     image: mysql
-    container_name: project_name_mariadb
+    container_name: django_mysql_mariadb
     restart: always
     volumes:
       - db_data:/var/lib/mysql
@@ -22,7 +22,7 @@ services:
     build: 
       context: ./../../
       dockerfile: ./sample-apps/django-mysql/Dockerfile
-    container_name: project_name_backend
+    container_name: django_mysql_backend
     command: sh -c "python3 manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
     restart: always
     volumes:
