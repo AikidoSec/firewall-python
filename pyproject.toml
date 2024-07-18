@@ -12,6 +12,8 @@ python-dotenv = "^1.0.1"
 pytest = "^8.2.2"
 pytest-cov = "^5.0.0"
 pytest-mock = "^3.14.0"
+werkzeug = "^3.0.3"
+flask-http-middleware = "^0.4.2"
 regex = "^2024.5.15"
 
 [tool.poetry.group.dev.dependencies]
