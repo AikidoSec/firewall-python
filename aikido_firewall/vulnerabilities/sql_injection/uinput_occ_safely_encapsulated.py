@@ -39,7 +39,7 @@ def js_slice(arr, start=None, end=None):
     return arr[start:end]
 
 
-def userinput_occurrences_safely_encapsulated(query, user_input):
+def uinput_occ_safely_encapsulated(query, user_input):
     """
     This function will check if user input is actually just safely encapsulated in the query
     """
