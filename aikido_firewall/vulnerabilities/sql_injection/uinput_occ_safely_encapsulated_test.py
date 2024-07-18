@@ -15,9 +15,17 @@ def test_user_input_occurrences_safely_encapsulated():
     assert uinput_occ_safely_encapsulated("`UNION`", "UNION") == True
     assert uinput_occ_safely_encapsulated("`U`NION`", "U`NION") == False
     assert uinput_occ_safely_encapsulated(" 'UNION' ", "UNION") == True
-    assert uinput_occ_safely_encapsulated("\"UNION\"'UNION'", "UNION") == True
-    assert uinput_occ_safely_encapsulated("'UNION'\"UNION\"UNION", "UNION") == False
-    assert uinput_occ_safely_encapsulated("'UNION'UNION\"UNION\"", "UNION") == False
+    assert (
+        uinput_occ_safely_encapsulated("\"UNION\"'UNION'", "UNION") == True
+    )
+    assert (
+        uinput_occ_safely_encapsulated("'UNION'\"UNION\"UNION", "UNION")
+        == False
+    )
+    assert (
+        uinput_occ_safely_encapsulated("'UNION'UNION\"UNION\"", "UNION")
+        == False
+    )
     assert uinput_occ_safely_encapsulated("UNION", "UNION") == False
     assert uinput_occ_safely_encapsulated('"UN\'ION"', "UN'ION") == True
     assert uinput_occ_safely_encapsulated("'UN\"ION'", 'UN"ION') == True
@@ -157,6 +165,8 @@ def test_starts_with_double_quote_multiple_occurrences():
 
 def test_single_quotes_escaped_with_single_quotes():
     assert (
-        uinput_occ_safely_encapsulated("SELECT * FROM users WHERE id = '''&'''", "'&'")
+        uinput_occ_safely_encapsulated(
+            "SELECT * FROM users WHERE id = '''&'''", "'&'"
+        )
         == False
     )
