@@ -7,6 +7,7 @@ from aikido_firewall.helpers.extract_strings_from_user_input import (
 )
 from aikido_firewall.vulnerabilities.sql_injection import detect_sql_injection
 from aikido_firewall.helpers.logging import logger
+import json
 
 SOURCES = ["body"]
 
