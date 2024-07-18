@@ -9,8 +9,8 @@ from aikido_firewall.vulnerabilities.sql_injection.query_contains_user_input imp
 from aikido_firewall.vulnerabilities.sql_injection.userinput_contains_sql_syntax import (
     userinput_contains_sqlsyntax,
 )
-from aikido_firewall.vulnerabilities.sql_injection.userinput_occurrences_safely_encapsulated import (
-    userinput_occurrences_safely_encapsulated,
+from aikido_firewall.vulnerabilities.sql_injection.uinput_occ_safely_encapsulated import (
+    uinput_occ_safely_encapsulated,
 )
 
 
@@ -29,7 +29,7 @@ def detectSQLInjection(query, user_input, dialect):
         # If the user input is not part of the query, return false (No need to check)
         return False
 
-    if userinput_occurrences_safely_encapsulated(query, user_input):
+    if uinput_occ_safely_encapsulated(query, user_input):
         return False
 
     # Executing our final check with the massive RegEx
