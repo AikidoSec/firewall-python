@@ -12,6 +12,11 @@ def get_current_context():
     return local.current_context
 
 
+def parse_headers(headers):
+    """Parse EnvironHeaders object into a dict"""
+    return dict(zip(headers.keys(), headers.values()))
+
+
 class Context:
     """
     A context object, it stores everything that is important
@@ -22,10 +27,10 @@ class Context:
         self.method = req.method
         self.remote_address = req.remote_addr
         self.url = req.url
-        self.body = req.form
-        self.headers = req.headers
-        self.query = req.args
-        self.cookies = req.cookies
+        self.body = req.form.to_dict()
+        self.headers = parse_headers(req.headers)
+        self.query = req.args.to_dict()
+        self.cookies = req.cookies.to_dict()
         self.source = "flask"
 
     def __reduce__(self):
