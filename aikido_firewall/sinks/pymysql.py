@@ -6,7 +6,7 @@ import copy
 import logging
 from importlib.metadata import version
 import importhook
-from aikido_firewall.agent import get_agent
+from aikido_firewall.context import get_current_context
 
 logger = logging.getLogger("aikido_firewall")
 
@@ -26,7 +26,8 @@ def on_flask_import(mysql):
     def aikido_new_query(_self, sql, unbuffered=False):
         logger.debug("Wrapper - `pymysql` version : %s", version("pymysql"))
         logger.debug("Sql : %s", sql)
-        get_agent().report(("MySQL", sql), "SQL_STATEMENT")
+        context = get_current_context()
+        logger.debug("Context according to MySQL wrapper : %s", context)
         return prev_query_function(_self, sql, unbuffered=False)
 
     # pylint: disable=no-member

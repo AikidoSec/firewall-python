@@ -8,7 +8,6 @@ import importhook
 from flask_http_middleware import MiddlewareManager, BaseHTTPMiddleware
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.context import Context
-from aikido_firewall.agent import get_agent
 
 
 class AikidoMiddleware(BaseHTTPMiddleware):  # pylint: disable=too-few-public-methods
@@ -23,7 +22,7 @@ class AikidoMiddleware(BaseHTTPMiddleware):  # pylint: disable=too-few-public-me
         """Dispatch function"""
         logger.debug("Aikido middleware for `flask` was called")
         context = Context(request)
-        get_agent().report(context, "WEB_CONTEXT")
+        context.set_as_current_context()
 
         response = call_next(request)
         return response
