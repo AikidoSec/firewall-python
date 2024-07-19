@@ -33,33 +33,28 @@ class Context:
         if not source in SUPPORTED_SOURCES:
             raise ValueError(f"Source {source} not supported")
         self.source = source
-
         self.method = req.method
-        if source == "flask":
-            self.remote_address = req.remote_addr
-        elif source == "django":
-            self.remote_address = req.META.get("REMOTE_ADDR")
-
-        if source == "flask":
-            self.url = req.url
-        elif source == "django":
-            self.url = req.build_absolute_uri()
-
-        if source == "flask":
-            self.body = req.form.to_dict()
-        elif source == "django":
-            self.body = dict(req.POST)
-
         self.headers = parse_headers(req.headers)
         if source == "flask":
-            self.query = req.args.to_dict()
+            self.set_flask_attrs(req)
         elif source == "django":
-            self.query = dict(req.GET)
+            self.set_django_attrs(req)
 
-        if source == "flask":
-            self.cookies = req.cookies.to_dict()
-        elif source == "django":
-            self.cookies = req.COOKIES
+    def set_django_attrs(self, req):
+        """set properties that are specific to django"""
+        self.remote_address = req.META.get("REMOTE_ADDR")
+        self.url = req.build_absolute_uri()
+        self.body = dict(req.POST)
+        self.query = dict(req.GET)
+        self.cookies = req.COOKIES
+
+    def set_flask_attrs(self, req):
+        """Set properties that are specific to flask"""
+        self.remote_address = req.remote_addr
+        self.url = req.url
+        self.body = req.form.to_dict()
+        self.query = req.args.to_dict()
+        self.cookies = req.cookies.to_dict()
 
     def __reduce__(self):
         return (
