@@ -12,7 +12,7 @@ from aikido_firewall.vulnerabilities.sql_injection.consts import (
 from aikido_firewall.helpers import escape_string_regexp
 from aikido_firewall.helpers.logging import logger
 
-cached_regexes = {}
+cached_regex = {}
 
 
 def userinput_contains_sqlsyntax(user_input, dialect):
@@ -27,19 +27,15 @@ def userinput_contains_sqlsyntax(user_input, dialect):
     # If the body contains "LIMIT" or "SELECT" it would be blocked
     # These are common SQL keywords and appear in almost any SQL query
     if user_input.upper() in COMMON_SQL_KEYWORDS:
+        logger.debug("User input in upper, returning false for %s", user_input)
         return False
+    regex = cached_regex.get(dialect.__class__.__name__)
 
-    regexes = cached_regexes.get(dialect.__class__.__name__)
-
-    if not regexes:
+    if not regex:
         logger.debug("Regex not found in cache")
-        regexes = build_regex(dialect)
-        cached_regexes[dialect.__class__.__name__] = regexes
-    for regex in regexes:
-        if regex.search(user_input):
-            logger.debug("Match with %s", regex)
-            return True
-    return False
+        regex = build_regex(dialect)
+        cached_regex[dialect.__class__.__name__] = regex
+    return bool(regex.search(user_input))
 
 
 def build_regex(dialect):
@@ -53,7 +49,7 @@ def build_regex(dialect):
         gen_match_dangerous_strings(dialect),
     ]
     logger.debug(match_strings)
-    return match_strings
+    return re.compile("|".join(map(lambda x: x.pattern, match_strings)), re.I | re.M)
 
 
 def gen_match_sql_keywords(dialect):
@@ -78,10 +74,7 @@ def gen_match_sql_operators():
     """
     Generate the string which matches sql operators
     """
-    logger.debug(
-        "match sql operator : %s", "(" + "|".join(map(re.escape, SQL_OPERATORS)) + ")"
-    )
-    return re.compile("(" + "|".join(map(re.escape, SQL_OPERATORS)) + ")")
+    return re.compile("(" + "|".join(map(escape_string_regexp, SQL_OPERATORS)) + ")")
 
 
 def gen_match_sql_functions():
@@ -90,7 +83,7 @@ def gen_match_sql_functions():
     """
     match_sql_functions = [
         # Lookbehind : A sql function should be preceded by spaces, dots,
-        r"(?<=([\s.",
+        r"(?<=([\s|.|",
         # Or sql operators
         "|".join(map(escape_string_regexp, SQL_OPERATORS)),
         r"]|^)+)",
@@ -112,6 +105,4 @@ def gen_match_dangerous_strings(dialect):
         "Match_dangerous_strings %s",
         "|".join(map(escape_string_regexp, dangerous_strings)),
     )
-    return re.compile(
-        "(" + "|".join(map(escape_string_regexp, dangerous_strings)) + ")"
-    )
+    return re.compile("|".join(map(escape_string_regexp, dangerous_strings)))
