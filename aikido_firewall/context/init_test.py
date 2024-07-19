@@ -25,13 +25,15 @@ def test_get_current_context_no_context():
 
 def test_set_as_current_context(sample_request):
     # Test set_as_current_context() method
-    context = Context(sample_request)
+    sample_request = mocker.MagicMock()
+    context = Context(sample_request, "flask")
     context.set_as_current_context()
     assert get_current_context() == context
 
 
 def test_get_current_context_with_context(sample_request):
     # Test get_current_context() when a context is set
-    context = Context(sample_request)
+    sample_request = mocker.MagicMock()
+    context = Context(sample_request, "flask")
     context.set_as_current_context()
     assert get_current_context() == context
