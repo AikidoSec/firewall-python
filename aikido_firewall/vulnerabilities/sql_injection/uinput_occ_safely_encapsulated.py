@@ -1,5 +1,5 @@
 """
-????
+This module mainly provides the function uinput_occ_safely_encapsulated
 """
 
 import regex as re
@@ -10,11 +10,14 @@ from aikido_firewall.vulnerabilities.sql_injection.consts import (
     SQL_ESCAPE_SEQUENCES,
 )
 
-escape_sequences_pattern = "|".join(map(escape_string_regexp, SQL_ESCAPE_SEQUENCES))
-escape_sequences_regex = re.compile(escape_sequences_pattern, re.M)
+ESCAPE_SEQUENCES_PATTERN = "|".join(map(escape_string_regexp, SQL_ESCAPE_SEQUENCES))
+escape_sequences_regex = re.compile(ESCAPE_SEQUENCES_PATTERN, re.M)
 
 
 def js_slice(arr, start=None, end=None):
+    """
+    A more or less exact replica of the js slice function
+    """
     length = len(arr)
 
     # Handle start index
