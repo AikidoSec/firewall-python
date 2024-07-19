@@ -10,7 +10,7 @@ def test_get_current_context_no_context():
 def test_set_as_current_context(mocker):
     # Test set_as_current_context() method
     sample_request = mocker.MagicMock()
-    context = Context(sample_request)
+    context = Context(sample_request, "flask")
     context.set_as_current_context()
     assert get_current_context() == context
 
@@ -18,6 +18,48 @@ def test_set_as_current_context(mocker):
 def test_get_current_context_with_context(mocker):
     # Test get_current_context() when a context is set
     sample_request = mocker.MagicMock()
-    context = Context(sample_request)
+    context = Context(sample_request, "flask")
     context.set_as_current_context()
     assert get_current_context() == context
+
+
+def test_context_init_flask(mocker):
+    req = mocker.MagicMock()
+    req.method = "GET"
+    req.remote_addr = "127.0.0.1"
+    req.url = "http://example.com"
+    req.form.to_dict.return_value = {"key": "value"}
+    req.headers = {"Content-Type": "application/json"}
+    req.args.to_dict.return_value = {"key": "value"}
+    req.cookies.to_dict.return_value = {"cookie": "value"}
+
+    context = Context(req, "flask")
+    assert context.source == "flask"
+    assert context.method == "GET"
+    assert context.remote_address == "127.0.0.1"
+    assert context.url == "http://example.com"
+    assert context.body == {"key": "value"}
+    assert context.headers == {"Content-Type": "application/json"}
+    assert context.query == {"key": "value"}
+    assert context.cookies == {"cookie": "value"}
+
+
+def test_context_init_django(mocker):
+    req = mocker.MagicMock()
+    req.method = "POST"
+    req.META.get.return_value = "127.0.0.1"
+    req.build_absolute_uri.return_value = "http://example.com"
+    req.POST = {"key": "value"}
+    req.headers = {"Content-Type": "application/json"}
+    req.GET = {"key": "value"}
+    req.COOKIES = {"cookie": "value"}
+
+    context = Context(req, "django")
+    assert context.source == "django"
+    assert context.method == "POST"
+    assert context.remote_address == "127.0.0.1"
+    assert context.url == "http://example.com"
+    assert context.body == {"key": "value"}
+    assert context.headers == {"Content-Type": "application/json"}
+    assert context.query == {"key": "value"}
+    assert context.cookies == {"cookie": "value"}
