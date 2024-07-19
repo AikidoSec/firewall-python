@@ -15,11 +15,13 @@ from aikido_firewall.agent import start_agent
 load_dotenv()
 
 
-def protect():
+def protect(module="any"):
     """Start Aikido agent"""
     # Import sources
     import aikido_firewall.sources.django
-    import aikido_firewall.sources.flask
+
+    if module != "django":
+        import aikido_firewall.sources.flask
 
     # Import sinks
     import aikido_firewall.sinks.pymysql

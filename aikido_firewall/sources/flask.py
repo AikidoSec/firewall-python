@@ -21,7 +21,7 @@ class AikidoMiddleware(BaseHTTPMiddleware):  # pylint: disable=too-few-public-me
     def dispatch(self, request, call_next):
         """Dispatch function"""
         logger.debug("Aikido middleware for `flask` was called")
-        context = Context(request)
+        context = Context(request, "flask")
         context.set_as_current_context()
 
         response = call_next(request)

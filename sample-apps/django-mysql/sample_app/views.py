@@ -29,3 +29,7 @@ def create_dogpage(request, dog_name):
         print("QUERY : ", query)
         cursor.execute(query)
     return HttpResponse("Dog page created")
+
+def create(request):
+    template = loader.get_template("app/create_dog.html")
+    return HttpResponse(template.render({}, request))
