@@ -2,7 +2,7 @@
 ????
 """
 
-import regex
+import regex as re
 from aikido_firewall.helpers.escape_string_regexp import escape_string_regexp
 from aikido_firewall.helpers import get_current_and_next_segments
 from aikido_firewall.vulnerabilities.sql_injection.consts import (
@@ -11,7 +11,7 @@ from aikido_firewall.vulnerabilities.sql_injection.consts import (
 )
 
 escape_sequences_pattern = "|".join(map(escape_string_regexp, SQL_ESCAPE_SEQUENCES))
-escape_sequences_regex = regex.compile(escape_sequences_pattern, regex.M)
+escape_sequences_regex = re.compile(escape_sequences_pattern, re.M)
 
 
 def js_slice(arr, start=None, end=None):
