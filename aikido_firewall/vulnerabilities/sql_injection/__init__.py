@@ -12,6 +12,7 @@ from aikido_firewall.vulnerabilities.sql_injection.userinput_contains_sql_syntax
 from aikido_firewall.vulnerabilities.sql_injection.uinput_occ_safely_encapsulated import (
     uinput_occ_safely_encapsulated,
 )
+from aikido_firewall.helpers.logging import logger
 
 
 def detect_sql_injection(query, user_input, dialect):
@@ -35,4 +36,7 @@ def detect_sql_injection(query, user_input, dialect):
     if uinput_occ_safely_encapsulated(query, user_input):
         return False
     # Executing our final check with the massive RegEx
+    logger.debug(
+        "detect_sql_injection : No reason to return false with : %s", user_input
+    )
     return userinput_contains_sqlsyntax(user_input, dialect)
