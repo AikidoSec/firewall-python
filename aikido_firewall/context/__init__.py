@@ -9,7 +9,10 @@ local = threading.local()
 
 def get_current_context():
     """Returns the current context"""
-    return local.current_context
+    try:
+        return local.current_context
+    except AttributeError:
+        return None
 
 
 def parse_headers(headers):

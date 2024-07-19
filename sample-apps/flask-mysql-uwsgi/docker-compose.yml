@@ -2,15 +2,17 @@ version: '3'
 services:
   db:
     image: mysql
-    container_name: django_mysql_mariadb
+    container_name: flask_mysql_uwsgi_db
     restart: always
     volumes:
       - db_data:/var/lib/mysql
+      - ./init.sql:/data/application/init.sql
     environment:
       MYSQL_DATABASE: 'db'
       MYSQL_USER: 'user'
       MYSQL_PASSWORD: 'password'
       MYSQL_ROOT_PASSWORD: 'password'
+    command: --init-file /data/application/init.sql
     ports:
       # <Port exposed> : <MySQL Port running inside container>
       - '3306:3306'
@@ -21,16 +23,14 @@ services:
   backend:
     build: 
       context: ./../../
-      dockerfile: ./sample-apps/django-mysql/Dockerfile
-    container_name: django_mysql_backend
-    command: sh -c "python3 manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
+      dockerfile: ./sample-apps/flask-mysql-uwsgi/Dockerfile
+    container_name: flask_mysql_uwsgi_backend
+    command: sh -c "uwsgi --ini uwsgi.ini"
     restart: always
     volumes:
       - .:/app
     ports:
-      - "8080:8000"
-    env_file:
-      - .env
+      - "8080:5000"
     depends_on:
       - db
 
