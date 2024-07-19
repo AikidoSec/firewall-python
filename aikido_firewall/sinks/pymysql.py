@@ -4,13 +4,13 @@ Sink module for `pymysql`
 
 import copy
 import logging
+import json
 from importlib.metadata import version
 import importhook
 from aikido_firewall.context import get_current_context
 from aikido_firewall.vulnerabilities.sql_injection.check_context_for_sql_injection import (
     check_context_for_sql_injection,
 )
-import json
 from aikido_firewall.vulnerabilities.sql_injection.dialects import MySQL
 
 logger = logging.getLogger("aikido_firewall")
