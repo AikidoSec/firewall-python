@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from aikido_firewall.helpers.logging import logger
 
 # Import agent
-from aikido_firewall.agent import start_agent
+from aikido_firewall.agent import start_ipc
 
 # Load environment variables
 load_dotenv()
@@ -25,4 +25,4 @@ def protect():
     import aikido_firewall.sinks.pymysql
 
     logger.info("Aikido python firewall started")
-    start_agent()
+    start_ipc()
