@@ -30,12 +30,11 @@ def on_flask_import(mysql):
 
     def aikido_new_query(_self, sql, unbuffered=False):
         logger.debug("Wrapper - `pymysql` version : %s", version("pymysql"))
-        logger.debug("Sql : %s", sql)
+
         context = get_current_context()
-        logger.debug("Context according to MySQL wrapper : %s", context)
         result = check_context_for_sql_injection(sql, "Test_op", context, MySQL())
-        logger.critical("SQL RESULTS : ")
-        logger.critical(json.dumps(result))
+
+        logger.info("sql_injection results : %s", json.dumps(result))
         if result:
             raise Exception("SQL Injection [aikido_firewall]")
         return prev_query_function(_self, sql, unbuffered=False)
