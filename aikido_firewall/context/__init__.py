@@ -3,6 +3,7 @@ Provides all the functionality for contexts
 """
 
 import threading
+
 SUPPORTED_SOURCES = ["django", "flask"]
 local = threading.local()
 
