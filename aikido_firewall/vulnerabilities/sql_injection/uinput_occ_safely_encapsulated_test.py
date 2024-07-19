@@ -1,7 +1,44 @@
 import pytest
 from aikido_firewall.vulnerabilities.sql_injection.uinput_occ_safely_encapsulated import (
     uinput_occ_safely_encapsulated,
+    js_slice,
 )
+
+
+def test_js_slice_no_start_no_end():
+    arr = [1, 2, 3, 4, 5]
+    result = js_slice(arr)
+    assert result == [1, 2, 3, 4, 5]
+
+
+def test_js_slice_with_start():
+    arr = [1, 2, 3, 4, 5]
+    result = js_slice(arr, 2)
+    assert result == [3, 4, 5]
+
+
+def test_js_slice_with_negative_start():
+    arr = [1, 2, 3, 4, 5]
+    result = js_slice(arr, -3)
+    assert result == [3, 4, 5]
+
+
+def test_js_slice_with_start_and_end():
+    arr = [1, 2, 3, 4, 5]
+    result = js_slice(arr, 1, 4)
+    assert result == [2, 3, 4]
+
+
+def test_js_slice_with_negative_end():
+    arr = [1, 2, 3, 4, 5]
+    result = js_slice(arr, 1, -1)
+    assert result == [2, 3, 4]
+
+
+def test_js_slice_with_end_out_of_range():
+    arr = [1, 2, 3, 4, 5]
+    result = js_slice(arr, 1, 10)
+    assert result == [2, 3, 4, 5]
 
 
 def test_user_input_occurrences_safely_encapsulated():
