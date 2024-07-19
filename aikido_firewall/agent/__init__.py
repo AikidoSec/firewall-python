@@ -6,6 +6,8 @@ import time
 import os
 from multiprocessing.connection import Listener, Client
 from multiprocessing import Process
+from threading import Thread
+from queue import Queue
 from aikido_firewall.helpers.logging import logger
 
 AGENT_SEC_INTERVAL = 5
@@ -20,18 +22,28 @@ class AikidoProc:
     def __init__(self, address, key):
         logger.debug("Agent thread started")
         listener = Listener(address, authkey=key)
-        self.queue = []
+        self.queue = Queue()
+        # Start reporting thread :
+        Thread(target=self.reporting_thread).start()
+
         while True:
             conn = listener.accept()
             logger.debug("connection accepted from %s", listener.last_accepted)
             while True:
                 data = conn.recv()
-                logger.error(data) # Temporary debugging
+                logger.error(data)  # Temporary debugging
                 if data[0] == "SQL_INJECTION":
-                    self.queue.append(data[1])
+                    self.queue.put(data[1])
                 elif data[0] == "CLOSE":
                     conn.close()
                     break
+
+    def reporting_thread(self):
+        """Reporting thread"""
+        logger.debug("Started reporting thread")
+        while True:
+            logger.debug(self.queue)
+            time.sleep(AGENT_SEC_INTERVAL)
 
     def report_to_agent(self):
         """
