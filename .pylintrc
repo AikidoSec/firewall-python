@@ -4,5 +4,4 @@ disable = unused-argument
 ignore-patterns=(.)*_test\.py,test_(.)*\.py
 
 [MESSAGES CONTROL]
-# Disable the no-member warning [Currently enabled]
-#disable = no-member
+disable=too-few-public-methods

@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 """Django's command-line utility for administrative tasks."""
 import aikido_firewall # Aikido module
+aikido_firewall.protect("django")
+
 import os
 import sys
 
