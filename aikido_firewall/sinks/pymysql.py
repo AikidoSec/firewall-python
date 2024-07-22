@@ -12,6 +12,7 @@ from aikido_firewall.vulnerabilities.sql_injection.check_context_for_sql_injecti
     check_context_for_sql_injection,
 )
 from aikido_firewall.vulnerabilities.sql_injection.dialects import MySQL
+from aikido_firewall.agent import get_ipc
 
 logger = logging.getLogger("aikido_firewall")
 
