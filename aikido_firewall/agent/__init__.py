@@ -42,15 +42,19 @@ class AikidoProc:
         """Reporting thread"""
         logger.debug("Started reporting thread")
         while True:
-            logger.debug(self.queue)
+            self.report_to_agent()
             time.sleep(AGENT_SEC_INTERVAL)
 
     def report_to_agent(self):
         """
         Reports the found data to an Aikido server
         """
+        items_to_report = []
+        while not self.queue.empty():
+            items_to_report.append(self.queue.get())
         logger.debug("Reporting to aikido server")
-        # Implement
+        logger.critical("Items to report : %s", items_to_report)
+        # Currently not making API calls
 
 
 # pylint: disable=invalid-name # This variable does change
