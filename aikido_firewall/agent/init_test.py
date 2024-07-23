@@ -21,9 +21,9 @@ def test_start_ipc_missing_secret_key(mocker):
     assert str(exc_info.value) == "AIKIDO_SECRET_KEY is not set."
 
 
-def test_start_ipc(mocker):
+def test_start_ipc(monkeypatch):
     assert get_ipc() == None
-    mocker.patch("os.environ", {"AIKIDO_SECRET_KEY": "mock_key"})
+    monkeypatch.setenv("AIKIDO_SECRET_KEY", "mock_key")
 
     start_ipc()
 
