@@ -65,7 +65,7 @@ class Context:
         """Set properties that are specific to django-gunicorn"""
         self.remote_address = req.remote_addr
         self.url = req.uri
-        self.body = dict(req.body)
+        self.body = parse_qs(req.body_copy.decode("utf-8"))
         self.query = parse_qs(req.query)
         self.cookies = parse_cookies(self.headers["COOKIE"])
         del self.headers["COOKIE"]
