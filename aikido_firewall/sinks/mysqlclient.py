@@ -31,7 +31,9 @@ def on_mysqlclient_import(mysql):
 
         context = get_current_context()
         result = check_context_for_sql_injection(sql, "Test_op", context, MySQL())
-        result = check_context_for_sql_injection(sql.decode("utf-8"), "Test_op", context, MySQL())
+        result = check_context_for_sql_injection(
+            sql.decode("utf-8"), "Test_op", context, MySQL()
+        )
 
         logger.info("sql_injection results : %s", json.dumps(result))
         if result:
