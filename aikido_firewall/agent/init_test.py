@@ -33,12 +33,13 @@ def test_start_ipc(mocker):
 
     get_ipc().agent_proc.kill()
 
+
 def test_send_data_exception(monkeypatch, caplog):
     def mock_client(address, authkey):
         raise Exception("Connection Error")
 
-    monkeypatch.setitem(globals(), 'Client', mock_client)
-    monkeypatch.setitem(globals(), 'logger', caplog)
+    monkeypatch.setitem(globals(), "Client", mock_client)
+    monkeypatch.setitem(globals(), "logger", caplog)
 
     ipc = IPC(("localhost", 9898), "mock_key")
     ipc.send_data("ACTION", "Test Object")
