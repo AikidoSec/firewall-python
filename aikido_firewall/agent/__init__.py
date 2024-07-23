@@ -68,7 +68,7 @@ def get_ipc():
 
 def start_ipc():
     """
-    Starts a thread to handle incoming/outgoing data
+    Starts a process to handle incoming/outgoing data
     """
     # pylint: disable=global-statement # We need this to be global
     global ipc
