@@ -26,7 +26,7 @@ def on_mysqlclient_import(mysql):
 
     prev_query_function = copy.deepcopy(mysql.Connection.query)
 
-    def aikido_new_query(_self, sql, unbuffered=False):
+    def aikido_new_query(_self, sql):
         logger.debug("Wrapper - `mysqlclient` version : %s", version("mysqlclient"))
 
         context = get_current_context()
@@ -35,7 +35,7 @@ def on_mysqlclient_import(mysql):
         logger.info("sql_injection results : %s", json.dumps(result))
         if result:
             raise Exception("SQL Injection [aikido_firewall]")
-        return prev_query_function(_self, sql, unbuffered=False)
+        return prev_query_function(_self, sql)
 
     # pylint: disable=no-member
     setattr(mysql.Connection, "query", aikido_new_query)
