@@ -15,8 +15,15 @@ from aikido_firewall.agent import start_ipc
 load_dotenv()
 
 
-def protect(module="any"):
+def protect(module="any", server=True):
     """Start Aikido agent"""
+    if server:
+        start_ipc()
+    else:
+        logger.debug("Not starting IPC server")
+    if module == "server-only":
+        return
+    
     # Import sources
     import aikido_firewall.sources.django
 
@@ -27,4 +34,3 @@ def protect(module="any"):
     import aikido_firewall.sinks.pymysql
 
     logger.info("Aikido python firewall started")
-    start_ipc()
