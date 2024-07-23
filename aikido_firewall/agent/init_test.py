@@ -12,6 +12,15 @@ def test_ipc_init():
     assert ipc.agent_proc is None
 
 
+def test_start_ipc_missing_secret_key(mocker):
+    mocker.patch("os.environ", {})
+
+    with pytest.raises(EnvironmentError) as exc_info:
+        start_ipc()
+
+    assert str(exc_info.value) == "AIKIDO_SECRET_KEY is not set."
+
+
 def test_start_ipc(mocker):
     assert get_ipc() == None
     mocker.patch("os.environ", {"AIKIDO_SECRET_KEY": "mock_key"})
