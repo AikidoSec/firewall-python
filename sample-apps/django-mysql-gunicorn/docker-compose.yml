@@ -1,7 +1,7 @@
 version: '3'
 services:
   db:
-    image: mysql
+    image: mariadb
     container_name: django_mysql_gunicorn_mariadb
     restart: always
     volumes:
@@ -17,6 +17,11 @@ services:
     expose:
       # Opens port 3306 on the container
       - '3306'
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      retries: 5
+      start_period: 10s
 
   backend:
     build: 
@@ -32,7 +37,8 @@ services:
     env_file:
       - .env
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
 volumes:
   db_data:
