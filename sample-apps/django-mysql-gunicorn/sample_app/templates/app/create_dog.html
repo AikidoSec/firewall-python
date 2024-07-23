@@ -1,15 +1,7 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Create Dog</title>
-</head>
-<body>
-    <h1>Create a New Dog</h1>
-    <form method="post">
-        {% csrf_token %}
-        <label for="dog_name">Dog Name:</label>
-        <input type="text" id="dog_name" name="dog_name">
-        <button type="submit">Create Dog</button>
-    </form>
-</body>
-</html>
+<h1>Create a New Dog</h1>
+<form method="post">
+    {% csrf_token %}
+    <label for="dog_name">Dog Name:</label>
+    <input type="text" id="dog_name" name="dog_name">
+    <button type="submit">Create Dog</button>
+</form>

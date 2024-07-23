@@ -22,7 +22,7 @@ def dog_page(request, dog_id):
 
 def create_dogpage(request):
     if request.method == 'GET':
-        return render(request, 'create_dog.html')
+        return render(request, 'app/create_dog.html')
     elif request.method == 'POST':
         dog_name = request.POST.get('dog_name')
         # Using custom sql to create a dog :
