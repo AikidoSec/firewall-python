@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 """Django's command-line utility for administrative tasks."""
-import aikido_firewall # Aikido module
-aikido_firewall.protect("django")
-
 import os
 import sys
 
 
 def main():
     """Run administrative tasks."""
+    import aikido_firewall # Aikido module
+    aikido_firewall.protect("django")
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'sample-django-mysql-app.settings')
     try:
         from django.core.management import execute_from_command_line
