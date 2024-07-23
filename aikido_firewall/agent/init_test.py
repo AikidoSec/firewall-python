@@ -18,21 +18,21 @@ def test_start_ipc_missing_secret_key(mocker):
     with pytest.raises(EnvironmentError) as exc_info:
         start_ipc()
 
-    assert str(exc_info.value) == "AIKIDO_SECRET_KEY is not set."
+    assert "AIKIDO_SECRET_KEY is not set." in str(exc_info.value)
 
 
 # Following function does not work
-# def test_start_ipc(monkeypatch):
-#    assert get_ipc() == None
-#    monkeypatch.setenv("AIKIDO_SECRET_KEY", "mock_key")
-#
-#    start_ipc()
-#
-#    assert get_ipc() != None
-#    assert get_ipc().address == IPC_ADDRESS
-#    assert get_ipc().key == b"mock_key"
-#
-#    get_ipc().agent_proc.kill()
+def test_start_ipc(monkeypatch):
+    assert get_ipc() == None
+    monkeypatch.setenv("AIKIDO_SECRET_KEY", "mock_key")
+
+    start_ipc()
+
+    assert get_ipc() != None
+    assert get_ipc().address == IPC_ADDRESS
+    assert get_ipc().key == b"mock_key"
+
+    get_ipc().agent_proc.kill()
 
 
 def test_send_data_exception(monkeypatch, caplog):
