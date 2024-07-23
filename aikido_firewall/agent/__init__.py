@@ -85,19 +85,14 @@ class IPC:
     def __init__(self, address, key):
         self.address = address
         self.key = str.encode(key)
-        self.agent_proc = None
 
     def start_aikido_listener(self):
-        """This will start the aikido thread which listens"""
-        self.agent_proc = Process(
-            target=AikidoProc,
-            args=(
-                self.address,
-                self.key,
-            ),
-        )
-        logger.debug("Starting a new agent thread")
-        self.agent_proc.start()
+        """This will start the aikido process which listens"""
+        pid = os.fork()
+        if pid == 0:  # Child process
+            AikidoProc(self.address, self.key)
+        else:  # Parent process
+            logger.critical("Started a new agent process with PID: %d", pid)
 
     def send_data(self, action, obj):
         """This creates a new client for comms to the thread"""
