@@ -5,8 +5,6 @@ import sys
 
 def main():
     """Run administrative tasks."""
-    import aikido_firewall # Aikido module
-    aikido_firewall.protect("django")
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'sample-django-mysql-gunicorn-app.settings')
     try:
         from django.core.management import execute_from_command_line
