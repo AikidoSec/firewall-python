@@ -16,7 +16,7 @@ def post_fork(server, worker):
 def pre_request(worker, req):
     worker.log.critical(req.body)
     from aikido_firewall.context import Context
-    django_context = Context(req, "django")
+    django_context = Context(req, "django-gunicorn")
     print(django_context)
     worker.log.debug("%s %s", req.method, req.path)
 
