@@ -23,7 +23,7 @@ def protect(module="any", server=True):
         logger.debug("Not starting IPC server")
     if module == "server-only":
         return
-    
+
     # Import sources
     import aikido_firewall.sources.django
 
