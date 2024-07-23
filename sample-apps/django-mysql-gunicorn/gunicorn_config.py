@@ -22,7 +22,7 @@ def pre_request(worker, req):
     req.body, req.body_copy = clone_body(req.body)
 
     django_context = Context(req, "django-gunicorn")
-    print(django_context)
+    django_context.set_as_current_context()
 
     worker.log.debug("%s %s", req.method, req.path)
 
