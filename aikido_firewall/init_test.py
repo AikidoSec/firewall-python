@@ -10,6 +10,7 @@ def test_protect_with_django(monkeypatch, caplog):
     monkeypatch.setitem(
         globals(), "aikido_firewall.sinks.pymysql", "dummy_pymysql_module"
     )
+    monkeypatch.setenv("AIKIDO_SECRET_KEY", "mock_key")
 
     protect(module="django")
 
