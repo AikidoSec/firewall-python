@@ -53,6 +53,12 @@ class Agent:
         """
         if not self.token:
             return
+        res = self.api.report(
+            self.token,
+            {"type": "started", "time": datetime.now(), "agent": self.get_agent_info()},
+            self.timeout_in_sec,
+        )
+        self.update_service_config(res)
 
     def get_agent_info(self):
         """
