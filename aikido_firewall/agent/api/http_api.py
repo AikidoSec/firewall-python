@@ -11,5 +11,5 @@ class ReportingApiHTTP(ReportingApi):
     def __init__(self, reporting_url):
         self.reporting_url = reporting_url
 
-    def report(self, token, event, timeout_in_ms):
+    def report(self, token, event, timeout_in_sec):
         print("Do something here")

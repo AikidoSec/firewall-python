@@ -19,5 +19,5 @@ class ReportingApi:
         except Exception:
             return {"success": False, "error": "unknown_error"}
 
-    def report(self, token, event, timeout_in_ms):
+    def report(self, token, event, timeout_in_sec):
         """Report event to aikido server"""
