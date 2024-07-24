@@ -7,6 +7,8 @@ from aikido_firewall.helpers.logging import logger
 class Agent:
     """Agent class"""
 
+    timeout_in_sec = 5
+
     def __init__(self, block, api, token, serverless):
         self.block = block
         self.api = api
@@ -41,6 +43,7 @@ class Agent:
                 "routes": [],
                 "users": [],
             },
+            self.timeout_in_sec,
         )
         self.update_service_config(res)
 
