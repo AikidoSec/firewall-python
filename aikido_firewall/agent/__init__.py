@@ -4,7 +4,7 @@ Aikido agent, this will create a new thread and listen for stuff sent by our sou
 
 import time
 import os
-from multiprocessing.connection import Listener, Client
+import multiprocessing.connection as con
 from multiprocessing import Process
 from threading import Thread
 from queue import Queue
@@ -21,7 +21,7 @@ class AikidoProc:
 
     def __init__(self, address, key):
         logger.debug("Agent thread started")
-        listener = Listener(address, authkey=key)
+        listener = con.Listener(address, authkey=key)
         self.queue = Queue()
         # Start reporting thread :
         Thread(target=self.reporting_thread).start()
@@ -102,7 +102,7 @@ class IPC:
     def send_data(self, action, obj):
         """This creates a new client for comms to the thread"""
         try:
-            conn = Client(self.address, authkey=self.key)
+            conn = con.Client(self.address, authkey=self.key)
             logger.debug("Created connection %s", conn)
             conn.send((action, obj))
             conn.send(("CLOSE", {}))

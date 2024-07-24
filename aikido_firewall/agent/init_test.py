@@ -47,3 +47,12 @@ def test_send_data_exception(monkeypatch, caplog):
 
     assert "Failed to send data to agent" in caplog.text
     # Add assertions for handling exceptions
+
+
+def test_send_data_successful(monkeypatch, caplog, mocker):
+    ipc = IPC(("localhost"), "mock_key")
+    mock_client = mocker.MagicMock()
+    monkeypatch.setattr("multiprocessing.connection.Client", mock_client)
+
+    # Call the send_data function
+    ipc.send_data("ACTION", {"key": "value"})
