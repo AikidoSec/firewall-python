@@ -2,6 +2,7 @@
 Helper module for token
 """
 
+
 class Token:
     """Class that encapsulates the token"""
 
@@ -14,6 +15,7 @@ class Token:
 
     def __str__(self):
         return self.token
+
 
 def get_token_from_env():
     """

@@ -1,7 +1,9 @@
 """
 Helper function file, see function docstring
 """
+
 import os
+
 
 def should_block():
     """

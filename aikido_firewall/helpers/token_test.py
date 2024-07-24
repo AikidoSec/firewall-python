@@ -1,6 +1,7 @@
 import pytest
 from aikido_firewall.helpers.token import Token
 
+
 # Test Token Class :
 def test_token_valid_string():
     token_str = "my_token"
