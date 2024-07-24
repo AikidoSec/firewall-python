@@ -1,7 +1,7 @@
 """
 Exports the HTTP API class
 """
-
+import requests
 from aikido_firewall.agent.api import ReportingApi
 
 

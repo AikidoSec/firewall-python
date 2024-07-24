@@ -15,6 +15,7 @@ pytest-mock = "^3.14.0"
 werkzeug = "^3.0.3"
 flask-http-middleware = "^0.4.2"
 regex = "^2024.5.15"
+requests = "^2.32.3"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"
