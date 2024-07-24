@@ -1,6 +1,8 @@
 """ This file simply exports the agent class"""
 
 from datetime import datetime
+import socket
+import platform
 from aikido_firewall.helpers.logging import logger
 
 
@@ -64,7 +66,20 @@ class Agent:
         """
         This returns info about the agent
         """
-        return {}
+        return {
+            "dryMode": not self.block,
+            "hostname": socket.gethostname(),
+            "version": "x.x.x",
+            "library": "firewall_python",
+            "ipAddress": socket.gethostbyname(socket.gethostname()),
+            "packages": [],
+            "serverless": bool(self.serverless),
+            "stack": [],
+            "os": {
+                "name": platform.system(),
+                "version": platform.release()
+            }
+        }
 
     def update_service_config(self, res):
         pass
