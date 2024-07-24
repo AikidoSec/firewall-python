@@ -20,7 +20,8 @@ class Agent:
         """
         This will send something to the API when an attack is detected
         """
-        pass
+        if not self.token:
+            return
 
     def send_heartbeat(self):
         """
@@ -47,7 +48,8 @@ class Agent:
         """
         This will send out an Event signalling the start to the server
         """
-        pass
+        if not self.token:
+            return
 
     def get_agent_info(self):
         """
