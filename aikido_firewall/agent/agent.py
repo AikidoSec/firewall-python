@@ -3,6 +3,8 @@
 from datetime import datetime
 import socket
 import platform
+import json
+from copy import deepcopy
 from aikido_firewall.helpers.logging import logger
 
 
@@ -20,12 +22,41 @@ class Agent:
             raise ValueError("Serverless cannot be an empty string")
         self.serverless = serverless
 
-    def on_detected_attack(self):
+    def on_detected_attack(self, attack):
         """
         This will send something to the API when an attack is detected
         """
         if not self.token:
             return
+        # Modify attack so we can send it out :
+        try:
+            req = deepcopy(attack["request"])
+            del attack["request"]
+            attack["user"] = req["user"]
+            attack["payload"] = json.dumps(attack["payload"])[:4096]
+
+            self.api.report(
+                self.token,
+                {
+                    "type": "detected_attack",
+                    "time": datetime.now(),
+                    "agent": self.get_agent_info(),
+                    "attack": attack,
+                    "request": {
+                        "method": req["method"],
+                        "url": req["url"],
+                        "ipAddress": req["remoteAddress"],
+                        "userAgent": "WIP",
+                        "body": {},
+                        "headers": {},
+                        "source": req["source"],
+                        "route": req["route"],
+                    },
+                },
+                self.timeout_in_sec,
+            )
+        except Exception:
+            logger.info("Failed to report attack")
 
     def send_heartbeat(self):
         """
