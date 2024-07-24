@@ -72,10 +72,10 @@ def start_ipc():
     """
     # pylint: disable=global-statement # We need this to be global
     global ipc
-
-    if not "AIKIDO_SECRET_KEY" in os.environ:
+    aikido_secret_key_env = os.getenv("AIKIDO_SECRET_KEY")
+    if not aikido_secret_key_env:
         raise EnvironmentError("AIKIDO_SECRET_KEY is not set.")
-    ipc = IPC(IPC_ADDRESS, os.environ["AIKIDO_SECRET_KEY"])
+    ipc = IPC(IPC_ADDRESS, aikido_secret_key_env)
     ipc.start_aikido_listener()
 
 
