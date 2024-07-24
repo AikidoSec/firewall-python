@@ -6,6 +6,7 @@ import platform
 import json
 from copy import deepcopy
 from aikido_firewall.helpers.logging import logger
+from aikido_firewall.helpers.limit_length_metadata import limit_length_metadata
 
 
 class Agent:
@@ -34,6 +35,7 @@ class Agent:
             del attack["request"]
             attack["user"] = req["user"]
             attack["payload"] = json.dumps(attack["payload"])[:4096]
+            attack["metadata"] = limit_length_metadata(attack["metadata"], 4096)
 
             self.api.report(
                 self.token,
