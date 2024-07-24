@@ -1,0 +1,43 @@
+version: '3'
+services:
+  db:
+    image: mongo:latest
+    container_name: flask_mongo_db
+    restart: always
+    environment:
+        MONGO_INITDB_ROOT_USERNAME: admin
+        MONGO_INITDB_ROOT_PASSWORD: password
+        MONGO_INITDB_DATABASE: db
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - db_data:/data/db
+    expose:
+      - "27017"
+    networks:
+      - default_network
+
+
+
+  backend:
+    build: 
+      context: ./../../
+      dockerfile: ./sample-apps/flask-mongo/Dockerfile
+    container_name: flask_mongo_backend
+    command: sh -c "flask --app app run --debug --host=0.0.0.0"
+    restart: always
+    volumes:
+      - .:/app
+    ports:
+      - "8080:5000"
+    depends_on:
+      - db
+    networks:
+      - default_network
+
+volumes:
+  db_data:
+
+networks:
+  default_network:
