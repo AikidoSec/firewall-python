@@ -75,11 +75,10 @@ class Agent:
             "packages": [],
             "serverless": bool(self.serverless),
             "stack": [],
-            "os": {
-                "name": platform.system(),
-                "version": platform.release()
-            }
+            "os": {"name": platform.system(), "version": platform.release()},
         }
 
     def update_service_config(self, res):
-        pass
+        """
+        Update configuration based on the server's response
+        """
