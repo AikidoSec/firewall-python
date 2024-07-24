@@ -9,6 +9,9 @@ from multiprocessing import Process
 from threading import Thread
 from queue import Queue
 from aikido_firewall.helpers.logging import logger
+from aikido_firewall.agent.agent import Agent
+from aikido_firewall.helpers.should_block import should_block
+from aikido_firewall.helpers.token import get_token_from_env
 
 AGENT_SEC_INTERVAL = 5
 IPC_ADDRESS = ("localhost", 9898)  # Specify the IP address and port
@@ -23,6 +26,7 @@ class AikidoProc:
         logger.debug("Agent thread started")
         listener = Listener(address, authkey=key)
         self.queue = Queue()
+        self.agent = None
         # Start reporting thread :
         Thread(target=self.reporting_thread).start()
 
@@ -41,6 +45,8 @@ class AikidoProc:
     def reporting_thread(self):
         """Reporting thread"""
         logger.debug("Started reporting thread")
+        self.agent = Agent(should_block(), {}, get_token_from_env(), None)
+        logger.debug("Created agent")
         while True:
             self.report_to_agent()
             time.sleep(AGENT_SEC_INTERVAL)

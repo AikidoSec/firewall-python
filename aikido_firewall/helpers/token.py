@@ -2,6 +2,8 @@
 Helper module for token
 """
 
+import os
+
 
 class Token:
     """Class that encapsulates the token"""
@@ -19,6 +21,9 @@ class Token:
 
 def get_token_from_env():
     """
-    Fetches the token from the env variable ""
+    Fetches the token from the env variable "AIKIDO_TOKEN"
     """
-    return Token("xyz")
+    aikido_token_env = os.getenv("AIKIDO_TOKEN")
+    if not aikido_token_env is None:
+        return Token(aikido_token_env)
+    return None
