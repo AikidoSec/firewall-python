@@ -46,13 +46,9 @@ def remove_keys_that_dont_start_with_dollar_sign(filter):
 
 
 def find_filter_part_with_operators(user_input, part_of_filter):
-    print("ui", json.dumps(part_of_filter))
     if is_plain_object(part_of_filter):
-        print("Prev part of filter", part_of_filter)
         obj = remove_keys_that_dont_start_with_dollar_sign(part_of_filter)
-        print("Object", obj)
         if len(obj) > 0:
-            print("len > 0")
             result = match_filter_part_in_user(user_input, obj)
 
             if result.get("match"):
@@ -94,8 +90,6 @@ def detect_no_sql_injection(request, _filter):
 
     for source in UINPUT_SOURCES:
         if request.get(source):
-            print("Getting source %s", source)
-            print(request[source])
             result = find_filter_part_with_operators(request[source], _filter)
 
             if result.get("found"):
