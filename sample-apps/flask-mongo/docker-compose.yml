@@ -10,7 +10,7 @@ services:
         MONGO_INITDB_DATABASE: my_database
     volumes:
       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
-      - db_data2:/data/db
+      - db_data:/data/db
     networks:
       - default_network
 
@@ -33,7 +33,7 @@ services:
       - default_network
 
 volumes:
-  db_data2:
+  db_data:
 
 networks:
   default_network:
