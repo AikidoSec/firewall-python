@@ -1,5 +1,5 @@
 import pytest
-from aikido_firewall.vulnerabilities.nosql_injection import detect_no_sql_injection
+from aikido_firewall.vulnerabilities.nosql_injection import detect_nosql_injection
 
 
 @pytest.fixture
@@ -25,57 +25,57 @@ def create_context():
 
 
 def test_empty_filter_and_request(create_context):
-    assert detect_no_sql_injection(create_context(), {}) == {"injection": False}
+    assert detect_nosql_injection(create_context(), {}) == {"injection": False}
 
 
 def test_ignore_if_filter_not_object(create_context):
-    assert detect_no_sql_injection(create_context(), "abc") == {"injection": False}
+    assert detect_nosql_injection(create_context(), "abc") == {"injection": False}
 
 
 def test_ignore_if_and_not_array(create_context):
-    assert detect_no_sql_injection(create_context(), {"$and": "abc"}) == {
+    assert detect_nosql_injection(create_context(), {"$and": "abc"}) == {
         "injection": False
     }
 
 
 def test_ignore_if_or_not_array(create_context):
-    assert detect_no_sql_injection(create_context(), {"$or": "abc"}) == {
+    assert detect_nosql_injection(create_context(), {"$or": "abc"}) == {
         "injection": False
     }
 
 
 def test_ignore_if_nor_not_array(create_context):
-    assert detect_no_sql_injection(create_context(), {"$nor": "abc"}) == {
+    assert detect_nosql_injection(create_context(), {"$nor": "abc"}) == {
         "injection": False
     }
 
 
 def test_ignore_if_nor_empty_array(create_context):
-    assert detect_no_sql_injection(create_context(), {"$nor": []}) == {
+    assert detect_nosql_injection(create_context(), {"$nor": []}) == {
         "injection": False
     }
 
 
 def test_ignore_if_not_not_object(create_context):
-    assert detect_no_sql_injection(create_context(), {"$not": "abc"}) == {
+    assert detect_nosql_injection(create_context(), {"$not": "abc"}) == {
         "injection": False
     }
 
 
 def test_filter_with_string_value_and_empty_request(create_context):
-    assert detect_no_sql_injection(create_context(), {"title": {"title": "title"}}) == {
+    assert detect_nosql_injection(create_context(), {"title": {"title": "title"}}) == {
         "injection": False
     }
 
 
 def test_filter_with_ne_and_empty_request(create_context):
-    assert detect_no_sql_injection(create_context(), {"title": {"$ne": None}}) == {
+    assert detect_nosql_injection(create_context(), {"title": {"$ne": None}}) == {
         "injection": False
     }
 
 
 def test_using_gt_in_query_parameter(create_context):
-    assert detect_no_sql_injection(
+    assert detect_nosql_injection(
         create_context(query={"title": {"$gt": ""}}), {"title": {"$gt": ""}}
     ) == {
         "injection": True,
@@ -86,13 +86,13 @@ def test_using_gt_in_query_parameter(create_context):
 
 
 def test_safe_filter(create_context):
-    assert detect_no_sql_injection(
+    assert detect_nosql_injection(
         create_context(query={"title": "title"}), {"$and": [{"title": "title"}]}
     ) == {"injection": False}
 
 
 def test_using_ne_in_body(create_context):
-    assert detect_no_sql_injection(
+    assert detect_nosql_injection(
         create_context(body={"title": {"$ne": None}}), {"title": {"$ne": None}}
     ) == {
         "injection": True,
@@ -103,7 +103,7 @@ def test_using_ne_in_body(create_context):
 
 
 def test_using_ne_in_body_different_name(create_context):
-    assert detect_no_sql_injection(
+    assert detect_nosql_injection(
         create_context(body={"title": {"$ne": None}}), {"myTitle": {"$ne": None}}
     ) == {
         "injection": True,
@@ -114,7 +114,7 @@ def test_using_ne_in_body_different_name(create_context):
 
 
 def test_using_ne_in_headers_with_different_name(create_context):
-    assert detect_no_sql_injection(
+    assert detect_nosql_injection(
         create_context(body={"title": {"$ne": None}}), {"someField": {"$ne": None}}
     ) == {
         "injection": True,
@@ -125,7 +125,7 @@ def test_using_ne_in_headers_with_different_name(create_context):
 
 
 def test_using_ne_inside_and(create_context):
-    assert detect_no_sql_injection(
+    assert detect_nosql_injection(
         create_context(body={"title": {"$ne": None}}),
         {"$and": [{"title": {"$ne": None}}, {"published": True}]},
     ) == {
@@ -137,7 +137,7 @@ def test_using_ne_inside_and(create_context):
 
 
 def test_using_ne_inside_or(create_context):
-    assert detect_no_sql_injection(
+    assert detect_nosql_injection(
         create_context(body={"title": {"$ne": None}}),
         {"$or": [{"title": {"$ne": None}}, {"published": True}]},
     ) == {
@@ -149,7 +149,7 @@ def test_using_ne_inside_or(create_context):
 
 
 def test_using_ne_inside_nor(create_context):
-    assert detect_no_sql_injection(
+    assert detect_nosql_injection(
         create_context(body={"title": {"$ne": None}}),
         {"$nor": [{"title": {"$ne": None}}, {"published": True}]},
     ) == {
@@ -161,7 +161,7 @@ def test_using_ne_inside_nor(create_context):
 
 
 def test_using_ne_inside_not(create_context):
-    assert detect_no_sql_injection(
+    assert detect_nosql_injection(
         create_context(body={"title": {"$ne": None}}),
         {"$not": {"title": {"$ne": None}}},
     ) == {
@@ -173,7 +173,7 @@ def test_using_ne_inside_not(create_context):
 
 
 def test_using_ne_nested_in_body(create_context):
-    assert detect_no_sql_injection(
+    assert detect_nosql_injection(
         create_context(body={"nested": {"nested": {"$ne": None}}}),
         {"$not": {"title": {"$ne": None}}},
     ) == {
@@ -185,7 +185,7 @@ def test_using_ne_nested_in_body(create_context):
 
 
 def test_using_ne_in_jwt_in_headers(create_context):
-    assert detect_no_sql_injection(
+    assert detect_nosql_injection(
         create_context(
             # JWT token with the following payload:
             # {
@@ -209,7 +209,7 @@ def test_using_ne_in_jwt_in_headers(create_context):
 
 
 def test_using_ne_in_jwt_in_bearer_header(create_context):
-    assert detect_no_sql_injection(
+    assert detect_nosql_injection(
         create_context(
             # JWT token with the following payload:
             # {
@@ -233,7 +233,7 @@ def test_using_ne_in_jwt_in_bearer_header(create_context):
 
 
 def test_using_ne_in_jwt_in_cookies(create_context):
-    assert detect_no_sql_injection(
+    assert detect_nosql_injection(
         create_context(
             # JWT token with the following payload:
             # {
@@ -257,7 +257,7 @@ def test_using_ne_in_jwt_in_cookies(create_context):
 
 
 def test_jwt_lookalike(create_context):
-    assert detect_no_sql_injection(
+    assert detect_nosql_injection(
         create_context(
             cookies={
                 "session": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwidXNlcm5hbW!iOnsiJG5lIjpudWxsfSwiaWF0IjoxNTE2MjM5MDIyfQ._jhGJw9WzB6gHKPSozTFHDo9NOHs3CNOlvJ8rWy6VrQ"
@@ -268,7 +268,7 @@ def test_jwt_lookalike(create_context):
 
 
 def test_using_gt_in_query_parameter(create_context):
-    assert detect_no_sql_injection(
+    assert detect_nosql_injection(
         create_context(query={"age": {"$gt": "21"}}), {"age": {"$gt": "21"}}
     ) == {
         "injection": True,
@@ -279,7 +279,7 @@ def test_using_gt_in_query_parameter(create_context):
 
 
 def test_using_gt_and_lt_in_query_parameter(create_context):
-    assert detect_no_sql_injection(
+    assert detect_nosql_injection(
         create_context(body={"age": {"$gt": "21", "$lt": "100"}}),
         {"age": {"$gt": "21", "$lt": "100"}},
     ) == {
@@ -291,7 +291,7 @@ def test_using_gt_and_lt_in_query_parameter(create_context):
 
 
 def test_using_gt_and_lt_in_query_parameter_different_name(create_context):
-    assert detect_no_sql_injection(
+    assert detect_nosql_injection(
         create_context(body={"age": {"$gt": "21", "$lt": "100"}}),
         {"myAge": {"$gt": "21", "$lt": "100"}},
     ) == {
@@ -303,7 +303,7 @@ def test_using_gt_and_lt_in_query_parameter_different_name(create_context):
 
 
 def test_using_gt_and_lt_in_query_parameter_nested(create_context):
-    assert detect_no_sql_injection(
+    assert detect_nosql_injection(
         create_context(
             body={"nested": {"nested": {"age": {"$gt": "21", "$lt": "100"}}}}
         ),
@@ -317,7 +317,7 @@ def test_using_gt_and_lt_in_query_parameter_nested(create_context):
 
 
 def test_using_gt_and_lt_in_query_parameter_root(create_context):
-    assert detect_no_sql_injection(
+    assert detect_nosql_injection(
         create_context(body={"$and": [{"someAgeField": {"$gt": "21", "$lt": "100"}}]}),
         {"$and": [{"someAgeField": {"$gt": "21", "$lt": "100"}}]},
     ) == {
@@ -329,7 +329,7 @@ def test_using_gt_and_lt_in_query_parameter_root(create_context):
 
 
 def test_where(create_context):
-    assert detect_no_sql_injection(
+    assert detect_nosql_injection(
         create_context(body={"$and": [{"$where": "sleep(1000)"}]}),
         {"$and": [{"$where": "sleep(1000)"}]},
     ) == {
@@ -341,7 +341,7 @@ def test_where(create_context):
 
 
 def test_array_body(create_context):
-    assert detect_no_sql_injection(
+    assert detect_nosql_injection(
         create_context(
             body=[
                 {
@@ -365,7 +365,7 @@ def test_array_body(create_context):
 
 
 def test_safe_email_password(create_context):
-    assert detect_no_sql_injection(
+    assert detect_nosql_injection(
         create_context(
             body={
                 "email": "email",
@@ -380,7 +380,7 @@ def test_safe_email_password(create_context):
 
 
 def test_flags_pipeline_aggregations(create_context):
-    assert detect_no_sql_injection(
+    assert detect_nosql_injection(
         create_context(
             body=[
                 {
@@ -423,7 +423,7 @@ def test_flags_pipeline_aggregations(create_context):
         },
     }
 
-    assert detect_no_sql_injection(
+    assert detect_nosql_injection(
         create_context(
             body={
                 "username": {
@@ -457,7 +457,7 @@ def test_flags_pipeline_aggregations(create_context):
 
 
 def test_ignores_safe_pipeline_aggregations(create_context):
-    assert detect_no_sql_injection(
+    assert detect_nosql_injection(
         create_context(
             body={
                 "username": "admin",

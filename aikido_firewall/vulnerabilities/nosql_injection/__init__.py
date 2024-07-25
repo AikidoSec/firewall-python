@@ -91,7 +91,7 @@ def find_filter_part_with_operators(user_input, part_of_filter):
     return {"found": False}
 
 
-def detect_no_sql_injection(request, _filter):
+def detect_nosql_injection(request, _filter):
     """
     Give a context object and a nosql filter and this function
     checks if there is a NoSQL injection
