@@ -5,6 +5,7 @@ and listen for data sent by our sources and sinks
 
 import time
 import os
+import secrets
 import multiprocessing.connection as con
 from multiprocessing import Process
 from threading import Thread
@@ -78,10 +79,10 @@ def start_background_process():
     """
     # pylint: disable=global-statement # We need this to be global
     global ipc
-    aikido_secret_key_env = os.getenv("AIKIDO_SECRET_KEY")
-    if not aikido_secret_key_env:
-        raise EnvironmentError("AIKIDO_SECRET_KEY is not set.")
-    ipc = IPC(IPC_ADDRESS, aikido_secret_key_env)
+    # Generate a secret key :
+    generated_key_bytes = secrets.token_bytes(32)
+
+    ipc = IPC(IPC_ADDRESS, generated_key_bytes)
     ipc.start_aikido_listener()
 
 
@@ -92,7 +93,7 @@ class IPC:
 
     def __init__(self, address, key):
         self.address = address
-        self.key = str.encode(key)
+        self.key = key
         self.background_process = None
 
     def start_aikido_listener(self):
