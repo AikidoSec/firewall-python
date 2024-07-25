@@ -3,7 +3,7 @@ Exports the HTTP API class
 """
 
 import requests
-from aikido_firewall.agent.api import ReportingApi
+from aikido_firewall.background_process.api import ReportingApi
 
 
 class ReportingApiHTTP(ReportingApi):

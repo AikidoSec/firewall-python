@@ -11,7 +11,7 @@ from multiprocessing import Process
 from threading import Thread
 from queue import Queue
 from aikido_firewall.helpers.logging import logger
-from aikido_firewall.agent.agent import Agent
+from aikido_firewall.background_process.reporter import Reporter
 from aikido_firewall.helpers.should_block import should_block
 from aikido_firewall.helpers.token import get_token_from_env
 
@@ -30,7 +30,7 @@ class AikidoBackgroundProcess:
         logger.debug("Background process started")
         listener = con.Listener(address, authkey=key)
         self.queue = Queue()
-        self.agent = None
+        self.reporter = None
         # Start reporting thread :
         Thread(target=self.reporting_thread).start()
 
@@ -49,8 +49,8 @@ class AikidoBackgroundProcess:
     def reporting_thread(self):
         """Reporting thread"""
         logger.debug("Started reporting thread")
-        self.agent = Agent(should_block(), {}, get_token_from_env(), None)
-        logger.debug("Created agent")
+        self.reporter = Reporter(should_block(), {}, get_token_from_env(), None)
+        logger.debug("Created Reporter")
         while True:
             self.send_to_reporter()
             time.sleep(REPORT_SEC_INTERVAL)

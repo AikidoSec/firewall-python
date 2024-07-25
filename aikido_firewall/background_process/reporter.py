@@ -1,4 +1,4 @@
-""" This file simply exports the agent class"""
+""" This file simply exports the Reporter class"""
 
 from datetime import datetime
 import socket
@@ -9,8 +9,8 @@ from aikido_firewall.helpers.logging import logger
 from aikido_firewall.helpers.limit_length_metadata import limit_length_metadata
 
 
-class Agent:
-    """Agent class"""
+class Reporter:
+    """Reporter class"""
 
     timeout_in_sec = 5
 
@@ -42,7 +42,7 @@ class Agent:
                 {
                     "type": "detected_attack",
                     "time": datetime.now(),
-                    "agent": self.get_agent_info(),
+                    "agent": self.get_reporter_info(),
                     "attack": attack,
                     "request": {
                         "method": req["method"],
@@ -66,13 +66,13 @@ class Agent:
         """
         if not self.token:
             return
-        logger.debug("Aikido Agent : Sending out heartbeat")
+        logger.debug("Aikido Reporter : Sending out heartbeat")
         res = self.api.report(
             self.token,
             {
                 "type": "heartbeat",
                 "time": datetime.now(),
-                "agent": self.get_agent_info(),
+                "agent": self.get_reporter_info(),
                 "stats": {"sinks": [], "startedAt": 0, "endedAt": 0, "requests": []},
                 "hostnames": [],
                 "routes": [],
@@ -90,14 +90,14 @@ class Agent:
             return
         res = self.api.report(
             self.token,
-            {"type": "started", "time": datetime.now(), "agent": self.get_agent_info()},
+            {"type": "started", "time": datetime.now(), "agent": self.get_reporter_info()},
             self.timeout_in_sec,
         )
         self.update_service_config(res)
 
-    def get_agent_info(self):
+    def get_reporter_info(self):
         """
-        This returns info about the agent
+        This returns info about the reporter
         """
         return {
             "dryMode": not self.block,

@@ -1,5 +1,5 @@
 import pytest
-from aikido_firewall.agent.api import ReportingApi
+from aikido_firewall.background_process.api import ReportingApi
 
 # Test ReportingApi Class :
 from requests.models import Response
