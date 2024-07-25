@@ -36,7 +36,7 @@ class AikidoBackgroundProcess:
             while True:
                 data = conn.recv()
                 logger.error(data)  # Temporary debugging
-                if data[0] == "SQL_INJECTION":
+                if data[0] == "ATTACK":
                     self.queue.put(data[1])
                 elif data[0] == "CLOSE":
                     conn.close()
