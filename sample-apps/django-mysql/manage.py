@@ -2,11 +2,11 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
+import aikido_firewall # Aikido module
 
 
 def main():
     """Run administrative tasks."""
-    import aikido_firewall # Aikido module
     aikido_firewall.protect("django")
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'sample-django-mysql-app.settings')
     try:
