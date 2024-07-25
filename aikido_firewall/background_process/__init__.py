@@ -1,5 +1,6 @@
 """
-Aikido agent, this will create a new thread and listen for stuff sent by our sources and sinks
+Aikido background process, this will create a new process
+and listen for data sent by our sources and sinks
 """
 
 import time
@@ -10,13 +11,15 @@ from threading import Thread
 from queue import Queue
 from aikido_firewall.helpers.logging import logger
 
-AGENT_SEC_INTERVAL = 600  # 10 minutes
+REPORT_SEC_INTERVAL = 600  # 10 minutes
 IPC_ADDRESS = ("localhost", 9898)  # Specify the IP address and port
 
 
 class AikidoBackgroundProcess:
     """
-    Our agent thread
+    Aikido's background process consists of 2 threads :
+    - (main) Listening thread which listens on an IPC socket for incoming data
+    - (spawned) reporting thread which will collect the IPC data and send it to a Reporter
     """
 
     def __init__(self, address, key):
@@ -42,10 +45,10 @@ class AikidoBackgroundProcess:
         """Reporting thread"""
         logger.debug("Started reporting thread")
         while True:
-            self.report_to_agent()
-            time.sleep(AGENT_SEC_INTERVAL)
+            self.send_to_reporter()
+            time.sleep(REPORT_SEC_INTERVAL)
 
-    def report_to_agent(self):
+    def send_to_reporter(self):
         """
         Reports the found data to an Aikido server
         """
@@ -61,14 +64,17 @@ class AikidoBackgroundProcess:
 ipc = None
 
 
-def get_ipc():
-    """Returns the globally stored agent"""
+def get_comms():
+    """
+    Returns the globally stored IPC object, which you need
+    to communicate to our background process.
+    """
     return ipc
 
 
-def start_ipc():
+def start_background_process():
     """
-    Starts a thread to handle incoming/outgoing data
+    Starts a process to handle incoming/outgoing data
     """
     # pylint: disable=global-statement # We need this to be global
     global ipc
@@ -101,11 +107,13 @@ class IPC:
                 self.key,
             ),
         )
-        logger.debug("Starting a new agent thread")
-        self.agent_proc.start()
+        logger.debug("Starting the background process")
+        self.background_process.start()
 
     def send_data(self, action, obj):
-        """This creates a new client for comms to the thread"""
+        """
+        This creates a new client for comms to the background process
+        """
         try:
             conn = con.Client(self.address, authkey=self.key)
             logger.debug("Created connection %s", conn)
@@ -114,4 +122,4 @@ class IPC:
             conn.close()
             logger.debug("Connection closed")
         except Exception as e:
-            logger.info("Failed to send data to agent %s", e)
+            logger.info("Failed to send data to bg process : %s", e)

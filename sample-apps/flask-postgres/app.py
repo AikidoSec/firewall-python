@@ -2,31 +2,31 @@ import aikido_firewall # Aikido package import
 aikido_firewall.protect()
 
 from flask import Flask, render_template, request
-from flaskext.mysql import MySQL
+import psycopg2
 
 app = Flask(__name__)
 if __name__ == '__main__':
     app.run(threaded=True) # Run threaded so we can test how our bg process works
-mysql = MySQL()
 
-app.config['MYSQL_DATABASE_HOST'] = 'db'
-app.config['MYSQL_DATABASE_USER'] = 'user'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'password'
-app.config['MYSQL_DATABASE_DB'] = 'db'
-mysql.init_app(app)
+def get_db_connection():
+    return psycopg2.connect(
+        host="db",
+        database="db",
+        user="user",
+        password="password")
 
 @app.route("/")
 def homepage():
-    cursor = mysql.get_db().cursor()
-    cursor.execute("SELECT * FROM db.dogs")
+    cursor = get_db_connection().cursor()
+    cursor.execute("SELECT * FROM dogs")
     dogs = cursor.fetchall()
     return render_template('index.html', title='Homepage', dogs=dogs)
 
 
 @app.route('/dogpage/<int:dog_id>')
 def get_dogpage(dog_id):
-    cursor = mysql.get_db().cursor()
-    cursor.execute("SELECT * FROM db.dogs WHERE id = " + str(dog_id))
+    cursor = get_db_connection().cursor()
+    cursor.execute("SELECT * FROM dogs WHERE id = " + str(dog_id))
     dog = cursor.fetchmany(1)[0]
     return render_template('dogpage.html', title=f'Dog', dog=dog, isAdmin=("Yes" if dog[2] else "No"))
 
@@ -37,8 +37,10 @@ def show_create_dog_form():
 @app.route("/create", methods=['POST'])
 def create_dog():
     dog_name = request.form['dog_name']
-    connection = mysql.get_db()
-    cursor = connection.cursor()
-    cursor.execute(f'INSERT INTO dogs (dog_name, isAdmin) VALUES ("%s", 0)' % (dog_name))
-    connection.commit()
+    conn = get_db_connection()
+    cursor =  conn.cursor()
+    cursor.execute(f"INSERT INTO dogs (dog_name, isAdmin) VALUES ('%s', FALSE)" % (dog_name))
+    conn.commit()
+    cursor.close()
+    conn.close()
     return f'Dog {dog_name} created successfully'
