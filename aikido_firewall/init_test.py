@@ -1,6 +1,6 @@
 import pytest
 from aikido_firewall import protect
-from aikido_firewall.agent import get_ipc
+from aikido_firewall.background_process import get_comms
 
 
 def test_protect_with_django(monkeypatch, caplog):
@@ -14,5 +14,5 @@ def test_protect_with_django(monkeypatch, caplog):
     protect(module="django")
 
     assert "Aikido python firewall started" in caplog.text
-    assert get_ipc() != None
-    get_ipc().agent_proc.kill()
+    assert get_comms() != None
+    get_comms().background_process.kill()
