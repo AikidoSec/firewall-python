@@ -5,6 +5,8 @@ Provides all the functionality for contexts
 import threading
 
 SUPPORTED_SOURCES = ["django", "flask"]
+UINPUT_SOURCES = ["body", "cookies", "query", "headers"]
+
 local = threading.local()
 
 
