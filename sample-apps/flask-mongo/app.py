@@ -21,7 +21,7 @@ def homepage():
 @app.route('/dogpage/<dog_id>')
 def get_dogpage(dog_id):
     dog = mongo.db.dogs.find_one({"_id": ObjectId(dog_id)})
-    return render_template('dogpage.html', title=f'Dog', dog=dog, isAdmin=("Yes" if dog['admin'] else "No"))
+    return render_template('dogpage.html', title=f'Dog', dog=dog)
 
 @app.route("/create", methods=['GET'])
 def show_create_dog_form():
@@ -29,5 +29,26 @@ def show_create_dog_form():
 
 @app.route("/create", methods=['POST'])
 def create_dog():
-    dog_name = request.form['dog_name']
-    return f'Dog {dog_name} created successfully'
+    new_dog = {
+        'dog_name': request.form['dog_name'],
+        'pswd': request.form['pswd']
+    }
+    res = mongo.db.dogs.insert_one(new_dog)
+    return f'Dog with id {res.inserted_id} created successfully'
+
+@app.route("/auth", methods=['GET'])
+def show_auth_form():
+    return render_template('auth.html')
+
+@app.route("/auth", methods=['POST'])
+def post_auth():
+    dog_info = {
+        'dog_name': request.form['dog_name'],
+        'pswd': request.form['pswd']
+    }
+    dog = mongo.db.dogs.find_one(dog_info)
+    if dog:
+        dog_name = dog["dog_name"]
+        return f'Dog with name {dog_name} authenticated successfully'
+    else:
+        return f'Auth failed'

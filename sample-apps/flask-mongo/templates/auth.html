@@ -4,16 +4,21 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Dog</title>
+    <title>Login</title>
 </head>
 <body>
-    <h1>Create a Dog</h1>
-    <form action="/create" method="post">
+    <h1>Log In</h1>
+    <form action="/auth" method="post" id="post1">
         <label for="dog_name">Dog Name:</label>
         <input type="text" id="dog_name" name="dog_name" required>
         <label for="password">Password:</label>
         <input type="password" id="pswd" name="pswd" required>
-        <button type="submit">Create Dog</button>
+        <button type="submit">Login</button>
+    </form>
+    <form action="/auth" method="post" id="post2">
+        <label for="dog_name">Dog Name:</label>
+        <input type="text" id="dog_name" name="dog_name" required>
+        <button type="submit">Login (with NoSQL injection)</button>
     </form>
 </body>
 </html>
