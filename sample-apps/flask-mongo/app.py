@@ -1,26 +1,27 @@
 import aikido_firewall # Aikido package import
 aikido_firewall.protect()
 
+import json
 from flask import Flask, render_template, request
 from flask_pymongo import PyMongo
+from bson import ObjectId
 
 app = Flask(__name__)
 if __name__ == '__main__':
     app.run(threaded=True) # Run threaded so we can test our agent's capabilities
-app.config["MONGO_URI"] = "mongodb://admin:password@db:27017/"
+app.config["MONGO_URI"] = "mongodb://admin:password@db:27017/my_database?authSource=admin"
 mongo = PyMongo(app)
 
 @app.route("/")
 def homepage():
-    print(dir(mongo.db))
     dogs = mongo.db.dogs.find()
     return render_template('index.html', title='Homepage', dogs=dogs)
 
 
-@app.route('/dogpage/<int:dog_id>')
+@app.route('/dogpage/<dog_id>')
 def get_dogpage(dog_id):
-    dog = mongo.dogs.find({id: str(dog_id)})
-    return render_template('dogpage.html', title=f'Dog', dog=dog, isAdmin=("Yes" if dog[2] else "No"))
+    dog = mongo.db.dogs.find_one({"_id": ObjectId(dog_id)})
+    return render_template('dogpage.html', title=f'Dog', dog=dog, isAdmin=("Yes" if dog['admin'] else "No"))
 
 @app.route("/create", methods=['GET'])
 def show_create_dog_form():

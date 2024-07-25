@@ -41,7 +41,7 @@
     <h2>List</h2>
     <ul>
         {% for dog in dogs %}
-            <li><a href="/dogpage/{{ dog[0] }}">{{ dog[1] }}</a></li>
+            <li><a href="/dogpage/{{ dog._id }}">{{ dog.dog_name }}</a></li>
         {% endfor %}
     </ul>
 </body>
