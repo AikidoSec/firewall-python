@@ -17,25 +17,13 @@ def test_ipc_init():
     assert ipc.background_process is None
 
 
-def test_start_background_process_missing_secret_key(mocker):
-    mocker.patch("os.environ", {})
-
-    with pytest.raises(EnvironmentError) as exc_info:
-        start_background_process()
-
-    assert "AIKIDO_SECRET_KEY is not set." in str(exc_info.value)
-
-
 # Following function does not work
 def test_start_background_process(monkeypatch):
     assert get_comms() == None
-    monkeypatch.setenv("AIKIDO_SECRET_KEY", "mock_key")
-
     start_background_process()
 
     assert get_comms() != None
     assert get_comms().address == IPC_ADDRESS
-    assert get_comms().key == b"mock_key"
 
     get_comms().background_process.kill()
 
