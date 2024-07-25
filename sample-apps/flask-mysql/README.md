@@ -1,4 +1,7 @@
 # Flask Sample app
+It runs **single-threaded**
+
+## Getting started
 Run (with docker-compose installed) :
 ```bash
 docker-compose up --build

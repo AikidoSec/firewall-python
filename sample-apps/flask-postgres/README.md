@@ -1,4 +1,7 @@
 # Flask w/ Postgres Sample app
+It runs **multi-threaded**
+
+## Getting started
 Run (with docker-compose installed) :
 ```bash
 docker-compose up --build
