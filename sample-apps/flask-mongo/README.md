@@ -1,4 +1,7 @@
 # Flask Sample app w/ MongoDB
+It runs **multi-threaded**
+
+## Getting started
 Run (with docker-compose installed) :
 ```bash
 docker-compose up --build
