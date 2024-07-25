@@ -9,7 +9,12 @@ from aikido_firewall.helpers.try_decode_as_jwt import try_decode_as_jwt
 from aikido_firewall.context import UINPUT_SOURCES
 
 
-def match_filter_part_in_user(user_input, filter_part, path_to_payload=[]):
+def match_filter_part_in_user(user_input, filter_part, path_to_payload=None):
+    """
+    This tries to match a filter part to a part in user input
+    """
+    if not path_to_payload:
+        path_to_payload = []
     if isinstance(user_input, str):
         jwt = try_decode_as_jwt(user_input)
         if jwt[0]:
@@ -42,10 +47,16 @@ def match_filter_part_in_user(user_input, filter_part, path_to_payload=[]):
 
 
 def remove_keys_that_dont_start_with_dollar_sign(filter):
+    """
+    This removes key that don't start with $, since they are not dangerous
+    """
     return {key: value for key, value in filter.items() if key.startswith("$")}
 
 
 def find_filter_part_with_operators(user_input, part_of_filter):
+    """
+    This looks for parts in the filter that have NSQL operators (e.g. $)
+    """
     if is_plain_object(part_of_filter):
         obj = remove_keys_that_dont_start_with_dollar_sign(part_of_filter)
         if len(obj) > 0:
