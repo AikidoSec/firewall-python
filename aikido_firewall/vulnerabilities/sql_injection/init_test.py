@@ -248,6 +248,22 @@ def test_multiline_queries():
     )
 
 
+def test_lowercased_input_sql_injection():
+    sql = """
+        SELECT id,
+               email,
+               password_hash,
+               registered_at,
+               is_confirmed,
+               first_name,
+               last_name
+        FROM users WHERE email_lowercase = '' or 1=1 -- a'
+    """
+    expected_sql_injection = "' OR 1=1 -- a"
+
+    assert is_sql_injection(sql, expected_sql_injection)
+
+
 @pytest.mark.parametrize("dangerous", SQL_DANGEROUS_IN_STRING)
 def test_dangerous_strings(dangerous):
     input = f"{dangerous} a"
