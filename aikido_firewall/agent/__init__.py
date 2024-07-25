@@ -14,13 +14,13 @@ AGENT_SEC_INTERVAL = 600  # 10 minutes
 IPC_ADDRESS = ("localhost", 9898)  # Specify the IP address and port
 
 
-class AikidoProc:
+class AikidoBackgroundProcess:
     """
     Our agent thread
     """
 
     def __init__(self, address, key):
-        logger.debug("Agent thread started")
+        logger.debug("Background process started")
         listener = con.Listener(address, authkey=key)
         self.queue = Queue()
         # Start reporting thread :
@@ -80,17 +80,22 @@ def start_ipc():
 
 
 class IPC:
-    """Agent class"""
+    """
+    Facilitates Inter-Process communication
+    """
 
     def __init__(self, address, key):
         self.address = address
         self.key = str.encode(key)
-        self.agent_proc = None
+        self.background_process = None
 
     def start_aikido_listener(self):
-        """This will start the aikido thread which listens"""
-        self.agent_proc = Process(
-            target=AikidoProc,
+        """
+        This will start the aikido background process which listens
+        and makes calls to the API
+        """
+        self.background_process = Process(
+            target=AikidoBackgroundProcess,
             args=(
                 self.address,
                 self.key,
