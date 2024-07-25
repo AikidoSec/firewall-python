@@ -6,7 +6,10 @@ import threading
 from urllib.parse import parse_qs
 from http.cookies import SimpleCookie
 
+
 SUPPORTED_SOURCES = ["django", "flask", "django-gunicorn"]
+UINPUT_SOURCES = ["body", "cookies", "query", "headers"]
+
 local = threading.local()
 
 

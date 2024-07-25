@@ -1,4 +1,5 @@
 # Sample Django/Mysql App
+It runs **multi-threaded**
 
 ## Getting started
 With docker-compose installed run

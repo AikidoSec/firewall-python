@@ -1,4 +1,5 @@
 # Sample Django/Mysql App with Gunicorn installed
+it runs 4 processes, called workers, (**multi-process**) which handle requests using 2 threads (**multi-threaded**)
 
 ## Getting started
 With docker-compose installed run
