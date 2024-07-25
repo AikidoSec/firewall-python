@@ -35,7 +35,7 @@ def on_mysqlclient_import(mysql):
             sql.decode("utf-8"), "Test_op", context, MySQL()
         )
 
-        logger.info("sql_injection results : %s", json.dumps(result))
+        logger.debug("sql_injection results : %s", json.dumps(result))
         if result:
             raise Exception("SQL Injection [aikido_firewall]")
         return prev_query_function(_self, sql)
