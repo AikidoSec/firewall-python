@@ -42,9 +42,10 @@ def show_auth_form():
 
 @app.route("/auth", methods=['POST'])
 def post_auth():
+    data = request.get_json()
     dog_info = {
-        'dog_name': request.form['dog_name'],
-        'pswd': request.form['pswd']
+        'dog_name': data.get('dog_name'),
+        'pswd': data.get('pswd')
     }
     dog = mongo.db.dogs.find_one(dog_info)
     if dog:
