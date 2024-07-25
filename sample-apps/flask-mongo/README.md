@@ -6,4 +6,4 @@ docker-compose up --build
 
 - You'll be able to access the Flask Server at : [localhost:8080](http://localhost:8080)
 - To Create a reference test dog use `http://localhost:8080/create/`
-// - To test a sql injection enter the following dog name : `Malicious dog", 1); -- `
+- To test the nosql injection go to `http://localhost:8080/auth/`
