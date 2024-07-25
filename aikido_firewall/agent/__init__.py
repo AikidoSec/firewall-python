@@ -13,7 +13,7 @@ from aikido_firewall.agent.agent import Agent
 from aikido_firewall.helpers.should_block import should_block
 from aikido_firewall.helpers.token import get_token_from_env
 
-AGENT_SEC_INTERVAL = 5
+AGENT_SEC_INTERVAL = 600  # 10 minutes
 IPC_ADDRESS = ("localhost", 9898)  # Specify the IP address and port
 
 
