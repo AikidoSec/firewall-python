@@ -10,7 +10,7 @@ from threading import Thread
 from queue import Queue
 from aikido_firewall.helpers.logging import logger
 
-AGENT_SEC_INTERVAL = 5
+AGENT_SEC_INTERVAL = 600  # 10 minutes
 IPC_ADDRESS = ("localhost", 9898)  # Specify the IP address and port
 
 
