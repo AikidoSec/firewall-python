@@ -40,21 +40,21 @@ class Reporter:
             attack["metadata"] = limit_length_metadata(attack["metadata"], 4096)
 
             payload = {
-                    "type": "detected_attack",
-                    "time": get_unixtime_ms(),
-                    "agent": self.get_reporter_info(),
-                    "attack": attack,
-                    "request": {
-                        "method": context.method,
-                        "url": context.url,
-                        "ipAddress": context.remote_address,
-                        "userAgent": "WIP",
-                        "body": {},
-                        "headers": {},
-                        "source": context.source,
-                        "route": "?",
-                    },
-                }
+                "type": "detected_attack",
+                "time": get_unixtime_ms(),
+                "agent": self.get_reporter_info(),
+                "attack": attack,
+                "request": {
+                    "method": context.method,
+                    "url": context.url,
+                    "ipAddress": context.remote_address,
+                    "userAgent": get_ua_from_context(context),
+                    "body": context.body,
+                    "headers": context.headers,
+                    "source": context.source,
+                    "route": "?",
+                },
+            }
             logger.debug(json.dumps(payload))
             result = self.api.report(
                 self.token,
@@ -158,3 +158,11 @@ def get_ip():
         return socket.gethostbyname(socket.gethostname())
     except Exception:
         return "0.0.0.0"
+
+
+def get_ua_from_context(context):
+    """Tries to retrieve the user agent from context"""
+    for k, v in context.headers.items():
+        if k.lower() == "user-agent":
+            return v
+    return None
