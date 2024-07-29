@@ -96,16 +96,20 @@ class Context:
     def __reduce__(self):
         return (
             self.__class__,
-            ({
-                "method": self.method,
-                "remote_address": self.remote_address,
-                "url": self.url,
-                "body": self.body,
-                "headers": self.headers,
-                "query": self.query,
-                "cookies": self.cookies,
-                "source": self.source,
-            }, None, None),
+            (
+                {
+                    "method": self.method,
+                    "remote_address": self.remote_address,
+                    "url": self.url,
+                    "body": self.body,
+                    "headers": self.headers,
+                    "query": self.query,
+                    "cookies": self.cookies,
+                    "source": self.source,
+                },
+                None,
+                None,
+            ),
         )
 
     def set_as_current_context(self):

@@ -65,6 +65,7 @@ def test_context_init_django(mocker):
     assert context.query == {"key": "value"}
     assert context.cookies == {"cookie": "value"}
 
+
 def test_context_is_picklable(mocker):
     req = mocker.MagicMock()
     req.method = "POST"
