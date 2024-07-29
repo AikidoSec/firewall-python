@@ -4,6 +4,7 @@ from aikido_firewall.background_process import (
     start_background_process,
     get_comms,
     IPC_ADDRESS,
+    reset_comms,
 )
 
 
@@ -13,18 +14,19 @@ def test_ipc_init():
     ipc = IPC(address, key)
 
     assert ipc.address == address
-    assert ipc.background_process is None
+    assert ipc.key == key
 
 
-# Following function does not work
 def test_start_background_process(monkeypatch):
+    reset_comms()
     assert get_comms() == None
     start_background_process()
 
     assert get_comms() != None
     assert get_comms().address == IPC_ADDRESS
 
-    get_comms().background_process.kill()
+    reset_comms()
+    assert get_comms() == None
 
 
 def test_send_data_exception(monkeypatch, caplog):
