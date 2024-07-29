@@ -110,7 +110,7 @@ class Reporter:
             "hostname": socket.gethostname(),
             "version": PKG_VERSION,
             "library": "firewall_python",
-            "ipAddress": "127.0.0.1",
+            "ipAddress": get_ip(),
             "packages": [],
             "serverless": bool(self.serverless),
             "stack": [],
@@ -128,3 +128,11 @@ class Reporter:
 def get_unixtime_ms():
     """Get the current unix time but in ms"""
     return int(time.time() * 1000)
+
+
+def get_ip():
+    """Tries to fetch the IP and returns 0.0.0.0 on failure"""
+    try:
+        return socket.gethostbyname(socket.gethostname())
+    except Exception:
+        return "0.0.0.0"
