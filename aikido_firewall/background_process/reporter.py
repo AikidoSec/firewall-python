@@ -7,6 +7,7 @@ import json
 from copy import deepcopy
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.helpers.limit_length_metadata import limit_length_metadata
+from aikido_firewall.helpers.token import Token
 
 
 class Reporter:
@@ -17,7 +18,7 @@ class Reporter:
     def __init__(self, block, api, token, serverless):
         self.block = block
         self.api = api
-        self.token = token
+        self.token = Token(token)
 
         if isinstance(serverless, str) and len(serverless) == 0:
             raise ValueError("Serverless cannot be an empty string")
