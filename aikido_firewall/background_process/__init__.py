@@ -16,6 +16,7 @@ from aikido_firewall.helpers.logging import logger
 from aikido_firewall.background_process.reporter import Reporter
 from aikido_firewall.helpers.should_block import should_block
 from aikido_firewall.helpers.token import get_token_from_env
+from aikido_firewall.background_process.api.http_api import ReportingApiHTTP
 
 REPORT_SEC_INTERVAL = 600  # 10 minutes
 IPC_ADDRESS = ("localhost", 9898)  # Specify the IP address and port
@@ -74,12 +75,11 @@ class AikidoBackgroundProcess:
         """
         Reports the found data to an Aikido server
         """
-        items_to_report = []
+        logger.debug("Checking queue")
         while not self.queue.empty():
-            items_to_report.append(self.queue.get())
-        logger.debug("Reporting to aikido server")
-        logger.critical("Items to report : %s", items_to_report)
-        # Currently not making API calls
+            attack = self.queue.get()
+            logger.debug("Reporting attack : %s", attack)
+            self.reporter.on_detected_attack(attack)
 
 
 # pylint: disable=invalid-name # This variable does change
