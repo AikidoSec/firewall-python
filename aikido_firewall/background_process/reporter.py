@@ -42,7 +42,7 @@ class Reporter:
                 self.token,
                 {
                     "type": "detected_attack",
-                    "time": datetime.now(),
+                    "time": datetime.now().timestamp(),
                     "agent": self.get_reporter_info(),
                     "attack": attack,
                     "request": {
@@ -72,7 +72,7 @@ class Reporter:
             self.token,
             {
                 "type": "heartbeat",
-                "time": datetime.now(),
+                "time": datetime.now().timestamp(),
                 "agent": self.get_reporter_info(),
                 "stats": {"sinks": [], "startedAt": 0, "endedAt": 0, "requests": []},
                 "hostnames": [],
@@ -91,7 +91,11 @@ class Reporter:
             return
         res = self.api.report(
             self.token,
-            {"type": "started", "time": datetime.now(), "agent": self.get_reporter_info()},
+            {
+                "type": "started",
+                "time": datetime.now().timestamp(),
+                "agent": self.get_reporter_info(),
+            },
             self.timeout_in_sec,
         )
         self.update_service_config(res)
