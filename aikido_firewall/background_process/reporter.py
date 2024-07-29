@@ -75,7 +75,19 @@ class Reporter:
                 "type": "heartbeat",
                 "time": get_unixtime_ms(),
                 "agent": self.get_reporter_info(),
-                "stats": {"sinks": [], "startedAt": 0, "endedAt": 0, "requests": []},
+                "stats": {
+                    "sinks": {},
+                    "startedAt": 0,
+                    "endedAt": 0,
+                    "requests": {
+                        "total": 0,
+                        "aborted": 0,
+                        "attacksDetected": {
+                            "total": 0,
+                            "blocked": 0,
+                        },
+                    },
+                },
                 "hostnames": [],
                 "routes": [],
                 "users": [],
@@ -116,6 +128,7 @@ class Reporter:
             "stack": [],
             "os": {"name": platform.system(), "version": platform.release()},
             "preventedPrototypePollution": False,  # Get this out of the API maybe?
+            "nodeEnv": "",
         }
 
     def update_service_config(self, res):
