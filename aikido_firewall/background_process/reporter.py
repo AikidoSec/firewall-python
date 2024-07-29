@@ -122,6 +122,9 @@ class Reporter:
         """
         Update configuration based on the server's response
         """
+        if(res["block"] and res["block"] != self.block):
+            logger.debug("Updating blocking, setting blocking to : %s", res["block"])
+            self.block = bool(res["block"])
         print(res)
 
 
