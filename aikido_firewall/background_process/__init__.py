@@ -6,6 +6,7 @@ and listen for data sent by our sources and sinks
 import time
 import os
 import secrets
+import socket
 import multiprocessing.connection as con
 from multiprocessing import Process
 from threading import Thread
@@ -73,6 +74,14 @@ def get_comms():
     return ipc
 
 
+def reset_comms():
+    """This will reset communications"""
+    global ipc
+    if ipc:
+        ipc.send_data("KILL", {})
+        ipc = None
+
+
 def start_background_process():
     """
     Starts a process to handle incoming/outgoing data
@@ -108,7 +117,9 @@ class IPC:
         This creates a new client for comms to the background process
         """
         try:
-            conn = con.Client(self.address, authkey=self.key)
+            # Create a client socket so we can set the timeout for IPC at 3sec
+            client_socket = socket.create_connection(self.address, timeout=3)
+            conn = con.Client(client_socket, authkey=self.key)
             logger.debug("Created connection %s", conn)
             conn.send((action, obj))
             conn.send(("CLOSE", {}))
