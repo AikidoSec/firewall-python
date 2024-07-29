@@ -1,27 +1,31 @@
 """
-Aikido agent, this will create a new thread and listen for stuff sent by our sources and sinks
+Aikido background process, this will create a new process
+and listen for data sent by our sources and sinks
 """
 
 import time
 import os
-from multiprocessing.connection import Listener, Client
+import secrets
+import multiprocessing.connection as con
 from multiprocessing import Process
 from threading import Thread
 from queue import Queue
 from aikido_firewall.helpers.logging import logger
 
-AGENT_SEC_INTERVAL = 5
+REPORT_SEC_INTERVAL = 600  # 10 minutes
 IPC_ADDRESS = ("localhost", 9898)  # Specify the IP address and port
 
 
-class AikidoProc:
+class AikidoBackgroundProcess:
     """
-    Our agent thread
+    Aikido's background process consists of 2 threads :
+    - (main) Listening thread which listens on an IPC socket for incoming data
+    - (spawned) reporting thread which will collect the IPC data and send it to a Reporter
     """
 
     def __init__(self, address, key):
-        logger.debug("Agent thread started")
-        listener = Listener(address, authkey=key)
+        logger.debug("Background process started")
+        listener = con.Listener(address, authkey=key)
         self.queue = Queue()
         # Start reporting thread :
         Thread(target=self.reporting_thread).start()
@@ -32,7 +36,7 @@ class AikidoProc:
             while True:
                 data = conn.recv()
                 logger.error(data)  # Temporary debugging
-                if data[0] == "SQL_INJECTION":
+                if data[0] == "ATTACK":
                     self.queue.put(data[1])
                 elif data[0] == "CLOSE":
                     conn.close()
@@ -42,10 +46,10 @@ class AikidoProc:
         """Reporting thread"""
         logger.debug("Started reporting thread")
         while True:
-            self.report_to_agent()
-            time.sleep(AGENT_SEC_INTERVAL)
+            self.send_to_reporter()
+            time.sleep(REPORT_SEC_INTERVAL)
 
-    def report_to_agent(self):
+    def send_to_reporter(self):
         """
         Reports the found data to an Aikido server
         """
@@ -61,47 +65,54 @@ class AikidoProc:
 ipc = None
 
 
-def get_ipc():
-    """Returns the globally stored agent"""
+def get_comms():
+    """
+    Returns the globally stored IPC object, which you need
+    to communicate to our background process.
+    """
     return ipc
 
 
-def start_ipc():
+def start_background_process():
     """
     Starts a process to handle incoming/outgoing data
     """
     # pylint: disable=global-statement # We need this to be global
     global ipc
+    # Generate a secret key :
+    generated_key_bytes = secrets.token_bytes(32)
 
-    if not "AIKIDO_SECRET_KEY" in os.environ:
-        raise EnvironmentError("AIKIDO_SECRET_KEY is not set.")
-    ipc = IPC(IPC_ADDRESS, os.environ["AIKIDO_SECRET_KEY"])
+    ipc = IPC(IPC_ADDRESS, generated_key_bytes)
     ipc.start_aikido_listener()
 
 
 class IPC:
-    """Agent class"""
+    """
+    Facilitates Inter-Process communication
+    """
 
     def __init__(self, address, key):
         self.address = address
-        self.key = str.encode(key)
+        self.key = key
 
     def start_aikido_listener(self):
         """This will start the aikido process which listens"""
         pid = os.fork()
         if pid == 0:  # Child process
-            AikidoProc(self.address, self.key)
+            AikidoBackgroundProcess(self.address, self.key)
         else:  # Parent process
-            logger.critical("Started a new agent process with PID: %d", pid)
+            logger.debug("Started background process, PID: %d", pid)
 
     def send_data(self, action, obj):
-        """This creates a new client for comms to the thread"""
+        """
+        This creates a new client for comms to the background process
+        """
         try:
-            conn = Client(self.address, authkey=self.key)
+            conn = con.Client(self.address, authkey=self.key)
             logger.debug("Created connection %s", conn)
             conn.send((action, obj))
             conn.send(("CLOSE", {}))
             conn.close()
             logger.debug("Connection closed")
         except Exception as e:
-            logger.info("Failed to send data to agent %s", e)
+            logger.info("Failed to send data to bg process : %s", e)

@@ -8,19 +8,21 @@ from dotenv import load_dotenv
 # Import logger
 from aikido_firewall.helpers.logging import logger
 
-# Import agent
-from aikido_firewall.agent import start_ipc
+# Import background process
+from aikido_firewall.background_process import start_background_process
 
 # Load environment variables
 load_dotenv()
 
 
 def protect(module="any", server=True):
-    """Start Aikido agent"""
+    """
+    Protect user's application
+    """
     if server:
-        start_ipc()
+        start_background_process()
     else:
-        logger.debug("Not starting IPC server")
+        logger.debug("Not starting background process")
     if module == "server-only":
         return
 
