@@ -39,7 +39,8 @@ class AikidoBackgroundProcess:
             pid = os.getpid()
             os.kill(pid, signal.SIGTERM)  # Kill this subprocess
         self.queue = Queue()
-        self.reporter = None
+        api = ReportingApiHTTP("http://app.local.aikido.io/")
+        self.reporter = Reporter(should_block(), api, get_token_from_env(), False)
         # Start reporting thread :
         Thread(target=self.reporting_thread).start()
 
