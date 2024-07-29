@@ -1,6 +1,6 @@
 """ This file simply exports the Reporter class"""
 
-from datetime import datetime
+import time
 import socket
 import platform
 import json
@@ -42,7 +42,7 @@ class Reporter:
                 self.token,
                 {
                     "type": "detected_attack",
-                    "time": datetime.now().timestamp(),
+                    "time": get_unixtime_ms(),
                     "agent": self.get_reporter_info(),
                     "attack": attack,
                     "request": {
@@ -72,7 +72,7 @@ class Reporter:
             self.token,
             {
                 "type": "heartbeat",
-                "time": datetime.now().timestamp(),
+                "time": get_unixtime_ms(),
                 "agent": self.get_reporter_info(),
                 "stats": {"sinks": [], "startedAt": 0, "endedAt": 0, "requests": []},
                 "hostnames": [],
@@ -93,7 +93,7 @@ class Reporter:
             self.token,
             {
                 "type": "started",
-                "time": datetime.now().timestamp(),
+                "time": get_unixtime_ms(),
                 "agent": self.get_reporter_info(),
             },
             self.timeout_in_sec,
@@ -109,14 +109,21 @@ class Reporter:
             "hostname": socket.gethostname(),
             "version": "x.x.x",
             "library": "firewall_python",
-            "ipAddress": socket.gethostbyname(socket.gethostname()),
+            "ipAddress": "127.0.0.1",
             "packages": [],
             "serverless": bool(self.serverless),
             "stack": [],
             "os": {"name": platform.system(), "version": platform.release()},
+            "preventedPrototypePollution": False,  # Get this out of the API maybe?
         }
 
     def update_service_config(self, res):
         """
         Update configuration based on the server's response
         """
+        print(res)
+
+
+def get_unixtime_ms():
+    """Get the current unix time but in ms"""
+    return int(time.time() * 1000)
