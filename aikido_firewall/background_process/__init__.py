@@ -6,6 +6,7 @@ and listen for data sent by our sources and sinks
 import time
 import os
 import secrets
+import signal
 import socket
 import multiprocessing.connection as con
 from multiprocessing import Process
@@ -26,7 +27,14 @@ class AikidoBackgroundProcess:
 
     def __init__(self, address, key):
         logger.debug("Background process started")
-        listener = con.Listener(address, authkey=key)
+        try:
+            listener = con.Listener(address, authkey=key)
+        except OSError:
+            logger.warning(
+                "Aikido listener may already be running on port %s", address[1]
+            )
+            pid = os.getpid()
+            os.kill(pid, signal.SIGTERM)  # Kill this subprocess
         self.queue = Queue()
         # Start reporting thread :
         Thread(target=self.reporting_thread).start()
@@ -36,12 +44,17 @@ class AikidoBackgroundProcess:
             logger.debug("connection accepted from %s", listener.last_accepted)
             while True:
                 data = conn.recv()
-                logger.error(data)  # Temporary debugging
+                logger.debug("Incoming data : %s", data)
                 if data[0] == "ATTACK":
                     self.queue.put(data[1])
                 elif data[0] == "CLOSE":
                     conn.close()
                     break
+                elif data[0] == "KILL":
+                    logger.debug("Killing subprocess")
+                    conn.close()
+                    pid = os.getpid()
+                    os.kill(pid, signal.SIGTERM)  # Kill this subprocess
 
     def reporting_thread(self):
         """Reporting thread"""
@@ -101,6 +114,7 @@ class IPC:
     """
 
     def __init__(self, address, key):
+        # The key needs to be in byte form
         self.address = address
         self.key = key
 
