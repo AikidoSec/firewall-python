@@ -16,7 +16,7 @@ class ReportingApiHTTP(ReportingApi):
         try:
             res = requests.post(
                 self.reporting_url + "api/runtime/events",
-                data=event,
+                json=event,
                 timeout=timeout_in_sec,
                 headers=get_headers(token),
             )
