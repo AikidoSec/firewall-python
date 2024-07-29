@@ -65,8 +65,6 @@ class AikidoBackgroundProcess:
     def reporting_thread(self):
         """Reporting thread"""
         logger.debug("Started reporting thread")
-        self.reporter = Reporter(should_block(), {}, get_token_from_env(), None)
-        logger.debug("Created Reporter")
         while True:
             self.send_to_reporter()
             time.sleep(REPORT_SEC_INTERVAL)
@@ -79,7 +77,7 @@ class AikidoBackgroundProcess:
         while not self.queue.empty():
             attack = self.queue.get()
             logger.debug("Reporting attack : %s", attack)
-            self.reporter.on_detected_attack(attack)
+            self.reporter.on_detected_attack(attack[0], attack[1])
 
 
 # pylint: disable=invalid-name # This variable does change

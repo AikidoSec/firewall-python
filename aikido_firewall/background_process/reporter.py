@@ -27,7 +27,7 @@ class Reporter:
 
         self.on_start()
 
-    def on_detected_attack(self, attack):
+    def on_detected_attack(self, attack, context):
         """
         This will send something to the API when an attack is detected
         """
@@ -35,33 +35,35 @@ class Reporter:
             return
         # Modify attack so we can send it out :
         try:
-            req = deepcopy(attack["request"])
-            del attack["request"]
-            attack["user"] = req["user"]
+            attack["user"] = None
             attack["payload"] = json.dumps(attack["payload"])[:4096]
             attack["metadata"] = limit_length_metadata(attack["metadata"], 4096)
 
-            self.api.report(
-                self.token,
-                {
+            payload = {
                     "type": "detected_attack",
                     "time": get_unixtime_ms(),
                     "agent": self.get_reporter_info(),
                     "attack": attack,
                     "request": {
-                        "method": req["method"],
-                        "url": req["url"],
-                        "ipAddress": req["remoteAddress"],
+                        "method": context.method,
+                        "url": context.url,
+                        "ipAddress": context.remote_address,
                         "userAgent": "WIP",
                         "body": {},
                         "headers": {},
-                        "source": req["source"],
-                        "route": req["route"],
+                        "source": context.source,
+                        "route": "?",
                     },
-                },
+                }
+            logger.debug(json.dumps(payload))
+            result = self.api.report(
+                self.token,
+                payload,
                 self.timeout_in_sec,
             )
-        except Exception:
+            logger.debug("Result : %s", result)
+        except Exception as e:
+            logger.debug(e)
             logger.info("Failed to report attack")
 
     def send_heartbeat(self):
