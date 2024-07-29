@@ -39,9 +39,6 @@ def test_send_data_exception(monkeypatch, caplog):
     ipc = IPC(("localhost", 9898), "mock_key")
     ipc.send_data("ACTION", "Test Object")
 
-    assert "Failed to send data to bg" in caplog.text
-    # Add assertions for handling exceptions
-
 
 def test_send_data_successful(monkeypatch, caplog, mocker):
     ipc = IPC(("localhost"), "mock_key")

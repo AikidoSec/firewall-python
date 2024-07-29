@@ -130,14 +130,23 @@ class IPC:
         """
         This creates a new client for comms to the background process
         """
-        try:
-            # Create a client socket so we can set the timeout for IPC at 3sec
-            client_socket = socket.create_connection(self.address, timeout=3)
-            conn = con.Client(client_socket, authkey=self.key)
-            logger.debug("Created connection %s", conn)
-            conn.send((action, obj))
-            conn.send(("CLOSE", {}))
-            conn.close()
-            logger.debug("Connection closed")
-        except Exception as e:
-            logger.info("Failed to send data to bg process : %s", e)
+
+        # We want to make sure that sending out this data affects the process as little as possible
+        # So we run it inside a seperate thread with a timeout of 3 seconds
+        def target(address, key, data_array):
+            try:
+                conn = con.Client(address, authkey=key)
+                logger.debug("Created connection %s", conn)
+                for data in data_array:
+                    conn.send(data)
+                conn.send(("CLOSE", {}))
+                conn.close()
+                logger.debug("Connection closed")
+            except Exception as e:
+                logger.info("Failed to send data to bg process : %s", e)
+
+        t = Thread(
+            target=target, args=(self.address, self.key, [(action, obj)]), daemon=True
+        )
+        t.start()
+        t.join(timeout=3)
