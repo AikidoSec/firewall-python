@@ -2,6 +2,9 @@
 init.py file for api/ folder. Includes abstract class ReportingApi
 """
 
+import json
+from aikido_firewall.helpers.logging import logger
+
 
 class ReportingApi:
     """This is the super class for the reporting API's"""
@@ -13,10 +16,13 @@ class ReportingApi:
             return {"success": False, "error": "rate_limited"}
         elif status == 401:
             return {"success": False, "error": "invalid_token"}
-        try:
-            return res.json()
-        except Exception:
-            return {"success": False, "error": "unknown_error"}
+        elif status == 200:
+            try:
+                return json.loads(res.text)
+            except Exception as e:
+                logger.debug(e)
+                logger.debug(res.text)
+        return {"success": False, "error": "unknown_error"}
 
     def report(self, token, event, timeout_in_sec):
         """Report event to aikido server"""
