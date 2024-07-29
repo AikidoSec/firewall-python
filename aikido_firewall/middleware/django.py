@@ -17,7 +17,7 @@ class AikidoMiddleware:
 
     def __call__(self, request, *args, **kwargs):
         logger.debug("Aikido middleware for `django` was called : __call__")
-        context = Context(request, "django")
+        context = Context(req=request, source="django")
         context.set_as_current_context()
         return self.get_response(request)
 

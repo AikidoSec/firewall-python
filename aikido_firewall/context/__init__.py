@@ -51,7 +51,11 @@ class Context:
     for vulnerability detection
     """
 
-    def __init__(self, req, source):
+    def __init__(self, context_obj=None, req=None, source=None):
+        if context_obj:
+            self.__dict__.update(context_obj)
+            return
+
         if not source in SUPPORTED_SOURCES:
             raise ValueError(f"Source {source} not supported")
         self.source = source
@@ -92,16 +96,16 @@ class Context:
     def __reduce__(self):
         return (
             self.__class__,
-            (
-                self.method,
-                self.remote_address,
-                self.url,
-                self.body,
-                self.headers,
-                self.query,
-                self.cookies,
-                self.source,
-            ),
+            ({
+                "method": self.method,
+                "remote_address": self.remote_address,
+                "url": self.url,
+                "body": self.body,
+                "headers": self.headers,
+                "query": self.query,
+                "cookies": self.cookies,
+                "source": self.source,
+            }, None, None),
         )
 
     def set_as_current_context(self):
