@@ -1,7 +1,7 @@
 version: '3'
 services:
   db:
-    image: mysql
+    image: mariadb
     container_name: django_mysql_gunicorn_mariadb
     restart: always
     volumes:
@@ -17,13 +17,18 @@ services:
     expose:
       # Opens port 3306 on the container
       - '3306'
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      retries: 5
+      start_period: 10s
 
   backend:
     build: 
       context: ./../../
       dockerfile: ./sample-apps/django-mysql-gunicorn/Dockerfile
     container_name: django_mysql_gunicorn_backend
-    command: sh -c "python manage.py migrate && gunicorn --workers 4 --threads 2 --log-level debug --access-logfile '-' --error-logfile '-' --bind 0.0.0.0:8000 sample-django-mysql-gunicorn-app.wsgi"
+    command: sh -c "python manage.py migrate && gunicorn -c gunicorn_config.py --workers 4 --threads 2 --log-level debug --access-logfile '-' --error-logfile '-' --bind 0.0.0.0:8000 sample-django-mysql-gunicorn-app.wsgi"
     restart: always
     volumes:
       - .:/app
@@ -32,7 +37,8 @@ services:
     env_file:
       - .env
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
 volumes:
   db_data:
