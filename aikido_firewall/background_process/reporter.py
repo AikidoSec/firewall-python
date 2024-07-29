@@ -8,6 +8,7 @@ from copy import deepcopy
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.helpers.limit_length_metadata import limit_length_metadata
 from aikido_firewall.helpers.token import Token
+from aikido_firewall import PKG_VERSION
 
 
 class Reporter:
@@ -107,7 +108,7 @@ class Reporter:
         return {
             "dryMode": not self.block,
             "hostname": socket.gethostname(),
-            "version": "x.x.x",
+            "version": PKG_VERSION,
             "library": "firewall_python",
             "ipAddress": "127.0.0.1",
             "packages": [],
