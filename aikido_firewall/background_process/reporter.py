@@ -25,6 +25,8 @@ class Reporter:
             raise ValueError("Serverless cannot be an empty string")
         self.serverless = serverless
 
+        self.on_start()
+
     def on_detected_attack(self, attack):
         """
         This will send something to the API when an attack is detected
