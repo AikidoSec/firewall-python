@@ -19,7 +19,7 @@ class Reporter:
     def __init__(self, block, api, token, serverless):
         self.block = block
         self.api = api
-        self.token = Token(token)
+        self.token = token  # Should be instance of the Token class!
 
         if isinstance(serverless, str) and len(serverless) == 0:
             raise ValueError("Serverless cannot be an empty string")
