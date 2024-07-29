@@ -24,6 +24,6 @@ def get_token_from_env():
     Fetches the token from the env variable "AIKIDO_TOKEN"
     """
     aikido_token_env = os.getenv("AIKIDO_TOKEN")
-    if not aikido_token_env is None:
+    if aikido_token_env is not None:
         return Token(aikido_token_env)
     return None
