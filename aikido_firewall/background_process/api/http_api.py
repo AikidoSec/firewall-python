@@ -4,6 +4,7 @@ Exports the HTTP API class
 
 import requests
 from aikido_firewall.background_process.api import ReportingApi
+from aikido_firewall.helpers.logging import logger
 
 
 class ReportingApiHTTP(ReportingApi):
@@ -23,7 +24,7 @@ class ReportingApiHTTP(ReportingApi):
         except requests.exceptions.ConnectionError:
             return {"success": False, "error": "timeout"}
         except Exception as e:
-            raise e
+            logger.error(e)
         return self.to_api_response(res)
 
 
