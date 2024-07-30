@@ -16,7 +16,7 @@ class Reporter:
     """Reporter class"""
 
     timeout_in_sec = 5
-    heartbeat_secs = 10
+    heartbeat_secs = 600  # Heartbeat every 10 minutes
 
     def __init__(self, block, api, token, serverless, event_scheduler):
         self.block = block
