@@ -23,7 +23,7 @@ def protect(module="any", server=True):
         start_background_process()
     else:
         logger.debug("Not starting background process")
-    if module == "server-only":
+    if module == "background-process-only":
         return
 
     # Import sources

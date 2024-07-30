@@ -15,7 +15,7 @@ def when_ready(prev_func):
     """
 
     def aik_when_ready(server):
-        aikido_firewall.protect("server-only")
+        aikido_firewall.protect("background-process-only")
         prev_func(server)
 
     return aik_when_ready
