@@ -3,8 +3,11 @@ Provides all the functionality for contexts
 """
 
 import threading
+from urllib.parse import parse_qs
+from http.cookies import SimpleCookie
 
-SUPPORTED_SOURCES = ["django", "flask"]
+
+SUPPORTED_SOURCES = ["django", "flask", "django-gunicorn"]
 UINPUT_SOURCES = ["body", "cookies", "query", "headers"]
 
 local = threading.local()
@@ -22,7 +25,24 @@ def parse_headers(headers):
     """Parse EnvironHeaders object into a dict"""
     if isinstance(headers, dict):
         return headers
+    if isinstance(headers, list):
+        obj = {}
+        for k, v in headers:
+            obj[k] = v
+        return obj
     return dict(zip(headers.keys(), headers.values()))
+
+
+def parse_cookies(cookie_str):
+    """Parse cookie string from headers"""
+    cookie_dict = {}
+    cookies = SimpleCookie()
+    cookies.load(cookie_str)
+
+    for key, morsel in cookies.items():
+        cookie_dict[key] = morsel.value
+
+    return cookie_dict
 
 
 class Context:
@@ -41,6 +61,17 @@ class Context:
             self.set_flask_attrs(req)
         elif source == "django":
             self.set_django_attrs(req)
+        elif source == "django-gunicorn":
+            self.set_django_gunicorn_attrs(req)
+
+    def set_django_gunicorn_attrs(self, req):
+        """Set properties that are specific to django-gunicorn"""
+        self.remote_address = req.remote_addr
+        self.url = req.uri
+        self.body = parse_qs(req.body_copy.decode("utf-8"))
+        self.query = parse_qs(req.query)
+        self.cookies = parse_cookies(self.headers["COOKIE"])
+        del self.headers["COOKIE"]
 
     def set_django_attrs(self, req):
         """set properties that are specific to django"""
