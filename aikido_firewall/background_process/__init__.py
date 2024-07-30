@@ -5,7 +5,11 @@ and listen for data sent by our sources and sinks
 
 import secrets
 from aikido_firewall.helpers.logging import logger
-from aikido_firewall.background_process.comms import AikidoIPCCommunications
+from aikido_firewall.background_process.comms import (
+    AikidoIPCCommunications,
+    get_comms,
+    reset_comms,
+)
 
 IPC_ADDRESS = ("localhost", 9898)  # Specify the IP address and port
 

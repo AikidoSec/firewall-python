@@ -1,6 +1,7 @@
 import pytest
 from aikido_firewall.background_process.comms import AikidoIPCCommunications
 
+
 def test_comms_init():
     address = ("localhost", 9898)
     key = "secret_key"
@@ -8,6 +9,7 @@ def test_comms_init():
 
     assert comms.address == address
     assert comms.key == key
+
 
 def test_send_data_to_bg_process_exception(monkeypatch, caplog):
     def mock_client(address, authkey):
