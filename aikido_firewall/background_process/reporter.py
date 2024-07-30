@@ -146,7 +146,7 @@ class Reporter:
         if res["success"] is False:
             logger.debug(res)
             return
-        if res["block"] and res["block"] != self.block:
+        if "block" in res.keys() and res["block"] != self.block:
             logger.debug("Updating blocking, setting blocking to : %s", res["block"])
             self.block = bool(res["block"])
 
