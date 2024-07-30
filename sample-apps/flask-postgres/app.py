@@ -6,7 +6,7 @@ import psycopg2
 
 app = Flask(__name__)
 if __name__ == '__main__':
-    app.run(threaded=True) # Run threaded so we can test our agent's capabilities
+    app.run(threaded=True) # Run threaded so we can test how our bg process works
 
 def get_db_connection():
     return psycopg2.connect(
