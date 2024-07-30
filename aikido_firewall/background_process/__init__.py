@@ -165,5 +165,7 @@ class IPC:
         conn = con.Client(self.address, authkey=self.key)
         conn.send(("READ_PROPERTY", prop))
         prop_value = conn.recv()
+        conn.send(("CLOSE", {}))
+        conn.close()
         logger.debug("Received property %s as %s", prop, prop_value)
         return prop_value
