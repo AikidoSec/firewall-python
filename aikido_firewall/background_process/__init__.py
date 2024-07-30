@@ -6,6 +6,8 @@ and listen for data sent by our sources and sinks
 import time
 import os
 import secrets
+import signal
+import socket
 import multiprocessing.connection as con
 from multiprocessing import Process
 from threading import Thread
@@ -25,7 +27,14 @@ class AikidoBackgroundProcess:
 
     def __init__(self, address, key):
         logger.debug("Background process started")
-        listener = con.Listener(address, authkey=key)
+        try:
+            listener = con.Listener(address, authkey=key)
+        except OSError:
+            logger.warning(
+                "Aikido listener may already be running on port %s", address[1]
+            )
+            pid = os.getpid()
+            os.kill(pid, signal.SIGTERM)  # Kill this subprocess
         self.queue = Queue()
         # Start reporting thread :
         Thread(target=self.reporting_thread).start()
@@ -35,12 +44,17 @@ class AikidoBackgroundProcess:
             logger.debug("connection accepted from %s", listener.last_accepted)
             while True:
                 data = conn.recv()
-                logger.error(data)  # Temporary debugging
+                logger.debug("Incoming data : %s", data)
                 if data[0] == "ATTACK":
                     self.queue.put(data[1])
                 elif data[0] == "CLOSE":
                     conn.close()
                     break
+                elif data[0] == "KILL":
+                    logger.debug("Killing subprocess")
+                    conn.close()
+                    pid = os.getpid()
+                    os.kill(pid, signal.SIGTERM)  # Kill this subprocess
 
     def reporting_thread(self):
         """Reporting thread"""
@@ -73,6 +87,14 @@ def get_comms():
     return ipc
 
 
+def reset_comms():
+    """This will reset communications"""
+    global ipc
+    if ipc:
+        ipc.send_data("KILL", {})
+        ipc = None
+
+
 def start_background_process():
     """
     Starts a process to handle incoming/outgoing data
@@ -92,35 +114,39 @@ class IPC:
     """
 
     def __init__(self, address, key):
+        # The key needs to be in byte form
         self.address = address
         self.key = key
-        self.background_process = None
 
     def start_aikido_listener(self):
-        """
-        This will start the aikido background process which listens
-        and makes calls to the API
-        """
-        self.background_process = Process(
-            target=AikidoBackgroundProcess,
-            args=(
-                self.address,
-                self.key,
-            ),
-        )
-        logger.debug("Starting the background process")
-        self.background_process.start()
+        """This will start the aikido process which listens"""
+        pid = os.fork()
+        if pid == 0:  # Child process
+            AikidoBackgroundProcess(self.address, self.key)
+        else:  # Parent process
+            logger.debug("Started background process, PID: %d", pid)
 
     def send_data(self, action, obj):
         """
         This creates a new client for comms to the background process
         """
-        try:
-            conn = con.Client(self.address, authkey=self.key)
-            logger.debug("Created connection %s", conn)
-            conn.send((action, obj))
-            conn.send(("CLOSE", {}))
-            conn.close()
-            logger.debug("Connection closed")
-        except Exception as e:
-            logger.info("Failed to send data to bg process : %s", e)
+
+        # We want to make sure that sending out this data affects the process as little as possible
+        # So we run it inside a seperate thread with a timeout of 3 seconds
+        def target(address, key, data_array):
+            try:
+                conn = con.Client(address, authkey=key)
+                logger.debug("Created connection %s", conn)
+                for data in data_array:
+                    conn.send(data)
+                conn.send(("CLOSE", {}))
+                conn.close()
+                logger.debug("Connection closed")
+            except Exception as e:
+                logger.info("Failed to send data to bg process : %s", e)
+
+        t = Thread(
+            target=target, args=(self.address, self.key, [(action, obj)]), daemon=True
+        )
+        t.start()
+        t.join(timeout=3)

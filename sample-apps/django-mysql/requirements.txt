@@ -1,4 +1,4 @@
 django
-pymysql
+mysqlclient
 python-decouple
 cryptography

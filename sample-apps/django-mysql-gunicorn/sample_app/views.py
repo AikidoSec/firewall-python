@@ -20,12 +20,14 @@ def dog_page(request, dog_id):
     dog = get_object_or_404(Dogs, pk=dog_id)
     return HttpResponse("Your dog, %s, is lovely. Boss name is : %s" % (dog.dog_name, dog.dog_boss))
 
-def create_dogpage(request, dog_name):
-#    dog = Dogs(dog_name=dog_name, dog_boss="Unset")
-#    dog.save()
-    # Using custom sql to create a dog :
-    with connection.cursor() as cursor:
-        query = 'INSERT INTO sample_app_dogs (dog_name, dog_boss) VALUES ("%s", "N/A")' % dog_name
-        print("QUERY : ", query)
-        cursor.execute(query)
-    return HttpResponse("Dog page created")
+def create_dogpage(request):
+    if request.method == 'GET':
+        return render(request, 'app/create_dog.html')
+    elif request.method == 'POST':
+        dog_name = request.POST.get('dog_name')
+        # Using custom sql to create a dog :
+        with connection.cursor() as cursor:
+            query = 'INSERT INTO sample_app_dogs (dog_name, dog_boss) VALUES ("%s", "N/A")' % dog_name
+            print("QUERY : ", query)
+            cursor.execute(query)
+        return HttpResponse("Dog page created")
