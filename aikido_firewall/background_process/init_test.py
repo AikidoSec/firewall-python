@@ -29,7 +29,7 @@ def test_start_background_process(monkeypatch):
     assert get_comms() == None
 
 
-def test_send_data_exception(monkeypatch, caplog):
+def test_send_data_to_bg_process_exception(monkeypatch, caplog):
     def mock_client(address, authkey):
         raise Exception("Connection Error")
 
@@ -37,13 +37,13 @@ def test_send_data_exception(monkeypatch, caplog):
     monkeypatch.setitem(globals(), "logger", caplog)
 
     ipc = IPC(("localhost", 9898), "mock_key")
-    ipc.send_data("ACTION", "Test Object")
+    ipc.send_data_to_bg_process("ACTION", "Test Object")
 
 
-def test_send_data_successful(monkeypatch, caplog, mocker):
+def test_send_data_to_bg_process_successful(monkeypatch, caplog, mocker):
     ipc = IPC(("localhost"), "mock_key")
     mock_client = mocker.MagicMock()
     monkeypatch.setattr("multiprocessing.connection.Client", mock_client)
 
-    # Call the send_data function
-    ipc.send_data("ACTION", {"key": "value"})
+    # Call the send_data_to_bg_process function
+    ipc.send_data_to_bg_process("ACTION", {"key": "value"})
