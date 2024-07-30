@@ -25,6 +25,7 @@ class ReportingApiHTTP(ReportingApi):
             return {"success": False, "error": "timeout"}
         except Exception as e:
             logger.error(e)
+            return {"success": False, "error": "unknown"}
         return self.to_api_response(res)
 
 
