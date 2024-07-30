@@ -27,6 +27,7 @@ def protect(module="any"):
 
     # Import sinks
     import aikido_firewall.sinks.pymysql
+    import aikido_firewall.sinks.pymongo
 
     logger.info("Aikido python firewall started")
     start_background_process()
