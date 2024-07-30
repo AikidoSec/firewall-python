@@ -50,7 +50,9 @@ class AikidoBackgroundProcess:
                 elif data[0] == "CLOSE":  # this is a kind of EOL for python IPC
                     conn.close()
                     break
-                elif data[0] == "KILL":  # when main process quits , or during testing etc
+                elif (
+                    data[0] == "KILL"
+                ):  # when main process quits , or during testing etc
                     logger.debug("Killing subprocess")
                     conn.close()
                     pid = os.getpid()
