@@ -15,18 +15,25 @@ from aikido_firewall.background_process import start_background_process
 load_dotenv()
 
 
-def protect(module="any"):
+def protect(module="any", server=True):
     """
     Protect user's application
     """
-    # Import sources
-    import aikido_firewall.sources.django
+    if server:
+        start_background_process()
+    else:
+        logger.debug("Not starting background process")
+    if module == "background-process-only":
+        return
 
-    if module != "django":
+    # Import sources
+    if module == "django":
+        import aikido_firewall.sources.django
+
+    if not module in ["django", "django-gunicorn"]:
         import aikido_firewall.sources.flask
 
     # Import sinks
     import aikido_firewall.sinks.pymysql
 
     logger.info("Aikido python firewall started")
-    start_background_process()
