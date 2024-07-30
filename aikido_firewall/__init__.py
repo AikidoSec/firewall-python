@@ -25,7 +25,7 @@ def protect(module="any", server=True):
         start_background_process()
     else:
         logger.debug("Not starting background process")
-    if module == "server-only":
+    if module == "background-process-only":
         return
 
     # Import sources
@@ -37,5 +37,6 @@ def protect(module="any", server=True):
 
     # Import sinks
     import aikido_firewall.sinks.pymysql
+    import aikido_firewall.sinks.mysqlclient
 
     logger.info("Aikido python firewall started")
