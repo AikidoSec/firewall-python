@@ -1,4 +1,7 @@
 # Flask Sample app with uWSGI installed
+It runs 4 processes (**multi-process**) which handle requests **multi-threaded**
+
+## Getting Started
 Run (with docker-compose installed) :
 ```bash
 docker-compose up --build

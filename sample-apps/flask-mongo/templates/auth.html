@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <script>
+        function submitForm(inject) {
+            var dogName = document.getElementById('dog_name').value;
+            var dogPswd = document.getElementById('pswd').value;
+            var statusElement = document.getElementById('status');
+            if(inject)
+                var data = { "dog_name": dogName, "pswd": { "$ne": "" } };
+            else
+                var data = { "dog_name": dogName, "pswd": dogPswd };
+
+
+            fetch('/auth', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.text();
+                }
+                statusElement.innerText = "Network response was not ok."
+                throw new Error('Network response was not ok.');
+            })
+            .then(data => {
+                statusElement.innerText = data
+                console.log(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</head>
+<body>
+    <h1>Log In</h1>
+    <label for="dog_name">Dog Name:</label>
+    <input type="text" id="dog_name" name="dog_name" required><br/>
+    <label for="pswd">Dog Password:</label>
+    <input type="password" id="pswd" name="pswd" required><br/>
+    <button onclick="submitForm(false)">Login</button>
+    <button onclick="submitForm(true)">Login (with NoSQL injection)</button>
+    <p>Status: <span id="status"></span></p>
+</body>
+</html>

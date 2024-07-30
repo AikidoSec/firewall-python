@@ -8,8 +8,7 @@ from aikido_firewall.helpers.extract_strings_from_user_input import (
 )
 from aikido_firewall.vulnerabilities.sql_injection import detect_sql_injection
 from aikido_firewall.helpers.logging import logger
-
-SOURCES = ["body", "cookies", "query", "headers"]
+from aikido_firewall.context import UINPUT_SOURCES as SOURCES
 
 
 def check_context_for_sql_injection(sql, operation, context, dialect):

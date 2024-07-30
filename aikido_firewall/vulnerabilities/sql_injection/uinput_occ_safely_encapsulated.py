@@ -44,7 +44,9 @@ def uinput_occ_safely_encapsulated(query, user_input):
     """
     This function will check if user input is actually just safely encapsulated in the query
     """
-    segments_in_between = get_current_and_next_segments(query.split(user_input))
+    segments_in_between = get_current_and_next_segments(
+        query.lower().split(user_input.lower())
+    )
 
     for segment in segments_in_between:
         current_seg, next_seg = segment
