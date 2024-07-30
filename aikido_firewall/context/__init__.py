@@ -5,7 +5,7 @@ Provides all the functionality for contexts
 import threading
 from urllib.parse import parse_qs
 from http.cookies import SimpleCookie
-
+from aikido_firewall.helpers.build_route_from_url import build_route_from_url
 
 SUPPORTED_SOURCES = ["django", "flask", "django-gunicorn"]
 UINPUT_SOURCES = ["body", "cookies", "query", "headers"]
@@ -67,6 +67,7 @@ class Context:
             self.set_django_attrs(req)
         elif source == "django-gunicorn":
             self.set_django_gunicorn_attrs(req)
+        self.route = build_route_from_url(self.url)
 
     def set_django_gunicorn_attrs(self, req):
         """Set properties that are specific to django-gunicorn"""
@@ -106,6 +107,7 @@ class Context:
                     "query": self.query,
                     "cookies": self.cookies,
                     "source": self.source,
+                    "route": self.route,
                 },
                 None,
                 None,

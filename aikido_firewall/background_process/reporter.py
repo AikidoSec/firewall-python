@@ -53,7 +53,7 @@ class Reporter:
                     "body": context.body,
                     "headers": context.headers,
                     "source": context.source,
-                    "route": "?",
+                    "route": context.route,
                 },
             }
             logger.debug(json.dumps(payload))
