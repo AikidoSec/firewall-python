@@ -16,7 +16,7 @@ from aikido_firewall.helpers.token import get_token_from_env
 from aikido_firewall.background_process.api.http_api import ReportingApiHTTP
 
 
-REPORT_SEC_INTERVAL = 5  # 5 seconds
+EMPTY_QUEUE_INTERVAL = 5  # 5 seconds
 
 
 class AikidoBackgroundProcess:
@@ -83,9 +83,9 @@ class AikidoBackgroundProcess:
         """
         Reports the found data to an Aikido server
         """
-        # Add back to event scheduler in REPORT_SEC_INTERVAL secs :
+        # Add back to event scheduler in EMPTY_QUEUE_INTERVAL secs :
         event_scheduler.enter(
-            REPORT_SEC_INTERVAL, 1, self.send_to_reporter, (event_scheduler,)
+            EMPTY_QUEUE_INTERVAL, 1, self.send_to_reporter, (event_scheduler,)
         )
         logger.debug("Checking queue")
         while not self.queue.empty():
