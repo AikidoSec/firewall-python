@@ -35,17 +35,23 @@ def on_pymongo_import(pymongo):
     https://github.com/mongodb/mongo-python-driver/blob/98658cfd1fea42680a178373333bf27f41153759/pymongo/synchronous/collection.py#L136
     Returns : Modified pymongo.collection.Collection object
     """
-
     modified_pymongo = importhook.copy_module(pymongo)
     for operation in OPERATIONS_WITH_FILTER:
         if not hasattr(pymongo.Collection, operation):
             logger.warning("Operation `%s` not found on Collection object.", operation)
-        old_function = deepcopy(getattr(pymongo.Collection, operation))
 
-        def wrapped_operation_function(_self, filter, *args, **kwargs):
-            logger.debug(" `pymongo.collection.Collection.%s` wrapped", operation)
-            logger.debug(filter)
-            old_function(_self, filter, *args, **kwargs)
+        prev_func = deepcopy(getattr(pymongo.Collection, operation))
+
+        def wrapped_operation_function(
+            _self, _filter, *args, prev_func=prev_func, op=operation, **kwargs
+        ):
+            context = get_current_context()
+            logger.debug("Context : %s, Filter : %s", context, _filter)
+            injection_results = detect_nosql_injection(context, _filter)
+            logger.debug("Injection results : %s", injection_results)
+            if injection_results["injection"]:
+                raise Exception(contains_nosql_injection)
+            return prev_func(_self, _filter, *args, **kwargs)
 
         setattr(modified_pymongo.Collection, operation, wrapped_operation_function)
 
