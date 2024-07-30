@@ -100,8 +100,8 @@ def detect_nosql_injection(request, _filter):
         return {"injection": False}
 
     for source in UINPUT_SOURCES:
-        if request.get(source):
-            result = find_filter_part_with_operators(request[source], _filter)
+        if hasattr(request, source):
+            result = find_filter_part_with_operators(getattr(request, source), _filter)
 
             if result.get("found"):
                 return {
