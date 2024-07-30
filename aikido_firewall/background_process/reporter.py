@@ -8,6 +8,9 @@ from copy import deepcopy
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.helpers.limit_length_metadata import limit_length_metadata
 from aikido_firewall.helpers.token import Token
+from aikido_firewall.helpers.get_machine_ip import get_ip
+from aikido_firewall.helpers.get_ua_from_context import get_ua_from_context
+from aikido_firewall.helpers.get_current_unixtime_ms import get_unixtime_ms
 from aikido_firewall import PKG_VERSION
 from aikido_firewall.background_process.heartbeats import send_heartbeats_every_x_secs
 
@@ -149,24 +152,3 @@ class Reporter:
         if "block" in res.keys() and res["block"] != self.block:
             logger.debug("Updating blocking, setting blocking to : %s", res["block"])
             self.block = bool(res["block"])
-
-
-def get_unixtime_ms():
-    """Get the current unix time but in ms"""
-    return int(time.time() * 1000)
-
-
-def get_ip():
-    """Tries to fetch the IP and returns 0.0.0.0 on failure"""
-    try:
-        return socket.gethostbyname(socket.gethostname())
-    except Exception:
-        return "0.0.0.0"
-
-
-def get_ua_from_context(context):
-    """Tries to retrieve the user agent from context"""
-    for k, v in context.headers.items():
-        if k.lower() == "user-agent":
-            return v
-    return None
