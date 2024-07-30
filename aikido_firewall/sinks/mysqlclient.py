@@ -30,7 +30,6 @@ def on_mysqlclient_import(mysql):
         logger.debug("Wrapper - `mysqlclient` version : %s", version("mysqlclient"))
 
         context = get_current_context()
-        result = check_context_for_sql_injection(sql, "Test_op", context, MySQL())
         result = check_context_for_sql_injection(
             sql.decode("utf-8"), "Test_op", context, MySQL()
         )
