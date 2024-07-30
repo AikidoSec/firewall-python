@@ -38,7 +38,7 @@ class AikidoBackgroundProcess:
                 logger.error(data)  # Temporary debugging
                 if data[0] == "ATTACK":
                     self.queue.put(data[1])
-                elif data[0] == "CLOSE": // this is a kind of EOL for python IPC
+                elif data[0] == "CLOSE": # this is a kind of EOL for python IPC
                     conn.close()
                     break
 
