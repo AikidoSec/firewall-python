@@ -1,3 +1,8 @@
+"""
+Holds the globally stored comms object
+Exports the AikidoIPCCommunications class
+"""
+
 import os
 import multiprocessing.connection as con
 from threading import Thread
@@ -20,6 +25,7 @@ def get_comms():
 
 def reset_comms():
     """This will reset communications"""
+    # pylint: disable=global-statement # This needs to be global
     global comms
     if comms:
         comms.send_data_to_bg_process("KILL", {})
@@ -38,6 +44,7 @@ class AikidoIPCCommunications:
 
         # Set as global ipc object :
         reset_comms()
+        # pylint: disable=global-statement # This needs to be global
         global comms
         comms = self
 
@@ -72,4 +79,5 @@ class AikidoIPCCommunications:
             target=target, args=(self.address, self.key, [(action, obj)]), daemon=True
         )
         t.start()
+        # This joins the thread for 3 seconds, afterwards the thread is forced to close (daemon=True)
         t.join(timeout=3)
