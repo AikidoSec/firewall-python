@@ -18,7 +18,7 @@ from aikido_firewall.background_process.heartbeats import send_heartbeats_every_
 class Reporter:
     """Reporter class"""
 
-    timeout_in_sec = 5
+    timeout_in_sec = 5  # Timeout of API calls to Aikido Server
     heartbeat_secs = 600  # Heartbeat every 10 minutes
 
     def __init__(self, block, api, token, serverless, event_scheduler):
