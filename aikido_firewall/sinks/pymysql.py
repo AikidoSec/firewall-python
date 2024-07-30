@@ -33,7 +33,9 @@ def on_flask_import(mysql):
         logger.debug("Wrapper - `pymysql` version : %s", version("pymysql"))
 
         context = get_current_context()
-        result = check_context_for_sql_injection(sql, "Test_op", context, MySQL())
+        result = check_context_for_sql_injection(
+            sql, "pymysql.connections.query", context, MySQL()
+        )
 
         logger.info("sql_injection results : %s", json.dumps(result))
         if result:
