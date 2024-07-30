@@ -1,5 +1,6 @@
 import pytest
 from aikido_firewall.vulnerabilities.nosql_injection import detect_nosql_injection
+from aikido_firewall.context import Context
 
 
 @pytest.fixture
@@ -7,19 +8,24 @@ def create_context():
     def _create_context(
         query=None, headers=None, body=None, cookies=None, route_params=None
     ):
-        context = {
-            "remote_address": "::1",
-            "method": "GET",
-            "url": "http://localhost:4000",
-            "query": query if query else {},
-            "headers": headers if headers else {},
-            "body": body,
-            "cookies": cookies if cookies else {},
-            "route_params": route_params if route_params else {},
-            "source": "express",
-            "route": "/posts/:id",
-        }
-        return context
+        class RequestContext:
+            remote_address = "::1"
+            method = "GET"
+            url = "http://localhost:4000"
+            query = {}
+            headers = {}
+            body = None
+            cookies = {}
+            route_params = {}
+            source = "express"
+            route = "/posts/:id"
+
+        RequestContext.query = query if query else {}
+        RequestContext.headers = headers if headers else {}
+        RequestContext.body = body
+        RequestContext.cookies = cookies if cookies else {}
+        RequestContext.route_params = route_params if route_params else {}
+        return RequestContext()
 
     return _create_context
 

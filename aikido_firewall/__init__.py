@@ -38,5 +38,6 @@ def protect(module="any", server=True):
     # Import sinks
     import aikido_firewall.sinks.pymysql
     import aikido_firewall.sinks.mysqlclient
+    import aikido_firewall.sinks.pymongo
 
     logger.info("Aikido python firewall started")
