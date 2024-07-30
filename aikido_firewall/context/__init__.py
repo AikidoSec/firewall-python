@@ -5,7 +5,8 @@ Provides all the functionality for contexts
 import threading
 from urllib.parse import parse_qs
 from http.cookies import SimpleCookie
-
+from aikido_firewall.helpers.build_route_from_url import build_route_from_url
+from aikido_firewall.helpers.get_subdomains_from_url import get_subdomains_from_url
 
 SUPPORTED_SOURCES = ["django", "flask", "django-gunicorn"]
 UINPUT_SOURCES = ["body", "cookies", "query", "headers"]
@@ -51,7 +52,11 @@ class Context:
     for vulnerability detection
     """
 
-    def __init__(self, req, source):
+    def __init__(self, context_obj=None, req=None, source=None):
+        if context_obj:
+            self.__dict__.update(context_obj)
+            return
+
         if not source in SUPPORTED_SOURCES:
             raise ValueError(f"Source {source} not supported")
         self.source = source
@@ -63,6 +68,8 @@ class Context:
             self.set_django_attrs(req)
         elif source == "django-gunicorn":
             self.set_django_gunicorn_attrs(req)
+        self.route = build_route_from_url(self.url)
+        self.subdomains = get_subdomains_from_url(self.url)
 
     def set_django_gunicorn_attrs(self, req):
         """Set properties that are specific to django-gunicorn"""
@@ -93,14 +100,20 @@ class Context:
         return (
             self.__class__,
             (
-                self.method,
-                self.remote_address,
-                self.url,
-                self.body,
-                self.headers,
-                self.query,
-                self.cookies,
-                self.source,
+                {
+                    "method": self.method,
+                    "remote_address": self.remote_address,
+                    "url": self.url,
+                    "body": self.body,
+                    "headers": self.headers,
+                    "query": self.query,
+                    "cookies": self.cookies,
+                    "source": self.source,
+                    "route": self.route,
+                    "subdomains": self.subdomains,
+                },
+                None,
+                None,
             ),
         )
 

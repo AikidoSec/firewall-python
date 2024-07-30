@@ -81,3 +81,15 @@ class AikidoIPCCommunications:
         t.start()
         # This joins the thread for 3 seconds, afterwards the thread is forced to close (daemon=True)
         t.join(timeout=3)
+
+    def poll_config(self, prop):
+        """
+        This will poll the config from the Background Process
+        """
+        conn = con.Client(self.address, authkey=self.key)
+        conn.send(("READ_PROPERTY", prop))
+        prop_value = conn.recv()
+        conn.send(("CLOSE", {}))
+        conn.close()
+        logger.debug("Received property %s as %s", prop, prop_value)
+        return prop_value

@@ -8,8 +8,8 @@ import json
 from importlib.metadata import version
 import importhook
 from aikido_firewall.context import get_current_context
-from aikido_firewall.vulnerabilities.sql_injection.check_context_for_sql_injection import (
-    check_context_for_sql_injection,
+from aikido_firewall.vulnerabilities.sql_injection.context_contains_sql_injection import (
+    context_contains_sql_injection,
 )
 from aikido_firewall.vulnerabilities.sql_injection.dialects import MySQL
 from aikido_firewall.background_process import get_comms
@@ -33,14 +33,17 @@ def on_flask_import(mysql):
         logger.debug("Wrapper - `pymysql` version : %s", version("pymysql"))
 
         context = get_current_context()
-        result = check_context_for_sql_injection(
+        contains_injection = context_contains_sql_injection(
             sql, "pymysql.connections.query", context, MySQL()
         )
 
-        logger.info("sql_injection results : %s", json.dumps(result))
-        if result:
-            get_comms().send_data_to_bg_process("ATTACK", result)
-            raise Exception("SQL Injection [aikido_firewall]")
+        logger.info("sql_injection results : %s", json.dumps(contains_injection))
+        if contains_injection:
+            get_comms().send_data_to_bg_process("ATTACK", (contains_injection, context))
+            should_block = get_comms().poll_config("block")
+            if should_block:
+                raise Exception("SQL Injection [aikido_firewall]")
+
         return prev_query_function(_self, sql, unbuffered=False)
 
     # pylint: disable=no-member
