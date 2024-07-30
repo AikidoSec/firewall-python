@@ -7,8 +7,8 @@ import json
 from importlib.metadata import version
 import importhook
 from aikido_firewall.context import get_current_context
-from aikido_firewall.vulnerabilities.sql_injection.check_context_for_sql_injection import (
-    check_context_for_sql_injection,
+from aikido_firewall.vulnerabilities.sql_injection.context_contains_sql_injection import (
+    context_contains_sql_injection,
 )
 from aikido_firewall.vulnerabilities.sql_injection.dialects import MySQL
 from aikido_firewall.helpers.logging import logger
@@ -30,7 +30,7 @@ def on_mysqlclient_import(mysql):
         logger.debug("Wrapper - `mysqlclient` version : %s", version("mysqlclient"))
 
         context = get_current_context()
-        result = check_context_for_sql_injection(
+        result = context_contains_sql_injection(
             sql.decode("utf-8"), "MySQLdb.connections.query", context, MySQL()
         )
 

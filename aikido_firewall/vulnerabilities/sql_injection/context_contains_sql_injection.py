@@ -11,7 +11,7 @@ from aikido_firewall.helpers.logging import logger
 from aikido_firewall.context import UINPUT_SOURCES as SOURCES
 
 
-def check_context_for_sql_injection(sql, operation, context, dialect):
+def context_contains_sql_injection(sql, operation, context, dialect):
     """
     This will check the context of the request for SQL Injections
     """

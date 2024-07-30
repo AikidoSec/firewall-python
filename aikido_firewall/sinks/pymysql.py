@@ -8,8 +8,8 @@ import json
 from importlib.metadata import version
 import importhook
 from aikido_firewall.context import get_current_context
-from aikido_firewall.vulnerabilities.sql_injection.check_context_for_sql_injection import (
-    check_context_for_sql_injection,
+from aikido_firewall.vulnerabilities.sql_injection.context_contains_sql_injection import (
+    context_contains_sql_injection,
 )
 from aikido_firewall.vulnerabilities.sql_injection.dialects import MySQL
 from aikido_firewall.background_process import get_comms
@@ -33,7 +33,7 @@ def on_flask_import(mysql):
         logger.debug("Wrapper - `pymysql` version : %s", version("pymysql"))
 
         context = get_current_context()
-        result = check_context_for_sql_injection(
+        result = context_contains_sql_injection(
             sql, "pymysql.connections.query", context, MySQL()
         )
 
