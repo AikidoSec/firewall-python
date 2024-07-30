@@ -21,6 +21,8 @@ def test_get_subdomains_from_url():
         ("", []),
         # Test with a URL with subdomains and a path
         ("http://tobi.ferrets.example.com/path/to/resource", ["tobi", "ferrets"]),
+        ({}, []),
+        (None, []),
     ]
 
     for url, expected in test_cases:
