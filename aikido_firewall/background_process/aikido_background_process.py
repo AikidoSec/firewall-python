@@ -59,7 +59,7 @@ class AikidoBackgroundProcess:
                     conn.close()
                     pid = os.getpid()
                     os.kill(pid, signal.SIGTERM)  # Kill this subprocess
-                elif data[0] == "READ_PROPERTY":
+                elif data[0] == "READ_PROPERTY":  # meant to get config props
                     if hasattr(self.reporter, data[1]):
                         conn.send(self.reporter.__dict__[data[1]])
 
