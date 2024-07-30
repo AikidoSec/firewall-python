@@ -38,6 +38,7 @@ class Reporter:
             attack["user"] = None
             attack["payload"] = json.dumps(attack["payload"])[:4096]
             attack["metadata"] = limit_length_metadata(attack["metadata"], 4096)
+            attack["blocked"] = self.block
 
             payload = {
                 "type": "detected_attack",

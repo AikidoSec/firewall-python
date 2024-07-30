@@ -61,6 +61,9 @@ class AikidoBackgroundProcess:
                     conn.close()
                     pid = os.getpid()
                     os.kill(pid, signal.SIGTERM)  # Kill this subprocess
+                elif data[0] == "READ_PROPERTY":
+                    if hasattr(self.reporter, data[1]):
+                        conn.send(self.reporter.__dict__[data[1]])
 
     def reporting_thread(self):
         """Reporting thread"""
@@ -154,3 +157,13 @@ class IPC:
         )
         t.start()
         t.join(timeout=3)
+
+    def poll_config(self, prop):
+        """
+        This will poll the config from the Background Process
+        """
+        conn = con.Client(self.address, authkey=self.key)
+        conn.send(("READ_PROPERTY", prop))
+        prop_value = conn.recv()
+        logger.debug("Received property %s as %s", prop, prop_value)
+        return prop_value
