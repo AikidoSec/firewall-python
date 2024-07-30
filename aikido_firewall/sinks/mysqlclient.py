@@ -7,7 +7,9 @@ import json
 from importlib.metadata import version
 import importhook
 from aikido_firewall.context import get_current_context
-from aikido_firewall.vulnerabilities.sql_injection.context_contains_sql_injection import context_contains_sql_injection
+from aikido_firewall.vulnerabilities.sql_injection.context_contains_sql_injection import (
+    context_contains_sql_injection,
+)
 from aikido_firewall.vulnerabilities.sql_injection.dialects import MySQL
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.background_process import get_comms
