@@ -6,9 +6,15 @@ import multiprocessing.connection as con
 import os
 import time
 import signal
+import sched
 from threading import Thread
 from queue import Queue
 from aikido_firewall.helpers.logging import logger
+from aikido_firewall.background_process.reporter import Reporter
+from aikido_firewall.helpers.should_block import should_block
+from aikido_firewall.helpers.token import get_token_from_env
+from aikido_firewall.background_process.api.http_api import ReportingApiHTTP
+
 
 REPORT_SEC_INTERVAL = 600  # 10 minutes
 
@@ -31,6 +37,7 @@ class AikidoBackgroundProcess:
             pid = os.getpid()
             os.kill(pid, signal.SIGTERM)  # Kill this subprocess
         self.queue = Queue()
+        self.reporter = None
         # Start reporting thread :
         Thread(target=self.reporting_thread).start()
 
@@ -52,21 +59,36 @@ class AikidoBackgroundProcess:
                     conn.close()
                     pid = os.getpid()
                     os.kill(pid, signal.SIGTERM)  # Kill this subprocess
+                elif data[0] == "READ_PROPERTY":
+                    if hasattr(self.reporter, data[1]):
+                        conn.send(self.reporter.__dict__[data[1]])
 
     def reporting_thread(self):
         """Reporting thread"""
         logger.debug("Started reporting thread")
-        while True:
-            self.send_to_reporter()
-            time.sleep(REPORT_SEC_INTERVAL)
+        event_scheduler = sched.scheduler(
+            time.time, time.sleep
+        )  # Create an event scheduler
+        self.send_to_reporter(event_scheduler)
 
-    def send_to_reporter(self):
+        api = ReportingApiHTTP("http://app.local.aikido.io/")
+        # We need to pass along the scheduler so that the heartbeat also gets sent
+        self.reporter = Reporter(
+            should_block(), api, get_token_from_env(), False, event_scheduler
+        )
+
+        event_scheduler.run()
+
+    def send_to_reporter(self, event_scheduler):
         """
         Reports the found data to an Aikido server
         """
-        items_to_report = []
+        # Add back to event scheduler in REPORT_SEC_INTERVAL secs :
+        event_scheduler.enter(
+            REPORT_SEC_INTERVAL, 1, self.send_to_reporter, (event_scheduler,)
+        )
+        logger.debug("Checking queue")
         while not self.queue.empty():
-            items_to_report.append(self.queue.get())
-        logger.debug("Reporting to aikido server")
-        logger.critical("Items to report : %s", items_to_report)
-        # Currently not making API calls
+            attack = self.queue.get()
+            logger.debug("Reporting attack : %s", attack)
+            self.reporter.on_detected_attack(attack[0], attack[1])

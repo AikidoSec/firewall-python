@@ -18,13 +18,20 @@ def send_heartbeats_every_x_secs(reporter, interval_in_secs, event_scheduler):
 
     logger.debug("Starting heartbeats")
 
-    event_scheduler.enter(0, 1, send_heartbeat_wrapper, (reporter, interval_in_secs, event_scheduler))
+    event_scheduler.enter(
+        0, 1, send_heartbeat_wrapper, (reporter, interval_in_secs, event_scheduler)
+    )
 
 
 def send_heartbeat_wrapper(rep, interval_in_secs, event_scheduler):
     """
     Wrapper function for send_heartbeat so we get an interval
     """
-    event_scheduler.enter(interval_in_secs, 1, send_heartbeat_wrapper, (rep, interval_in_secs, event_scheduler))
+    event_scheduler.enter(
+        interval_in_secs,
+        1,
+        send_heartbeat_wrapper,
+        (rep, interval_in_secs, event_scheduler),
+    )
     logger.debug("Heartbeat...")
     rep.send_heartbeat()

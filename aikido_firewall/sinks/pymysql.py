@@ -39,7 +39,7 @@ def on_flask_import(mysql):
 
         logger.info("sql_injection results : %s", json.dumps(result))
         if result:
-            get_comms().send_data("ATTACK", (result, context))
+            get_comms().send_data_to_bg_process("ATTACK", (result, context))
             should_block = get_comms().poll_config("block")
             if should_block:
                 raise Exception("SQL Injection [aikido_firewall]")
