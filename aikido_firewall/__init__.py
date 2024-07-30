@@ -8,15 +8,17 @@ from dotenv import load_dotenv
 # Import logger
 from aikido_firewall.helpers.logging import logger
 
-# Import agent
-from aikido_firewall.agent import start_agent
+# Import background process
+from aikido_firewall.background_process import start_background_process
 
 # Load environment variables
 load_dotenv()
 
 
 def protect(module="any"):
-    """Start Aikido agent"""
+    """
+    Protect user's application
+    """
     # Import sources
     import aikido_firewall.sources.django
 
@@ -27,4 +29,4 @@ def protect(module="any"):
     import aikido_firewall.sinks.pymysql
 
     logger.info("Aikido python firewall started")
-    start_agent()
+    start_background_process()
