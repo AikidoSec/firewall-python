@@ -16,7 +16,7 @@ from aikido_firewall.helpers.token import get_token_from_env
 from aikido_firewall.background_process.api.http_api import ReportingApiHTTP
 
 
-REPORT_SEC_INTERVAL = 600  # 10 minutes
+REPORT_SEC_INTERVAL = 5  # 5 seconds
 
 
 class AikidoBackgroundProcess:
