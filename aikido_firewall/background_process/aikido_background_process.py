@@ -38,7 +38,7 @@ class AikidoBackgroundProcess:
             conn = listener.accept()
             logger.debug("connection accepted from %s", listener.last_accepted)
             while True:
-                data = conn.recv()
+                data = conn.recv()  #  because of this no sleep needed in thread
                 logger.debug("Incoming data : %s", data)
                 if data[0] == "ATTACK":
                     self.queue.put(data[1])
