@@ -74,7 +74,11 @@ class AikidoBackgroundProcess:
         api = ReportingApiHTTP("http://app.local.aikido.io/")
         # We need to pass along the scheduler so that the heartbeat also gets sent
         self.reporter = Reporter(
-            should_block(), api, get_token_from_env(), False, event_scheduler
+            block=should_block(),
+            api=api,
+            token=get_token_from_env(),
+            serverless=False,
+            event_scheduler=event_scheduler,
         )
 
         event_scheduler.run()
