@@ -7,11 +7,10 @@ import json
 from importlib.metadata import version
 import importhook
 from aikido_firewall.context import get_current_context
-from aikido_firewall.vulnerabilities.sql_injection.context_contains_sql_injection import (
-    context_contains_sql_injection,
-)
+from aikido_firewall.vulnerabilities.sql_injection.context_contains_sql_injection import context_contains_sql_injection
 from aikido_firewall.vulnerabilities.sql_injection.dialects import MySQL
 from aikido_firewall.helpers.logging import logger
+from aikido_firewall.background_process import get_comms
 
 
 @importhook.on_import("MySQLdb.connections")
@@ -30,13 +29,17 @@ def on_mysqlclient_import(mysql):
         logger.debug("Wrapper - `mysqlclient` version : %s", version("mysqlclient"))
 
         context = get_current_context()
-        result = context_contains_sql_injection(
+        contains_injection = context_contains_sql_injection(
             sql.decode("utf-8"), "MySQLdb.connections.query", context, MySQL()
         )
 
-        logger.debug("sql_injection results : %s", json.dumps(result))
-        if result:
-            raise Exception("SQL Injection [aikido_firewall]")
+        logger.debug("sql_injection results : %s", json.dumps(contains_injection))
+        if contains_injection:
+            get_comms().send_data_to_bg_process("ATTACK", (contains_injection, context))
+            should_block = get_comms().poll_config("block")
+            if should_block:
+                raise Exception("SQL Injection [aikido_firewall]")
+
         return prev_query_function(_self, sql)
 
     # pylint: disable=no-member

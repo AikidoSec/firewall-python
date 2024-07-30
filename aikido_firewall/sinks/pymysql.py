@@ -33,13 +33,13 @@ def on_flask_import(mysql):
         logger.debug("Wrapper - `pymysql` version : %s", version("pymysql"))
 
         context = get_current_context()
-        result = context_contains_sql_injection(
+        contains_injection = context_contains_sql_injection(
             sql, "pymysql.connections.query", context, MySQL()
         )
 
-        logger.info("sql_injection results : %s", json.dumps(result))
-        if result:
-            get_comms().send_data_to_bg_process("ATTACK", (result, context))
+        logger.info("sql_injection results : %s", json.dumps(contains_injection))
+        if contains_injection:
+            get_comms().send_data_to_bg_process("ATTACK", (contains_injection, context))
             should_block = get_comms().poll_config("block")
             if should_block:
                 raise Exception("SQL Injection [aikido_firewall]")
