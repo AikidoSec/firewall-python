@@ -57,5 +57,5 @@ def on_pymongo_import(pymongo):
 
         setattr(modified_pymongo.Collection, operation, wrapped_operation_function)
 
-    logger.debug("Wrapped `pymongo` with version %s", version("pymongo"))
+    # logger.debug("Wrapped `pymongo` with version %s", version("pymongo"))
     return modified_pymongo
