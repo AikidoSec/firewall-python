@@ -8,6 +8,7 @@ import os
 import secrets
 import signal
 import socket
+import sched
 import multiprocessing.connection as con
 from multiprocessing import Process
 from threading import Thread
@@ -40,8 +41,7 @@ class AikidoBackgroundProcess:
             pid = os.getpid()
             os.kill(pid, signal.SIGTERM)  # Kill this subprocess
         self.queue = Queue()
-        api = ReportingApiHTTP("http://app.local.aikido.io/")
-        self.reporter = Reporter(should_block(), api, get_token_from_env(), False)
+        self.reporter = None
         # Start reporting thread :
         Thread(target=self.reporting_thread).start()
 
@@ -68,14 +68,23 @@ class AikidoBackgroundProcess:
     def reporting_thread(self):
         """Reporting thread"""
         logger.debug("Started reporting thread")
-        while True:
-            self.send_to_reporter()
-            time.sleep(REPORT_SEC_INTERVAL)
+        s = sched.scheduler(time.time, time.sleep)  # Create an event scheduler
+        self.send_to_reporter(s)
 
-    def send_to_reporter(self):
+        api = ReportingApiHTTP("http://app.local.aikido.io/")
+        # We need to pass along the scheduler so that the heartbeat also gets sent
+        self.reporter = Reporter(should_block(), api, get_token_from_env(), False, s)
+
+        s.run()
+
+    def send_to_reporter(self, event_scheduler):
         """
         Reports the found data to an Aikido server
         """
+        # Add back to event scheduler in REPORT_SEC_INTERVAL secs :
+        event_scheduler.enter(
+            REPORT_SEC_INTERVAL, 1, self.send_to_reporter, (event_scheduler,)
+        )
         logger.debug("Checking queue")
         while not self.queue.empty():
             attack = self.queue.get()

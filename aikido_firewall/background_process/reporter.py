@@ -9,14 +9,16 @@ from aikido_firewall.helpers.logging import logger
 from aikido_firewall.helpers.limit_length_metadata import limit_length_metadata
 from aikido_firewall.helpers.token import Token
 from aikido_firewall import PKG_VERSION
+from aikido_firewall.background_process.heartbeats import send_heartbeats_every_x_secs
 
 
 class Reporter:
     """Reporter class"""
 
     timeout_in_sec = 5
+    heartbeat_secs = 10
 
-    def __init__(self, block, api, token, serverless):
+    def __init__(self, block, api, token, serverless, event_scheduler):
         self.block = block
         self.api = api
         self.token = token  # Should be instance of the Token class!
@@ -26,6 +28,7 @@ class Reporter:
         self.serverless = serverless
 
         self.on_start()
+        send_heartbeats_every_x_secs(self, self.heartbeat_secs, event_scheduler)
 
     def on_detected_attack(self, attack, context):
         """
