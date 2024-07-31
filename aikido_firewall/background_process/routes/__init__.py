@@ -8,7 +8,7 @@ class Routes:
     Stores all routes
     """
 
-    def __init__(self, max_size):
+    def __init__(self, max_size=1000):
         self.max_size = max_size
         self.routes = dict()
 
