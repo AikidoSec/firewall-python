@@ -32,6 +32,7 @@ def is_usefull_route(status_code, route, method):
     - Isn't a dot file e.g. .well-known
     - etc.
     """
+    status_code = int(status_code)
     if method in EXCLUDED_METHODS:
         return False
 
