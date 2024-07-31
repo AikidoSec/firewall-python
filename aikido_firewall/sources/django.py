@@ -21,5 +21,5 @@ def on_django_import(django):
 
     # pylint: disable=no-member
     setattr(modified_django.settings, "MIDDLEWARE", new_middleware_array)
-    logger.debug("Wrapped `django` module")
+    logger.info("Wrapped `django` module")
     return modified_django
