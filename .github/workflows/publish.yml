@@ -1,0 +1,33 @@
+name: Publish PyPi package
+
+on:
+  push:
+    tags:
+      - 'v*'  # This will trigger the workflow on version tags like v1.0.0
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'  # Specify the Python version you want to use
+
+      - name: Install dependencies
+        run: |
+          make install
+          pip install setuptools wheel twine
+
+      - name: Build the package
+        run: make build
+
+      - name: Publish to PyPI
+        env:
+          TWINE_USERNAME: __token__  # Use __token__ for API token authentication
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        run: twine upload dist/*
