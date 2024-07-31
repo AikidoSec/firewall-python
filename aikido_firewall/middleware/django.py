@@ -3,8 +3,11 @@ Django WSGI Aikido Middleware
 uses headers, body, etc. as sources
 """
 
+from aikido_firewall.background_process import get_comms
 from aikido_firewall.helpers.logging import logger
+from aikido_firewall.helpers.is_usefull_route import is_usefull_route
 from aikido_firewall.context import Context
+
 RATELIMIT_BLOCK_MSG = "You are rate limited by Aikido firewall."
 
 
