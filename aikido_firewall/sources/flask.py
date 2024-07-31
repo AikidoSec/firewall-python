@@ -41,7 +41,7 @@ class AikidoMiddleware(BaseHTTPMiddleware):  # pylint: disable=too-few-public-me
         # comms.send_data_to_bg_process("STATS:ADD_REQ", ())
 
         ratelimit = comms.send_and_recv_from_bg_process("RLM:SHOULD_RLM", context)
-        if ratelimit.block:
+        if ratelimit.get("block"):
             raise EnvironmentError(RATELIMIT_BLOCK_MSG)
 
         return response
