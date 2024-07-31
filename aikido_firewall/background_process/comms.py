@@ -71,14 +71,14 @@ class AikidoIPCCommunications:
             # Send/Receive data :
             conn.send(data)
             if receive:
-                result_obj = conn.recv()
+                result_obj[0] = conn.recv()
 
             # Close the connection :
             conn.send(("CLOSE", {}))
             conn.close()
 
         # Create a shared result object between the thread and this process :
-        result_obj = None
+        result_obj = [None]
         t = Thread(
             target=target,
             args=(self.address, self.key, receive, (action, obj), result_obj),
@@ -88,4 +88,4 @@ class AikidoIPCCommunications:
         # Start and join the thread for 3 seconds, afterwards the thread is forced to close (daemon=True)
         t.start()
         t.join(timeout=3)
-        return result_obj
+        return result_obj[0]
