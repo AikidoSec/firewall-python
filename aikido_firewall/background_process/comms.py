@@ -93,3 +93,14 @@ class AikidoIPCCommunications:
         conn.close()
         logger.debug("Received property %s as %s", prop, prop_value)
         return prop_value
+
+    def send_and_recv_from_bg_process(self, action, obj):
+        """
+        This will send and also recv data
+        """
+        conn = con.Client(self.address, authkey=self.key)
+        conn.send((action, obj))
+        res = conn.recv()
+        conn.send(("CLOSE", {}))
+        conn.close()
+        return res
