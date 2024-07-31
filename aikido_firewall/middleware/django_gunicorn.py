@@ -35,20 +35,19 @@ def pre_request(prev_func):
     def aik_pre_request(worker, req):
         req.body, req.body_copy = clone_body(req.body)
 
-        django_context = Context(
-            req=req, 
-            source="django-gunicorn"
-        )
+        django_context = Context(req=req, source="django-gunicorn")
         django_context.set_as_current_context()
         prev_func(worker, req)
 
     return aik_pre_request
+
 
 def post_request(prev_func):
     """
     Aikido decorator for gunicorn config
     Function: post_request(worker, req, environ, resp)
     """
+
     def aik_post_request(worker, req, environ, resp):
         context = get_current_context()
         if not context:
@@ -68,7 +67,9 @@ def post_request(prev_func):
             raise EnvironmentError(RATELIMIT_BLOCK_MSG)
 
         prev_func(worker, req, environ, resp)
+
     return aik_post_request
+
 
 def post_fork(prev_func):
     """

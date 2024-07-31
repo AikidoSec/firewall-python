@@ -52,7 +52,9 @@ class AikidoIPCCommunications:
 
     def start_aikido_listener(self):
         """This will start the aikido process which listens"""
-        self.background_process = Process(target=AikidoBackgroundProcess, args=(self.address, self.key), daemon=True)
+        self.background_process = Process(
+            target=AikidoBackgroundProcess, args=(self.address, self.key), daemon=True
+        )
         self.background_process.start()
 
     def send_data_to_bg_process(self, action, obj, receive=False):
