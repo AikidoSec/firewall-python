@@ -12,19 +12,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.x"
-    - name: Install pypa/build
-      run: make install
-    - name: Build a binary wheel and a source tarball
-      run: make build
-    - name: Store the distribution packages
-      uses: actions/upload-artifact@v3
-      with:
-        name: python-package-distributions
-        path: dist/
+    - name: Install poetry
+      run: pip install poetry
+    - name: Install dependencies
+      run: poetry install
+
+    - name: Build distribution packages
+      run: poetry build
   publish-to-testpypi:
     name: Publish Python 🐍 distribution 📦 to TestPyPI
     needs:
