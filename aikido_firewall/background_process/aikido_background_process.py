@@ -14,6 +14,7 @@ from aikido_firewall.background_process.reporter import Reporter
 from aikido_firewall.helpers.should_block import should_block
 from aikido_firewall.helpers.token import get_token_from_env
 from aikido_firewall.background_process.api.http_api import ReportingApiHTTP
+from aikido_firewall.ratelimiting import should_ratelimit_request
 
 
 EMPTY_QUEUE_INTERVAL = 5  # 5 seconds
@@ -64,6 +65,12 @@ class AikidoBackgroundProcess:
                         conn.send(self.reporter.__dict__[data[1]])
                 elif data[0] == "ROUTE":
                     self.reporter.routes.add_route(method=data[1][0], path=data[1][1])
+                elif data[0] == "RLM:SHOULD_RLM":
+                    conn.send(
+                        should_ratelimit_request(
+                            context=data[1], reporter=self.reporter
+                        )
+                    )
 
     def reporting_thread(self):
         """Reporting thread"""
