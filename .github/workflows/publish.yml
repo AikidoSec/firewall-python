@@ -19,6 +19,12 @@ jobs:
 
     - name: Build distribution packages
       run: poetry build
+
+    - name: Store the distribution packages
+      uses: actions/upload-artifact@v3
+      with:
+        name: python-package-distributions
+        path: dist/
   publish-to-testpypi:
     name: Publish Python 🐍 distribution 📦 to TestPyPI
     needs:
