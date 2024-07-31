@@ -5,6 +5,7 @@ Exports the AikidoIPCCommunications class
 
 import os
 import multiprocessing.connection as con
+from multiprocessing import Process
 from threading import Thread
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.background_process.aikido_background_process import (
@@ -41,6 +42,7 @@ class AikidoIPCCommunications:
         # The key needs to be in byte form
         self.address = address
         self.key = key
+        self.background_process = None
 
         # Set as global ipc object :
         reset_comms()
@@ -50,11 +52,8 @@ class AikidoIPCCommunications:
 
     def start_aikido_listener(self):
         """This will start the aikido process which listens"""
-        pid = os.fork()
-        if pid == 0:  # Child process
-            AikidoBackgroundProcess(self.address, self.key)
-        else:  # Parent process
-            logger.debug("Started background process, PID: %d", pid)
+        self.background_process = Process(target=AikidoBackgroundProcess, args=(self.address, self.key), daemon=True)
+        self.background_process.start()
 
     def send_data_to_bg_process(self, action, obj, receive=False):
         """
