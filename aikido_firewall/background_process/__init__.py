@@ -3,7 +3,7 @@ Aikido background process, this will create a new process
 and listen for data sent by our sources and sinks
 """
 
-import secrets
+from aikido_firewall.helpers.token import get_token_from_env
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.background_process.comms import (
     AikidoIPCCommunications,
@@ -20,7 +20,7 @@ def start_background_process():
     """
 
     # Generate a secret key :
-    generated_key_bytes = secrets.token_bytes(32)
+    secret_key_bytes = str.encode(str(get_token_from_env()))
 
-    comms = AikidoIPCCommunications(IPC_ADDRESS, generated_key_bytes)
+    comms = AikidoIPCCommunications(IPC_ADDRESS, secret_key_bytes)
     comms.start_aikido_listener()
