@@ -11,6 +11,8 @@ from aikido_firewall.context import Context
 from aikido_firewall.background_process import get_comms
 from aikido_firewall.helpers.is_usefull_route import is_usefull_route
 
+RATELIMIT_BLOCK_MSG = "You are rate limited by Aikido firewall."
+
 
 class AikidoMiddleware(BaseHTTPMiddleware):  # pylint: disable=too-few-public-methods
     """
@@ -29,14 +31,19 @@ class AikidoMiddleware(BaseHTTPMiddleware):  # pylint: disable=too-few-public-me
         response = call_next(request)
         if not context or not context.route or not context.method:
             return response
+        comms = get_comms()
 
         is_curr_route_usefull = is_usefull_route(
             response._status_code, context.route, context.method
         )
         if is_curr_route_usefull:
-            get_comms().send_data_to_bg_process(
-                "ROUTE", (context.method, context.route)
-            )
+            comms.send_data_to_bg_process("ROUTE", (context.method, context.route))
+        # comms.send_data_to_bg_process("STATS:ADD_REQ", ())
+
+        ratelimit = comms.send_and_recv_from_bg_process("RLM:SHOULD_RLM", context)
+        if ratelimit.block:
+            raise EnvironmentError(RATELIMIT_BLOCK_MSG)
+
         return response
 
 
