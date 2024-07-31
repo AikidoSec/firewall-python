@@ -6,7 +6,7 @@ authors = ["Aikido"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.8"
 importhook = "^1.0.9"
 python-dotenv = "^1.0.1"
 pytest = "^8.2.2"
