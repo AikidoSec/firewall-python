@@ -1,33 +1,50 @@
-name: Publish PyPi package
+name: Publish Python 🐍 distribution 📦 to TestPyPI
 
 on:
   push:
     tags:
-      - 'v*'  # This will trigger the workflow on version tags like v1.0.0
+      - 'v*'
 
 jobs:
-  publish:
+  build:
+    name: Build distribution 📦
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.x"
+    - name: Install pypa/build
+      run: make install
+    - name: Build a binary wheel and a source tarball
+      run: make build
+    - name: Store the distribution packages
+      uses: actions/upload-artifact@v3
+      with:
+        name: python-package-distributions
+        path: dist/
+  publish-to-testpypi:
+    name: Publish Python 🐍 distribution 📦 to TestPyPI
+    needs:
+    - build
+    runs-on: ubuntu-latest
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.12'  # Specify the Python version you want to use
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/aikido_firewall
 
-      - name: Install dependencies
-        run: |
-          make install
-          pip install setuptools wheel twine
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
 
-      - name: Build the package
-        run: make build
-
-      - name: Publish to PyPI
-        env:
-          TWINE_USERNAME: __token__  # Use __token__ for API token authentication
-          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-        run: twine upload dist/*
+    steps:
+    - name: Download all the dists
+      uses: actions/download-artifact@v3
+      with:
+        name: python-package-distributions
+        path: dist/
+    - name: Publish distribution 📦 to TestPyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        repository-url: https://test.pypi.org/legacy/
