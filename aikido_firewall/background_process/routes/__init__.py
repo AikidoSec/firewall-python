@@ -35,7 +35,18 @@ class Routes:
         Evicts LRU routes if the size is too large
         """
         if len(self.routes) >= self.max_size:
-            least_used_key = None
+            least_used = [None, float("inf")]
+            for key, route in self.routes.items():
+                if route.get("hits") < least_used[1]:
+                    least_used = [key, route.get("hits")]
+            if least_used[0]:
+                del self.routes[least_used[0]]
+
+    def __iter__(self):
+        return iter(self.routes.values())
+
+    def __len__(self):
+        return len(self.routes)
 
 
 def route_to_key(method, path):
