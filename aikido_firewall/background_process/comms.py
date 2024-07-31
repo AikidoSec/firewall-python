@@ -56,51 +56,36 @@ class AikidoIPCCommunications:
         else:  # Parent process
             logger.debug("Started background process, PID: %d", pid)
 
-    def send_data_to_bg_process(self, action, obj):
+    def send_data_to_bg_process(self, action, obj, receive=False):
         """
         This creates a new client for comms to the background process
         """
 
         # We want to make sure that sending out this data affects the process as little as possible
         # So we run it inside a seperate thread with a timeout of 3 seconds
-        def target(address, key, data_array):
-            try:
-                conn = con.Client(address, authkey=key)
-                logger.debug("Created connection %s", conn)
-                for data in data_array:
-                    conn.send(data)
-                conn.send(("CLOSE", {}))
-                conn.close()
-                logger.debug("Connection closed")
-            except Exception as e:
-                logger.info("Failed to send data to bg process : %s", e)
+        # If something goes wrong, it will also be encapsulated in the thread i.e. no crashes
+        def target(address, key, receive, data, result_obj):
+            # Create a connection, this can get stuck :
+            conn = con.Client(address, authkey=key)
 
+            # Send/Receive data :
+            conn.send(data)
+            if receive:
+                result_obj = conn.recv()
+
+            # Close the connection :
+            conn.send(("CLOSE", {}))
+            conn.close()
+
+        # Create a shared result object between the thread and this process :
+        result_obj = None
         t = Thread(
-            target=target, args=(self.address, self.key, [(action, obj)]), daemon=True
+            target=target,
+            args=(self.address, self.key, receive, (action, obj), result_obj),
+            daemon=True,
         )
+
+        # Start and join the thread for 3 seconds, afterwards the thread is forced to close (daemon=True)
         t.start()
-        # This joins the thread for 3 seconds, afterwards the thread is forced to close (daemon=True)
         t.join(timeout=3)
-
-    def poll_config(self, prop):
-        """
-        This will poll the config from the Background Process
-        """
-        conn = con.Client(self.address, authkey=self.key)
-        conn.send(("READ_PROPERTY", prop))
-        prop_value = conn.recv()
-        conn.send(("CLOSE", {}))
-        conn.close()
-        logger.debug("Received property %s as %s", prop, prop_value)
-        return prop_value
-
-    def send_and_recv_from_bg_process(self, action, obj):
-        """
-        This will send and also recv data
-        """
-        conn = con.Client(self.address, authkey=self.key)
-        conn.send((action, obj))
-        res = conn.recv()
-        conn.send(("CLOSE", {}))
-        conn.close()
-        return res
+        return result_obj
