@@ -59,8 +59,10 @@ def test_mutable_aikido_cursor(
 ):
     # Create a mock former cursor
     mock_execute = MagicMock(return_value="execute_result")
+    mock_executemany = MagicMock(return_value="executemany_result")
     mock_former_cursor = MagicMock()
     mock_former_cursor.execute = mock_execute
+    mock_former_cursor.executemany = mock_executemany
 
     # Create an instance of MutableAikidoCursor
     cursor = MutableAikidoCursor(mock_former_cursor)
@@ -68,6 +70,10 @@ def test_mutable_aikido_cursor(
     # Test execute method
     result = cursor.execute("SELECT * FROM table")
     assert result == "execute_result"
+
+    # Test executemany method
+    result = cursor.executemany(["SELECT * FROM table"], [])
+    assert result == "executemany_result"
 
     # Test accessing other attributes
     mock_former_cursor.some_method = MagicMock(return_value="some_value")
