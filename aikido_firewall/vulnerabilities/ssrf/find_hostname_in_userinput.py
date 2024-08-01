@@ -2,19 +2,8 @@
 Only exports find_hostname_in_userinput function
 """
 
-from urllib.parse import urlparse
 from aikido_firewall.helpers.get_port_from_url import get_port_from_url
-
-
-def try_parse_url(url: str):
-    """Tries to parse the url using urlparse"""
-    try:
-        parsed_url = urlparse(url)
-        if parsed_url.scheme and parsed_url.netloc:
-            return parsed_url
-        return None
-    except Exception:
-        return None
+from aikido_firewall.helpers.try_parse_url import try_parse_url
 
 
 def find_hostname_in_userinput(user_input, hostname, port=None):
