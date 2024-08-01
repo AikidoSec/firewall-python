@@ -23,7 +23,7 @@ class MutableAikidoConnection:
 
     def __getattr__(self, name):
         if name != "cursor":
-            return self._former_conn.__getattr__(name)
+            return getattr(self._former_conn, name)
 
         # Return a function dynamically
         def cursor(*args, **kwargs):
