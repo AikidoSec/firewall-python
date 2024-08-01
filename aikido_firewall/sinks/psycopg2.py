@@ -41,7 +41,6 @@ class MutableAikidoCursor:
         self._execute_func_copy = copy.deepcopy(former_cursor.execute)
 
     def __getattr__(self, name):
-        logger.debug("Name : %s", name)
         if name != "execute":
             return getattr(self._former_cursor, name)
 
