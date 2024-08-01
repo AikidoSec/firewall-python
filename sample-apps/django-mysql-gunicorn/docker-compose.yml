@@ -39,6 +39,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    extra_hosts:
+      - "app.local.aikido.io:host-gateway"
 
 volumes:
   db_data:
