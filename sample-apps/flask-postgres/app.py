@@ -54,7 +54,7 @@ def create_dog_many():
     dog_name = request.form['dog_name']
     conn = get_db_connection()
     cursor =  conn.cursor()
-    cursor.executemany([f"INSERT INTO dogs (dog_name, isAdmin) VALUES ('%s', FALSE)" % (dog_name)])
+    cursor.executemany([f"INSERT INTO dogs (dog_name, isAdmin) VALUES ('%s', FALSE)" % (dog_name)], [])
     conn.commit()
     cursor.close()
     conn.close()
