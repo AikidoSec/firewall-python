@@ -33,36 +33,48 @@ class MutableAikidoConnection:
         return cursor
 
 
+def execute_sql_detection_code(sql):
+    """
+    Executes the sql algorithm : Should block or not, get context, ...
+    """
+    context = get_current_context()
+    contains_injection = context_contains_sql_injection(
+        sql, "pymysql.connections.query", context, Postgres()
+    )
+
+    logger.info("sql_injection results : %s", json.dumps(contains_injection))
+    if contains_injection:
+        get_comms().send_data_to_bg_process("ATTACK", (contains_injection, context))
+        should_block = get_comms().poll_config("block")
+        if should_block:
+            raise Exception("SQL Injection [aikido_firewall]")
+
+
 class MutableAikidoCursor:
     """Aikido's mutable cursor class"""
 
     def __init__(self, former_cursor):
         self._former_cursor = former_cursor
         self._execute_func_copy = copy.deepcopy(former_cursor.execute)
+        self._executemany_func_copy = copy.deepcopy(former_cursor.executemany)
 
     def __getattr__(self, name):
-        if name != "execute":
+        if not name in ["execute", "executemany"]:
             return getattr(self._former_cursor, name)
 
         # Return a function dynamically
         def execute(*args, **kwargs):
-            sql = args[0]
-            context = get_current_context()
-            contains_injection = context_contains_sql_injection(
-                sql, "pymysql.connections.query", context, Postgres()
-            )
-
-            logger.info("sql_injection results : %s", json.dumps(contains_injection))
-            if contains_injection:
-                get_comms().send_data_to_bg_process(
-                    "ATTACK", (contains_injection, context)
-                )
-                should_block = get_comms().poll_config("block")
-                if should_block:
-                    raise Exception("SQL Injection [aikido_firewall]")
+            execute_sql_detection_code(sql=args[0])
             return self._execute_func_copy(*args, **kwargs)
 
-        return execute
+        def executemany(*args, **kwargs):
+            for sql in args[0]:
+                execute_sql_detection_code(sql)
+            return self._executemany_func_copy(*args, **kwargs)
+
+        if name is "execute":
+            return execute
+        return executemany
 
 
 @importhook.on_import("psycopg2._psycopg")
