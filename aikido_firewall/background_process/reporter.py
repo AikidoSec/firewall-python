@@ -15,6 +15,7 @@ from aikido_firewall import PKG_VERSION
 from aikido_firewall.background_process.heartbeats import send_heartbeats_every_x_secs
 from aikido_firewall.background_process.routes import Routes
 from .reporter_config import ReporterConfig
+from aikido_firewall.ratelimiting.rate_limiter import RateLimiter
 
 
 class Reporter:
@@ -29,6 +30,9 @@ class Reporter:
         self.token = token  # Should be instance of the Token class!
         self.routes = Routes(200)
         self.conf = ReporterConfig([], get_unixtime_ms())
+        self.rate_limiter = RateLimiter(
+            max_items=5000, time_to_live_in_ms=120 * 60 * 1000  # 120 minutes
+        )
 
         if isinstance(serverless, str) and len(serverless) == 0:
             raise ValueError("Serverless cannot be an empty string")

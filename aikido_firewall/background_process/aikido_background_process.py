@@ -3,10 +3,9 @@ Simply exports the aikido background process
 """
 
 import multiprocessing.connection as con
-import os
 import time
-import signal
 import sched
+import sys
 from threading import Thread
 from queue import Queue
 from aikido_firewall.helpers.logging import logger
@@ -33,10 +32,9 @@ class AikidoBackgroundProcess:
             listener = con.Listener(address, authkey=key)
         except OSError:
             logger.warning(
-                "Aikido listener may already be running on port %s", address[1]
+                "Aikido listener may already be running on port %s, exiting", address[1]
             )
-            pid = os.getpid()
-            os.kill(pid, signal.SIGTERM)  # Kill this subprocess
+            sys.exit(0)
         self.queue = Queue()
         self.reporter = None
         # Start reporting thread :
@@ -58,8 +56,7 @@ class AikidoBackgroundProcess:
                 ):  # when main process quits , or during testing etc
                     logger.debug("Killing subprocess")
                     conn.close()
-                    pid = os.getpid()
-                    os.kill(pid, signal.SIGTERM)  # Kill this subprocess
+                    sys.exit(0)
                 elif data[0] == "READ_PROPERTY":  # meant to get config props
                     if hasattr(self.reporter, data[1]):
                         conn.send(self.reporter.__dict__[data[1]])

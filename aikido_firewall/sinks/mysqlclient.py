@@ -38,7 +38,9 @@ def on_mysqlclient_import(mysql):
         logger.debug("sql_injection results : %s", json.dumps(contains_injection))
         if contains_injection:
             get_comms().send_data_to_bg_process("ATTACK", (contains_injection, context))
-            should_block = get_comms().poll_config("block")
+            should_block = get_comms().send_data_to_bg_process(
+                "READ_PROPERTY", "block", True
+            )
             if should_block:
                 raise Exception("SQL Injection [aikido_firewall]")
 
