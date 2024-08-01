@@ -72,7 +72,7 @@ class MutableAikidoCursor:
                 execute_sql_detection_code(sql)
             return self._executemany_func_copy(*args, **kwargs)
 
-        if name is "execute":
+        if name == "execute":
             return execute
         return executemany
 
