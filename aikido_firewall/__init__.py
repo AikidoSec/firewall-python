@@ -5,7 +5,7 @@ Aggregates from the different modules
 from dotenv import load_dotenv
 
 # Constants
-PKG_VERSION = "0.0.5"
+PKG_VERSION = "0.0.6"
 
 # Import logger
 from aikido_firewall.helpers.logging import logger
