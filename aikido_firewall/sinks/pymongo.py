@@ -51,7 +51,9 @@ def on_pymongo_import(pymongo):
             context = get_current_context()
             injection_results = detect_nosql_injection(context, _filter)
             if injection_results["injection"]:
-                get_comms().send_data("ATTACK", injection_results)
+                get_comms().send_data_to_bg_process(
+                    "ATTACK", (injection_results, context)
+                )
                 raise Exception("NOSQL Injection [aikido_firewall]")
             return prev_func(_self, _filter, *args, **kwargs)
 
