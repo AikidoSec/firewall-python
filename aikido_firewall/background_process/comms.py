@@ -52,6 +52,7 @@ class AikidoIPCCommunications:
 
     def start_aikido_listener(self):
         """This will start the aikido process which listens"""
+        #  Daemon is set to True so that the process kills itself when the main process dies
         self.background_process = Process(
             target=AikidoBackgroundProcess, args=(self.address, self.key), daemon=True
         )
@@ -63,7 +64,7 @@ class AikidoIPCCommunications:
         """
 
         # We want to make sure that sending out this data affects the process as little as possible
-        # So we run it inside a seperate thread with a timeout of 3 seconds
+        # So we run it inside a seperate thread with a timeout of 100ms
         # If something goes wrong, it will also be encapsulated in the thread i.e. no crashes
         def target(address, key, receive, data, result_obj):
             # Create a connection, this can get stuck :
