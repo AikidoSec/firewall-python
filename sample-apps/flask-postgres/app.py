@@ -34,12 +34,27 @@ def get_dogpage(dog_id):
 def show_create_dog_form():
     return render_template('create_dog.html')
 
+@app.route("/create_many", methods=['GET'])
+def show_create_dog_form_many():
+    return render_template('create_dog.html')
+
 @app.route("/create", methods=['POST'])
 def create_dog():
     dog_name = request.form['dog_name']
     conn = get_db_connection()
     cursor =  conn.cursor()
     cursor.execute(f"INSERT INTO dogs (dog_name, isAdmin) VALUES ('%s', FALSE)" % (dog_name))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return f'Dog {dog_name} created successfully'
+
+@app.route("/create_many", methods=['POST'])
+def create_dog_many():
+    dog_name = request.form['dog_name']
+    conn = get_db_connection()
+    cursor =  conn.cursor()
+    cursor.executemany([f"INSERT INTO dogs (dog_name, isAdmin) VALUES ('%s', FALSE)" % (dog_name)], [])
     conn.commit()
     cursor.close()
     conn.close()
