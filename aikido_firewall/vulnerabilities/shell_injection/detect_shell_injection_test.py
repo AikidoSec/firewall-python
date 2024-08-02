@@ -62,14 +62,12 @@ def test_single_quote_between_single_quotes():
     is_shell_injection("ls ''single quote''", "'single quote'")
 
 
-# def quote(args):
-#    # A simple implementation of quoting similar to shell-quote
-#    return ' '.join(f'"{arg}"' if ' ' in arg or '`' in arg else arg for arg in args)
-
-# def test_ignores_escaped_backticks():
-#    domain = "www.example`whoami`.com"
-#    args = ["--domain", domain]
-#    is_not_shell_injection(f"binary {quote(args)}", domain)
+# Test not ported : Requires `quote` function
+# t.test("it ignores escaped backticks", async () => {
+#  const domain = "www.example`whoami`.com";
+#  const args = ["--domain", domain];
+#  isNotShellInjection(`binary ${quote(args)}`, domain);
+# });
 
 
 def test_no_special_chars_inside_double_quotes():
