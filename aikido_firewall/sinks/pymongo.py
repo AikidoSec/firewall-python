@@ -9,6 +9,7 @@ from aikido_firewall.helpers.logging import logger
 from aikido_firewall.vulnerabilities.nosql_injection import detect_nosql_injection
 from aikido_firewall.context import get_current_context
 from aikido_firewall.background_process import get_comms
+from aikido_firewall.errors import AikidoNoSQLInjection
 
 OPERATIONS_WITH_FILTER = [
     "replace_one",  # L1087
@@ -52,7 +53,7 @@ def on_pymongo_import(pymongo):
             injection_results = detect_nosql_injection(context, _filter)
             if injection_results["injection"]:
                 get_comms().send_data("ATTACK", injection_results)
-                raise Exception("NOSQL Injection [aikido_firewall]")
+                raise AikidoNoSQLInjection("NOSQL Injection [aikido_firewall]")
             return prev_func(_self, _filter, *args, **kwargs)
 
         setattr(modified_pymongo.Collection, operation, wrapped_operation_function)
