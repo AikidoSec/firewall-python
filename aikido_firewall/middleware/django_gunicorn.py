@@ -8,9 +8,7 @@ import aikido_firewall
 from aikido_firewall.context import Context, get_current_context
 from aikido_firewall.helpers.is_usefull_route import is_usefull_route
 from aikido_firewall.background_process import get_comms
-
-
-RATELIMIT_BLOCK_MSG = "You are rate limited by Aikido firewall."
+from aikido_firewall.errors import AikidoRateLimiting
 
 
 def when_ready(prev_func):
@@ -64,7 +62,7 @@ def post_request(prev_func):
 
         ratelimit = comms.send_data_to_bg_process("RLM:SHOULD_RLM", context, True)
         if ratelimit and ratelimit.get("block"):
-            raise EnvironmentError(RATELIMIT_BLOCK_MSG)
+            raise AikidoRateLimiting()
 
         prev_func(worker, req, environ, resp)
 
