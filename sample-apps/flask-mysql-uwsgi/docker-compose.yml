@@ -33,6 +33,9 @@ services:
       - "8080:5000"
     depends_on:
       - db
+    extra_hosts:
+      - "app.local.aikido.io:host-gateway"
+
 
 volumes:
   db_data:

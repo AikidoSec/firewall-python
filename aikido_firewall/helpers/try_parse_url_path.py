@@ -21,7 +21,6 @@ def try_parse_url_path(url):
 
     if not parsed or not parsed.scheme:
         return None
-    print(parsed)
     if parsed.path == "":
         return "/"
     return parsed.path

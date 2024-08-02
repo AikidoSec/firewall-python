@@ -19,7 +19,7 @@ logger = logging.getLogger("aikido_firewall")
 
 
 @importhook.on_import("pymysql.connections")
-def on_flask_import(mysql):
+def on_pymysql_import(mysql):
     """
     Hook 'n wrap on `pymysql.connections`
     Our goal is to wrap the query() function of the Connection class :
