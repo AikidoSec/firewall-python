@@ -14,7 +14,6 @@ def find_hostname_in_userinput(user_input, hostname, port=None):
         return False
 
     hostname_url = try_parse_url(f"http://{hostname}")
-    print(hostname_url)
     if not hostname_url:
         return False
 
