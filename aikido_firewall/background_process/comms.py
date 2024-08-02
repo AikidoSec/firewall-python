@@ -79,14 +79,14 @@ class AikidoIPCCommunications:
             conn.close()
 
         # Create a shared result object between the thread and this process :
-        result_obj = [None]
+        result_obj = [None]  # Needs to be an array so we can make a ref.
         t = Thread(
             target=target,
             args=(self.address, self.key, receive, (action, obj), result_obj),
-            daemon=True,
+            daemon=True,  #  This allows us to join and set a timeout after which the thread closes
         )
 
-        # Start and join the thread for 3 seconds, afterwards the thread is forced to close (daemon=True)
+        # Start and join the thread for 100ms, afterwards the thread is forced to close (daemon=True)
         t.start()
-        t.join(timeout=3)
+        t.join(timeout=0.1)
         return result_obj[0]

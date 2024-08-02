@@ -21,7 +21,8 @@ class ReportingApiHTTP(ReportingApi):
                 timeout=timeout_in_sec,
                 headers=get_headers(token),
             )
-        except requests.exceptions.ConnectionError:
+        except requests.exceptions.ConnectionError as e:
+            logger.error(e)
             return {"success": False, "error": "timeout"}
         except Exception as e:
             logger.error(e)

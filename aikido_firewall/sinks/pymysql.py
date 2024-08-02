@@ -19,7 +19,7 @@ logger = logging.getLogger("aikido_firewall")
 
 
 @importhook.on_import("pymysql.connections")
-def on_flask_import(mysql):
+def on_pymysql_import(mysql):
     """
     Hook 'n wrap on `pymysql.connections`
     Our goal is to wrap the query() function of the Connection class :
@@ -42,7 +42,7 @@ def on_flask_import(mysql):
         if contains_injection:
             get_comms().send_data_to_bg_process("ATTACK", (contains_injection, context))
             should_block = get_comms().send_data_to_bg_process(
-                "READ_PROPERTY", "block", True
+                action="READ_PROPERTY", obj="block", receive=True
             )
             if should_block:
                 raise AikidoSQLInjection("SQL Injection [aikido_firewall]")

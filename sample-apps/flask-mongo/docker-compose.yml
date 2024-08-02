@@ -31,6 +31,9 @@ services:
       - db
     networks:
       - default_network
+    extra_hosts:
+      - "app.local.aikido.io:host-gateway"
+
 
 volumes:
   db_data:

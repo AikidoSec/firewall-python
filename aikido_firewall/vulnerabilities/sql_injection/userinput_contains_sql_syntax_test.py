@@ -31,7 +31,6 @@ def test_flags_dangerous_SQL_syntax():
         with open(file_path, "r", encoding="utf-8") as file:
             for line in file:
                 sql = line.rstrip("\n")
-                print(sql)
                 assert userinput_contains_sqlsyntax(sql, DialectMySQL()) == True
                 assert userinput_contains_sqlsyntax(sql, DialectPG()) == True
 
