@@ -62,7 +62,7 @@ class AikidoIPCCommunications:
         """
 
         # We want to make sure that sending out this data affects the process as little as possible
-        # So we run it inside a seperate thread with a timeout of 3 seconds
+        # So we run it inside a seperate thread with a timeout of 100ms
         # If something goes wrong, it will also be encapsulated in the thread i.e. no crashes
         def target(address, key, receive, data, result_obj):
             # Create a connection, this can get stuck :
@@ -82,10 +82,10 @@ class AikidoIPCCommunications:
         t = Thread(
             target=target,
             args=(self.address, self.key, receive, (action, obj), result_obj),
-            daemon=True,
+            daemon=True,  #  This allows us to join and set a timeout after which the thread closes
         )
 
-        # Start and join the thread for 3 seconds, afterwards the thread is forced to close (daemon=True)
+        # Start and join the thread for 100ms, afterwards the thread is forced to close (daemon=True)
         t.start()
-        t.join(timeout=3)
+        t.join(timeout=0.1)
         return result_obj
