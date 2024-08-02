@@ -18,7 +18,6 @@ def check_context_for_path_traversal(
     """
     is_url = try_parse_url(filename) is not None
     path_string = path_to_string(filename)
-    print(path_string)
     if not path_string:
         return {}
 
