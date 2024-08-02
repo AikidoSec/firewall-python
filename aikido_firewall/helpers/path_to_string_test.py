@@ -8,8 +8,8 @@ def test_path_to_string_with_string():
 
 
 def test_path_to_string_with_valid_url():
-    assert path_to_string("http://example.com/path/to/resource") == "/path/to/resource"
-    assert path_to_string("https://example.com/another/path") == "/another/path"
+    assert path_to_string("file:///path/to/resource") == "/path/to/resource"
+    assert path_to_string("file:///another/path") == "/another/path"
 
 
 def test_path_to_string_with_bytes():
