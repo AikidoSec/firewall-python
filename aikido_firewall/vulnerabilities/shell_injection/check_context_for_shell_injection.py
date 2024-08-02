@@ -10,7 +10,7 @@ from aikido_firewall.context import UINPUT_SOURCES as SOURCES
 from .detect_shell_injection import detect_shell_injection
 
 
-def context_contains_sql_injection(command, operation, context):
+def check_context_for_shell_injection(command, operation, context):
     """
     This will check the context of the request for Shell injections
     """
