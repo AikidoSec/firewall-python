@@ -50,8 +50,7 @@ def uinput_occ_safely_encapsulated(query, user_input):
 
     for segment in segments_in_between:
         current_seg, next_seg = segment
-        print(segments_in_between)
-        print(segment)
+
         input_str = user_input
         char_before_user_input = js_slice(current_seg, -1)
         char_after_user_input = js_slice(next_seg, 0, 1)
