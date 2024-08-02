@@ -13,6 +13,7 @@ from aikido_firewall.vulnerabilities.sql_injection.context_contains_sql_injectio
 )
 from aikido_firewall.vulnerabilities.sql_injection.dialects import MySQL
 from aikido_firewall.background_process import get_comms
+from aikido_firewall.errors import AikidoSQLInjection
 
 logger = logging.getLogger("aikido_firewall")
 
@@ -42,7 +43,7 @@ def on_flask_import(mysql):
             get_comms().send_data_to_bg_process("ATTACK", (contains_injection, context))
             should_block = get_comms().poll_config("block")
             if should_block:
-                raise Exception("SQL Injection [aikido_firewall]")
+                raise AikidoSQLInjection("SQL Injection [aikido_firewall]")
 
         return prev_query_function(_self, sql, unbuffered=False)
 
