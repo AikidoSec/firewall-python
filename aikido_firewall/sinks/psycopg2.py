@@ -12,6 +12,7 @@ from aikido_firewall.vulnerabilities.sql_injection.context_contains_sql_injectio
 )
 from aikido_firewall.vulnerabilities.sql_injection.dialects import Postgres
 from aikido_firewall.background_process import get_comms
+from aikido_firewall.errors import AikidoSQLInjection
 
 
 class MutableAikidoConnection:
@@ -47,7 +48,7 @@ def execute_sql_detection_code(sql):
         get_comms().send_data_to_bg_process("ATTACK", (contains_injection, context))
         should_block = get_comms().poll_config("block")
         if should_block:
-            raise Exception("SQL Injection [aikido_firewall]")
+            raise AikidoSQLInjection("SQL Injection [aikido_firewall]")
 
 
 class MutableAikidoCursor:
