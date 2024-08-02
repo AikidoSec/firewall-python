@@ -92,7 +92,10 @@ class Context:
         """Set properties that are specific to flask"""
         self.remote_address = req.remote_addr
         self.url = req.url
-        self.body = req.form.to_dict()
+        if req.is_json:
+            self.body = req.json
+        else:
+            self.body = req.form.to_dict()
         self.query = req.args.to_dict()
         self.cookies = req.cookies.to_dict()
 
