@@ -10,7 +10,7 @@ from .contains_private_ip_address import contains_private_ip_address
 
 def check_context_for_ssrf(hostname, port, operation, context):
     """
-    This will check the context of the request for SQL Injections
+    This will check the context for SSRF
     """
     for source in SOURCES:
         logger.debug("Checking source %s for SSRF", source)
