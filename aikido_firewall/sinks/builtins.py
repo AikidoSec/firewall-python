@@ -24,12 +24,12 @@ def on_builtins_import(builtins):
     former_open = copy.deepcopy(builtins.open)
 
     def aikido_new_open(*args, **kwargs):
+        logger.debug("`builtins` wrapper, filepath : `%s`;", args[0])
         result = check_context_for_path_traversal(
             filename=args[0], operation="builtins.open", context=get_current_context()
         )
         if len(result) != 0:
             raise AikidoPathTraversal()
-        logger.info("File name openend : %s, in mode : `%s`", args[0], args[1])
         return former_open(*args, **kwargs)
 
     # pylint: disable=no-member
