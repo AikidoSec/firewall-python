@@ -35,11 +35,14 @@ def protect(module="any", server=True):
     if not module in ["django", "django-gunicorn"]:
         import aikido_firewall.sources.flask
 
-    # Import sinks
+    # Import DB Sinks
     import aikido_firewall.sinks.pymysql
     import aikido_firewall.sinks.mysqlclient
     import aikido_firewall.sinks.pymongo
     import aikido_firewall.sinks.psycopg2
+
+    # Import shell sinks
     import aikido_firewall.sinks.os_system
+    import aikido_firewall.sinks.subprocess
 
     logger.info("Aikido python firewall started")
