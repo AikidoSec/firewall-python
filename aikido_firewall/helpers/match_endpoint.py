@@ -7,7 +7,9 @@ from .try_parse_url_path import try_parse_url_path
 
 
 def match_endpoint(context, endpoints):
-    """Check if the context matches one of the endpoints"""
+    """
+    Based on the context's url this tries to find a match in the list of endpoints
+    """
     if not context.method:
         return None
 
