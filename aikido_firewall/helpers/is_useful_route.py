@@ -1,5 +1,5 @@
 """
-Main export is the is_usefull_route function
+Main export is the is_useful_route function
 """
 
 import os
@@ -24,9 +24,9 @@ IGNORE_EXTENSIONS = ["properties", "php", "asp", "aspx", "jsp", "config"]
 IGNORE_STRINGS = ["cgi-bin"]
 
 
-def is_usefull_route(status_code, route, method):
+def is_useful_route(status_code, route, method):
     """
-    Checks if the route is actually usefull,
+    Checks if the route is actually useful,
     - Isn't OPTIONS or HEAD
     - Status code isn't an error or redirect code
     - Isn't a dot file e.g. .well-known
