@@ -58,7 +58,7 @@ class AikidoIPCCommunications:
         )
         self.background_process.start()
 
-    def send_data_to_bg_process(self, action, obj, receive=False, default=None):
+    def send_data_to_bg_process(self, action, obj, receive=False):
         """
         This creates a new client for comms to the background process
         """
@@ -73,14 +73,15 @@ class AikidoIPCCommunications:
             # Send/Receive data :
             conn.send(data)
             if receive:
-                result_obj[0] = conn.recv()
+                result_obj[1] = conn.recv()
 
             # Close the connection :
             conn.send(("CLOSE", {}))
             conn.close()
+            result_obj[0] = True  #  Connection ended gracefully
 
         # Create a shared result object between the thread and this process :
-        result_obj = [None]  # Needs to be an array so we can make a ref.
+        result_obj = [False, None]  # Needs to be an array so we can make a ref.
         t = Thread(
             target=target,
             args=(self.address, self.key, receive, (action, obj), result_obj),
@@ -90,11 +91,13 @@ class AikidoIPCCommunications:
         # Start and join the thread for 100ms, afterwards the thread is forced to close (daemon=True)
         t.start()
         t.join(timeout=0.1)
-
-        if result_obj[0] is None and receive:
-            #  No data came through, return default value
-            logger.debug(
+        if not result_obj[0]:
+            logger.info(
                 "Communication returned None between background process and threads"
             )
-            return default
-        return result_obj[0]
+            return {"success": False, "error": "timeout"}
+
+        if receive:
+            return {"success": True, "data": result_obj[1]}
+        else:
+            return {"success": True}
