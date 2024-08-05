@@ -1,4 +1,5 @@
 """exports contains_private_ip_address"""
+
 from aikido_firewall.helpers.try_parse_url import try_parse_url
 from .is_private_ip import is_private_ip
 
