@@ -41,5 +41,6 @@ def protect(module="any", server=True):
     import aikido_firewall.sinks.pymongo
     import aikido_firewall.sinks.psycopg2
     import aikido_firewall.sinks.http_client
+    import aikido_firewall.sinks.socket
 
     logger.info("Aikido python firewall started")
