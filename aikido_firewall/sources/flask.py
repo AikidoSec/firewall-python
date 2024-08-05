@@ -28,8 +28,6 @@ class AikidoMiddleware(BaseHTTPMiddleware):  # pylint: disable=too-few-public-me
         context.set_as_current_context()
 
         response = call_next(request)
-        if not context or not context.route or not context.method:
-            return response
         comms = get_comms()
 
         is_curr_route_useful = is_useful_route(
