@@ -14,7 +14,7 @@ def find_hostname_in_context(hostname, context, port):
     for source in UINPUT_SOURCES:
         if not hasattr(context, source):
             continue
-        user_inputs = extract_strings_from_user_input(context, source)
+        user_inputs = extract_strings_from_user_input(getattr(context, source))
         if not user_inputs:
             continue
         for user_input, path in user_inputs.items():
