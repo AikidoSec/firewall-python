@@ -33,7 +33,7 @@ class AikidoMiddleware:
             comms.send_data_to_bg_process("ROUTE", (context.method, context.route))
         # comms.send_data_to_bg_process("STATS:ADD_REQ", ())
 
-        ratelimit = comms.send_data_to_bg_process("RLM:SHOULD_RLM", context, True)
+        ratelimit = comms.send_data_to_bg_process("SHOULD_RATELIMIT", context, True)
         if ratelimit and ratelimit.get("block"):
             raise AikidoRateLimiting()
 

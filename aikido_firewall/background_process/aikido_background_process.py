@@ -61,8 +61,11 @@ class AikidoBackgroundProcess:
                     if hasattr(self.reporter, data[1]):
                         conn.send(self.reporter.__dict__[data[1]])
                 elif data[0] == "ROUTE":
+                    # Called every time the user visits a route
                     self.reporter.routes.add_route(method=data[1][0], path=data[1][1])
-                elif data[0] == "RLM:SHOULD_RLM":
+                elif data[0] == "SHOULD_RATELIMIT":
+                    # Called to check if the context passed along as data should be
+                    # Rate limited
                     conn.send(
                         should_ratelimit_request(
                             context=data[1], reporter=self.reporter
