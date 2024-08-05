@@ -9,6 +9,7 @@ from aikido_firewall.vulnerabilities.path_traversal.check_context_for_path_trave
     check_context_for_path_traversal,
 )
 from aikido_firewall.context import get_current_context
+from aikido_firewall.background_process import get_comms
 from aikido_firewall.errors import AikidoPathTraversal
 
 
@@ -25,11 +26,19 @@ def on_builtins_import(builtins):
 
     def aikido_new_open(*args, **kwargs):
         logger.debug("`builtins` wrapper, filepath : `%s`;", args[0])
+        context = get_current_context()
+        if not context:
+            return former_open(*args, **kwargs)
         result = check_context_for_path_traversal(
-            filename=args[0], operation="builtins.open", context=get_current_context()
+            filename=args[0], operation="builtins.open", context=context
         )
         if len(result) != 0:
-            raise AikidoPathTraversal()
+            get_comms().send_data_to_bg_process("ATTACK", (result, context))
+            should_block = get_comms().send_data_to_bg_process(
+                action="READ_PROPERTY", obj="block", receive=True
+            )
+            if should_block:
+                raise AikidoPathTraversal()
         return former_open(*args, **kwargs)
 
     # pylint: disable=no-member

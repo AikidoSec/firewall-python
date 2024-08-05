@@ -9,6 +9,7 @@ from aikido_firewall.vulnerabilities.path_traversal.check_context_for_path_trave
     check_context_for_path_traversal,
 )
 from aikido_firewall.context import get_current_context
+from aikido_firewall.background_process import get_comms
 from aikido_firewall.errors import AikidoPathTraversal
 
 # File functions :
@@ -50,11 +51,19 @@ def generate_aikido_function(op, former_func):
 
     def aikido_new_func(*args, op=op, former_func=former_func, **kwargs):
         logger.debug("`os` wrapper, filepath : `%s`; OP : `%s`", args[0], op)
+        context = get_current_context()
+        if not context:
+            return former_func(*args, **kwargs)
         result = check_context_for_path_traversal(
-            filename=args[0], operation=f"os.{op}", context=get_current_context()
+            filename=args[0], operation=f"os.{op}", context=context
         )
         if len(result) != 0:
-            raise AikidoPathTraversal()
+            get_comms().send_data_to_bg_process("ATTACK", (result, context))
+            should_block = get_comms().send_data_to_bg_process(
+                action="READ_PROPERTY", obj="block", receive=True
+            )
+            if should_block:
+                raise AikidoPathTraversal()
         return former_func(*args, **kwargs)
 
     return aikido_new_func
