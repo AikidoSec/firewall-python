@@ -25,11 +25,11 @@ def on_os_import(os):
     former_system_func = copy.deepcopy(os.system)
 
     def aikido_new_system(*args, former_system_func=former_system_func, **kwargs):
-        logger.debug("Wrapper - `os`")
+        logger.debug("Wrapper - `os` on system() function")
 
         context = get_current_context()
         if not context:
-            former_system_func(*args, **kwargs)
+            return former_system_func(*args, **kwargs)
         contains_injection = check_context_for_shell_injection(
             command=args[0], operation="os.system", context=context
         )
@@ -45,7 +45,8 @@ def on_os_import(os):
 
         return former_system_func(*args, **kwargs)
 
-    # pylint: disable=no-member
     setattr(os, "system", aikido_new_system)
+    setattr(modified_os, "system", aikido_new_system)
+
     logger.debug("Wrapped `os` module")
     return modified_os
