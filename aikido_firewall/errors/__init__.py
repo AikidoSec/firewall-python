@@ -13,3 +13,7 @@ class AikidoSQLInjection(AikidoException):
 
 class AikidoNoSQLInjection(AikidoException):
     """Exception because of NoSQL Injection"""
+
+
+class AikidoSSRF(AikidoException):
+    """Exception because of SSRF"""
