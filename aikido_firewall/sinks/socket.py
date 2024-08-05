@@ -6,6 +6,13 @@ import copy
 import importhook
 from aikido_firewall.helpers.logging import logger
 
+SOCKET_OPERATIONS = [
+    "gethostbyname",
+    "gethostbyaddr",
+    "getaddrinfo",
+    "create_connection",
+]
+
 
 def generate_aikido_function(former_func, op):
     """
@@ -13,7 +20,7 @@ def generate_aikido_function(former_func, op):
     """
 
     def aik_new_func(*args, **kwargs):
-        logger.info("DNS LOOKUP")
+        logger.info("socket.%s()", op)
         logger.debug(args)
         logger.debug(kwargs)
         return former_func(*args, **kwargs)
@@ -32,22 +39,10 @@ def on_socket_import(socket):
     Returns : Modified http.client object
     """
     modified_socket = importhook.copy_module(socket)
-    former_gethostbyname = copy.deepcopy(socket.gethostbyname)
-    former_gethostbyaddr = copy.deepcopy(socket.gethostbyaddr)
+    for op in SOCKET_OPERATIONS:
+        former_func = copy.deepcopy(getattr(socket, op))
+        setattr(modified_socket, op, generate_aikido_function(former_func, op))
+        setattr(socket, op, generate_aikido_function(former_func, op))
 
-    setattr(
-        modified_socket,
-        "gethostbyname",
-        generate_aikido_function(
-            former_func=former_gethostbyname, op="socket.gethostbyname"
-        ),
-    )
-    setattr(
-        modified_socket,
-        "gethostbyaddr",
-        generate_aikido_function(
-            former_func=former_gethostbyaddr, op="socket.gethostbyaddr"
-        ),
-    )
     logger.debug("Wrapped `http` module")
     return modified_socket
