@@ -1,4 +1,5 @@
 """Exports check_context_for_ssrf"""
+
 from aikido_firewall.helpers.extract_strings_from_user_input import (
     extract_strings_from_user_input,
 )

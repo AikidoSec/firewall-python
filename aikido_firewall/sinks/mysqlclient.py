@@ -13,6 +13,7 @@ from aikido_firewall.vulnerabilities.sql_injection.context_contains_sql_injectio
 from aikido_firewall.vulnerabilities.sql_injection.dialects import MySQL
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.background_process import get_comms
+from aikido_firewall.errors import AikidoSQLInjection
 
 
 @importhook.on_import("MySQLdb.connections")
@@ -38,9 +39,11 @@ def on_mysqlclient_import(mysql):
         logger.debug("sql_injection results : %s", json.dumps(contains_injection))
         if contains_injection:
             get_comms().send_data_to_bg_process("ATTACK", (contains_injection, context))
-            should_block = get_comms().poll_config("block")
+            should_block = get_comms().send_data_to_bg_process(
+                action="READ_PROPERTY", obj="block", receive=True
+            )
             if should_block:
-                raise Exception("SQL Injection [aikido_firewall]")
+                raise AikidoSQLInjection("SQL Injection [aikido_firewall]")
 
         return prev_query_function(_self, sql)
 

@@ -122,7 +122,11 @@ class Reporter:
             },
             self.timeout_in_sec,
         )
-        self.update_service_config(res)
+        if not res.get("success", True):
+            logger.error("Failed to communicate with Aikido Server : %s", res["error"])
+        else:
+            self.update_service_config(res)
+            logger.info("Established connection with Aikido Server")
 
     def get_reporter_info(self):
         """

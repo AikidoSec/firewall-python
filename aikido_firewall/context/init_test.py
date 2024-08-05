@@ -29,6 +29,7 @@ def test_context_init_flask(mocker):
     req.method = "GET"
     req.remote_addr = "127.0.0.1"
     req.url = "http://example.com"
+    req.is_json = False
     req.form.to_dict.return_value = {"key": "value"}
     req.headers = {"Content-Type": "application/json"}
     req.args.to_dict.return_value = {"key": "value"}
