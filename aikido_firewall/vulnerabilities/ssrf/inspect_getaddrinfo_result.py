@@ -5,6 +5,7 @@
 import traceback
 from aikido_firewall.helpers.try_parse_url import try_parse_url
 from aikido_firewall.context import get_current_context
+from aikido_firewall.helpers.logging import logger
 from aikido_firewall.background_process import get_comms
 from aikido_firewall.errors import AikidoSSRF
 from .imds import is_trusted_hostname, is_imds_ip_address
@@ -16,6 +17,7 @@ def inspect_getaddrinfo_result(dns_results, hostname, port):
     """Inspect the results of a getaddrinfo() call"""
     if not hostname or try_parse_url(hostname) is not None:
         #  If the hostname is an IP address, we don't need to inspect it
+        logger.debug("Hostname %s is actually an IP address, ignoring", hostname)
         return
 
     context = get_current_context()
@@ -31,9 +33,6 @@ def inspect_getaddrinfo_result(dns_results, hostname, port):
         #  We don't check if the user input contains the hostname because there's no context
         if should_block:
             raise AikidoSSRF()
-
-        # DEBUGGING ONLY :
-        raise AikidoSSRF()
 
     if not context:
         return
@@ -58,11 +57,13 @@ def inspect_getaddrinfo_result(dns_results, hostname, port):
         "metadata": {"hostname": hostname},
         "payload": found["payload"],
     }
+    logger.debug("Attack results : %s", attack)
+
+    logger.debug("Sending data to bg process :")
     get_comms().send_data_to_bg_process("ATTACK", (attack, context))
 
     if should_block:
         raise AikidoSSRF()
-    raise AikidoSSRF()
 
 
 def resolves_to_imds_ip(resolved_ip_addresses, hostname):
