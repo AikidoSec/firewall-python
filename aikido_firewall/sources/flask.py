@@ -35,7 +35,6 @@ class AikidoMiddleware(BaseHTTPMiddleware):  # pylint: disable=too-few-public-me
         )
         if is_curr_route_useful:
             comms.send_data_to_bg_process("ROUTE", (context.method, context.route))
-        # comms.send_data_to_bg_process("STATS:ADD_REQ", ())
 
         ratelimit_res = comms.send_data_to_bg_process(
             action="SHOULD_RATELIMIT", obj=context, receive=True
