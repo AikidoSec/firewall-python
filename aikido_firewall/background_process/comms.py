@@ -58,7 +58,7 @@ class AikidoIPCCommunications:
         )
         self.background_process.start()
 
-    def send_data_to_bg_process(self, action, obj, receive=False):
+    def send_data_to_bg_process(self, action, obj, receive=False, default=None):
         """
         This creates a new client for comms to the background process
         """
@@ -90,4 +90,11 @@ class AikidoIPCCommunications:
         # Start and join the thread for 100ms, afterwards the thread is forced to close (daemon=True)
         t.start()
         t.join(timeout=0.1)
+
+        if result_obj[0] is None and receive:
+            #  No data came through, return default value
+            logger.debug(
+                "Communication returned None between background process and threads"
+            )
+            return default
         return result_obj[0]

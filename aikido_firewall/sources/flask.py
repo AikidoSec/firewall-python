@@ -37,8 +37,10 @@ class AikidoMiddleware(BaseHTTPMiddleware):  # pylint: disable=too-few-public-me
             comms.send_data_to_bg_process("ROUTE", (context.method, context.route))
         # comms.send_data_to_bg_process("STATS:ADD_REQ", ())
 
-        ratelimit = comms.send_data_to_bg_process("SHOULD_RATELIMIT", context, True)
-        if ratelimit and ratelimit.get("block"):
+        ratelimit = comms.send_data_to_bg_process(
+            action="SHOULD_RATELIMIT", obj=context, receive=True, default=False
+        )
+        if isinstance(ratelimit, dict) and ratelimit["block"]:
             raise AikidoRateLimiting()
 
         return response
