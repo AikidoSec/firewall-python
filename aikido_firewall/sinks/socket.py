@@ -5,6 +5,9 @@ Sink module for `socket`
 import copy
 import importhook
 from aikido_firewall.helpers.logging import logger
+from aikido_firewall.vulnerabilities.ssrf.inspect_getaddrinfo_result import (
+    inspect_getaddrinfo_result,
+)
 
 SOCKET_OPERATIONS = [
     "gethostbyname",
@@ -20,10 +23,12 @@ def generate_aikido_function(former_func, op):
     """
 
     def aik_new_func(*args, **kwargs):
-        logger.info("socket.%s()", op)
-        logger.debug(args)
-        logger.debug(kwargs)
-        return former_func(*args, **kwargs)
+        logger.info("socket.%s() Hostname : `%s`;", op, args[0])
+        res = former_func(*args, **kwargs)
+        if op is "getaddrinfo":
+            inspect_getaddrinfo_result(dns_results=res, hostname=args[0], port=args[1])
+        logger.debug("Res %s", res)
+        return res
 
     return aik_new_func
 
