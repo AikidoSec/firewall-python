@@ -21,10 +21,13 @@ def inspect_getaddrinfo_result(dns_results, hostname, port):
         return
 
     context = get_current_context()
-    # Implement checks for "protection off" for a specific route
-    should_block = get_comms().send_data_to_bg_process(
+
+    # TO DO : Implement checks for "protection off" for a specific route
+
+    should_block_res = get_comms().send_data_to_bg_process(
         action="READ_PROPERTY", obj="block", receive=True
     )
+    should_block = should_block_res["success"] and should_block_res["data"]
 
     ip_addresses = extract_ip_array_from_results(dns_results)
     if resolves_to_imds_ip(ip_addresses, hostname):
