@@ -12,7 +12,7 @@ from .imds import is_trusted_hostname, is_imds_ip_address
 from .is_private_ip import is_private_ip
 from .find_hostname_in_context import find_hostname_in_context
 
-
+#  gets called when the result of the DNS resolution has come in
 def inspect_getaddrinfo_result(dns_results, hostname, port):
     """Inspect the results of a getaddrinfo() call"""
     if not hostname or try_parse_url(hostname) is not None:
