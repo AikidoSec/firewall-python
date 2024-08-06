@@ -23,9 +23,22 @@ class AikidoRateLimiting(AikidoException):
         self.message = message
 
 
+
 class AikidoShellInjection(AikidoException):
     """Exception becausen of Shell Injection"""
 
     def __init__(self, message="Possible Shell Injection"):
         super().__init__(message)
         self.message = message
+
+
+class AikidoPathTraversal(AikidoException):
+    """Exception because of a path traversal"""
+
+    def __init__(self, message="This is a path traversal attack, halted by Aikido."):
+        super().__init__(self, message)
+        self.message = message
+
+
+class AikidoSSRF(AikidoException):
+    """Exception because of SSRF"""
