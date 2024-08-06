@@ -13,6 +13,7 @@ from aikido_firewall.vulnerabilities.sql_injection.context_contains_sql_injectio
 from aikido_firewall.vulnerabilities.sql_injection.dialects import Postgres
 from aikido_firewall.background_process import get_comms
 from aikido_firewall.errors import AikidoSQLInjection
+from aikido_firewall.background_process.packages import add_wrapped_package
 
 
 class MutableAikidoConnection:
@@ -102,5 +103,5 @@ def on_psycopg2_import(psycopg2):
     # pylint: disable=no-member
     setattr(psycopg2, "_connect", aik__connect)
     setattr(modified_psycopg2, "_connect", aik__connect)
-    logger.debug("Wrapped `psycopg2` module")
+    add_wrapped_package("psycopg2")
     return modified_psycopg2

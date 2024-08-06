@@ -3,11 +3,11 @@ Flask source module, intercepts flask import and adds Aikido middleware
 """
 
 import copy
-from importlib.metadata import version
 import importhook
 from flask_http_middleware import MiddlewareManager, BaseHTTPMiddleware
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.context import Context
+from aikido_firewall.background_process.packages import add_wrapped_package
 
 
 class AikidoMiddleware(BaseHTTPMiddleware):  # pylint: disable=too-few-public-methods
@@ -41,11 +41,10 @@ def on_flask_import(flask):
 
     def aikido_flask_init(_self, *args, **kwargs):
         prev_flask_init(_self, *args, **kwargs)
-        logger.debug("Wrapper - `flask` version : %s", version("flask"))
         _self.wsgi_app = MiddlewareManager(_self)
         _self.wsgi_app.add_middleware(AikidoMiddleware)
 
     # pylint: disable=no-member
     setattr(modified_flask.Flask, "__init__", aikido_flask_init)
-    logger.debug("Wrapped `flask` module")
+    add_wrapped_package("flask")
     return modified_flask
