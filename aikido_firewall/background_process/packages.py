@@ -24,7 +24,6 @@ def add_wrapped_package(pkg_name):
             },
             True,
         )
-        break
-        # if res["success"] and res["data"] == True:
-        #    break
+        if res["success"] and res["data"] is True:
+            break
         attempts += 1
