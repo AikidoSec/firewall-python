@@ -39,10 +39,10 @@ def generate_aikido_function(op, former_func):
         logger.debug("Shell injection results : %s", json.dumps(contains_injection))
         if contains_injection:
             get_comms().send_data_to_bg_process("ATTACK", (contains_injection, context))
-            should_block = get_comms().send_data_to_bg_process(
+            should_block_res = get_comms().send_data_to_bg_process(
                 action="READ_PROPERTY", obj="block", receive=True
             )
-            if should_block:
+            if should_block_res["success"] and should_block_res["data"]:
                 raise AikidoShellInjection()
 
         return former_func(*args, **kwargs)
