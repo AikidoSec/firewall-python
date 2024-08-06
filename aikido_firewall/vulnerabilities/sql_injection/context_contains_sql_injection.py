@@ -19,9 +19,7 @@ def context_contains_sql_injection(sql, operation, context, dialect):
         logger.debug("Checking source %s for SQL Injection", source)
         if hasattr(context, source):
             user_inputs = extract_strings_from_user_input(getattr(context, source))
-            logger.debug("User inputs : %s", json.dumps(user_inputs))
             for user_input, path in user_inputs.items():
-                logger.debug("Checking user input %s", user_input)
                 if detect_sql_injection(sql, user_input, dialect):
                     return {
                         "operation": operation,
