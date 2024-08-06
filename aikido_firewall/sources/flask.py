@@ -28,7 +28,7 @@ class AikidoMiddleware(BaseHTTPMiddleware):  # pylint: disable=too-few-public-me
         context.set_as_current_context()
 
         response = call_next(request)
-        comms = get_comms() # get IPC facilitator
+        comms = get_comms()  # get IPC facilitator
 
         is_curr_route_useful = is_useful_route(
             response._status_code, context.route, context.method
