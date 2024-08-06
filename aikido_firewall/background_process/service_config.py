@@ -5,7 +5,7 @@
 from aikido_firewall.helpers.match_endpoint import match_endpoint
 
 
-class ReporterConfig:
+class ServiceConfig:
     """Class holding the config of the reporter"""
 
     def __init__(self, endpoints, last_updated_at):
