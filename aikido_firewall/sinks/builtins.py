@@ -34,10 +34,10 @@ def on_builtins_import(builtins):
         )
         if len(result) != 0:
             get_comms().send_data_to_bg_process("ATTACK", (result, context))
-            should_block = get_comms().send_data_to_bg_process(
+            should_block_res = get_comms().send_data_to_bg_process(
                 action="READ_PROPERTY", obj="block", receive=True
             )
-            if should_block:
+            if should_block_res["success"] and should_block_res["data"]:
                 raise AikidoPathTraversal()
         return former_open(*args, **kwargs)
 
