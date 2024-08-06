@@ -22,8 +22,6 @@ def inspect_getaddrinfo_result(dns_results, hostname, port):
 
     context = get_current_context()
 
-    # TO DO : Implement checks for "protection off" for a specific route
-
     should_block_res = get_comms().send_data_to_bg_process(
         action="READ_PROPERTY", obj="block", receive=True
     )
