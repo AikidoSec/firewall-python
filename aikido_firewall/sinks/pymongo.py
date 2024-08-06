@@ -9,7 +9,7 @@ from aikido_firewall.vulnerabilities.nosql_injection import detect_nosql_injecti
 from aikido_firewall.context import get_current_context
 from aikido_firewall.background_process import get_comms
 from aikido_firewall.errors import AikidoNoSQLInjection
-from aikido_firewall.background_process.packages import add_wrapped_package
+import aikido_firewall.background_process.packages as pkgs
 
 OPERATIONS_WITH_FILTER = [
     "replace_one",  # L1087
@@ -60,5 +60,5 @@ def on_pymongo_import(pymongo):
 
         setattr(modified_pymongo.Collection, operation, wrapped_operation_function)
 
-    add_wrapped_package("pymongo")
+    pkgs.add_wrapped_package("pymongo")
     return modified_pymongo
