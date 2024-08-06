@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aikido_firewall"
-version = "0.0.7"
+version = "0.0.8"
 description = "Aikido RASP for Python"
 authors = ["Aikido"]
 readme = "README.md"
