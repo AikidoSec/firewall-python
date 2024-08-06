@@ -16,6 +16,8 @@ def extract_strings_from_user_input(obj, path_to_payload=None):
     results = {}
 
     if isinstance(obj, dict):
+        #  Stringifying the dict and adding it as user input is resource intensive
+        #  And in most cases shouldn't be necessary.
         for key, value in obj.items():
             results[key] = build_path_to_payload(path_to_payload)
             for k, v in extract_strings_from_user_input(
@@ -24,6 +26,10 @@ def extract_strings_from_user_input(obj, path_to_payload=None):
                 results[k] = v
 
     if isinstance(obj, list):
+        #  Add the stringified array as well to the results, there might
+        #  be accidental concatenation if the client expects a string but gets the array
+        #  E.g. HTTP Parameter pollution
+        results[str(obj)] = build_path_to_payload(path_to_payload)
         for i, value in enumerate(obj):
             for k, v in extract_strings_from_user_input(
                 value, path_to_payload + [{"type": "array", "index": i}]

@@ -25,6 +25,7 @@ def test_extract_query_objects():
         {
             "user_input": ".",
             "age": ".",
+            "['whaat', 'dangerous']": ".user_input",
             "whaat": ".user_input.[0]",
             "dangerous": ".user_input.[1]",
         }
@@ -94,3 +95,64 @@ def test_jwt_as_string():
     assert extract_strings_from_user_input(
         {"header": "/;ping%20localhost;.e30=."}
     ) == from_obj({"header": ".", "/;ping%20localhost;.e30=.": ".header"})
+
+
+def test_extracts_strings_from_string_array():
+    assert extract_strings_from_user_input({"arr": ["1", "2", "3"]}) == from_obj(
+        {
+            "arr": ".",
+            "['1', '2', '3']": ".arr",
+            "1": ".arr.[0]",
+            "2": ".arr.[1]",
+            "3": ".arr.[2]",
+        }
+    )
+
+
+def test_extracts_strings_from_mixed_array():
+    assert extract_strings_from_user_input(
+        {"arr": ["1", 2, True, None, {"test": "test"}]}
+    ) == from_obj(
+        {
+            "arr": ".",
+            "1": ".arr.[0]",
+            "test": ".arr.[4].test",
+            "['1', 2, True, None, {'test': 'test'}]": ".arr",
+        }
+    )
+
+
+def test_extracts_strings_from_mixed_array_containing_array():
+    assert extract_strings_from_user_input(
+        {"arr": ["1", 2, True, None, {"test": ["test123", "test345"]}]}
+    ) == from_obj(
+        {
+            "arr": ".",
+            "1": ".arr.[0]",
+            "test": ".arr.[4]",
+            "test123": ".arr.[4].test.[0]",
+            "test345": ".arr.[4].test.[1]",
+            "['test123', 'test345']": ".arr.[4].test",
+            "['1', 2, True, None, {'test': ['test123', 'test345']}]": ".arr",
+        }
+    )
+
+
+"""
+
+  t.same(
+    extractStringsFromUserInput({
+      arr: ["1", 2, true, null, undefined, { test: ["test123", "test345"] }],
+    }),
+    fromObj({
+      arr: ".",
+      "1": ".arr.[0]",
+      test: ".arr.[5]",
+      test123: ".arr.[5].test.[0]",
+      test345: ".arr.[5].test.[1]",
+      "test123,test345": ".arr.[5].test",
+      "1,2,true,,,[object Object]": ".arr",
+    })
+  );
+});
+"""
