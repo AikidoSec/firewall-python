@@ -147,7 +147,7 @@ class Reporter:
                 and details["supported"]
             },
             "serverless": bool(self.serverless),
-            "stack": [],
+            "stack": list(self.packages.keys()) + ([self.serverless] if self.serverless else []),
             "os": {"name": platform.system(), "version": platform.release()},
             "preventedPrototypePollution": False,  # Get this out of the API maybe?
             "nodeEnv": "",
