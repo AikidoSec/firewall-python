@@ -7,6 +7,9 @@ import importhook
 from flask_http_middleware import MiddlewareManager, BaseHTTPMiddleware
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.context import Context
+from aikido_firewall.background_process import get_comms
+from aikido_firewall.helpers.is_useful_route import is_useful_route
+from aikido_firewall.errors import AikidoRateLimiting
 from aikido_firewall.background_process.packages import add_wrapped_package
 
 
@@ -25,6 +28,20 @@ class AikidoMiddleware(BaseHTTPMiddleware):  # pylint: disable=too-few-public-me
         context.set_as_current_context()
 
         response = call_next(request)
+        comms = get_comms()  # get IPC facilitator
+
+        is_curr_route_useful = is_useful_route(
+            response._status_code, context.route, context.method
+        )
+        if is_curr_route_useful:
+            comms.send_data_to_bg_process("ROUTE", (context.method, context.route))
+
+        ratelimit_res = comms.send_data_to_bg_process(
+            action="SHOULD_RATELIMIT", obj=context, receive=True
+        )
+        if ratelimit_res["success"] and ratelimit_res["data"]["block"]:
+            raise AikidoRateLimiting()
+
         return response
 
 

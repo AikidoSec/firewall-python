@@ -3,10 +3,9 @@ Simply exports the aikido background process
 """
 
 import multiprocessing.connection as con
-import os
 import time
-import signal
 import sched
+import sys
 from threading import Thread
 from queue import Queue
 from aikido_firewall.helpers.logging import logger
@@ -14,6 +13,7 @@ from aikido_firewall.background_process.reporter import Reporter
 from aikido_firewall.helpers.should_block import should_block
 from aikido_firewall.helpers.token import get_token_from_env
 from aikido_firewall.background_process.api.http_api import ReportingApiHTTP
+from aikido_firewall.ratelimiting import should_ratelimit_request
 
 
 EMPTY_QUEUE_INTERVAL = 5  # 5 seconds
@@ -32,10 +32,9 @@ class AikidoBackgroundProcess:
             listener = con.Listener(address, authkey=key)
         except OSError:
             logger.warning(
-                "Aikido listener may already be running on port %s", address[1]
+                "Aikido listener may already be running on port %s, exiting", address[1]
             )
-            pid = os.getpid()
-            os.kill(pid, signal.SIGTERM)  # Kill this subprocess
+            sys.exit(0)
         self.queue = Queue()
         self.reporter = None
         # Start reporting thread :
@@ -57,11 +56,21 @@ class AikidoBackgroundProcess:
                 ):  # when main process quits , or during testing etc
                     logger.debug("Killing subprocess")
                     conn.close()
-                    pid = os.getpid()
-                    os.kill(pid, signal.SIGTERM)  # Kill this subprocess
+                    sys.exit(0)
                 elif data[0] == "READ_PROPERTY":  # meant to get config props
                     if hasattr(self.reporter, data[1]):
                         conn.send(self.reporter.__dict__[data[1]])
+                elif data[0] == "ROUTE":
+                    # Called every time the user visits a route
+                    self.reporter.routes.add_route(method=data[1][0], path=data[1][1])
+                elif data[0] == "SHOULD_RATELIMIT":
+                    # Called to check if the context passed along as data should be
+                    # Rate limited
+                    conn.send(
+                        should_ratelimit_request(
+                            context=data[1], reporter=self.reporter
+                        )
+                    )
                 elif data[0] == "WRAPPED_PACKAGE":
                     #  A package has been wrapped
                     if self.reporter:
