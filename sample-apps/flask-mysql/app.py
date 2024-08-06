@@ -4,6 +4,7 @@ aikido_firewall.protect()
 import subprocess
 from flask import Flask, render_template, request
 from flaskext.mysql import MySQL
+import requests
 
 app = Flask(__name__)
 if __name__ == '__main__':
@@ -52,3 +53,23 @@ def execute_command():
     command = request.form['command']
     result = subprocess.run(command.split(), capture_output=True, text=True)
     return str(result.stdout)
+
+@app.route("/open_file", methods=['GET'])
+def show_open_file_form():
+    return render_template('open_file.html')
+
+@app.route("/open_file", methods=['POST'])
+def open_file():
+    filepath = request.form['filepath']
+    file = open(filepath, 'r', encoding='utf-8')
+    return file.read()
+
+@app.route("/request", methods=['GET'])
+def show_request_page():
+    return render_template('request.html')
+
+@app.route("/request", methods=['POST'])
+def make_request():
+    url = request.form['url']
+    res = requests.get(url)
+    return str(res)
