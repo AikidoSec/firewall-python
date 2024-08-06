@@ -23,7 +23,6 @@ class AikidoRateLimiting(AikidoException):
         self.message = message
 
 
-
 class AikidoShellInjection(AikidoException):
     """Exception becausen of Shell Injection"""
 
