@@ -2,6 +2,9 @@
 Aggregates from the different modules
 """
 
+# Re-export set_current_user :
+from aikido_firewall.context.users import set_current_user as set_user
+
 from dotenv import load_dotenv
 
 # Constants
