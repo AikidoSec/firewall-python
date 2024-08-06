@@ -24,6 +24,10 @@ def extract_strings_from_user_input(obj, path_to_payload=None):
                 results[k] = v
 
     if isinstance(obj, list):
+        #  Add the concatenated array as well to the object, there might
+        #  be accidental concatenation if the user expects a string but gets the array
+        #  E.g. HTTP Parameter pollution
+        results[str(obj)] = build_path_to_payload(path_to_payload)
         for i, value in enumerate(obj):
             for k, v in extract_strings_from_user_input(
                 value, path_to_payload + [{"type": "array", "index": i}]
