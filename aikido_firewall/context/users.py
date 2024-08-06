@@ -4,6 +4,7 @@ Users file
 
 from aikido_firewall.helpers.logging import logger
 from . import set_current_user, get_current_context
+from aikido_firewall.background_process import get_comms
 
 
 def set_user(user):
@@ -22,7 +23,8 @@ def set_user(user):
         return
     validated_user["lastIpAddress"] = context.remote_addr
 
-    # Sent validated_user object to Agent
+    # Send validated_user object to Agent
+    get_comms().send_data_to_bg_process("USER", validated_user)
 
 
 def validate_user(user):

@@ -62,6 +62,10 @@ class AikidoBackgroundProcess:
                 elif data[0] == "READ_PROPERTY":  # meant to get config props
                     if hasattr(self.reporter, data[1]):
                         conn.send(self.reporter.__dict__[data[1]])
+                elif data[0] == "USER":
+                    pass
+                    #  The client reported a user
+                    # TBI : self.reporter.add_user(data[1])
 
     def reporting_thread(self):
         """Reporting thread"""
