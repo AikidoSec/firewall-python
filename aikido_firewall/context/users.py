@@ -21,7 +21,7 @@ def set_user(user):
     context = get_current_context()
     if not context:
         return
-    validated_user["lastIpAddress"] = context.remote_addr
+    validated_user["lastIpAddress"] = context.remote_address
 
     # Send validated_user object to Agent
     get_comms().send_data_to_bg_process("USER", validated_user)
