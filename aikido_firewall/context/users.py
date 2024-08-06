@@ -1,0 +1,46 @@
+"""
+Users file
+"""
+
+from aikido_firewall.helpers.logging import logger
+
+
+def set_user(user):
+    """
+    External function for applications to set a user
+    """
+    validated_user = validate_user(user)
+    if not validated_user:
+        return
+    logger.debug("Validated user : %s", validated_user)
+
+
+def validate_user(user):
+    """This validates the user object"""
+    if not isinstance(user, dict):
+        logger.info(
+            "set_user(...) expects a dict with 'id' and 'name' properties, found %s instead.",
+            type(user),
+        )
+        return
+
+    #  Validate user's id :
+    if not "id" in user:
+        logger.info("set_user(...) expects an object with 'id' property.")
+        return
+    if not isinstance(user["id"], str) and not isinstance(user["id"], int):
+        logger.info(
+            "set_user(...) expects an object with 'id' property of type string or number, found %s instead.",
+            type(user["id"]),
+        )
+        return
+    if isinstance(user["id"], str) and len(user["id"]) is 0:
+        logger.info(
+            "set_user(...) expects an object with 'id' property non-empty string."
+        )
+        return
+    valid_user = {"id": str(user["id"])}
+    if "name" in user and isinstance(user["name"], str) and len(user["name"]) > 0:
+        valid_user["name"] = str(user["name"])
+
+    return valid_user
