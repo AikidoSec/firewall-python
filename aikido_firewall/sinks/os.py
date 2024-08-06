@@ -50,7 +50,6 @@ def generate_aikido_function(op, former_func):
     """
 
     def aikido_new_func(*args, op=op, former_func=former_func, **kwargs):
-        logger.debug("`os` wrapper, filepath : `%s`; OP : `%s`", args[0], op)
         context = get_current_context()
         if not context:
             return former_func(*args, **kwargs)
