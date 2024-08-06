@@ -44,6 +44,17 @@ def create_dog():
     connection.commit()
     return f'Dog {dog_name} created successfully'
 
+
+@app.route("/open_file", methods=['GET'])
+def show_open_file_form():
+    return render_template('open_file.html')
+
+@app.route("/open_file", methods=['POST'])
+def open_file():
+    filepath = request.form['filepath']
+    file = open(filepath, 'r', encoding='utf-8')
+    return file.read()
+
 @app.route("/request", methods=['GET'])
 def show_request_page():
     return render_template('request.html')
