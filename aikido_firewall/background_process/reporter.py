@@ -21,7 +21,7 @@ class Reporter:
     timeout_in_sec = 5  # Timeout of API calls to Aikido Server
     heartbeat_secs = 600  # Heartbeat every 10 minutes
 
-    def __init__(self, block, api, token, serverless, event_scheduler):
+    def __init__(self, block, api, token, serverless):
         self.block = block
         self.api = api
         self.token = token  # Should be instance of the Token class!
@@ -31,6 +31,8 @@ class Reporter:
             raise ValueError("Serverless cannot be an empty string")
         self.serverless = serverless
 
+    def start(self, event_scheduler):
+        """Send out start event and add heartbeats"""
         self.on_start()
         send_heartbeats_every_x_secs(self, self.heartbeat_secs, event_scheduler)
 

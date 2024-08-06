@@ -87,8 +87,9 @@ class AikidoBackgroundProcess:
             api=api,
             token=get_token_from_env(),
             serverless=False,
-            event_scheduler=event_scheduler,
         )
+        time.sleep(2)  # Sleep 2 seconds to make sure modules get reported
+        self.reporter.start(event_scheduler)
 
         event_scheduler.run()
 
