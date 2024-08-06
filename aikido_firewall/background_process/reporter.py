@@ -25,6 +25,7 @@ class Reporter:
         self.block = block
         self.api = api
         self.token = token  # Should be instance of the Token class!
+        self.packages = {}
 
         if isinstance(serverless, str) and len(serverless) == 0:
             raise ValueError("Serverless cannot be an empty string")
@@ -138,7 +139,13 @@ class Reporter:
             "version": PKG_VERSION,
             "library": "firewall_python",
             "ipAddress": get_ip(),
-            "packages": [],
+            "packages": {
+                pkg: details["version"]
+                for pkg, details in self.packages.items()
+                if "version" in details
+                and "supported" in details
+                and details["supported"]
+            },
             "serverless": bool(self.serverless),
             "stack": [],
             "os": {"name": platform.system(), "version": platform.release()},
