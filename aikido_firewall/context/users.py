@@ -3,6 +3,7 @@ Users file
 """
 
 from aikido_firewall.helpers.logging import logger
+from . import set_current_user
 
 
 def set_user(user):
@@ -13,6 +14,8 @@ def set_user(user):
     if not validated_user:
         return
     logger.debug("Validated user : %s", validated_user)
+
+    set_current_user(validated_user)
 
 
 def validate_user(user):

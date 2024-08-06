@@ -7,11 +7,21 @@ from urllib.parse import parse_qs
 from http.cookies import SimpleCookie
 from aikido_firewall.helpers.build_route_from_url import build_route_from_url
 from aikido_firewall.helpers.get_subdomains_from_url import get_subdomains_from_url
+from aikido_firewall.helpers.logging import logger
 
 SUPPORTED_SOURCES = ["django", "flask", "django-gunicorn"]
 UINPUT_SOURCES = ["body", "cookies", "query", "headers"]
 
 local = threading.local()
+
+
+def set_current_user(user):
+    """Sets the current user"""
+    if hasattr(local, "user") and local.user is not None:
+        logger.debug(
+            "Evicting a saved users, this probably means a user was set twice."
+        )
+    local.user = user
 
 
 def get_current_context():
@@ -70,6 +80,7 @@ class Context:
             self.set_django_gunicorn_attrs(req)
         self.route = build_route_from_url(self.url)
         self.subdomains = get_subdomains_from_url(self.url)
+        self.user = local.user if hasattr(local, "user") else None
 
     def set_django_gunicorn_attrs(self, req):
         """Set properties that are specific to django-gunicorn"""
@@ -114,6 +125,7 @@ class Context:
                     "source": self.source,
                     "route": self.route,
                     "subdomains": self.subdomains,
+                    "user": self.user,
                 },
                 None,
                 None,
