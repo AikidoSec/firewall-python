@@ -46,8 +46,10 @@ def execute_sql_detection_code(sql):
     logger.info("sql_injection results : %s", json.dumps(contains_injection))
     if contains_injection:
         get_comms().send_data_to_bg_process("ATTACK", (contains_injection, context))
-        should_block = get_comms().poll_config("block")
-        if should_block:
+        should_block_res = get_comms().send_data_to_bg_process(
+            action="READ_PROPERTY", obj="block", receive=True
+        )
+        if should_block_res["success"] and should_block_res["data"]:
             raise AikidoSQLInjection("SQL Injection [aikido_firewall]")
 
 

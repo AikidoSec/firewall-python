@@ -1,6 +1,7 @@
 import aikido_firewall # Aikido package import
 aikido_firewall.protect()
 
+import subprocess
 from flask import Flask, render_template, request
 from flaskext.mysql import MySQL
 import requests
@@ -44,6 +45,14 @@ def create_dog():
     connection.commit()
     return f'Dog {dog_name} created successfully'
 
+@app.route("/shell", methods=['GET'])
+def show_shell_form():
+    return render_template('shell.html')
+@app.route("/shell", methods=['POST'])
+def execute_command():
+    command = request.form['command']
+    result = subprocess.run(command.split(), capture_output=True, text=True)
+    return str(result.stdout)
 
 @app.route("/open_file", methods=['GET'])
 def show_open_file_form():
