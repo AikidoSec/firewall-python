@@ -1,5 +1,5 @@
 """
-!!!!!!!!!!!!!!!!!1
+Mainly exports inspect_getaddrinfo_result function
 """
 
 import traceback
