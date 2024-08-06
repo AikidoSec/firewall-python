@@ -72,9 +72,7 @@ class AikidoBackgroundProcess:
                         )
                     )
                 elif data[0] == "USER":
-                    pass
-                    #  The client reported a user
-                    # TBI : self.reporter.add_user(data[1])
+                    self.reporter.users.add_user(data[1])
 
     def reporting_thread(self):
         """Reporting thread"""
