@@ -12,6 +12,7 @@ from aikido_firewall.vulnerabilities.shell_injection.check_context_for_shell_inj
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.background_process import get_comms
 from aikido_firewall.errors import AikidoShellInjection
+from aikido_firewall.helpers.blocking_enabled import is_blocking_enabled
 
 
 @importhook.on_import("os")
@@ -37,10 +38,7 @@ def on_os_import(os):
         logger.debug("Shell injection results : %s", json.dumps(contains_injection))
         if contains_injection:
             get_comms().send_data_to_bg_process("ATTACK", (contains_injection, context))
-            should_block_res = get_comms().send_data_to_bg_process(
-                action="READ_PROPERTY", obj="block", receive=True
-            )
-            if should_block_res["success"] and should_block_res["data"]:
+            if is_blocking_enabled():
                 raise AikidoShellInjection()
 
         return former_system_func(*args, **kwargs)
