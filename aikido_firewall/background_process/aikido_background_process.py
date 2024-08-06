@@ -64,9 +64,13 @@ class AikidoBackgroundProcess:
                         conn.send(self.reporter.__dict__[data[1]])
                 elif data[0] == "WRAPPED_PACKAGE":
                     #  A package has been wrapped
-                    pkg_name = data[1]["name"]
-                    pkg_details = data[1]["details"]
-                    self.reporter.packages[pkg_name] = pkg_details
+                    if self.reporter:
+                        pkg_name = data[1]["name"]
+                        pkg_details = data[1]["details"]
+                        self.reporter.packages[pkg_name] = pkg_details
+                        conn.send(True)
+                    else:
+                        conn.send(False)
 
     def reporting_thread(self):
         """Reporting thread"""

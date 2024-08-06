@@ -17,12 +17,14 @@ def add_wrapped_package(pkg_name):
             "WRAPPED_PACKAGE",
             {
                 "name": pkg_name,
-                "options": {
+                "details": {
                     "version": pkg_version,
                     "supported": True,  #  We can change this later if we validate package versions?
                 },
             },
+            True,
         )
-        if res["success"]:
-            break
+        break
+        # if res["success"] and res["data"] == True:
+        #    break
         attempts += 1
