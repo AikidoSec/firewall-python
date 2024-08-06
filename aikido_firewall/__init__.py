@@ -7,9 +7,6 @@ from aikido_firewall.context.users import set_current_user as set_user
 
 from dotenv import load_dotenv
 
-# Constants
-PKG_VERSION = "0.0.1"
-
 # Import logger
 from aikido_firewall.helpers.logging import logger
 

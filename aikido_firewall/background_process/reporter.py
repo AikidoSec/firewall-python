@@ -11,7 +11,7 @@ from aikido_firewall.helpers.token import Token
 from aikido_firewall.helpers.get_machine_ip import get_ip
 from aikido_firewall.helpers.get_ua_from_context import get_ua_from_context
 from aikido_firewall.helpers.get_current_unixtime_ms import get_unixtime_ms
-from aikido_firewall import PKG_VERSION
+from aikido_firewall.config import PKG_VERSION
 from aikido_firewall.background_process.heartbeats import send_heartbeats_every_x_secs
 from aikido_firewall.background_process.routes import Routes
 from .reporter_config import ReporterConfig
