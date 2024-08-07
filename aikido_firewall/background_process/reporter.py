@@ -153,7 +153,7 @@ class Reporter:
             "dryMode": not self.block,
             "hostname": socket.gethostname(),
             "version": PKG_VERSION,
-            "library": "firewall_python",
+            "library": "firewall-python",
             "ipAddress": get_ip(),
             "packages": {
                 pkg: details["version"]
