@@ -47,7 +47,7 @@ class Reporter:
         self.on_start()
         send_heartbeats_every_x_secs(self, self.heartbeat_secs, event_scheduler)
         start_polling_for_changes(
-            self.update_service_config, serverless, token, event_scheduler
+            self.update_service_config, self.serverless, self.token, event_scheduler
         )
 
     def on_detected_attack(self, attack, context):
