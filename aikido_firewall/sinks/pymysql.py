@@ -4,17 +4,10 @@ Sink module for `pymysql`
 
 import copy
 import logging
-import json
 import importhook
-from aikido_firewall.context import get_current_context
-from aikido_firewall.vulnerabilities.sql_injection.context_contains_sql_injection import (
-    context_contains_sql_injection,
-)
 from aikido_firewall.vulnerabilities.sql_injection.dialects import MySQL
-from aikido_firewall.background_process import get_comms
-from aikido_firewall.errors import AikidoSQLInjection
-from aikido_firewall.helpers.blocking_enabled import is_blocking_enabled
 from aikido_firewall.background_process.packages import add_wrapped_package
+from aikido_firewall.vulnerabilities import run_vulnerability_scan
 
 logger = logging.getLogger("aikido_firewall")
 
@@ -32,17 +25,9 @@ def on_pymysql_import(mysql):
     prev_query_function = copy.deepcopy(mysql.Connection.query)
 
     def aikido_new_query(_self, sql, unbuffered=False):
-        context = get_current_context()
-        contains_injection = context_contains_sql_injection(
-            sql, "pymysql.connections.query", context, MySQL()
+        run_vulnerability_scan(
+            kind="sql_injection", op="pymysql.connections.query", args=(sql, MySQL())
         )
-
-        logger.info("sql_injection results : %s", json.dumps(contains_injection))
-        if contains_injection:
-            get_comms().send_data_to_bg_process("ATTACK", (contains_injection, context))
-            if is_blocking_enabled():
-                raise AikidoSQLInjection("SQL Injection [aikido_firewall]")
-
         return prev_query_function(_self, sql, unbuffered=False)
 
     # pylint: disable=no-member
