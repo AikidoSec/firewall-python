@@ -17,7 +17,6 @@ from aikido_firewall.background_process.routes import Routes
 from aikido_firewall.ratelimiting.rate_limiter import RateLimiter
 from .service_config import ServiceConfig
 from .users import Users
-from .reporter_config import ReporterConfig
 
 
 class Reporter:
