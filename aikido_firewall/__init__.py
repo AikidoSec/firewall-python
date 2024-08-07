@@ -2,10 +2,10 @@
 Aggregates from the different modules
 """
 
-from dotenv import load_dotenv
+# Re-export set_current_user :
+from aikido_firewall.context.users import set_user
 
-# Constants
-PKG_VERSION = "0.0.7"
+from dotenv import load_dotenv
 
 # Import logger
 from aikido_firewall.helpers.logging import logger
