@@ -51,7 +51,8 @@ def poll_for_changes(on_config_update, token, former_last_updated, event_schedul
     except Exception as e:
         logger.debug("Failed to check for config updates due to error : %s", e)
 
-    # Add poll_for_changes back onto the interval
+    # Set a timeout for `POLL_FOR_CONFIG_CHANGES_INTERVAL` seconds until this function
+    # Gets called again
     event_scheduler.enter(
         POLL_FOR_CONFIG_CHANGES_INTERVAL,
         1,
