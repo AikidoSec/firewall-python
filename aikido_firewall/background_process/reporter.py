@@ -15,6 +15,7 @@ from aikido_firewall.config import PKG_VERSION
 from aikido_firewall.background_process.heartbeats import send_heartbeats_every_x_secs
 from aikido_firewall.background_process.routes import Routes
 from aikido_firewall.ratelimiting.rate_limiter import RateLimiter
+from .service_config import ServiceConfig
 from .users import Users
 from .reporter_config import ReporterConfig
 
@@ -30,7 +31,7 @@ class Reporter:
         self.api = api
         self.token = token  # Should be instance of the Token class!
         self.routes = Routes(200)
-        self.conf = ReporterConfig([], get_unixtime_ms())
+        self.conf = ServiceConfig([], get_unixtime_ms())
         self.rate_limiter = RateLimiter(
             max_items=5000, time_to_live_in_ms=120 * 60 * 1000  # 120 minutes
         )
@@ -174,6 +175,6 @@ class Reporter:
         if res["endpoints"]:
             if not isinstance(res["endpoints"], list):
                 res["endpoints"] = []  # Empty list
-            self.conf = ReporterConfig(
+            self.conf = ServiceConfig(
                 endpoints=res["endpoints"], last_updated_at=get_unixtime_ms()
             )
