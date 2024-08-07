@@ -41,7 +41,7 @@ def on_pymysql_import(mysql):
         if contains_injection:
             get_comms().send_data_to_bg_process("ATTACK", (contains_injection, context))
             if is_blocking_enabled():
-                raise AikidoSQLInjection("SQL Injection [aikido_firewall]")
+                raise AikidoSQLInjection("MySQL")
 
         return prev_query_function(_self, sql, unbuffered=False)
 

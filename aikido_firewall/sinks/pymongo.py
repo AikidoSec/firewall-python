@@ -57,7 +57,7 @@ def on_pymongo_import(pymongo):
                     "ATTACK", (injection_results, context)
                 )
                 if is_blocking_enabled():
-                    raise AikidoNoSQLInjection("NOSQL Injection [aikido_firewall]")
+                    raise AikidoNoSQLInjection()
             return prev_func(_self, _filter, *args, **kwargs)
 
         setattr(modified_pymongo.Collection, operation, wrapped_operation_function)

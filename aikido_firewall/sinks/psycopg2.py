@@ -49,7 +49,7 @@ def execute_sql_detection_code(sql):
     if contains_injection:
         get_comms().send_data_to_bg_process("ATTACK", (contains_injection, context))
         if is_blocking_enabled():
-            raise AikidoSQLInjection("SQL Injection [aikido_firewall]")
+            raise AikidoSQLInjection("PostgreSQL")
 
 
 class MutableAikidoCursor:
