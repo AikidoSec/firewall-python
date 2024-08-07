@@ -75,6 +75,15 @@ class AikidoBackgroundProcess:
                         )
                     elif data[0] == "USER":
                         self.reporter.users.add_user(data[1])
+                    elif data[0] == "WRAPPED_PACKAGE":
+                        #  A package has been wrapped
+                        if self.reporter:
+                            pkg_name = data[1]["name"]
+                            pkg_details = data[1]["details"]
+                            self.reporter.packages[pkg_name] = pkg_details
+                            conn.send(True)
+                        else:
+                            conn.send(False)
                     elif data[0] == "SHOULD_RATELIMIT":
                         # Called to check if the context passed along as data should be
                         # Rate limited
@@ -101,8 +110,9 @@ class AikidoBackgroundProcess:
             api=api,
             token=get_token_from_env(),
             serverless=False,
-            event_scheduler=event_scheduler,
         )
+        time.sleep(2)  # Sleep 2 seconds to make sure modules get reported
+        self.reporter.start(event_scheduler)
 
         event_scheduler.run()
 

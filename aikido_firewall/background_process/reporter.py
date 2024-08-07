@@ -26,7 +26,7 @@ class Reporter:
     timeout_in_sec = 5  # Timeout of API calls to Aikido Server
     heartbeat_secs = 600  # Heartbeat every 10 minutes
 
-    def __init__(self, block, api, token, serverless, event_scheduler):
+    def __init__(self, block, api, token, serverless):
         self.block = block
         self.api = api
         self.token = token  # Should be instance of the Token class!
@@ -36,11 +36,14 @@ class Reporter:
             max_items=5000, time_to_live_in_ms=120 * 60 * 1000  # 120 minutes
         )
         self.users = Users(1000)
+        self.packages = {}
 
         if isinstance(serverless, str) and len(serverless) == 0:
             raise ValueError("Serverless cannot be an empty string")
         self.serverless = serverless
 
+    def start(self, event_scheduler):
+        """Send out start event and add heartbeats"""
         self.on_start()
         send_heartbeats_every_x_secs(self, self.heartbeat_secs, event_scheduler)
 
@@ -153,9 +156,16 @@ class Reporter:
             "version": PKG_VERSION,
             "library": "firewall_python",
             "ipAddress": get_ip(),
-            "packages": [],
+            "packages": {
+                pkg: details["version"]
+                for pkg, details in self.packages.items()
+                if "version" in details
+                and "supported" in details
+                and details["supported"]
+            },
             "serverless": bool(self.serverless),
-            "stack": [],
+            "stack": list(self.packages.keys())
+            + ([self.serverless] if self.serverless else []),
             "os": {"name": platform.system(), "version": platform.release()},
             "preventedPrototypePollution": False,  # Get this out of the API maybe?
             "nodeEnv": "",

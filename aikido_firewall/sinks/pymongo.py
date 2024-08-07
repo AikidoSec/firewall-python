@@ -2,7 +2,6 @@
 Sink module for `pymongo`
 """
 
-from importlib.metadata import version
 from copy import deepcopy
 import importhook
 from aikido_firewall.helpers.logging import logger
@@ -11,6 +10,7 @@ from aikido_firewall.context import get_current_context
 from aikido_firewall.background_process import get_comms
 from aikido_firewall.errors import AikidoNoSQLInjection
 from aikido_firewall.helpers.blocking_enabled import is_blocking_enabled
+import aikido_firewall.background_process.packages as pkgs
 
 OPERATIONS_WITH_FILTER = [
     "replace_one",  # L1087
@@ -62,5 +62,5 @@ def on_pymongo_import(pymongo):
 
         setattr(modified_pymongo.Collection, operation, wrapped_operation_function)
 
-    # logger.debug("Wrapped `pymongo` with version %s", version("pymongo"))
+    pkgs.add_wrapped_package("pymongo")
     return modified_pymongo
