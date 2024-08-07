@@ -9,6 +9,7 @@ from aikido_firewall.errors import (
     AikidoSQLInjection,
     AikidoNoSQLInjection,
     AikidoShellInjection,
+    AikidoPathTraversal,
 )
 from aikido_firewall.background_process import get_comms
 from aikido_firewall.helpers.logging import logger
@@ -17,6 +18,9 @@ from .sql_injection.context_contains_sql_injection import context_contains_sql_i
 from .nosql_injection import detect_nosql_injection
 from .shell_injection.check_context_for_shell_injection import (
     check_context_for_shell_injection,
+)
+from .path_traversal.check_context_for_path_traversal import (
+    check_context_for_path_traversal,
 )
 
 
@@ -45,6 +49,11 @@ def run_vulnerability_scan(kind, op, args):
             command=args[0], operation=op, context=context
         )
         error_type = AikidoShellInjection
+    elif kind == "path_traversal":
+        injection_results = check_context_for_path_traversal(
+            filename=args[0], operation=op, context=context
+        )
+        error_type = AikidoPathTraversal
     else:
         logger.error("Vulnerability type %s currently has no scans implemented", kind)
 

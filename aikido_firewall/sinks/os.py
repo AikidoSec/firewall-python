@@ -5,13 +5,7 @@ Sink module for python's `os`
 import copy
 import importhook
 from aikido_firewall.helpers.logging import logger
-from aikido_firewall.vulnerabilities.path_traversal.check_context_for_path_traversal import (
-    check_context_for_path_traversal,
-)
-from aikido_firewall.context import get_current_context
-from aikido_firewall.background_process import get_comms
-from aikido_firewall.errors import AikidoPathTraversal
-from aikido_firewall.helpers.blocking_enabled import is_blocking_enabled
+from aikido_firewall.vulnerabilities import run_vulnerability_scan
 
 # File functions :
 OS_FILE_FUNCTIONS = [
@@ -51,17 +45,7 @@ def generate_aikido_function(op, former_func):
     """
 
     def aikido_new_func(*args, op=op, former_func=former_func, **kwargs):
-        logger.debug("`os` wrapper, filepath : `%s`; OP : `%s`", args[0], op)
-        context = get_current_context()
-        if not context:
-            return former_func(*args, **kwargs)
-        result = check_context_for_path_traversal(
-            filename=args[0], operation=f"os.{op}", context=context
-        )
-        if len(result) != 0:
-            get_comms().send_data_to_bg_process("ATTACK", (result, context))
-            if is_blocking_enabled():
-                raise AikidoPathTraversal()
+        run_vulnerability_scan(kind="path_traversal", op=f"os.{op}", args=(args[0]))
         return former_func(*args, **kwargs)
 
     return aikido_new_func
