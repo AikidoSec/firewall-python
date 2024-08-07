@@ -4,6 +4,7 @@ Mainly exports the `get_ip_from_request` function
 
 import socket
 import os
+from aikido_firewall.helpers.logging import logger
 
 
 def get_ip_from_request(remote_address, headers):
@@ -67,3 +68,6 @@ def is_ip(value):
             return True
         except socket.error:
             return False
+    except Exception as e:
+        logger.debug("is_ip failed because of exception : %s", e)
+        return False
