@@ -45,7 +45,8 @@ def generate_aikido_function(op, former_func):
     """
 
     def aikido_new_func(*args, op=op, former_func=former_func, **kwargs):
-        run_vulnerability_scan(kind="path_traversal", op=f"os.{op}", args=(args[0]))
+        #  args[0] : filename
+        run_vulnerability_scan(kind="path_traversal", op=f"os.{op}", args=(args[0],))
         return former_func(*args, **kwargs)
 
     return aikido_new_func

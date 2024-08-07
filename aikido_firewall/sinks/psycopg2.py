@@ -45,7 +45,7 @@ class MutableAikidoCursor:
             run_vulnerability_scan(
                 kind="sql_injection",
                 op="pymysql.connection.cursor.execute",
-                args=(args[0], Postgres()),
+                args=(args[0], Postgres()),  #  args[0] : sql
             )
             return self._execute_func_copy(*args, **kwargs)
 
