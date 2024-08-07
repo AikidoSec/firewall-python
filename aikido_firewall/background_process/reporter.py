@@ -11,11 +11,13 @@ from aikido_firewall.helpers.token import Token
 from aikido_firewall.helpers.get_machine_ip import get_ip
 from aikido_firewall.helpers.get_ua_from_context import get_ua_from_context
 from aikido_firewall.helpers.get_current_unixtime_ms import get_unixtime_ms
-from aikido_firewall import PKG_VERSION
+from aikido_firewall.config import PKG_VERSION
 from aikido_firewall.background_process.heartbeats import send_heartbeats_every_x_secs
 from aikido_firewall.background_process.routes import Routes
-from .service_config import ServiceConfig
 from aikido_firewall.ratelimiting.rate_limiter import RateLimiter
+from .service_config import ServiceConfig
+from .users import Users
+from .reporter_config import ReporterConfig
 
 
 class Reporter:
@@ -33,6 +35,7 @@ class Reporter:
         self.rate_limiter = RateLimiter(
             max_items=5000, time_to_live_in_ms=120 * 60 * 1000  # 120 minutes
         )
+        self.users = Users(1000)
 
         if isinstance(serverless, str) and len(serverless) == 0:
             raise ValueError("Serverless cannot be an empty string")
@@ -88,6 +91,10 @@ class Reporter:
         if not self.token:
             return
         logger.debug("Aikido Reporter : Sending out heartbeat")
+        users = self.users.as_array()
+        routes = list(self.routes)
+        self.users.clear()
+        self.routes.clear()
         res = self.api.report(
             self.token,
             {
@@ -108,8 +115,8 @@ class Reporter:
                     },
                 },
                 "hostnames": [],
-                "routes": list(self.routes),
-                "users": [],
+                "routes": routes,
+                "users": users,
             },
             self.timeout_in_sec,
         )

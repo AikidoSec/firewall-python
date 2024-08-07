@@ -73,6 +73,8 @@ class AikidoBackgroundProcess:
                         self.reporter.routes.add_route(
                             method=data[1][0], path=data[1][1]
                         )
+                    elif data[0] == "USER":
+                        self.reporter.users.add_user(data[1])
                     elif data[0] == "SHOULD_RATELIMIT":
                         # Called to check if the context passed along as data should be
                         # Rate limited
