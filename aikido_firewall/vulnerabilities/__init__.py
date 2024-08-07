@@ -37,7 +37,7 @@ def run_vulnerability_scan(kind, op, args):
     force_protection_off = comms.send_data_to_bg_process(
         action="FORCE_PROTECTION_OFF?", obj=context, receive=True
     )
-    if force_protection_off:
+    if force_protection_off["success"] and force_protection_off["data"]:
         #  The client turned protection off for this route, not scanning
         return
 
