@@ -14,8 +14,10 @@ RUN pip install -r requirements.txt
 # Build and install aikido_firewall from source
 WORKDIR /tmp
 RUN pip install poetry
+RUN rm -rf ./dist
 RUN make build
-RUN pip install ./dist/aikido_firewall-0.1.0.tar.gz
+RUN mv ./dist/aikido_firewall-*.tar.gz ./dist/aikido_firewall.tar.gz
+RUN pip install ./dist/aikido_firewall.tar.gz
 RUN pip list
 
 WORKDIR /app

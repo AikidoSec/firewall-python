@@ -13,6 +13,9 @@ def mock_pymongo():
 
 def test_on_pymongo_import(mocker, mock_pymongo):
     mocker.patch("importhook.copy_module", return_value=mock_pymongo)
+    mock_add_wrapped_package = mocker.patch(
+        "aikido_firewall.background_process.packages.add_wrapped_package"
+    )
 
     for operation in [
         "replace_one",
@@ -59,3 +62,5 @@ def test_on_pymongo_import(mocker, mock_pymongo):
     ]:
         wrapped_function = getattr(modified_pymongo.Collection, operation)
         assert wrapped_function is not None
+    # Assert that add_wrapped_package was called with the correct argument
+    mock_add_wrapped_package.assert_called_once_with("pymongo")

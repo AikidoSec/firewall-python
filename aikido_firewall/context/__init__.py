@@ -7,11 +7,22 @@ from urllib.parse import parse_qs
 from http.cookies import SimpleCookie
 from aikido_firewall.helpers.build_route_from_url import build_route_from_url
 from aikido_firewall.helpers.get_subdomains_from_url import get_subdomains_from_url
+from aikido_firewall.helpers.logging import logger
+from aikido_firewall.helpers.get_ip_from_request import get_ip_from_request
 
 SUPPORTED_SOURCES = ["django", "flask", "django-gunicorn"]
 UINPUT_SOURCES = ["body", "cookies", "query", "headers"]
 
 local = threading.local()
+
+
+def set_current_user(user):
+    """Sets the current user"""
+    if hasattr(local, "user") and local.user is not None:
+        logger.debug(
+            "Evicting a saved users, this probably means a user was set twice."
+        )
+    local.user = user
 
 
 def get_current_context():
@@ -70,10 +81,12 @@ class Context:
             self.set_django_gunicorn_attrs(req)
         self.route = build_route_from_url(self.url)
         self.subdomains = get_subdomains_from_url(self.url)
+        self.user = local.user if hasattr(local, "user") else None
+        self.remote_address = get_ip_from_request(self.raw_ip, self.headers)
 
     def set_django_gunicorn_attrs(self, req):
         """Set properties that are specific to django-gunicorn"""
-        self.remote_address = req.remote_addr
+        self.raw_ip = req.remote_addr
         self.url = req.uri
         self.body = parse_qs(req.body_copy.decode("utf-8"))
         self.query = parse_qs(req.query)
@@ -82,7 +95,7 @@ class Context:
 
     def set_django_attrs(self, req):
         """set properties that are specific to django"""
-        self.remote_address = req.META.get("REMOTE_ADDR")
+        self.raw_ip = req.META.get("REMOTE_ADDR")
         self.url = req.build_absolute_uri()
         self.body = dict(req.POST)
         self.query = dict(req.GET)
@@ -90,7 +103,7 @@ class Context:
 
     def set_flask_attrs(self, req):
         """Set properties that are specific to flask"""
-        self.remote_address = req.remote_addr
+        self.raw_ip = req.remote_addr
         self.url = req.url
         if req.is_json:
             self.body = req.json
@@ -114,6 +127,7 @@ class Context:
                     "source": self.source,
                     "route": self.route,
                     "subdomains": self.subdomains,
+                    "user": self.user,
                 },
                 None,
                 None,

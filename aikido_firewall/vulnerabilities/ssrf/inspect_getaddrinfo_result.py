@@ -8,6 +8,7 @@ from aikido_firewall.context import get_current_context
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.background_process import get_comms
 from aikido_firewall.errors import AikidoSSRF
+from aikido_firewall.helpers.blocking_enabled import is_blocking_enabled
 from .imds import is_trusted_hostname, is_imds_ip_address
 from .is_private_ip import is_private_ip
 from .find_hostname_in_context import find_hostname_in_context
@@ -23,17 +24,12 @@ def inspect_getaddrinfo_result(dns_results, hostname, port):
 
     context = get_current_context()
 
-    should_block_res = get_comms().send_data_to_bg_process(
-        action="READ_PROPERTY", obj="block", receive=True
-    )
-    should_block = should_block_res["success"] and should_block_res["data"]
-
     ip_addresses = extract_ip_array_from_results(dns_results)
     if resolves_to_imds_ip(ip_addresses, hostname):
         #  Block stored SSRF attack that target IMDS IP addresses
         #  An attacker could have stored a hostname in a database that points to an IMDS IP address
         #  We don't check if the user input contains the hostname because there's no context
-        if should_block:
+        if is_blocking_enabled():
             raise AikidoSSRF()
 
     if not context:
@@ -47,6 +43,7 @@ def inspect_getaddrinfo_result(dns_results, hostname, port):
     if not found:
         return
 
+    should_block = is_blocking_enabled()
     stack = " ".join(traceback.format_stack())
     attack = {
         "module": "socket",

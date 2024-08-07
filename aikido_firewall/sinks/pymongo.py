@@ -2,7 +2,6 @@
 Sink module for `pymongo`
 """
 
-from importlib.metadata import version
 from copy import deepcopy
 import importhook
 from aikido_firewall.helpers.logging import logger
@@ -10,6 +9,8 @@ from aikido_firewall.vulnerabilities.nosql_injection import detect_nosql_injecti
 from aikido_firewall.context import get_current_context
 from aikido_firewall.background_process import get_comms
 from aikido_firewall.errors import AikidoNoSQLInjection
+from aikido_firewall.helpers.blocking_enabled import is_blocking_enabled
+import aikido_firewall.background_process.packages as pkgs
 
 OPERATIONS_WITH_FILTER = [
     "replace_one",  # L1087
@@ -55,10 +56,11 @@ def on_pymongo_import(pymongo):
                 get_comms().send_data_to_bg_process(
                     "ATTACK", (injection_results, context)
                 )
-                raise AikidoNoSQLInjection("NOSQL Injection [aikido_firewall]")
+                if is_blocking_enabled():
+                    raise AikidoNoSQLInjection("NOSQL Injection [aikido_firewall]")
             return prev_func(_self, _filter, *args, **kwargs)
 
         setattr(modified_pymongo.Collection, operation, wrapped_operation_function)
 
-    # logger.debug("Wrapped `pymongo` with version %s", version("pymongo"))
+    pkgs.add_wrapped_package("pymongo")
     return modified_pymongo

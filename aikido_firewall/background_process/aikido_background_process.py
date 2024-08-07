@@ -44,33 +44,56 @@ class AikidoBackgroundProcess:
             conn = listener.accept()
             logger.debug("connection accepted from %s", listener.last_accepted)
             while True:
-                data = conn.recv()  #  because of this no sleep needed in thread
-                logger.debug("Incoming data : %s", data)
-                if data[0] == "ATTACK":
-                    self.queue.put(data[1])
-                elif data[0] == "CLOSE":  # this is a kind of EOL for python IPC
-                    conn.close()
-                    break
-                elif (
-                    data[0] == "KILL"
-                ):  # when main process quits , or during testing etc
-                    logger.debug("Killing subprocess")
-                    conn.close()
-                    sys.exit(0)
-                elif data[0] == "READ_PROPERTY":  # meant to get config props
-                    if hasattr(self.reporter, data[1]):
-                        conn.send(self.reporter.__dict__[data[1]])
-                elif data[0] == "ROUTE":
-                    # Called every time the user visits a route
-                    self.reporter.routes.add_route(method=data[1][0], path=data[1][1])
-                elif data[0] == "SHOULD_RATELIMIT":
-                    # Called to check if the context passed along as data should be
-                    # Rate limited
-                    conn.send(
-                        should_ratelimit_request(
-                            context=data[1], reporter=self.reporter
+                try:
+                    data = conn.recv()  #  because of this no sleep needed in thread
+                    logger.debug("Incoming data : %s", data)
+                    if data[0] == "ATTACK":
+                        self.queue.put(data[1])
+                    elif data[0] == "CLOSE":  # this is a kind of EOL for python IPC
+                        conn.close()
+                        break
+                    elif (
+                        data[0] == "KILL"
+                    ):  # when main process quits , or during testing etc
+                        logger.debug("Killing subprocess")
+                        conn.close()
+                        sys.exit(0)
+                    elif data[0] == "READ_PROPERTY":  # meant to get config props
+                        if hasattr(self.reporter, data[1]):
+                            conn.send(self.reporter.__dict__[data[1]])
+                        else:
+                            logger.debug(
+                                "Reporter has no attribute %s, current reporter: %s",
+                                data[1],
+                                self.reporter,
+                            )
+                            conn.send(None)
+                    elif data[0] == "ROUTE":
+                        # Called every time the user visits a route
+                        self.reporter.routes.add_route(
+                            method=data[1][0], path=data[1][1]
                         )
-                    )
+                    elif data[0] == "USER":
+                        self.reporter.users.add_user(data[1])
+                    elif data[0] == "WRAPPED_PACKAGE":
+                        #  A package has been wrapped
+                        if self.reporter:
+                            pkg_name = data[1]["name"]
+                            pkg_details = data[1]["details"]
+                            self.reporter.packages[pkg_name] = pkg_details
+                            conn.send(True)
+                        else:
+                            conn.send(False)
+                    elif data[0] == "SHOULD_RATELIMIT":
+                        # Called to check if the context passed along as data should be
+                        # Rate limited
+                        conn.send(
+                            should_ratelimit_request(
+                                context=data[1], reporter=self.reporter
+                            )
+                        )
+                except Exception as e:
+                    logger.error("Exception occured in server thread : %s", e)
 
     def reporting_thread(self):
         """Reporting thread"""
@@ -87,8 +110,9 @@ class AikidoBackgroundProcess:
             api=api,
             token=get_token_from_env(),
             serverless=False,
-            event_scheduler=event_scheduler,
         )
+        time.sleep(2)  # Sleep 2 seconds to make sure modules get reported
+        self.reporter.start(event_scheduler)
 
         event_scheduler.run()
 

@@ -5,6 +5,7 @@ import subprocess
 from flask import Flask, render_template, request
 from flaskext.mysql import MySQL
 import requests
+import subprocess
 
 app = Flask(__name__)
 if __name__ == '__main__':
@@ -19,6 +20,10 @@ mysql.init_app(app)
 
 @app.route("/")
 def homepage():
+    aikido_firewall.set_user({
+        "id": 1,
+        "name": "Wout"
+    })
     cursor = mysql.get_db().cursor()
     cursor.execute("SELECT * FROM db.dogs")
     dogs = cursor.fetchall()
@@ -27,6 +32,10 @@ def homepage():
 
 @app.route('/dogpage/<int:dog_id>')
 def get_dogpage(dog_id):
+    aikido_firewall.set_user({
+        "id": 2,
+        "name": "Wout 2"
+    })
     cursor = mysql.get_db().cursor()
     cursor.execute("SELECT * FROM db.dogs WHERE id = " + str(dog_id))
     dog = cursor.fetchmany(1)[0]
@@ -73,3 +82,13 @@ def make_request():
     url = request.form['url']
     res = requests.get(url)
     return str(res)
+
+@app.route("/execute", methods=['GET'])
+def show_execute_page():
+    return render_template('execute.html')
+
+@app.route("/execute", methods=['POST'])
+def run_command():
+    command = request.form['command'].split()
+    result = subprocess.run(command, capture_output=True, text=True)
+    return str(result.stdout)
