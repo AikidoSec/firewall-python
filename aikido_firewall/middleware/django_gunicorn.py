@@ -28,10 +28,10 @@ def pre_request(prev_func):
     """
 
     def aik_pre_request(worker, req):
-        #req.body, req.body_copy = clone_body(req.body)
+        # req.body, req.body_copy = clone_body(req.body)
 
-        #django_context = Context(req=req, source="django-gunicorn")
-        #django_context.set_as_current_context()
+        # django_context = Context(req=req, source="django-gunicorn")
+        # django_context.set_as_current_context()
         prev_func(worker, req)
 
     return aik_pre_request
