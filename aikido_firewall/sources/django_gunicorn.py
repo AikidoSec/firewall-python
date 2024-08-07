@@ -13,7 +13,7 @@ from aikido_firewall.background_process.packages import add_wrapped_package
 
 
 
-@importhook.on_import("django.views.generic.base")
+@importhook.on_import("django.core.handlers.base")
 def on_flask_import(django):
     """
     Hook 'n wrap on `django.views.generic.base`
@@ -23,18 +23,17 @@ def on_flask_import(django):
     """
     modified_django = importhook.copy_module(django)
 
-    former_dispatch = copy.deepcopy(django.View.dispatch)
+    former_get_response = copy.deepcopy(django.BaseHandler._get_response)
 
-    def aikido_new_dispatch(_self, request, *args, **kwargs):
-        raise Exception("Hewow")
+    def aikido_new_get_response(_self, request):
         logger.critical("Request object django : %s", request)
         logger.critical("Request object dict django : %s", request.__dict__)
-
-        return former_dispatch(_self, request, *args, **kwargs)
+        response = former_get_response(_self, request)
+        return response
 
     # pylint: disable=no-member
-    setattr(modified_django.View, "dispatch", aikido_new_dispatch)
-    setattr(django.View, "dispatch", aikido_new_dispatch)
+    setattr(modified_django.BaseHandler, "_get_response", aikido_new_get_response)
+    setattr(django.BaseHandler, "_get_response", aikido_new_get_response)
 
     add_wrapped_package("django")
     return modified_django
