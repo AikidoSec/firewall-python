@@ -44,7 +44,7 @@ def poll_for_changes(on_config_update, token, former_last_updated, event_schedul
         ):
             #  The config changed
             config = get_config(token)
-            on_config_update(config)
+            on_config_update({**config, "success": True})
         else:
             # If something went wrong, or we don't know when the config was
             # last updated, set to prev value
