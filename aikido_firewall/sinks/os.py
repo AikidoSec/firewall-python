@@ -11,6 +11,7 @@ from aikido_firewall.vulnerabilities.path_traversal.check_context_for_path_trave
 from aikido_firewall.context import get_current_context
 from aikido_firewall.background_process import get_comms
 from aikido_firewall.errors import AikidoPathTraversal
+from aikido_firewall.helpers.blocking_enabled import is_blocking_enabled
 
 # File functions :
 OS_FILE_FUNCTIONS = [
@@ -59,10 +60,7 @@ def generate_aikido_function(op, former_func):
         )
         if len(result) != 0:
             get_comms().send_data_to_bg_process("ATTACK", (result, context))
-            should_block_res = get_comms().send_data_to_bg_process(
-                action="READ_PROPERTY", obj="block", receive=True
-            )
-            if should_block_res["success"] and should_block_res["data"]:
+            if is_blocking_enabled():
                 raise AikidoPathTraversal()
         return former_func(*args, **kwargs)
 
