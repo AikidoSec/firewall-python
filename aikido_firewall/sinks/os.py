@@ -18,7 +18,6 @@ OS_FILE_FUNCTIONS = [
     "access",
     "chmod",
     "chown",
-    "lstat",
     "mkdir",
     "listdir",
     "readlink",
