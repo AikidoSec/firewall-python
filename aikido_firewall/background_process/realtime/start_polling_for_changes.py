@@ -4,7 +4,7 @@ Mainly exports `start_polling_for_changes` function
 
 from aikido_firewall.helpers.token import Token
 from aikido_firewall.helpers.logging import logger
-from . import get_config, get_config_last_updated_at
+import aikido_firewall.background_process.realtime as realtime
 
 POLL_FOR_CONFIG_CHANGES_INTERVAL = 60  #  Poll for config changes every 60 seconds
 
@@ -40,16 +40,16 @@ def poll_for_changes(on_config_update, token, former_last_updated, event_schedul
     # last updated, set to prev value
     config_last_updated_at = former_last_updated
     try:
-        config_last_updated_at = get_config_last_updated_at(token)
+        config_last_updated_at = realtime.get_config_last_updated_at(token)
         if (
             isinstance(former_last_updated, int)
             and config_last_updated_at > former_last_updated
         ):
             #  The config changed
-            config = get_config(token)
+            config = realtime.get_config(token)
             on_config_update({**config, "success": True})
     except Exception as e:
-        logger.debug("Failed to check for config updates due to error : %s", e)
+        logger.error("Failed to check for config updates due to error : %s", e)
 
     # Set a timeout for `POLL_FOR_CONFIG_CHANGES_INTERVAL` seconds until this function
     # Gets called again
