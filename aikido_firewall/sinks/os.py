@@ -27,7 +27,6 @@ OS_FILE_FUNCTIONS = [
     "remove",
     "symlink",
     "stat",
-    "utime",
     "link",
     "makedirs",
     "walk",
