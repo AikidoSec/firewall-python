@@ -5,6 +5,7 @@ Exports the AikidoIPCCommunications class
 
 import os
 import multiprocessing.connection as con
+from multiprocessing import Process
 from threading import Thread
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.background_process.aikido_background_process import (
@@ -41,6 +42,7 @@ class AikidoIPCCommunications:
         # The key needs to be in byte form
         self.address = address
         self.key = key
+        self.background_process = None
 
         # Set as global ipc object :
         reset_comms()
@@ -50,11 +52,11 @@ class AikidoIPCCommunications:
 
     def start_aikido_listener(self):
         """This will start the aikido process which listens"""
-        pid = os.fork()
-        if pid == 0:  # Child process
-            AikidoBackgroundProcess(self.address, self.key)
-        else:  # Parent process
-            logger.debug("Started background process, PID: %d", pid)
+        #  Daemon is set to True so that the process kills itself when the main process dies
+        self.background_process = Process(
+            target=AikidoBackgroundProcess, args=(self.address, self.key), daemon=True
+        )
+        self.background_process.start()
 
     def send_data_to_bg_process(self, action, obj, receive=False):
         """
@@ -71,14 +73,15 @@ class AikidoIPCCommunications:
             # Send/Receive data :
             conn.send(data)
             if receive:
-                result_obj = conn.recv()
+                result_obj[1] = conn.recv()
 
             # Close the connection :
             conn.send(("CLOSE", {}))
             conn.close()
+            result_obj[0] = True  #  Connection ended gracefully
 
         # Create a shared result object between the thread and this process :
-        result_obj = None
+        result_obj = [False, None]  # Needs to be an array so we can make a ref.
         t = Thread(
             target=target,
             args=(self.address, self.key, receive, (action, obj), result_obj),
@@ -88,4 +91,13 @@ class AikidoIPCCommunications:
         # Start and join the thread for 100ms, afterwards the thread is forced to close (daemon=True)
         t.start()
         t.join(timeout=0.1)
-        return result_obj
+        if not result_obj[0]:
+            logger.info(
+                "Communication returned None between background process and threads"
+            )
+            return {"success": False, "error": "timeout"}
+
+        if receive:
+            return {"success": True, "data": result_obj[1]}
+        else:
+            return {"success": True}
