@@ -36,6 +36,9 @@ def poll_for_changes(on_config_update, token, former_last_updated, event_schedul
     """
     Actually performs the check if the config was updated or not
     """
+    # If something went wrong, or we don't know when the config was
+    # last updated, set to prev value
+    config_last_updated_at = former_last_updated
     try:
         config_last_updated_at = get_config_last_updated_at(token)
         if (
@@ -45,10 +48,6 @@ def poll_for_changes(on_config_update, token, former_last_updated, event_schedul
             #  The config changed
             config = get_config(token)
             on_config_update({**config, "success": True})
-        else:
-            # If something went wrong, or we don't know when the config was
-            # last updated, set to prev value
-            config_last_updated_at = former_last_updated
     except Exception as e:
         logger.debug("Failed to check for config updates due to error : %s", e)
 
