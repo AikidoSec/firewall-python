@@ -31,6 +31,8 @@ def protect(module="any", server=True):
     # Import sources
     if module == "django":
         import aikido_firewall.sources.django
+    elif module == "django-gunicorn":
+        import aikido_firewall.sources.django_gunicorn
 
     if not module in ["django", "django-gunicorn"]:
         import aikido_firewall.sources.flask
