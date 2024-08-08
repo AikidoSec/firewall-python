@@ -3,16 +3,9 @@ Sink module for `subprocess`
 """
 
 import copy
-import json
 import importhook
-from aikido_firewall.context import get_current_context
-from aikido_firewall.vulnerabilities.shell_injection.check_context_for_shell_injection import (
-    check_context_for_shell_injection,
-)
 from aikido_firewall.helpers.logging import logger
-from aikido_firewall.background_process import get_comms
-from aikido_firewall.errors import AikidoShellInjection
-from aikido_firewall.helpers.blocking_enabled import is_blocking_enabled
+from aikido_firewall.vulnerabilities import run_vulnerability_scan
 
 SUBPROCESS_OPERATIONS = ["call", "run", "check_call", "Popen", "check_output"]
 
@@ -29,20 +22,11 @@ def generate_aikido_function(op, former_func):
             command = " ".join(args[0])
         else:
             command = args[0]
-
-        context = get_current_context()
-        if not context:
-            return former_func(*args, **kwargs)
-        contains_injection = check_context_for_shell_injection(
-            command=command, operation=f"subprocess.{op}", context=context
+        run_vulnerability_scan(
+            kind="shell_injection",
+            op=f"subprocess.{op}",
+            args=(command,),
         )
-
-        logger.debug("Shell injection results : %s", json.dumps(contains_injection))
-        if contains_injection:
-            get_comms().send_data_to_bg_process("ATTACK", (contains_injection, context))
-            if is_blocking_enabled():
-                raise AikidoShellInjection()
-
         return former_func(*args, **kwargs)
 
     return aikido_new_func
