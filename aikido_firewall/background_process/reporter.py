@@ -14,7 +14,6 @@ from aikido_firewall.helpers.get_current_unixtime_ms import get_unixtime_ms
 from aikido_firewall.config import PKG_VERSION
 from aikido_firewall.background_process.heartbeats import send_heartbeats_every_x_secs
 from aikido_firewall.background_process.routes import Routes
-from .realtime.start_polling_for_changes import start_polling_for_changes
 from aikido_firewall.ratelimiting.rate_limiter import RateLimiter
 from .service_config import ServiceConfig
 from .users import Users
@@ -46,9 +45,6 @@ class Reporter:
         """Send out start event and add heartbeats"""
         self.on_start()
         send_heartbeats_every_x_secs(self, self.heartbeat_secs, event_scheduler)
-        start_polling_for_changes(
-            self.update_service_config, self.serverless, self.token, event_scheduler
-        )
 
     def on_detected_attack(self, attack, context):
         """
