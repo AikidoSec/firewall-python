@@ -29,7 +29,14 @@ class AikidoMiddleware:
             action="SHOULD_RATELIMIT", obj=context, receive=True
         )
         if ratelimit_res["success"] and ratelimit_res["data"]["block"]:
-            raise AikidoRateLimiting()
+            from django.http import (
+                HttpResponse,
+            )  #  We don't want to install django, import on demand
+
+            message = "You are rate limited by Aikido firewall"
+            if ratelimit_res["data"]["trigger"] is "ip":
+                message += f" (Your IP: {context.remote_address})"
+            return HttpResponse(message, status=429)
 
         response = self.get_response(request)
 
