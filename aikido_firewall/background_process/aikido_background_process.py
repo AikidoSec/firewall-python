@@ -94,6 +94,7 @@ class AikidoBackgroundProcess:
                         )
                 except Exception as e:
                     logger.error("Exception occured in server thread : %s", e)
+                    break  # Return back to listening for new connections
 
     def reporting_thread(self):
         """Reporting thread"""
