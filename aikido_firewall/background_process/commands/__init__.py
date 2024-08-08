@@ -9,6 +9,7 @@ from .wrapped_package import process_wrapped_package
 from .should_ratelimit import process_should_ratelimit
 from .kill import process_kill
 from .force_protection_off import process_force_protection_off
+from .hostnames_add import process_hostnames_add
 
 commands_map = {
     "ATTACK": process_attack,
@@ -19,6 +20,7 @@ commands_map = {
     "SHOULD_RATELIMIT": process_should_ratelimit,
     "KILL": process_kill,
     "FORCE_PROTECTION_OFF?": process_force_protection_off,
+    "HOSTNAMES_ADD": process_hostnames_add,
 }
 
 
