@@ -2,8 +2,8 @@
 
 import socket
 import platform
-from aikido_firewall.config import PKG_VERSION
-from aikido_firewall.helpers.get_machine_ip import get_ip
+import aikido_firewall.config as config
+import aikido_firewall.helpers.get_machine_ip as h
 
 
 def get_reporter_info(reporter):
@@ -13,9 +13,9 @@ def get_reporter_info(reporter):
     return {
         "dryMode": not reporter.block,
         "hostname": socket.gethostname(),
-        "version": PKG_VERSION,
+        "version": config.PKG_VERSION,
         "library": "firewall-python",
-        "ipAddress": get_ip(),
+        "ipAddress": h.get_ip(),
         "packages": {
             pkg: details["version"]
             for pkg, details in reporter.packages.items()
