@@ -44,5 +44,5 @@ def on_mysqlclient_import(mysql):
 
     # pylint: disable=no-member
     setattr(mysql.Connection, "query", aikido_new_query)
-    add_wrapped_package("MySQLdb")
+    add_wrapped_package("mysqlclient")
     return modified_mysql
