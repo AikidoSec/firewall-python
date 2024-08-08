@@ -46,6 +46,9 @@ class AikidoBackgroundProcess:
                 try:
                     data = conn.recv()  #  because of this no sleep needed in thread
                     logger.debug("Incoming data : %s", data)
+                    elif data[0] == "FORCE_PROTECTION_OFF?":
+                        match = self.reporter.conf.get_endpoint(data[1])
+                        conn.send(match and match["endpoint"]["forceProtectionOff"])
                     process_incoming_command(bg_process=self, obj=data, conn=conn)
                     conn.close()  # Sort of EOL for Python IPC
                     break

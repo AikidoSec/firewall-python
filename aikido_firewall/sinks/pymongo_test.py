@@ -38,7 +38,7 @@ def test_on_pymongo_import(mocker, mock_pymongo):
     mocker.patch("aikido_firewall.helpers.logging.logger")
     mocker.patch(
         "aikido_firewall.vulnerabilities.nosql_injection.detect_nosql_injection",
-        return_value={"injection": False},
+        return_value={},
     )
     mocker.patch("aikido_firewall.context.get_current_context", return_value={})
     mocker.patch(
