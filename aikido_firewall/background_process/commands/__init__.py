@@ -8,6 +8,7 @@ from .user import process_user
 from .wrapped_package import process_wrapped_package
 from .should_ratelimit import process_should_ratelimit
 from .kill import process_kill
+from .force_protection_off import process_force_protection_off
 
 commands_map = {
     "ATTACK": process_attack,
@@ -17,6 +18,7 @@ commands_map = {
     "WRAPPED_PACKAGE": process_wrapped_package,
     "SHOULD_RATELIMIT": process_should_ratelimit,
     "KILL": process_kill,
+    "FORCE_PROTECTION_OFF?": process_force_protection_off,
 }
 
 
