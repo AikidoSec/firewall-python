@@ -10,12 +10,14 @@ from aikido_firewall.errors import (
     AikidoNoSQLInjection,
     AikidoShellInjection,
     AikidoPathTraversal,
+    AikidoSSRF,
 )
 from aikido_firewall.background_process import get_comms
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.helpers.blocking_enabled import is_blocking_enabled
 from .sql_injection.context_contains_sql_injection import context_contains_sql_injection
 from .nosql_injection import detect_nosql_injection
+from .ssrf.check_context_for_ssrf import check_context_for_ssrf
 from .shell_injection.check_context_for_shell_injection import (
     check_context_for_shell_injection,
 )
@@ -54,6 +56,11 @@ def run_vulnerability_scan(kind, op, args):
             filename=args[0], operation=op, context=context
         )
         error_type = AikidoPathTraversal
+    elif kind == "ssrf":
+        injection_results = check_context_for_ssrf(
+            hostname=args[0], port=args[1], operation=op, context=context
+        )
+        error_type = AikidoSSRF
     else:
         logger.error("Vulnerability type %s currently has no scans implemented", kind)
 
