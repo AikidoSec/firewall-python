@@ -29,12 +29,6 @@ def on_pymysql_import(mysql):
             kind="sql_injection", op="pymysql.connections.query", args=(sql, MySQL())
         )
 
-        logger.info("sql_injection results : %s", json.dumps(contains_injection))
-        if contains_injection:
-            get_comms().send_data_to_bg_process("ATTACK", (contains_injection, context))
-            if is_blocking_enabled():
-                raise AikidoSQLInjection("MySQL")
-
         return prev_query_function(_self, sql, unbuffered=False)
 
     # pylint: disable=no-member
