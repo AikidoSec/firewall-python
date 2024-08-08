@@ -39,10 +39,10 @@ def run_vulnerability_scan(kind, op, args):
     )
     if force_protection_off["success"] and force_protection_off["data"]:
         #  The client turned protection off for this route, not scanning
-        return
 
     error_type = AikidoException  # Default error
     injection_results = {}
+
     if kind == "sql_injection":
         injection_results = context_contains_sql_injection(
             sql=args[0], dialect=args[1], operation=op, context=context
