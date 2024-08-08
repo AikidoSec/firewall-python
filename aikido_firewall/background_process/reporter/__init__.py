@@ -8,17 +8,20 @@ from aikido_firewall.background_process.routes import Routes
 from aikido_firewall.ratelimiting.rate_limiter import RateLimiter
 from ..service_config import ServiceConfig
 from ..users import Users
+
+# Import functions :
 from .on_detected_attack import on_detected_attack
 from .get_reporter_info import get_reporter_info
 from .update_service_config import update_service_config
 from .on_start import on_start
+from .send_heartbeat import send_heartbeat
 
 
 class Reporter:
     """Reporter class"""
 
     timeout_in_sec = 5  # Timeout of API calls to Aikido Server
-    heartbeat_secs = 600  # Heartbeat every 10 minutes
+    heartbeat_secs = 10  # Heartbeat every 10 minutes
 
     def __init__(self, block, api, token, serverless):
         self.block = block
@@ -48,6 +51,10 @@ class Reporter:
     def on_start(self):
         """This will send out an Event signalling the start to the server"""
         return on_start(self)
+
+    def send_heartbeat(self):
+        """This will send a heartbeat to the server"""
+        return send_heartbeat(self)
 
     def get_reporter_info(self):
         """This returns info about the reporter"""
