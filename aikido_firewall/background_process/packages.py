@@ -9,7 +9,13 @@ MAX_REPORT_TRIES = 5
 
 def add_wrapped_package(pkg_name):
     """Reports a newly wrapped package to the bg process"""
-    pkg_version = metadata.version(pkg_name)
+    try:
+        pkg_version = metadata.version(pkg_name)
+    except metadata.PackageNotFoundError:
+        logger.info(
+            "Package `%s` was wrapped but could not find a version, aborting", pkg_name
+        )
+        return
     logger.info("Successfully wrapped package `%s` version (%s)", pkg_name, pkg_version)
     attempts = 0
     while attempts < MAX_REPORT_TRIES:
