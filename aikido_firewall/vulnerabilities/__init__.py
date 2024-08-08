@@ -32,12 +32,19 @@ def run_vulnerability_scan(kind, op, args):
     raises error if blocking is enabled, communicates it with reporter
     """
     context = get_current_context()
-    if not context:
+    comms = get_comms()
+    if not context or not comms:
+        return
+
+    force_protection_off = comms.send_data_to_bg_process(
+        action="FORCE_PROTECTION_OFF?", obj=context, receive=True
+    )
+    if force_protection_off["success"] and force_protection_off["data"]:
+        #  The client turned protection off for this route, not scanning
         return
 
     error_type = AikidoException  # Default error
     injection_results = {}
-
     if kind == "sql_injection":
         injection_results = context_contains_sql_injection(
             sql=args[0], dialect=args[1], operation=op, context=context
@@ -66,6 +73,6 @@ def run_vulnerability_scan(kind, op, args):
 
     if injection_results:
         logger.debug("Injection results : %s", json.dumps(injection_results))
-        get_comms().send_data_to_bg_process("ATTACK", (injection_results, context))
+        comms.send_data_to_bg_process("ATTACK", (injection_results, context))
         if is_blocking_enabled():
             raise error_type()
