@@ -88,4 +88,5 @@ def on_psycopg2_import(psycopg2):
     setattr(psycopg2, "_connect", aik__connect)
     setattr(modified_psycopg2, "_connect", aik__connect)
     add_wrapped_package("psycopg2")
+    add_wrapped_package("psycopg2-binary")
     return modified_psycopg2
