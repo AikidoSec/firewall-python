@@ -52,5 +52,6 @@ def on_django_gunicorn_import(django):
     setattr(modified_django.BaseHandler, "load_middleware", aikido_load_middleware)
     setattr(django.BaseHandler, "load_middleware", aikido_load_middleware)
 
-    # add_wrapped_package("django")
+    add_wrapped_package("gunicorn")
+    add_wrapped_package("django")
     return modified_django
