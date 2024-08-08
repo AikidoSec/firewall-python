@@ -36,6 +36,7 @@ def protect(module="any", server=True):
 
     if not module in ["django", "django-gunicorn"]:
         import aikido_firewall.sources.flask
+    import aikido_firewall.sources.uwsgi
 
     # Import DB Sinks
     import aikido_firewall.sinks.pymysql
