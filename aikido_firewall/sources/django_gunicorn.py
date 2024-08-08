@@ -45,6 +45,7 @@ def on_django_gunicorn_import(django):
 
     def aikido_load_middleware(_self, *args, **kwargs):
         response = former_load_middleware(_self, *args, **kwargs)
+        #  We are the first middleware to be called :
         _self._view_middleware = [aikido_middleware_function] + _self._view_middleware
         return response
 
