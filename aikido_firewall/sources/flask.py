@@ -33,7 +33,12 @@ class AikidoMiddleware(BaseHTTPMiddleware):  # pylint: disable=too-few-public-me
             action="SHOULD_RATELIMIT", obj=context, receive=True
         )
         if ratelimit_res["success"] and ratelimit_res["data"]["block"]:
-            raise AikidoRateLimiting()
+            from flask import make_response  #  We don't want to install flask
+
+            message = "You are rate limited by Aikido firewall"
+            if ratelimit_res["data"]["trigger"] is "ip":
+                message += f" (Your IP: {context.remote_address})"
+            return make_response(message, 429)
 
         response = call_next(request)
 
