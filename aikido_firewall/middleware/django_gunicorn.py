@@ -1,6 +1,7 @@
 """
 Includes all the wrappers for gunicorn config file
 """
+
 import aikido_firewall
 
 
@@ -15,6 +16,7 @@ def when_ready(prev_func):
         prev_func(server)
 
     return aik_when_ready
+
 
 def post_fork(prev_func):
     """

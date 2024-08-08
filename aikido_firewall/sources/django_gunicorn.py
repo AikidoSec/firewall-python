@@ -30,6 +30,7 @@ def aikido_middleware_function(request, *args, **kwargs):
     if is_curr_route_useful:
         get_comms().send_data_to_bg_process("ROUTE", (context.method, context.route))
 
+
 @importhook.on_import("django.core.handlers.base")
 def on_django_gunicorn_import(django):
     """
@@ -40,9 +41,7 @@ def on_django_gunicorn_import(django):
     """
     modified_django = importhook.copy_module(django)
 
-    former_load_middleware = copy.deepcopy(
-        django.BaseHandler.load_middleware
-    )
+    former_load_middleware = copy.deepcopy(django.BaseHandler.load_middleware)
 
     def aikido_load_middleware(_self, *args, **kwargs):
         response = former_load_middleware(_self, *args, **kwargs)
@@ -50,10 +49,8 @@ def on_django_gunicorn_import(django):
         return response
 
     # pylint: disable=no-member
-    setattr(
-        modified_django.BaseHandler, "load_middleware", aikido_load_middleware
-    )
+    setattr(modified_django.BaseHandler, "load_middleware", aikido_load_middleware)
     setattr(django.BaseHandler, "load_middleware", aikido_load_middleware)
 
-    #add_wrapped_package("django")
+    # add_wrapped_package("django")
     return modified_django
