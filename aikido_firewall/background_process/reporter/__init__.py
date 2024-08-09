@@ -9,6 +9,7 @@ from aikido_firewall.ratelimiting.rate_limiter import RateLimiter
 from ..service_config import ServiceConfig
 from ..users import Users
 from ..hostnames import Hostnames
+from ..realtime.start_polling_for_changes import start_polling_for_changes
 
 # Import functions :
 from .on_detected_attack import on_detected_attack
@@ -45,6 +46,9 @@ class Reporter:
         """Send out start event and add heartbeats"""
         self.on_start()
         send_heartbeats_every_x_secs(self, self.heartbeat_secs, event_scheduler)
+        start_polling_for_changes(
+            self.update_service_config, self.serverless, self.token, event_scheduler
+        )
 
     def on_detected_attack(self, attack, context):
         """This will send something to the API when an attack is detected"""
