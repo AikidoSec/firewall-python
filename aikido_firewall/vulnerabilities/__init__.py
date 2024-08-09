@@ -43,6 +43,13 @@ def run_vulnerability_scan(kind, op, args):
         #  The client turned protection off for this route, not scanning
         return
 
+    is_allowed_ip = comms.send_data_to_bg_process(
+        action="IS_ALLOWED_IP", obj=context.remote_address, receive=True
+    )
+    if is_allowed_ip["success"] and is_allowed_ip["data"]:
+        #  This IP is whitelisted, not scanning
+        return
+
     error_type = AikidoException  # Default error
     error_args = tuple()
     injection_results = {}
