@@ -13,8 +13,7 @@ from aikido_firewall.background_process.reporter import Reporter
 from aikido_firewall.helpers.should_block import should_block
 from aikido_firewall.helpers.token import get_token_from_env
 from aikido_firewall.background_process.api.http_api import ReportingApiHTTP
-from aikido_firewall.ratelimiting import should_ratelimit_request
-
+from .commands import process_incoming_command
 
 EMPTY_QUEUE_INTERVAL = 5  # 5 seconds
 
@@ -47,54 +46,9 @@ class AikidoBackgroundProcess:
                 try:
                     data = conn.recv()  #  because of this no sleep needed in thread
                     logger.debug("Incoming data : %s", data)
-                    if data[0] == "ATTACK":
-                        self.queue.put(data[1])
-                    elif data[0] == "CLOSE":  # this is a kind of EOL for python IPC
-                        conn.close()
-                        break
-                    elif (
-                        data[0] == "KILL"
-                    ):  # when main process quits , or during testing etc
-                        logger.debug("Killing subprocess")
-                        conn.close()
-                        sys.exit(0)
-                    elif data[0] == "READ_PROPERTY":  # meant to get config props
-                        if hasattr(self.reporter, data[1]):
-                            conn.send(self.reporter.__dict__[data[1]])
-                        else:
-                            logger.debug(
-                                "Reporter has no attribute %s, current reporter: %s",
-                                data[1],
-                                self.reporter,
-                            )
-                            conn.send(None)
-                    elif data[0] == "ROUTE":
-                        # Called every time the user visits a route
-                        self.reporter.routes.add_route(
-                            method=data[1][0], path=data[1][1]
-                        )
-                    elif data[0] == "USER":
-                        self.reporter.users.add_user(data[1])
-                    elif data[0] == "WRAPPED_PACKAGE":
-                        #  A package has been wrapped
-                        if self.reporter:
-                            pkg_name = data[1]["name"]
-                            pkg_details = data[1]["details"]
-                            self.reporter.packages[pkg_name] = pkg_details
-                            conn.send(True)
-                        else:
-                            conn.send(False)
-                    elif data[0] == "SHOULD_RATELIMIT":
-                        # Called to check if the context passed along as data should be
-                        # Rate limited
-                        conn.send(
-                            should_ratelimit_request(
-                                context=data[1], reporter=self.reporter
-                            )
-                        )
-                    elif data[0] == "FORCE_PROTECTION_OFF?":
-                        match = self.reporter.conf.get_endpoint(data[1])
-                        conn.send(match and match["endpoint"]["forceProtectionOff"])
+                    process_incoming_command(bg_process=self, obj=data, conn=conn)
+                    conn.close()  # Sort of EOL for Python IPC
+                    break
                 except Exception as e:
                     logger.error("Exception occured in server thread : %s", e)
                     break  # Return back to listening for new connections
