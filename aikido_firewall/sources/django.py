@@ -38,6 +38,20 @@ def gen_aikido_middleware_function(former__middleware_chain):
 def aikido_ratelimiting_middleware(request, *args, **kwargs):
     """Aikido middleware that handles ratelimiting"""
     context = get_current_context()
+    if not context:
+        return
+    # Blocked users:
+    if context.user:
+        blocked_res = get_comms().send_data_to_bg_process(
+            action="SHOULD_BLOCK_USER", obj=context.user["id"], receive=True
+        )
+        if blocked_res["success"] and blocked_res["data"]:
+            # We don't want to install django, import on demand
+            from django.http import HttpResponse
+
+            return HttpResponse("You are blocked by Aikido Firewall.", status=403)
+
+    # Ratelimiting :
     ratelimit_res = get_comms().send_data_to_bg_process(
         action="SHOULD_RATELIMIT", obj=context, receive=True
     )

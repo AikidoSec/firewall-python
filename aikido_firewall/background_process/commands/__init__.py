@@ -10,6 +10,7 @@ from .should_ratelimit import process_should_ratelimit
 from .kill import process_kill
 from .force_protection_off import process_force_protection_off
 from .hostnames_add import process_hostnames_add
+from .should_block_user import process_should_block_user
 
 commands_map = {
     "ATTACK": process_attack,
@@ -21,6 +22,7 @@ commands_map = {
     "KILL": process_kill,
     "FORCE_PROTECTION_OFF?": process_force_protection_off,
     "HOSTNAMES_ADD": process_hostnames_add,
+    "SHOULD_BLOCK_USER": process_should_block_user,
 }
 
 
