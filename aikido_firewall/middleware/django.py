@@ -22,21 +22,23 @@ class AikidoMiddleware:
         logger.debug("Aikido middleware for `django` was called : __call__")
         context = Context(req=request, source="django")
         context.set_as_current_context()
-
-        response = self.get_response(request)
         comms = get_comms()
 
-        is_curr_route_useful = is_useful_route(
-            response.status_code, context.route, context.method
-        )
-        if is_curr_route_useful:
-            comms.send_data_to_bg_process("ROUTE", (context.method, context.route))
-
+        # Ratelimiting code :
         ratelimit_res = comms.send_data_to_bg_process(
             action="SHOULD_RATELIMIT", obj=context, receive=True
         )
         if ratelimit_res["success"] and ratelimit_res["data"]["block"]:
             raise AikidoRateLimiting()
+
+        response = self.get_response(request)
+
+        # Reporting route code :
+        is_curr_route_useful = is_useful_route(
+            response.status_code, context.route, context.method
+        )
+        if is_curr_route_useful:
+            comms.send_data_to_bg_process("ROUTE", (context.method, context.route))
 
         return response
 
