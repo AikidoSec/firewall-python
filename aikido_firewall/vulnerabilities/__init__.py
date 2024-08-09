@@ -16,7 +16,7 @@ from aikido_firewall.background_process import get_comms
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.helpers.blocking_enabled import is_blocking_enabled
 from .sql_injection.context_contains_sql_injection import context_contains_sql_injection
-from .nosql_injection import detect_nosql_injection
+from .nosql_injection.check_context import check_context_for_nosql_injection
 from .ssrf.check_context_for_ssrf import check_context_for_ssrf
 from .shell_injection.check_context_for_shell_injection import (
     check_context_for_shell_injection,
@@ -44,14 +44,19 @@ def run_vulnerability_scan(kind, op, args):
         return
 
     error_type = AikidoException  # Default error
+    error_args = tuple()
     injection_results = {}
+
     if kind == "sql_injection":
         injection_results = context_contains_sql_injection(
             sql=args[0], dialect=args[1], operation=op, context=context
         )
         error_type = AikidoSQLInjection
+        error_args = (type(args[1]).__name__,)  # Pass along the dialect
     elif kind == "nosql_injection":
-        injection_results = detect_nosql_injection(request=context, _filter=args[0])
+        injection_results = check_context_for_nosql_injection(
+            context=context, op=op, _filter=args[0]
+        )
         error_type = AikidoNoSQLInjection
     elif kind == "shell_injection":
         injection_results = check_context_for_shell_injection(
@@ -77,4 +82,4 @@ def run_vulnerability_scan(kind, op, args):
         logger.debug("Injection results : %s", json.dumps(injection_results))
         comms.send_data_to_bg_process("ATTACK", (injection_results, context))
         if is_blocking_enabled():
-            raise error_type()
+            raise error_type(*error_args)

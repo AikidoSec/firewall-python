@@ -28,6 +28,7 @@ def on_pymysql_import(mysql):
         run_vulnerability_scan(
             kind="sql_injection", op="pymysql.connections.query", args=(sql, MySQL())
         )
+
         return prev_query_function(_self, sql, unbuffered=False)
 
     # pylint: disable=no-member

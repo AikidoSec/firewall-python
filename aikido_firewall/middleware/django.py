@@ -22,21 +22,30 @@ class AikidoMiddleware:
         logger.debug("Aikido middleware for `django` was called : __call__")
         context = Context(req=request, source="django")
         context.set_as_current_context()
-
-        response = self.get_response(request)
         comms = get_comms()
 
+        # Ratelimiting code :
+        ratelimit_res = comms.send_data_to_bg_process(
+            action="SHOULD_RATELIMIT", obj=context, receive=True
+        )
+        if ratelimit_res["success"] and ratelimit_res["data"]["block"]:
+            from django.http import (
+                HttpResponse,
+            )  #  We don't want to install django, import on demand
+
+            message = "You are rate limited by Aikido firewall"
+            if ratelimit_res["data"]["trigger"] is "ip":
+                message += f" (Your IP: {context.remote_address})"
+            return HttpResponse(message, status=429)
+
+        response = self.get_response(request)
+
+        # Reporting route code :
         is_curr_route_useful = is_useful_route(
             response.status_code, context.route, context.method
         )
         if is_curr_route_useful:
             comms.send_data_to_bg_process("ROUTE", (context.method, context.route))
-
-        ratelimit_res = comms.send_data_to_bg_process(
-            action="SHOULD_RATELIMIT", obj=context, receive=True
-        )
-        if ratelimit_res["success"] and ratelimit_res["data"]["block"]:
-            raise AikidoRateLimiting()
 
         return response
 
