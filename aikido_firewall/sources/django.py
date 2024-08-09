@@ -5,10 +5,9 @@
 import copy
 import importhook
 from aikido_firewall.helpers.logging import logger
-from aikido_firewall.context import Context
+from aikido_firewall.context import Context, get_current_context
 from aikido_firewall.background_process import get_comms
 from aikido_firewall.helpers.is_useful_route import is_useful_route
-from aikido_firewall.errors import AikidoRateLimiting
 from aikido_firewall.background_process.packages import add_wrapped_package
 
 
@@ -21,17 +20,6 @@ def gen_aikido_middleware_function(former__middleware_chain):
         context = Context(req=request, source="django")
         context.set_as_current_context()
 
-        ratelimit_res = get_comms().send_data_to_bg_process(
-            action="SHOULD_RATELIMIT", obj=context, receive=True
-        )
-        if ratelimit_res["success"] and ratelimit_res["data"]["block"]:
-            # We don't want to install django, import on demand
-            from django.http import HttpResponse
-
-            message = "You are rate limited by Aikido firewall"
-            if ratelimit_res["data"]["trigger"] is "ip":
-                message += f" (Your IP: {context.remote_address})"
-            return HttpResponse(message, status=429)
         res = former__middleware_chain(request)
         is_curr_route_useful = is_useful_route(
             res.status_code,
@@ -45,6 +33,22 @@ def gen_aikido_middleware_function(former__middleware_chain):
         return res
 
     return aikido_middleware_function
+
+
+def aikido_ratelimiting_middleware(request, *args, **kwargs):
+    """Aikido middleware that handles ratelimiting"""
+    context = get_current_context()
+    ratelimit_res = get_comms().send_data_to_bg_process(
+        action="SHOULD_RATELIMIT", obj=context, receive=True
+    )
+    if ratelimit_res["success"] and ratelimit_res["data"]["block"]:
+        # We don't want to install django, import on demand
+        from django.http import HttpResponse
+
+        message = "You are rate limited by Aikido firewall"
+        if ratelimit_res["data"]["trigger"] is "ip":
+            message += f" (Your IP: {context.remote_address})"
+        return HttpResponse(message, status=429)
 
 
 @importhook.on_import("django.core.handlers.base")
@@ -66,6 +70,11 @@ def on_django_gunicorn_import(django):
         _self._middleware_chain = gen_aikido_middleware_function(
             former__middleware_chain
         )
+
+        # The rate limiting middleware needs to be added as the last middleware in the chain :
+        _self._view_middleware = _self._view_middleware + [
+            aikido_ratelimiting_middleware
+        ]
         return response
 
     # pylint: disable=no-member
