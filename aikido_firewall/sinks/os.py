@@ -20,18 +20,18 @@ OS_FILE_FUNCTIONS = [
     "rmdir",
     "remove",
     "symlink",
-    "stat",
+#    "stat",
     "link",
     "makedirs",
     "walk",
 ]
 OS_PATH_FUNCTIONS = [
-    "exists",
+#    "exists",
     "realpath",
     "getsize",
-    "getmtime",
-    "getatime",
-    "getctime",
+#    "getmtime",
+#    "getatime",
+#    "getctime",
 ]
 # os.path.join(path, *paths) is not wrapped
 
