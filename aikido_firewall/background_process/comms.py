@@ -74,9 +74,7 @@ class AikidoIPCCommunications:
             conn.send(data)
             if receive:
                 result_obj[1] = conn.recv()
-
             # Close the connection :
-            conn.send(("CLOSE", {}))
             conn.close()
             result_obj[0] = True  #  Connection ended gracefully
 
