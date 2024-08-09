@@ -37,6 +37,7 @@ def poll_for_changes(on_config_update, token, former_last_updated, event_schedul
     config_last_updated_at = former_last_updated
     try:
         config_last_updated_at = realtime.get_config_last_updated_at(token)
+        logger.debug("Polling for config changes, last updated at : %s", config_last_updated_at)
         if (
             isinstance(former_last_updated, int)
             and config_last_updated_at > former_last_updated
