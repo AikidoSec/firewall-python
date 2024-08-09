@@ -25,7 +25,13 @@ def gen_aikido_middleware_function(former__middleware_chain):
             action="SHOULD_RATELIMIT", obj=context, receive=True
         )
         if ratelimit_res["success"] and ratelimit_res["data"]["block"]:
-            raise AikidoRateLimiting()
+            # We don't want to install django, import on demand
+            from django.http import HttpResponse
+
+            message = "You are rate limited by Aikido firewall"
+            if ratelimit_res["data"]["trigger"] is "ip":
+                message += f" (Your IP: {context.remote_address})"
+            return HttpResponse(message, status=429)
         res = former__middleware_chain(request)
         is_curr_route_useful = is_useful_route(
             res.status_code,
