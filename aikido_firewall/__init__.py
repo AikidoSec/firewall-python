@@ -29,10 +29,12 @@ def protect(module="any", server=True):
         return
 
     # Import sources
-    import aikido_firewall.sources.django_gunicorn
+    import aikido_firewall.sources.django
 
     if not module in ["django", "django-gunicorn"]:
         import aikido_firewall.sources.flask
+    
+    import aikido_firewall.sources.gunicorn
     import aikido_firewall.sources.uwsgi
 
     # Import DB Sinks
