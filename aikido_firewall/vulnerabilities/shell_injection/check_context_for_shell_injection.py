@@ -15,7 +15,6 @@ def check_context_for_shell_injection(command, operation, context):
     This will check the context of the request for Shell injections
     """
     for source in SOURCES:
-        logger.debug("Checking source %s for Shell Injection", source)
         if hasattr(context, source):
             user_inputs = extract_strings_from_user_input(getattr(context, source))
             for user_input, path in user_inputs.items():

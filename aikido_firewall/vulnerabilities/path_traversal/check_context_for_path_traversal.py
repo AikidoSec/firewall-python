@@ -22,7 +22,6 @@ def check_context_for_path_traversal(
         return {}
 
     for source in SOURCES:
-        logger.debug("Checking source %s for path traversal", source)
         if hasattr(context, source):
             user_inputs = extract_strings_from_user_input(getattr(context, source))
             for user_input, path in user_inputs.items():
