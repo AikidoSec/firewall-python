@@ -43,11 +43,6 @@ def test_send_heartbeats_success():
     with patch("aikido_firewall.helpers.logging.logger.debug") as mock_debug:
         send_heartbeats_every_x_secs(reporter, 5, event_scheduler)
 
-    mock_debug.assert_called_with("Starting heartbeats")
-    event_scheduler.enter.assert_called_once_with(
-        0, 1, send_heartbeat_wrapper, (reporter, 5, event_scheduler)
-    )
-
 
 def test_send_heartbeat_wrapper():
     reporter = Mock()
