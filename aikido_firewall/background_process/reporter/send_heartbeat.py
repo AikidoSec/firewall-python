@@ -13,8 +13,11 @@ def send_heartbeat(reporter):
     logger.debug("Aikido Reporter : Sending out heartbeat")
     users = reporter.users.as_array()
     routes = list(reporter.routes)
+    outgoing_domains = reporter.hostnames.as_array()
+
     reporter.users.clear()
     reporter.routes.clear()
+    reporter.hostnames.clear()
     res = reporter.api.report(
         reporter.token,
         {
@@ -34,7 +37,7 @@ def send_heartbeat(reporter):
                     },
                 },
             },
-            "hostnames": [],
+            "hostnames": outgoing_domains,
             "routes": routes,
             "users": users,
         },

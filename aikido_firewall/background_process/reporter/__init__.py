@@ -8,6 +8,7 @@ from aikido_firewall.background_process.routes import Routes
 from aikido_firewall.ratelimiting.rate_limiter import RateLimiter
 from ..service_config import ServiceConfig
 from ..users import Users
+from ..hostnames import Hostnames
 
 # Import functions :
 from .on_detected_attack import on_detected_attack
@@ -28,6 +29,7 @@ class Reporter:
         self.api = api
         self.token = token  # Should be instance of the Token class!
         self.routes = Routes(200)
+        self.hostnames = Hostnames(200)
         self.conf = ServiceConfig([], get_unixtime_ms(), [], [])
         self.rate_limiter = RateLimiter(
             max_items=5000, time_to_live_in_ms=120 * 60 * 1000  # 120 minutes

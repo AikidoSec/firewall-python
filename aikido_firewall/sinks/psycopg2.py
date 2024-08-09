@@ -3,18 +3,10 @@ Sink module for `psycopg2`
 """
 
 import copy
-import json
 import importhook
-from aikido_firewall.helpers.logging import logger
-from aikido_firewall.context import get_current_context
-from aikido_firewall.vulnerabilities.sql_injection.context_contains_sql_injection import (
-    context_contains_sql_injection,
-)
 from aikido_firewall.vulnerabilities.sql_injection.dialects import Postgres
-from aikido_firewall.background_process import get_comms
-from aikido_firewall.errors import AikidoSQLInjection
-from aikido_firewall.helpers.blocking_enabled import is_blocking_enabled
 from aikido_firewall.background_process.packages import add_wrapped_package
+from aikido_firewall.vulnerabilities import run_vulnerability_scan
 
 
 class MutableAikidoConnection:
@@ -36,22 +28,6 @@ class MutableAikidoConnection:
         return cursor
 
 
-def execute_sql_detection_code(sql):
-    """
-    Executes the sql algorithm : Should block or not, get context, ...
-    """
-    context = get_current_context()
-    contains_injection = context_contains_sql_injection(
-        sql, "pymysql.connections.query", context, Postgres()
-    )
-
-    logger.info("sql_injection results : %s", json.dumps(contains_injection))
-    if contains_injection:
-        get_comms().send_data_to_bg_process("ATTACK", (contains_injection, context))
-        if is_blocking_enabled():
-            raise AikidoSQLInjection("SQL Injection [aikido_firewall]")
-
-
 class MutableAikidoCursor:
     """Aikido's mutable cursor class"""
 
@@ -66,12 +42,20 @@ class MutableAikidoCursor:
 
         # Return a function dynamically
         def execute(*args, **kwargs):
-            execute_sql_detection_code(sql=args[0])
+            run_vulnerability_scan(
+                kind="sql_injection",
+                op="pymysql.connection.cursor.execute",
+                args=(args[0], Postgres()),  #  args[0] : sql
+            )
             return self._execute_func_copy(*args, **kwargs)
 
         def executemany(*args, **kwargs):
             for sql in args[0]:
-                execute_sql_detection_code(sql)
+                run_vulnerability_scan(
+                    kind="sql_injection",
+                    op="pymysql.connection.cursor.executemany",
+                    args=(sql, Postgres()),
+                )
             return self._executemany_func_copy(*args, **kwargs)
 
         if name == "execute":

@@ -5,6 +5,7 @@ Sink module for `http`
 import copy
 import importhook
 from aikido_firewall.helpers.logging import logger
+from aikido_firewall.vulnerabilities import run_vulnerability_scan
 
 
 @importhook.on_import("http.client")
@@ -20,6 +21,9 @@ def on_http_import(http):
 
     def aik_new_putrequest(_self, method, url, *args, **kwargs):
         logger.info("HTTP Request [%s] %s:%s %s", method, _self.host, _self.port, url)
+        run_vulnerability_scan(
+            kind="ssrf", op="http.client.putrequest", args=(_self.host, _self.port)
+        )
         return former_putrequest(_self, method, url, *args, **kwargs)
 
     # pylint: disable=no-member
