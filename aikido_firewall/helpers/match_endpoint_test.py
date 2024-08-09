@@ -290,3 +290,141 @@ def test_prefers_specific_route_over_wildcard():
         },
         "route": "/api/coach",
     }
+
+
+def test_returns_multiple_endpoints_with_wildcards():
+    context = SampleContext()
+    context.route = None
+    context.url = "http://localhost:4000/posts/3/comments/10"
+    context.method = "GET"
+
+    endpoints = [
+        {
+            "method": "*",
+            "route": "/posts/*",
+            "rate_limiting": {
+                "enabled": True,
+                "max_requests": 10,
+                "window_size_in_ms": 1000,
+            },
+            "force_protection_off": False,
+        },
+        {
+            "method": "*",
+            "route": "/posts/*/comments/*",
+            "rate_limiting": {
+                "enabled": True,
+                "max_requests": 5,
+                "window_size_in_ms": 1000,
+            },
+            "force_protection_off": False,
+        },
+        {
+            "method": "GET",
+            "route": "/posts/*/comments/*",
+            "rate_limiting": {
+                "enabled": True,
+                "max_requests": 3,
+                "window_size_in_ms": 1000,
+            },
+            "force_protection_off": False,
+        },
+    ]
+
+    result = match_endpoint(context, endpoints, multi=True)
+
+    assert len(result) == 3  # Expecting two matches
+    assert all(
+        endpoint["endpoint"]["route"].startswith("/posts/") for endpoint in result
+    )
+    assert any(
+        endpoint["endpoint"]["route"] == "/posts/*/comments/*" for endpoint in result
+    )
+    assert any(endpoint["endpoint"]["route"] == "/posts/*" for endpoint in result)
+
+
+def test_returns_multiple_endpoints_with_specific_method():
+    context = SampleContext()
+    context.route = None
+    context.url = "http://localhost:4000/posts/3/comments/10"
+    context.method = "POST"
+
+    endpoints = [
+        {
+            "method": "*",
+            "route": "/posts/*",
+            "rate_limiting": {
+                "enabled": True,
+                "max_requests": 10,
+                "window_size_in_ms": 1000,
+            },
+            "force_protection_off": False,
+        },
+        {
+            "method": "POST",
+            "route": "/posts/*/comments/*",
+            "rate_limiting": {
+                "enabled": True,
+                "max_requests": 5,
+                "window_size_in_ms": 1000,
+            },
+            "force_protection_off": False,
+        },
+        {
+            "method": "POST",
+            "route": "/posts/*/comments/10",
+            "rate_limiting": {
+                "enabled": True,
+                "max_requests": 2,
+                "window_size_in_ms": 1000,
+            },
+            "force_protection_off": False,
+        },
+    ]
+
+    result = match_endpoint(context, endpoints, multi=True)
+
+    assert len(result) == 3  # Expecting two matches
+    assert all(
+        endpoint["endpoint"]["route"].startswith("/posts/") for endpoint in result
+    )
+    assert any(
+        endpoint["endpoint"]["route"] == "/posts/*/comments/*" for endpoint in result
+    )
+    assert any(
+        endpoint["endpoint"]["route"] == "/posts/*/comments/10" for endpoint in result
+    )
+
+
+def test_returns_no_endpoints_when_none_match():
+    context = SampleContext()
+    context.route = None
+    context.url = "http://localhost:4000/unknown/route"
+    context.method = "GET"
+
+    endpoints = [
+        {
+            "method": "*",
+            "route": "/posts/*",
+            "rate_limiting": {
+                "enabled": True,
+                "max_requests": 10,
+                "window_size_in_ms": 1000,
+            },
+            "force_protection_off": False,
+        },
+        {
+            "method": "POST",
+            "route": "/posts/*/comments/*",
+            "rate_limiting": {
+                "enabled": True,
+                "max_requests": 5,
+                "window_size_in_ms": 1000,
+            },
+            "force_protection_off": False,
+        },
+    ]
+
+    result = match_endpoint(context, endpoints, multi=True)
+
+    assert result == None  # Expecting no matches
