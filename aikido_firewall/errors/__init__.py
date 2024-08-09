@@ -2,17 +2,39 @@
 Exports different types of Aikido Exception
 """
 
+from aikido_firewall.helpers.attack_human_name import attack_human_name
+
+
+def generate_default_message(kind):
+    """Generates a default message based on kind of attack"""
+    return "Aikido firewall has blocked " + attack_human_name(kind)
+
 
 class AikidoException(Exception):
     """General AikidoException class"""
+
+    kind = None
+
+    def __init__(self, message=None):
+        if isinstance(message, str):
+            super().__init__(self, message)
+        else:
+            super().__init__(self, generate_default_message(self.kind))
 
 
 class AikidoSQLInjection(AikidoException):
     """Exception because of SQL Injection"""
 
+    def __init__(self, dialect="unknown"):
+        super().__init__(
+            generate_default_message("sql_injection") + ", dialect: " + dialect
+        )
+
 
 class AikidoNoSQLInjection(AikidoException):
     """Exception because of NoSQL Injection"""
+
+    kind = "nosql_injection"
 
 
 class AikidoRateLimiting(AikidoException):
@@ -26,18 +48,16 @@ class AikidoRateLimiting(AikidoException):
 class AikidoShellInjection(AikidoException):
     """Exception becausen of Shell Injection"""
 
-    def __init__(self, message="Possible Shell Injection"):
-        super().__init__(message)
-        self.message = message
+    kind = "shell_injection"
 
 
 class AikidoPathTraversal(AikidoException):
     """Exception because of a path traversal"""
 
-    def __init__(self, message="This is a path traversal attack, halted by Aikido."):
-        super().__init__(self, message)
-        self.message = message
+    kind = "path_traversal"
 
 
 class AikidoSSRF(AikidoException):
     """Exception because of SSRF"""
+
+    kind = "ssrf"

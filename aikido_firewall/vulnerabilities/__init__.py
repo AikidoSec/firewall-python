@@ -34,6 +34,7 @@ def run_vulnerability_scan(kind, op, args):
         return
 
     error_type = AikidoException  # Default error
+    error_args = tuple()
     injection_results = {}
 
     if kind == "sql_injection":
@@ -41,6 +42,7 @@ def run_vulnerability_scan(kind, op, args):
             sql=args[0], dialect=args[1], operation=op, context=context
         )
         error_type = AikidoSQLInjection
+        error_args = (type(args[1]).__name__,)  # Pass along the dialect
     elif kind == "nosql_injection":
         injection_results = detect_nosql_injection(request=context, _filter=args[0])
         error_type = AikidoNoSQLInjection
@@ -61,4 +63,4 @@ def run_vulnerability_scan(kind, op, args):
         logger.debug("Injection results : %s", json.dumps(injection_results))
         get_comms().send_data_to_bg_process("ATTACK", (injection_results, context))
         if is_blocking_enabled():
-            raise error_type()
+            raise error_type(*error_args)
