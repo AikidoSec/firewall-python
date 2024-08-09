@@ -23,13 +23,9 @@ def start_polling_for_changes(on_config_update, serverless, token, event_schedul
     if serverless:
         logger.info("Running in serverless environment, not polling for config updates")
         return
+
     # Start the interval by booting the first settimeout
-    event_scheduler.enter(
-        0,
-        1,
-        poll_for_changes,
-        (on_config_update, token, 0, event_scheduler),
-    )
+    poll_for_changes(on_config_update, token, 0, event_scheduler)
 
 
 def poll_for_changes(on_config_update, token, former_last_updated, event_scheduler):
