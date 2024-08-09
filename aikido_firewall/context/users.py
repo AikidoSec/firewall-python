@@ -3,8 +3,8 @@ Users file
 """
 
 from aikido_firewall.helpers.logging import logger
-from . import set_current_user, get_current_context
 from aikido_firewall.background_process import get_comms
+from . import get_current_context
 
 
 def set_user(user):
@@ -16,12 +16,12 @@ def set_user(user):
         return
     logger.debug("Validated user : %s", validated_user)
 
-    set_current_user(validated_user)
-
     context = get_current_context()
     if not context:
+        logger.debug("No context set, returning")
         return
     validated_user["lastIpAddress"] = context.remote_address
+    context.user = validated_user
 
     # Send validated_user object to Agent
     get_comms().send_data_to_bg_process("USER", validated_user)

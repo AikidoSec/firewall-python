@@ -16,15 +16,6 @@ UINPUT_SOURCES = ["body", "cookies", "query", "headers"]
 local = threading.local()
 
 
-def set_current_user(user):
-    """Sets the current user"""
-    if hasattr(local, "user") and local.user is not None:
-        logger.debug(
-            "Evicting a saved users, this probably means a user was set twice."
-        )
-    local.user = user
-
-
 def get_current_context():
     """Returns the current context"""
     try:
@@ -81,7 +72,7 @@ class Context:
             self.set_django_gunicorn_attrs(req)
         self.route = build_route_from_url(self.url)
         self.subdomains = get_subdomains_from_url(self.url)
-        self.user = local.user if hasattr(local, "user") else None
+        self.user = None
         self.remote_address = get_ip_from_request(self.raw_ip, self.headers)
 
     def set_django_gunicorn_attrs(self, req):
