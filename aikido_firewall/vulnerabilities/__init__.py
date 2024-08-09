@@ -43,11 +43,11 @@ def run_vulnerability_scan(kind, op, args):
         #  The client turned protection off for this route, not scanning
         return
 
-    is_allowed_ip = comms.send_data_to_bg_process(
-        action="IS_ALLOWED_IP", obj=context.remote_address, receive=True
+    is_bypassed_ip = comms.send_data_to_bg_process(
+        action="IS_BYPASSED_IP", obj=context.remote_address, receive=True
     )
-    if is_allowed_ip["success"] and is_allowed_ip["data"]:
-        #  This IP is whitelisted, not scanning
+    if is_bypassed_ip["success"] and is_bypassed_ip["data"]:
+        #  This IP is on the bypass list, not scanning
         return
 
     error_type = AikidoException  # Default error

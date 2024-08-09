@@ -11,7 +11,7 @@ from .kill import process_kill
 from .force_protection_off import process_force_protection_off
 from .hostnames_add import process_hostnames_add
 from .should_block_user import process_should_block_user
-from .is_allowed_ip import process_is_allowed_ip
+from .is_bypassed_ip import process_is_bypassed_ip
 
 commands_map = {
     "ATTACK": process_attack,
@@ -24,7 +24,7 @@ commands_map = {
     "FORCE_PROTECTION_OFF?": process_force_protection_off,
     "HOSTNAMES_ADD": process_hostnames_add,
     "SHOULD_BLOCK_USER": process_should_block_user,
-    "IS_ALLOWED_IP": process_is_allowed_ip,
+    "IS_BYPASSED_IP": process_is_bypassed_ip,
 }
 
 

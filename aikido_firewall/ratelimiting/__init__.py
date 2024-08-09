@@ -16,10 +16,10 @@ def should_ratelimit_request(context, reporter):
         return {"block": False}
 
     # Production logic, still missing
-    is_allowed_ip = reporter.conf.is_allowed_ip(context.remote_address)
+    is_bypassed_ip = reporter.conf.is_bypassed_ip(context.remote_address)
     max_requests = int(endpoint["rateLimiting"]["maxRequests"])
     windows_size_in_ms = int(endpoint["rateLimiting"]["windowSizeInMS"])
-    if context.remote_address and not is_allowed_ip:
+    if context.remote_address and not is_bypassed_ip:
         allowed = reporter.rate_limiter.is_allowed(
             f"{context.method}:{route}:ip:{context.remote_address}",
             windows_size_in_ms,
