@@ -12,23 +12,33 @@ from aikido_firewall.errors import AikidoRateLimiting
 from aikido_firewall.background_process.packages import add_wrapped_package
 
 
-def aikido_middleware_function(request, *args, **kwargs):
+def gen_aikido_middleware_function(former__middleware_chain):
     """
     Aikido's middleware function, handles request
     """
-    context = Context(req=request, source="django")
-    context.set_as_current_context()
 
-    ratelimit_res = get_comms().send_data_to_bg_process(
-        action="SHOULD_RATELIMIT", obj=context, receive=True
-    )
-    if ratelimit_res["success"] and ratelimit_res["data"]["block"]:
-        raise AikidoRateLimiting()
-    is_curr_route_useful = is_useful_route(
-        200, context.route, context.method  #  Pretend the status code is 200
-    )
-    if is_curr_route_useful:
-        get_comms().send_data_to_bg_process("ROUTE", (context.method, context.route))
+    def aikido_middleware_function(request):
+        context = Context(req=request, source="django")
+        context.set_as_current_context()
+
+        ratelimit_res = get_comms().send_data_to_bg_process(
+            action="SHOULD_RATELIMIT", obj=context, receive=True
+        )
+        if ratelimit_res["success"] and ratelimit_res["data"]["block"]:
+            raise AikidoRateLimiting()
+        res = former__middleware_chain(request)
+        is_curr_route_useful = is_useful_route(
+            res.status_code,
+            context.route,
+            context.method,  #  Pretend the status code is 200
+        )
+        if is_curr_route_useful:
+            get_comms().send_data_to_bg_process(
+                "ROUTE", (context.method, context.route)
+            )
+        return res
+
+    return aikido_middleware_function
 
 
 @importhook.on_import("django.core.handlers.base")
@@ -36,8 +46,8 @@ def on_django_gunicorn_import(django):
     """
     Hook 'n wrap on `django.core.handlers.base`
     Our goal is to wrap the `load_middleware` function
-    # https://github.com/django/django/blob/790f0f8868b0cde9a9bec1f0621efa53b00c87df/django/core/handlers/base.py#L32
-    So we can add our aikido_middleware_function; Returns : Modified django.core.handlers.base object
+    # https://github.com/django/django/blob/790f0f8868b0cde9a9bec1f0621efa53b00c87df/django/core/handlers/base.py#L140
+    So we can wrap te `_middleware_chain` function; Returns : Modified django.core.handlers.base object
     """
     modified_django = importhook.copy_module(django)
 
@@ -46,7 +56,10 @@ def on_django_gunicorn_import(django):
     def aikido_load_middleware(_self, *args, **kwargs):
         response = former_load_middleware(_self, *args, **kwargs)
         #  We are the first middleware to be called :
-        _self._view_middleware = [aikido_middleware_function] + _self._view_middleware
+        former__middleware_chain = copy.deepcopy(_self._middleware_chain)
+        _self._middleware_chain = gen_aikido_middleware_function(
+            former__middleware_chain
+        )
         return response
 
     # pylint: disable=no-member
