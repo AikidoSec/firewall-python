@@ -92,6 +92,9 @@ class AikidoBackgroundProcess:
                                 context=data[1], reporter=self.reporter
                             )
                         )
+                    elif data[0] == "FORCE_PROTECTION_OFF?":
+                        match = self.reporter.conf.get_endpoint(data[1])
+                        conn.send(match and match["endpoint"]["forceProtectionOff"])
                 except Exception as e:
                     logger.error("Exception occured in server thread : %s", e)
                     break  # Return back to listening for new connections

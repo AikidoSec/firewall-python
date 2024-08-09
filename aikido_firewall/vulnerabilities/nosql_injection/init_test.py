@@ -31,53 +31,39 @@ def create_context():
 
 
 def test_empty_filter_and_request(create_context):
-    assert detect_nosql_injection(create_context(), {}) == {"injection": False}
+    assert detect_nosql_injection(create_context(), {}) == {}
 
 
 def test_ignore_if_filter_not_object(create_context):
-    assert detect_nosql_injection(create_context(), "abc") == {"injection": False}
+    assert detect_nosql_injection(create_context(), "abc") == {}
 
 
 def test_ignore_if_and_not_array(create_context):
-    assert detect_nosql_injection(create_context(), {"$and": "abc"}) == {
-        "injection": False
-    }
+    assert detect_nosql_injection(create_context(), {"$and": "abc"}) == {}
 
 
 def test_ignore_if_or_not_array(create_context):
-    assert detect_nosql_injection(create_context(), {"$or": "abc"}) == {
-        "injection": False
-    }
+    assert detect_nosql_injection(create_context(), {"$or": "abc"}) == {}
 
 
 def test_ignore_if_nor_not_array(create_context):
-    assert detect_nosql_injection(create_context(), {"$nor": "abc"}) == {
-        "injection": False
-    }
+    assert detect_nosql_injection(create_context(), {"$nor": "abc"}) == {}
 
 
 def test_ignore_if_nor_empty_array(create_context):
-    assert detect_nosql_injection(create_context(), {"$nor": []}) == {
-        "injection": False
-    }
+    assert detect_nosql_injection(create_context(), {"$nor": []}) == {}
 
 
 def test_ignore_if_not_not_object(create_context):
-    assert detect_nosql_injection(create_context(), {"$not": "abc"}) == {
-        "injection": False
-    }
+    assert detect_nosql_injection(create_context(), {"$not": "abc"}) == {}
 
 
 def test_filter_with_string_value_and_empty_request(create_context):
-    assert detect_nosql_injection(create_context(), {"title": {"title": "title"}}) == {
-        "injection": False
-    }
+    assert detect_nosql_injection(create_context(), {"title": {"title": "title"}}) == {}
 
 
 def test_filter_with_ne_and_empty_request(create_context):
-    assert detect_nosql_injection(create_context(), {"title": {"$ne": None}}) == {
-        "injection": False
-    }
+    assert detect_nosql_injection(create_context(), {"title": {"$ne": None}}) == {}
 
 
 def test_using_gt_in_query_parameter(create_context):
@@ -92,9 +78,12 @@ def test_using_gt_in_query_parameter(create_context):
 
 
 def test_safe_filter(create_context):
-    assert detect_nosql_injection(
-        create_context(query={"title": "title"}), {"$and": [{"title": "title"}]}
-    ) == {"injection": False}
+    assert (
+        detect_nosql_injection(
+            create_context(query={"title": "title"}), {"$and": [{"title": "title"}]}
+        )
+        == {}
+    )
 
 
 def test_using_ne_in_body(create_context):
@@ -263,14 +252,17 @@ def test_using_ne_in_jwt_in_cookies(create_context):
 
 
 def test_jwt_lookalike(create_context):
-    assert detect_nosql_injection(
-        create_context(
-            cookies={
-                "session": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwidXNlcm5hbW!iOnsiJG5lIjpudWxsfSwiaWF0IjoxNTE2MjM5MDIyfQ._jhGJw9WzB6gHKPSozTFHDo9NOHs3CNOlvJ8rWy6VrQ"
-            }
-        ),
-        {"username": {"$ne": None}},
-    ) == {"injection": False}
+    assert (
+        detect_nosql_injection(
+            create_context(
+                cookies={
+                    "session": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwidXNlcm5hbW!iOnsiJG5lIjpudWxsfSwiaWF0IjoxNTE2MjM5MDIyfQ._jhGJw9WzB6gHKPSozTFHDo9NOHs3CNOlvJ8rWy6VrQ"
+                }
+            ),
+            {"username": {"$ne": None}},
+        )
+        == {}
+    )
 
 
 def test_using_gt_in_query_parameter(create_context):
@@ -371,18 +363,21 @@ def test_array_body(create_context):
 
 
 def test_safe_email_password(create_context):
-    assert detect_nosql_injection(
-        create_context(
-            body={
+    assert (
+        detect_nosql_injection(
+            create_context(
+                body={
+                    "email": "email",
+                    "password": "password",
+                }
+            ),
+            {
                 "email": "email",
                 "password": "password",
-            }
-        ),
-        {
-            "email": "email",
-            "password": "password",
-        },
-    ) == {"injection": False}
+            },
+        )
+        == {}
+    )
 
 
 def test_flags_pipeline_aggregations(create_context):
@@ -463,23 +458,26 @@ def test_flags_pipeline_aggregations(create_context):
 
 
 def test_ignores_safe_pipeline_aggregations(create_context):
-    assert detect_nosql_injection(
-        create_context(
-            body={
-                "username": "admin",
-            }
-        ),
-        [
-            {
-                "$match": {
+    assert (
+        detect_nosql_injection(
+            create_context(
+                body={
                     "username": "admin",
+                }
+            ),
+            [
+                {
+                    "$match": {
+                        "username": "admin",
+                    },
                 },
-            },
-            {
-                "$group": {
-                    "_id": "$username",
-                    "count": {"$sum": 1},
+                {
+                    "$group": {
+                        "_id": "$username",
+                        "count": {"$sum": 1},
+                    },
                 },
-            },
-        ],
-    ) == {"injection": False}
+            ],
+        )
+        == {}
+    )

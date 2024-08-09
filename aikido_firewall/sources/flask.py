@@ -26,21 +26,23 @@ class AikidoMiddleware(BaseHTTPMiddleware):  # pylint: disable=too-few-public-me
         logger.debug("Aikido middleware for `flask` was called")
         context = Context(req=request, source="flask")
         context.set_as_current_context()
-
-        response = call_next(request)
         comms = get_comms()  # get IPC facilitator
 
-        is_curr_route_useful = is_useful_route(
-            response._status_code, context.route, context.method
-        )
-        if is_curr_route_useful:
-            comms.send_data_to_bg_process("ROUTE", (context.method, context.route))
-
+        # Ratelimiting code:
         ratelimit_res = comms.send_data_to_bg_process(
             action="SHOULD_RATELIMIT", obj=context, receive=True
         )
         if ratelimit_res["success"] and ratelimit_res["data"]["block"]:
             raise AikidoRateLimiting()
+
+        response = call_next(request)
+
+        # Reporting route code :
+        is_curr_route_useful = is_useful_route(
+            response._status_code, context.route, context.method
+        )
+        if is_curr_route_useful:
+            comms.send_data_to_bg_process("ROUTE", (context.method, context.route))
 
         return response
 
