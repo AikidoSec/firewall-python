@@ -97,7 +97,7 @@ def detect_nosql_injection(request, _filter):
     checks if there is a NoSQL injection
     """
     if not is_plain_object(_filter) and not isinstance(_filter, list):
-        return {"injection": False}
+        return {}
 
     for source in UINPUT_SOURCES:
         if hasattr(request, source):
@@ -111,4 +111,4 @@ def detect_nosql_injection(request, _filter):
                     "payload": result.get("payload"),
                 }
 
-    return {"injection": False}
+    return {}

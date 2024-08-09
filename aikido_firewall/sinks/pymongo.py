@@ -5,12 +5,8 @@ Sink module for `pymongo`
 from copy import deepcopy
 import importhook
 from aikido_firewall.helpers.logging import logger
-from aikido_firewall.vulnerabilities.nosql_injection import detect_nosql_injection
-from aikido_firewall.context import get_current_context
-from aikido_firewall.background_process import get_comms
-from aikido_firewall.errors import AikidoNoSQLInjection
-from aikido_firewall.helpers.blocking_enabled import is_blocking_enabled
 import aikido_firewall.background_process.packages as pkgs
+from aikido_firewall.vulnerabilities import run_vulnerability_scan
 
 OPERATIONS_WITH_FILTER = [
     "replace_one",  # L1087
@@ -50,14 +46,11 @@ def on_pymongo_import(pymongo):
         def wrapped_operation_function(
             _self, _filter, *args, prev_func=prev_func, op=operation, **kwargs
         ):
-            context = get_current_context()
-            injection_results = detect_nosql_injection(context, _filter)
-            if injection_results["injection"]:
-                get_comms().send_data_to_bg_process(
-                    "ATTACK", (injection_results, context)
-                )
-                if is_blocking_enabled():
-                    raise AikidoNoSQLInjection("NOSQL Injection [aikido_firewall]")
+            run_vulnerability_scan(
+                kind="nosql_injection",
+                op=f"pymongo.collection.Collection.{op}",
+                args=(_filter,),
+            )
             return prev_func(_self, _filter, *args, **kwargs)
 
         setattr(modified_pymongo.Collection, operation, wrapped_operation_function)
