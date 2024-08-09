@@ -56,6 +56,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'sample-django-mysql-gunicorn-app.middleware.SimpleAuthMiddleware'
 ]
 
 ROOT_URLCONF = 'sample-django-mysql-gunicorn-app.urls'
