@@ -1,7 +1,5 @@
 """Main export is process_attack"""
 
-from aikido_firewall.helpers.logging import logger
-
 
 def process_attack(bg_process, data, conn):
     """Adds ATTACK data object to queue"""
