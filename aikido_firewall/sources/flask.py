@@ -7,11 +7,9 @@ import json
 from io import BytesIO
 import importhook
 from aikido_firewall.helpers.logging import logger
-from aikido_firewall.context import Context, get_current_context
-from aikido_firewall.background_process import get_comms
-from aikido_firewall.helpers.is_useful_route import is_useful_route
-from aikido_firewall.errors import AikidoRateLimiting
+from aikido_firewall.context import Context
 from aikido_firewall.background_process.packages import add_wrapped_package
+from .functions.request_handler import request_handler
 
 
 class AikidoMiddleware:
@@ -23,31 +21,16 @@ class AikidoMiddleware:
         self.app = app
 
     def __call__(self, environ, start_response):
-        context = get_current_context()
-        comms = get_comms()
-        if not context or not comms:
-            return
-
-        # Ratelimiting snippet :
-        ratelimit_res = comms.send_data_to_bg_process(
-            action="SHOULD_RATELIMIT", obj=context, receive=True
-        )
-        if ratelimit_res["success"] and ratelimit_res["data"]["block"]:
+        response = request_handler(stage="pre_response")
+        if response:
             from flask import make_response  #  We don't want to install flask
 
-            message = "You are rate limited by Aikido firewall"
-            if ratelimit_res["data"]["trigger"] is "ip":
-                message += f" (Your IP: {context.remote_address})"
-            return make_response(message, 429)
+            return make_response(*response)
 
         def custom_start_response(status, headers):
             """Is current route useful snippet :"""
             status_code = int(status.split(" ")[0])
-            is_curr_route_useful = is_useful_route(
-                status_code, context.route, context.method
-            )
-            if is_curr_route_useful:
-                comms.send_data_to_bg_process("ROUTE", (context.method, context.route))
+            request_handler(stage="post_response", status_code=status_code)
             return start_response(status, headers)
 
         response = self.app(environ, custom_start_response)
@@ -59,7 +42,7 @@ def aikido___call__(flask_app, environ, start_response):
     # We don't want to install werkzeug :
     # pylint: disable=import-outside-toplevel
     try:
-        get_comms().send_data_to_bg_process("STATISTICS", {"action": "request"})
+        request_handler(stage="init")
         #  https://stackoverflow.com/a/11163649 :
         length = int(environ.get("CONTENT_LENGTH") or 0)
         body = environ["wsgi.input"].read(length)
