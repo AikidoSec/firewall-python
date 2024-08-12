@@ -13,7 +13,7 @@ def get_ip_from_request(remote_address, headers):
     """
     if headers:
         lower_headers = {key.lower(): value for key, value in headers.items()}
-        if "x-forwarded-for" in lower_headers and trust_proxy():
+        if "x_forwarded_for" in lower_headers and trust_proxy():
             x_forwarded_for = get_client_ip_from_x_forwarded_for(
                 lower_headers["x_forwarded_for"]
             )
