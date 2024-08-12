@@ -10,7 +10,7 @@ from aikido_firewall.helpers.get_subdomains_from_url import get_subdomains_from_
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.helpers.get_ip_from_request import get_ip_from_request
 from .parse_cookies import parse_cookies
-
+from .extract_wsgi_headers import extract_wsgi_headers
 SUPPORTED_SOURCES = ["django", "flask"]
 UINPUT_SOURCES = ["body", "cookies", "query", "headers"]
 
@@ -23,15 +23,6 @@ def get_current_context():
         return local.current_context
     except AttributeError:
         return None
-
-
-def extract_wsgi_headers(request):
-    headers = {}
-    for key, value in request.items():
-        if key.startswith("HTTP_"):
-            # Remove the 'HTTP_' prefix and store in the headers dictionary
-            headers[key[5:]] = value
-    return headers
 
 
 def build_url_from_wsgi(request):
