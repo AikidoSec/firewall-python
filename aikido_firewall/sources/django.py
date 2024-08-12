@@ -18,6 +18,7 @@ def gen_aikido_middleware_function(former__middleware_chain):
     """
 
     def aikido_middleware_function(request):
+        get_comms().send_data_to_bg_process("STATISTICS", {"action": "request"})
         context = Context(
             req=request.META, raw_body=request.body.decode("utf-8"), source="django"
         )

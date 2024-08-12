@@ -59,6 +59,7 @@ def aikido___call__(flask_app, environ, start_response):
     # We don't want to install werkzeug :
     # pylint: disable=import-outside-toplevel
     try:
+        get_comms().send_data_to_bg_process("STATISTICS", {"action": "request"})
         #  https://stackoverflow.com/a/11163649 :
         length = int(environ.get("CONTENT_LENGTH") or 0)
         body = environ["wsgi.input"].read(length)
