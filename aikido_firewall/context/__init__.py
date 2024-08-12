@@ -47,7 +47,8 @@ class Context:
             self.cookies = {}
         self.url = build_url_from_wsgi(req)
         self.query = parse_qs(req["QUERY_STRING"])
-        self.body = parse_raw_body(raw_body, self.headers["CONTENT_TYPE"])
+        content_type = req.get("CONTENT_TYPE", None)
+        self.body = parse_raw_body(raw_body, content_type)
         self.route = build_route_from_url(self.url)
         self.subdomains = get_subdomains_from_url(self.url)
         self.user = None
