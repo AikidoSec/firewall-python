@@ -17,15 +17,18 @@ class AikidoMiddleware:
     Aikido WSGI Middleware for ratelimiting and route reporting
     """
 
-    def __init__(self, app):
+    def __init__(self, app, flask_app=None):
         self.app = app
+        self.flask_app = flask_app
 
     def __call__(self, environ, start_response):
         response = request_handler(stage="pre_response")
         if response:
-            from flask import make_response  #  We don't want to install flask
+            from flask import jsonify  #  We don't want to install flask
 
-            return make_response(*response)
+            with self.flask_app.app_context():
+                start_response(f"{response[1]} Aikido", [])
+                return [response[0].encode("utf-8")]
 
         def custom_start_response(status, headers):
             """Is current route useful snippet :"""
@@ -72,7 +75,7 @@ def on_flask_import(flask):
     def aikido_flask_init(_self, *args, **kwargs):
         prev_flask_init(_self, *args, **kwargs)
         setattr(_self, "__call__", aikido___call__)
-        _self.wsgi_app = AikidoMiddleware(_self.wsgi_app)
+        _self.wsgi_app = AikidoMiddleware(_self.wsgi_app, _self)
 
     # pylint: disable=no-member
     setattr(modified_flask.Flask, "__init__", aikido_flask_init)
