@@ -3,6 +3,7 @@ Flask source module, intercepts flask import and adds Aikido middleware
 """
 
 import copy
+import json
 from io import BytesIO
 import importhook
 from aikido_firewall.helpers.logging import logger
@@ -39,15 +40,17 @@ class AikidoMiddleware:
                 message += f" (Your IP: {context.remote_address})"
             return make_response(message, 429)
 
-        response = self.app(environ, start_response)
+        def custom_start_response(status, headers):
+            """Is current route useful snippet :"""
+            status_code = int(status.split(" ")[0])
+            is_curr_route_useful = is_useful_route(
+                status_code, context.route, context.method
+            )
+            if is_curr_route_useful:
+                comms.send_data_to_bg_process("ROUTE", (context.method, context.route))
+            return start_response(status, headers)
 
-        # Is current route useful snippet :
-        is_curr_route_useful = is_useful_route(
-            response._status_code, context.route, context.method
-        )
-        if is_curr_route_useful:
-            comms.send_data_to_bg_process("ROUTE", (context.method, context.route))
-
+        response = self.app(environ, custom_start_response)
         return response
 
 
@@ -59,17 +62,16 @@ def aikido___call__(flask_app, environ, start_response):
         #  https://stackoverflow.com/a/11163649 :
         length = int(environ.get("CONTENT_LENGTH") or 0)
         body = environ["wsgi.input"].read(length)
-        environ["body_copy"] = body
         # replace the stream since it was exhausted by read()
         environ["wsgi.input"] = BytesIO(body)
 
-        context1 = Context(
-            req=environ, raw_body=environ["body_copy"].decode("utf-8"), source="flask"
-        )
-        res = flask_app.wsgi_app(environ, start_response)
-        return res
+        context1 = Context(req=environ, raw_body=body.decode("utf-8"), source="flask")
+        logger.debug("Context : %s", json.dumps(context1.__dict__))
+        context1.set_as_current_context()
     except Exception as e:
         logger.info("Exception on aikido __call__ function : %s", e)
+    res = flask_app.wsgi_app(environ, start_response)
+    return res
 
 
 @importhook.on_import("flask.app")
