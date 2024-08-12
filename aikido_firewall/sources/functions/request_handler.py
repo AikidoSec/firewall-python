@@ -32,7 +32,7 @@ def pre_response():
     res = comms.send_data_to_bg_process(
         action="IS_IP_ALLOWED", obj=(context,), receive=True
     )
-    if res["success"] and res["data"]:
+    if res["success"] and not res["data"]:
         message = "Your IP address is not allowed to access this resource."
         if context.remote_address:
             message += f" (Your IP: {context.remote_address})"
