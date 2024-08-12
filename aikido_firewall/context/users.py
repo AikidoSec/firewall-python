@@ -46,7 +46,7 @@ def validate_user(user):
             type(user["id"]),
         )
         return
-    if isinstance(user["id"], str) and len(user["id"]) is 0:
+    if isinstance(user["id"], str) and len(user["id"]) == 0:
         logger.info(
             "set_user(...) expects an object with 'id' property non-empty string."
         )
