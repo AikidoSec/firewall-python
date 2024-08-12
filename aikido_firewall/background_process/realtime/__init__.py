@@ -25,7 +25,9 @@ def get_config(token):
     }
     response = requests.get(url, headers=headers, timeout=3)  # timeout in 3 seconds
     if response.status_code != 200:
-        logger.error("Invalid response (%s): %s", response.status_code, response.text)
+        logger.info(
+            "Invalid response from api (Status Code : %s)", response.status_code
+        )
 
     return response.json()  # Parse and return the JSON response
 

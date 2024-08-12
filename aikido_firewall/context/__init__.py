@@ -34,7 +34,7 @@ class Context:
 
     def __init__(self, context_obj=None, req=None, raw_body=None, source=None):
         if context_obj:
-            logger.info("Context object setting")
+            logger.debug("Creating Context instance based on dict object.")
             self.__dict__.update(context_obj)
             return
         self.source = source
