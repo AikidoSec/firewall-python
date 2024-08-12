@@ -2,6 +2,7 @@
 `Django` source module for django-gunicorn, intercepts django import and adds Aikido middleware
 """
 
+import json
 import copy
 import importhook
 from aikido_firewall.helpers.logging import logger
@@ -17,7 +18,10 @@ def gen_aikido_middleware_function(former__middleware_chain):
     """
 
     def aikido_middleware_function(request):
-        context = Context(req=request, source="django")
+        context = Context(
+            req=request.META, raw_body=request.body.decode("utf-8"), source="django"
+        )
+        logger.info("Context : %s", json.dumps(context.__dict__))
         context.set_as_current_context()
 
         res = former__middleware_chain(request)

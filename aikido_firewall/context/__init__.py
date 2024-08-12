@@ -9,8 +9,9 @@ from aikido_firewall.helpers.build_route_from_url import build_route_from_url
 from aikido_firewall.helpers.get_subdomains_from_url import get_subdomains_from_url
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.helpers.get_ip_from_request import get_ip_from_request
+import io
 
-SUPPORTED_SOURCES = ["django", "flask", "django-gunicorn"]
+SUPPORTED_SOURCES = ["django", "flask"]
 UINPUT_SOURCES = ["body", "cookies", "query", "headers"]
 
 local = threading.local()
@@ -48,60 +49,73 @@ def parse_cookies(cookie_str):
     return cookie_dict
 
 
+def clone_body(buffered_reader):
+    # Read all data from the BufferedReader
+    data = buffered_reader.read()
+
+    # Convert the data to a string (assuming it's in bytes)
+    data_string = data.decode("utf-8")  # Adjust encoding as necessary
+    logger.critical("Data string : %s", data_string)
+
+    # Create a new buffer with the same data
+    new_buffer = io.BytesIO(data)
+
+    return data_string, new_buffer
+
+
+def extract_wsgi_headers(request):
+    headers = {}
+    for key, value in request.items():
+        if key.startswith("HTTP_"):
+            # Remove the 'HTTP_' prefix and store in the headers dictionary
+            headers[key[5:]] = value
+    return headers
+
+
+def build_url_from_wsgi(request):
+    scheme = request["wsgi.url_scheme"]
+    host = request["HTTP_HOST"]
+    uri = request["PATH_INFO"]
+    return f"{scheme}://{host}{uri}"
+
+
+def parse_body_string(body_string):
+    return body_string
+
+
 class Context:
     """
     A context object, it stores everything that is important
     for vulnerability detection
     """
 
-    def __init__(self, context_obj=None, req=None, source=None):
+    def __init__(self, context_obj=None, req=None, raw_body=None, source=None):
         if context_obj:
+            logger.info("Context object setting")
             self.__dict__.update(context_obj)
             return
 
         if not source in SUPPORTED_SOURCES:
             raise ValueError(f"Source {source} not supported")
         self.source = source
-        self.method = req.method
-        self.headers = parse_headers(req.headers)
-        if source == "flask":
-            self.set_flask_attrs(req)
-        elif source == "django":
-            self.set_django_attrs(req)
-        elif source == "django-gunicorn":
-            self.set_django_gunicorn_attrs(req)
+        logger.debug("Setting wsgi attributes")
+        self.set_wsgi_attrs(req)
+        self.body = raw_body
         self.route = build_route_from_url(self.url)
         self.subdomains = get_subdomains_from_url(self.url)
         self.user = None
         self.remote_address = get_ip_from_request(self.raw_ip, self.headers)
 
-    def set_django_gunicorn_attrs(self, req):
-        """Set properties that are specific to django-gunicorn"""
-        self.raw_ip = req.remote_addr
-        self.url = req.uri
-        self.body = parse_qs(req.body_copy.decode("utf-8"))
-        self.query = parse_qs(req.query)
-        self.cookies = parse_cookies(self.headers["COOKIE"])
-        del self.headers["COOKIE"]
-
-    def set_django_attrs(self, req):
-        """set properties that are specific to django"""
-        self.raw_ip = req.META.get("REMOTE_ADDR")
-        self.url = req.build_absolute_uri()
-        self.body = dict(req.POST)
-        self.query = dict(req.GET)
-        self.cookies = req.COOKIES
-
-    def set_flask_attrs(self, req):
-        """Set properties that are specific to flask"""
-        self.raw_ip = req.remote_addr
-        self.url = req.url
-        if req.is_json:
-            self.body = req.json
+    def set_wsgi_attrs(self, req):
+        self.method = req["REQUEST_METHOD"]
+        self.headers = extract_wsgi_headers(req)
+        if "COOKIE" in self.headers:
+            self.cookies = parse_cookies(self.headers["COOKIE"])
         else:
-            self.body = req.form.to_dict()
-        self.query = req.args.to_dict()
-        self.cookies = req.cookies.to_dict()
+            self.cookies = {}
+        self.raw_ip = req["REMOTE_ADDR"]
+        self.url = build_url_from_wsgi(req)
+        self.query = parse_qs(req["QUERY_STRING"])
 
     def __reduce__(self):
         return (
