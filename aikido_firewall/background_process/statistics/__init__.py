@@ -1,6 +1,9 @@
 """Exports statistics class"""
 
 from aikido_firewall.helpers.get_current_unixtime_ms import get_unixtime_ms
+from .ensure_sink_stats import ensure_sink_stats
+from .compress_perf_samples import compress_perf_samples
+from .on_inspected_call import on_inspected_call
 
 
 class Statistics:
@@ -33,3 +36,32 @@ class Statistics:
             len(sink_stats["compressedTimings"]) > 0
             for sink_stats in self.stats.values()
         )
+
+    def interceptor_threw_error(self, sink):
+        """Increment the error count for the interceptor for the given sink."""
+        self.ensure_sink_stats(sink)
+        self.stats[sink]["total"] += 1
+        self.stats[sink]["interceptorThrewError"] += 1
+
+    def on_detected_attack(self, blocked):
+        """Increment the attack detection statistics."""
+        self.requests["attacksDetected"]["total"] += 1
+        if blocked:
+            self.requests["attacksDetected"]["blocked"] += 1
+
+    def force_compress(self):
+        """Force compression of performance samples for all sinks."""
+        for sink in self.stats:
+            self.compress_perf_samples(sink)
+
+    def ensure_sink_stats(self, sink):
+        """Makes sure to initalize sink if it's not there"""
+        ensure_sink_stats(self, sink)
+
+    def compress_perf_samples(self, sink):
+        """Compress performance samples for a given sink."""
+        compress_perf_samples(self, sink)
+
+    def on_inspected_call(self, *args, **kwargs):
+        """Handle an inspected call and update statistics accordingly."""
+        on_inspected_call(self, *args, **kwargs)
