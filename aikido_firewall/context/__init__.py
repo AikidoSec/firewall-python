@@ -11,6 +11,7 @@ from aikido_firewall.helpers.logging import logger
 from aikido_firewall.helpers.get_ip_from_request import get_ip_from_request
 from .parse_cookies import parse_cookies
 from .extract_wsgi_headers import extract_wsgi_headers
+from .build_url_from_wsgi import build_url_from_wsgi
 
 UINPUT_SOURCES = ["body", "cookies", "query", "headers"]
 local = threading.local()
@@ -22,17 +23,6 @@ def get_current_context():
         return local.current_context
     except AttributeError:
         return None
-
-
-def build_url_from_wsgi(request):
-    scheme = request["wsgi.url_scheme"]
-    host = request["HTTP_HOST"]
-    uri = request["PATH_INFO"]
-    return f"{scheme}://{host}{uri}"
-
-
-def parse_body_string(body_string):
-    return body_string
 
 
 class Context:
