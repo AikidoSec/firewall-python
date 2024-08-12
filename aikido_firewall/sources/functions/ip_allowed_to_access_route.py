@@ -10,9 +10,15 @@ def ip_allowed_to_access_route(context, reporter):
     ip = context.remote_address
     if ip and is_localhost_ip(ip):
         return True
+
     matches = reporter.conf.get_endpoints(context)
+    if not matches:
+        return True
 
     for endpoint in matches:
+        if not hasattr(endpoint, "allowedIPAddresses"):
+            #  This feature is not supported by the current aikido server version
+            return True
         if not isinstance(endpoint["allowedIPAddresses"], list):
             #  We will continue to check all the other matches
             continue
