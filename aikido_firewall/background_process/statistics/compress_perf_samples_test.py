@@ -20,7 +20,7 @@ def test_clear_durations_after_compression():
     statistics_object.stats = {
         "sink1": {"durations": [100, 200, 300], "compressedTimings": []}
     }
-    statistics_object.max_compressed_stats_in_memory = 5
+    statistics_object.max_compressed_stats_in_mem = 5
 
     # Mock the percentiles function
     percentiles.return_value = (200, 300, 400, 450, 490)

@@ -14,7 +14,7 @@ def test_no_context():
             "attacksDetected": {"total": 0, "blocked": 0},
         }
     }
-    statistics_object.max_perf_samples_in_memory = 5
+    statistics_object.max_perf_samples_in_mem = 5
 
     on_inspected_call(statistics_object, "sink1", 150, False, False, True)
 
@@ -34,7 +34,7 @@ def test_with_context_and_no_attack():
             "attacksDetected": {"total": 0, "blocked": 0},
         }
     }
-    statistics_object.max_perf_samples_in_memory = 5
+    statistics_object.max_perf_samples_in_mem = 5
 
     on_inspected_call(statistics_object, "sink1", 150, False, False, False)
 
@@ -55,7 +55,7 @@ def test_with_context_and_attack_detected():
             "attacksDetected": {"total": 0, "blocked": 0},
         }
     }
-    statistics_object.max_perf_samples_in_memory = 5
+    statistics_object.max_perf_samples_in_mem = 5
 
     on_inspected_call(statistics_object, "sink1", 200, True, True, False)
 
@@ -76,11 +76,18 @@ def test_compress_samples_when_limit_exceeded():
             "attacksDetected": {"total": 0, "blocked": 0},
         }
     }
-    statistics_object.max_perf_samples_in_memory = 5
+    statistics_object.max_perf_samples_in_mem = 5
 
     # Mock the compress_perf_samples function to avoid actual compression
     statistics_object.compress_perf_samples = MagicMock()
 
     on_inspected_call(statistics_object, "sink1", 600, False, False, False)
 
-    assert statistics_object.stats["sink1"]["durations"] == [100, 200, 300, 400, 500, 600]
+    assert statistics_object.stats["sink1"]["durations"] == [
+        100,
+        200,
+        300,
+        400,
+        500,
+        600,
+    ]

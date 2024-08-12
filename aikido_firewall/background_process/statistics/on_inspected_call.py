@@ -15,7 +15,7 @@ def on_inspected_call(
 
     if (
         len(statistics_object.stats[sink]["durations"])
-        >= statistics_object.max_perf_samples_in_memory
+        >= statistics_object.max_perf_samples_in_mem
     ):
         statistics_object.compress_perf_samples(sink)
 

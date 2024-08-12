@@ -4,6 +4,7 @@ from aikido_firewall.helpers.get_current_unixtime_ms import get_unixtime_ms
 from .ensure_sink_stats import ensure_sink_stats
 from .compress_perf_samples import compress_perf_samples
 from .on_inspected_call import on_inspected_call
+from .get_stats import get_stats
 
 
 class Statistics:
@@ -56,12 +57,16 @@ class Statistics:
 
     def ensure_sink_stats(self, sink):
         """Makes sure to initalize sink if it's not there"""
-        ensure_sink_stats(self, sink)
+        return ensure_sink_stats(self, sink)
 
     def compress_perf_samples(self, sink):
         """Compress performance samples for a given sink."""
-        compress_perf_samples(self, sink)
+        return compress_perf_samples(self, sink)
 
     def on_inspected_call(self, *args, **kwargs):
         """Handle an inspected call and update statistics accordingly."""
-        on_inspected_call(self, *args, **kwargs)
+        return on_inspected_call(self, *args, **kwargs)
+
+    def get_stats(self):
+        """This will return the stats as a dict, from a Statistics class"""
+        return get_stats(self)

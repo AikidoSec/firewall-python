@@ -35,7 +35,7 @@ def compress_perf_samples(statistics_object, sink):
     # Remove the oldest compressed timing if exceeding the limit
     if (
         len(statistics_object.stats[sink]["compressedTimings"])
-        > statistics_object.max_compressed_stats_in_memory
+        > statistics_object.max_compressed_stats_in_mem
     ):
         statistics_object.stats[sink]["compressedTimings"].pop(0)
 
