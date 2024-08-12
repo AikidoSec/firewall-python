@@ -18,13 +18,20 @@ def match_endpoint(context, endpoints, multi=False):
         for endpoint in endpoints
         if endpoint["method"] == "*" or endpoint["method"] == context.method
     ]
+    results = []
 
-    endpoint = next(
-        (endpoint for endpoint in possible if endpoint["route"] == context.route), None
-    )
+    if not multi:
+        endpoint = next(
+            (endpoint for endpoint in possible if endpoint["route"] == context.route),
+            None,
+        )
 
-    if endpoint:
-        return {"endpoint": endpoint, "route": endpoint["route"]}
+        if endpoint:
+            return {"endpoint": endpoint, "route": endpoint["route"]}
+    else:
+        for endpoint in possible:
+            if endpoint["route"] == context.route:
+                results.append({"endpoint": endpoint, "route": endpoint["route"]})
 
     if not context.url:
         return None
@@ -40,7 +47,6 @@ def match_endpoint(context, endpoints, multi=False):
         reverse=True,
     )
 
-    results = []
     for wildcard in wildcards:
         route = wildcard["route"]
         regex = re.compile(f"^{route.replace('*', '(.*)')}\/?$", re.IGNORECASE)

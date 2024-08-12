@@ -380,6 +380,16 @@ def test_returns_multiple_endpoints_with_specific_method():
             },
             "force_protection_off": False,
         },
+        {
+            "method": "POST",
+            "route": "/posts",
+            "rate_limiting": {
+                "enabled": True,
+                "max_requests": 2,
+                "window_size_in_ms": 1000,
+            },
+            "force_protection_off": False,
+        },
     ]
 
     result = match_endpoint(context, endpoints, multi=True)
