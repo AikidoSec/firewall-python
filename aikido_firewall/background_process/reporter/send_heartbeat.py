@@ -11,10 +11,12 @@ def send_heartbeat(reporter):
     if not reporter.token:
         return
     logger.debug("Aikido Reporter : Sending out heartbeat")
+    stats = reporter.statistics.get_stats()
     users = reporter.users.as_array()
     routes = list(reporter.routes)
     outgoing_domains = reporter.hostnames.as_array()
 
+    reporter.statistics.reset()
     reporter.users.clear()
     reporter.routes.clear()
     reporter.hostnames.clear()
@@ -24,19 +26,7 @@ def send_heartbeat(reporter):
             "type": "heartbeat",
             "time": get_unixtime_ms(),
             "agent": reporter.get_reporter_info(),
-            "stats": {
-                "sinks": {},
-                "startedAt": 0,
-                "endedAt": 0,
-                "requests": {
-                    "total": 0,
-                    "aborted": 0,
-                    "attacksDetected": {
-                        "total": 0,
-                        "blocked": 0,
-                    },
-                },
-            },
+            "stats": stats,
             "hostnames": outgoing_domains,
             "routes": routes,
             "users": users,
