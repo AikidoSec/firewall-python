@@ -12,6 +12,7 @@ from aikido_firewall.helpers.get_ip_from_request import get_ip_from_request
 from .parse_cookies import parse_cookies
 from .extract_wsgi_headers import extract_wsgi_headers
 from .build_url_from_wsgi import build_url_from_wsgi
+from .parse_raw_body import parse_raw_body
 
 UINPUT_SOURCES = ["body", "cookies", "query", "headers"]
 local = threading.local()
@@ -46,7 +47,7 @@ class Context:
             self.cookies = {}
         self.url = build_url_from_wsgi(req)
         self.query = parse_qs(req["QUERY_STRING"])
-        self.body = raw_body
+        self.body = parse_raw_body(raw_body, self.headers["CONTENT_TYPE"])
         self.route = build_route_from_url(self.url)
         self.subdomains = get_subdomains_from_url(self.url)
         self.user = None
