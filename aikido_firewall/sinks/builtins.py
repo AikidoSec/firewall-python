@@ -5,13 +5,7 @@ Sink module for `builtins`, python's built-in function
 import copy
 import importhook
 from aikido_firewall.helpers.logging import logger
-from aikido_firewall.vulnerabilities.path_traversal.check_context_for_path_traversal import (
-    check_context_for_path_traversal,
-)
-from aikido_firewall.context import get_current_context
-from aikido_firewall.background_process import get_comms
-from aikido_firewall.errors import AikidoPathTraversal
-from aikido_firewall.helpers.blocking_enabled import is_blocking_enabled
+from aikido_firewall.vulnerabilities import run_vulnerability_scan
 
 
 @importhook.on_import("builtins")
@@ -26,17 +20,10 @@ def on_builtins_import(builtins):
     former_open = copy.deepcopy(builtins.open)
 
     def aikido_new_open(*args, **kwargs):
-        logger.debug("`builtins` wrapper, filepath : `%s`;", args[0])
-        context = get_current_context()
-        if not context:
-            return former_open(*args, **kwargs)
-        result = check_context_for_path_traversal(
-            filename=args[0], operation="builtins.open", context=context
+        #  args[0] is the filename
+        run_vulnerability_scan(
+            kind="path_traversal", op="builtins.open", args=(args[0],)
         )
-        if len(result) != 0:
-            get_comms().send_data_to_bg_process("ATTACK", (result, context))
-            if is_blocking_enabled():
-                raise AikidoPathTraversal()
         return former_open(*args, **kwargs)
 
     # pylint: disable=no-member
