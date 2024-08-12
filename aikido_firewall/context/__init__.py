@@ -11,9 +11,8 @@ from aikido_firewall.helpers.logging import logger
 from aikido_firewall.helpers.get_ip_from_request import get_ip_from_request
 from .parse_cookies import parse_cookies
 from .extract_wsgi_headers import extract_wsgi_headers
-SUPPORTED_SOURCES = ["django", "flask"]
-UINPUT_SOURCES = ["body", "cookies", "query", "headers"]
 
+UINPUT_SOURCES = ["body", "cookies", "query", "headers"]
 local = threading.local()
 
 
@@ -47,9 +46,6 @@ class Context:
             logger.info("Context object setting")
             self.__dict__.update(context_obj)
             return
-
-        if not source in SUPPORTED_SOURCES:
-            raise ValueError(f"Source {source} not supported")
         self.source = source
         logger.debug("Setting wsgi attributes")
         self.method = req["REQUEST_METHOD"]
