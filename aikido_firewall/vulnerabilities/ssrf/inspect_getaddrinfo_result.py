@@ -59,7 +59,7 @@ def inspect_getaddrinfo_result(dns_results, hostname, port):
     logger.debug("Attack results : %s", attack)
 
     logger.debug("Sending data to bg process :")
-    get_comms().send_data_to_bg_process("ATTACK", (attack, context))
+    get_comms().send_data_to_bg_process("ATTACK", (attack, context, should_block))
 
     if should_block:
         raise AikidoSSRF()

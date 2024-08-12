@@ -87,6 +87,7 @@ def run_vulnerability_scan(kind, op, args):
 
     if injection_results:
         logger.debug("Injection results : %s", json.dumps(injection_results))
-        comms.send_data_to_bg_process("ATTACK", (injection_results, context))
-        if is_blocking_enabled():
+        blocked = is_blocking_enabled()
+        comms.send_data_to_bg_process("ATTACK", (injection_results, context, blocked))
+        if blocked:
             raise error_type(*error_args)
