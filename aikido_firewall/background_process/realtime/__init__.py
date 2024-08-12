@@ -42,6 +42,9 @@ def get_config_last_updated_at(token):
     }
     response = requests.get(url, headers=headers, timeout=0.5)  # timeout in 500ms
     if response.status_code != 200:
-        logger.error("Invalid response (%s): %s", response.status_code, response.text)
+        logger.info(
+            "Invalid response from realtime api (Status Code : %s)",
+            response.status_code,
+        )
 
     return int(response.json()["configUpdatedAt"])  #  Return configUpdatedAt time
