@@ -80,13 +80,3 @@ def make_request():
     url = request.form['url']
     res = requests.get(url)
     return str(res)
-
-@app.route("/execute", methods=['GET'])
-def show_execute_page():
-    return render_template('execute.html')
-
-@app.route("/execute", methods=['POST'])
-def run_command():
-    command = request.form['command'].split()
-    result = subprocess.run(command, capture_output=True, text=True)
-    return str(result.stdout)
