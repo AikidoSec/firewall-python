@@ -1,0 +1,25 @@
+index b1846b8..16e6905 100644
+--- a/docker-compose.yml
++++ b/docker-compose.yml
+@@ -22,7 +22,7 @@ services:
+     volumes:
+       - .:/app
+     ports:
+-      - "8080:8000"
++      - "8081:8000"
+     env_file:
+       - .env
+     depends_on:
+
+index f66fda4..859bba9 100755
+--- a/manage.py
++++ b/manage.py
+@@ -1,8 +1,5 @@
+ #!/usr/bin/env python
+ """Django's command-line utility for administrative tasks."""
+-import aikido_firewall # Aikido module
+-aikido_firewall.protect("django")
+-
+ import os
+ import sys
+ 
