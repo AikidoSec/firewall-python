@@ -35,16 +35,17 @@ def run_vulnerability_scan(kind, op, args):
     comms = get_comms()
     if not context or not comms:
         return
+    compressed_context = context.compress()
 
     force_protection_off = comms.send_data_to_bg_process(
-        action="FORCE_PROTECTION_OFF?", obj=context, receive=True
+        action="FORCE_PROTECTION_OFF?", obj=compressed_context, receive=True
     )
     if force_protection_off["success"] and force_protection_off["data"]:
         #  The client turned protection off for this route, not scanning
         return
 
     is_bypassed_ip = comms.send_data_to_bg_process(
-        action="IS_BYPASSED_IP", obj=context.remote_address, receive=True
+        action="IS_BYPASSED_IP", obj=compressed_context.remote_address, receive=True
     )
     if is_bypassed_ip["success"] and is_bypassed_ip["data"]:
         #  This IP is on the bypass list, not scanning
