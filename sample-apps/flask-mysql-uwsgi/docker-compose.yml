@@ -25,7 +25,7 @@ services:
     volumes:
       - .:/app
     ports:
-      - "8080:5000"
+      - "8088:5000"
     depends_on:
       - db
     extra_hosts:
