@@ -9,23 +9,17 @@ import aikido_firewall.background_process.packages as pkgs
 from aikido_firewall.vulnerabilities import run_vulnerability_scan
 
 OPERATIONS_WITH_FILTER = [
-    "replace_one",  # L1087
-    "update_one",  # L1189
-    "update_many",  # L1302
-    "delete_one",  # L1542
-    "delete_many",  # L1607
-    "find_one",  # L1672
-    "count_documents",  # L2020
-    "find_one_and_delete",  # L3207
-    "find_one_and_replace",  # L3296
-    "find_one_and_update",  # L3403
+    "replace_one",
+    "update_one",
+    "update_many",
+    "delete_one",
+    "delete_many",
+    "find_one",
+    "count_documents",
+    "find_one_and_delete",
+    "find_one_and_replace",
+    "find_one_and_update",
 ]
-
-# ISSUE : Asynchronous
-# ISSUE : `find` on L1707 and `find_raw_batches` on L1895
-# ISSUE : `aggregate` on L2847 and `aggregate_raw_batches` on L2942
-# ISSUE : `distinct` on L3054
-
 
 # Synchronous :
 @importhook.on_import("pymongo.collection")
