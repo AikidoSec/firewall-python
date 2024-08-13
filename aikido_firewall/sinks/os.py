@@ -25,7 +25,6 @@ OS_FILE_FUNCTIONS = [
     "walk",
 ]
 OS_PATH_FUNCTIONS = [
-#    "exists",
     "realpath",
     "getsize",
 #    "getmtime",
