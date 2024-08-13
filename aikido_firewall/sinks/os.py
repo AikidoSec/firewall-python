@@ -27,9 +27,6 @@ OS_FILE_FUNCTIONS = [
 OS_PATH_FUNCTIONS = [
     "realpath",
     "getsize",
-#    "getmtime",
-#    "getatime",
-#    "getctime",
 ]
 # os.path.join(path, *paths) is not wrapped
 
