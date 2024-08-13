@@ -20,6 +20,12 @@ class ServiceConfig:
         """
         return match_endpoint(context, self.endpoints)
 
+    def get_endpoints(self, context):
+        """
+        Gets the endpoint that matches the current context
+        """
+        return match_endpoint(context=context, endpoints=self.endpoints, multi=True)
+
     def is_bypassed_ip(self, ip):
         """Checks if the IP is on the bypass list"""
         return ip in self.bypassed_ips
