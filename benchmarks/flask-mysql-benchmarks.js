@@ -19,6 +19,15 @@ const default_payload = {
     text_message: "Lorem ipsum dolor sit amet".repeat(3000)
 
 };
+function generateLargeJson(sizeInMB) {
+    const sizeInBytes = sizeInMB * 1024; // Convert MB to Kilobytes
+    let currentSize = 0;
+    let long_text = "b".repeat(sizeInBytes)
+    return {
+        dog_name: "test",
+        long_texts: new Array(1024).fill(long_text)
+    }
+}
 function calculateMedian(arr) {
     if (arr.length === 0) return null; // Handle empty array case
 
@@ -72,6 +81,10 @@ function log_test_results(test, res) {
 }
 export default function () {
     console.log("======  Benchmarking results: ======")
+    route_test(1, "/create", "POST", generateLargeJson(40)) // Cold-Turkey
+    const res_40mb = route_test(10, "/create", "POST", generateLargeJson(40)) // 40 Megabytes
+    log_test_results("Test a 40MB payload on /create", res_40mb)
+
     const res_multi_no_bb = route_test(50, "/multiple_queries", "POST", {dog_name: "W"})
     log_test_results("Testing with execution of multiple SQL queries", res_multi_no_bb)
 
