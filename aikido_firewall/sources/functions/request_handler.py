@@ -27,34 +27,35 @@ def pre_response():
     comms = get_comms()
     if not context or not comms:
         return
+    compressed_context = context.compress()
 
     # IP Allowlist:
     res = comms.send_data_to_bg_process(
-        action="IS_IP_ALLOWED", obj=(context,), receive=True
+        action="IS_IP_ALLOWED", obj=(compressed_context,), receive=True
     )
     if res["success"] and not res["data"]:
         message = "Your IP address is not allowed to access this resource."
         if context.remote_address:
-            message += f" (Your IP: {context.remote_address})"
+            message += f" (Your IP: {compressed_context.remote_address})"
         return (message, 403)
 
     # Blocked users:
     if context.user:
         blocked_res = comms.send_data_to_bg_process(
-            action="SHOULD_BLOCK_USER", obj=context.user["id"], receive=True
+            action="SHOULD_BLOCK_USER", obj=compressed_context.user["id"], receive=True
         )
         if blocked_res["success"] and blocked_res["data"]:
             return ("You are blocked by Aikido Firewall.", 403)
 
     # Ratelimiting :
     ratelimit_res = comms.send_data_to_bg_process(
-        action="SHOULD_RATELIMIT", obj=context, receive=True
+        action="SHOULD_RATELIMIT", obj=compressed_context, receive=True
     )
     if ratelimit_res["success"] and ratelimit_res["data"]["block"]:
 
         message = "You are rate limited by Aikido firewall"
         if ratelimit_res["data"]["trigger"] is "ip":
-            message += f" (Your IP: {context.remote_address})"
+            message += f" (Your IP: {compressed_context.remote_address})"
         return (message, 429)
 
 
