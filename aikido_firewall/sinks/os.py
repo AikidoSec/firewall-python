@@ -20,7 +20,6 @@ OS_FILE_FUNCTIONS = [
     "rmdir",
     "remove",
     "symlink",
-#    "stat",
     "link",
     "makedirs",
     "walk",
