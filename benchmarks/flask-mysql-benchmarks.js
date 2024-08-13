@@ -82,7 +82,7 @@ function log_test_results(test, res) {
 export default function () {
     console.log("======  Benchmarking results: ======")
     route_test(1, "/create", "POST", generateLargeJson(40)) // Cold-Turkey
-    const res_40mb = route_test(10, "/create", "POST", generateLargeJson(40)) // 40 Megabytes
+    const res_40mb = route_test(30, "/create", "POST", generateLargeJson(40)) // 40 Megabytes
     log_test_results("Test a 40MB payload on /create", res_40mb)
 
     const res_multi_no_bb = route_test(50, "/multiple_queries", "POST", {dog_name: "W"})
