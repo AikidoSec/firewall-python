@@ -5,7 +5,7 @@ from aikido_firewall.context import get_current_context
 from aikido_firewall.helpers.is_useful_route import is_useful_route
 
 
-def request_handler(stage, status_code=500):
+def request_handler(stage, status_code=0):
     """This will check for rate limiting, Allowed IP's, useful routes, etc."""
     if stage == "init":
         #  This gets executed the first time a request get's intercepted
