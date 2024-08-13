@@ -9,7 +9,6 @@ readme = "README.md"
 python = "^3.8"
 importhook = "^1.0.9"
 python-dotenv = "^1.0.1"
-flask-http-middleware = "^0.4.2"
 regex = "^2024.5.15"
 requests = "^2.32.3"
 
