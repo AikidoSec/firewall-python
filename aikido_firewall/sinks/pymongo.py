@@ -21,6 +21,7 @@ OPERATIONS_WITH_FILTER = [
     "find_one_and_update",
 ]
 
+
 # Synchronous :
 @importhook.on_import("pymongo.collection")
 def on_pymongo_import(pymongo):
