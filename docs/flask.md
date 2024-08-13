@@ -21,6 +21,10 @@ AIKIDO_TOKEN="AIK_RUNTIME_YOUR_TOKEN_HERE"
 - Enabling extra debugging (optional): ```AIKIDO_DEBUG=1```
 - Enabling blocking using an env variable (optional): ```AIKIDO_BLOCKING=1```
 
+## Using gUnicorn
+If you're using gunicorn, please check our docs on that first : [Click Here](./gunicorn.md)
+
+
 ## Warning: Installing middleware
 When installing middleware make sure to install it like this :
 ```python
