@@ -43,6 +43,13 @@ def run_vulnerability_scan(kind, op, args):
         #  The client turned protection off for this route, not scanning
         return
 
+    is_bypassed_ip = comms.send_data_to_bg_process(
+        action="IS_BYPASSED_IP", obj=context.remote_address, receive=True
+    )
+    if is_bypassed_ip["success"] and is_bypassed_ip["data"]:
+        #  This IP is on the bypass list, not scanning
+        return
+
     error_type = AikidoException  # Default error
     error_args = tuple()
     injection_results = {}
@@ -80,6 +87,7 @@ def run_vulnerability_scan(kind, op, args):
 
     if injection_results:
         logger.debug("Injection results : %s", json.dumps(injection_results))
-        comms.send_data_to_bg_process("ATTACK", (injection_results, context))
-        if is_blocking_enabled():
+        blocked = is_blocking_enabled()
+        comms.send_data_to_bg_process("ATTACK", (injection_results, context, blocked))
+        if blocked:
             raise error_type(*error_args)

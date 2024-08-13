@@ -10,6 +10,7 @@ from ..service_config import ServiceConfig
 from ..users import Users
 from ..hostnames import Hostnames
 from ..realtime.start_polling_for_changes import start_polling_for_changes
+from ..statistics import Statistics
 
 # Import functions :
 from .on_detected_attack import on_detected_attack
@@ -37,6 +38,9 @@ class Reporter:
         )
         self.users = Users(1000)
         self.packages = {}
+        self.statistics = Statistics(
+            max_perf_samples_in_mem=5000, max_compressed_stats_in_mem=100
+        )
 
         if isinstance(serverless, str) and len(serverless) == 0:
             raise ValueError("Serverless cannot be an empty string")

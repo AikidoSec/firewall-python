@@ -2,13 +2,13 @@
 `Django` source module for django-gunicorn, intercepts django import and adds Aikido middleware
 """
 
+import json
 import copy
 import importhook
 from aikido_firewall.helpers.logging import logger
-from aikido_firewall.context import Context, get_current_context
-from aikido_firewall.background_process import get_comms
-from aikido_firewall.helpers.is_useful_route import is_useful_route
+from aikido_firewall.context import Context
 from aikido_firewall.background_process.packages import add_wrapped_package
+from .functions.request_handler import request_handler
 
 
 def gen_aikido_middleware_function(former__middleware_chain):
@@ -17,19 +17,15 @@ def gen_aikido_middleware_function(former__middleware_chain):
     """
 
     def aikido_middleware_function(request):
-        context = Context(req=request, source="django")
+        request_handler(stage="init")
+        context = Context(
+            req=request.META, raw_body=request.body.decode("utf-8"), source="django"
+        )
+        logger.info("Context : %s", json.dumps(context.__dict__))
         context.set_as_current_context()
 
         res = former__middleware_chain(request)
-        is_curr_route_useful = is_useful_route(
-            res.status_code,
-            context.route,
-            context.method,  #  Pretend the status code is 200
-        )
-        if is_curr_route_useful:
-            get_comms().send_data_to_bg_process(
-                "ROUTE", (context.method, context.route)
-            )
+        request_handler(stage="post_response", status_code=res.status_code)
         return res
 
     return aikido_middleware_function
@@ -37,32 +33,11 @@ def gen_aikido_middleware_function(former__middleware_chain):
 
 def aikido_ratelimiting_middleware(request, *args, **kwargs):
     """Aikido middleware that handles ratelimiting"""
-    context = get_current_context()
-    if not context:
-        return
-    # Blocked users:
-    if context.user:
-        blocked_res = get_comms().send_data_to_bg_process(
-            action="SHOULD_BLOCK_USER", obj=context.user["id"], receive=True
-        )
-        if blocked_res["success"] and blocked_res["data"]:
-            # We don't want to install django, import on demand
-            from django.http import HttpResponse
-
-            return HttpResponse("You are blocked by Aikido Firewall.", status=403)
-
-    # Ratelimiting :
-    ratelimit_res = get_comms().send_data_to_bg_process(
-        action="SHOULD_RATELIMIT", obj=context, receive=True
-    )
-    if ratelimit_res["success"] and ratelimit_res["data"]["block"]:
-        # We don't want to install django, import on demand
+    response = request_handler(stage="pre_response")
+    if response:
         from django.http import HttpResponse
 
-        message = "You are rate limited by Aikido firewall"
-        if ratelimit_res["data"]["trigger"] is "ip":
-            message += f" (Your IP: {context.remote_address})"
-        return HttpResponse(message, status=429)
+        return HttpResponse(response[0], status=response[1])
 
 
 @importhook.on_import("django.core.handlers.base")

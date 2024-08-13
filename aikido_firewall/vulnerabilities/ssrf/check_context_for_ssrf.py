@@ -14,7 +14,6 @@ def check_context_for_ssrf(hostname, port, operation, context):
     This will check the context for SSRF
     """
     for source in SOURCES:
-        logger.debug("Checking source %s for SSRF", source)
         if hasattr(context, source):
             user_inputs = extract_strings_from_user_input(getattr(context, source))
             for user_input, path in user_inputs.items():
@@ -25,7 +24,7 @@ def check_context_for_ssrf(hostname, port, operation, context):
                         "kind": "ssrf",
                         "source": source,
                         "pathToPayload": path,
-                        "metadata": {},
+                        "metadata": {"hostname": hostname},
                         "payload": user_input,
                     }
     return {}
