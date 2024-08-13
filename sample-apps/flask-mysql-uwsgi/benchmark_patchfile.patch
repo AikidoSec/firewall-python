@@ -1,0 +1,23 @@
+index b10c854..2b89dca 100644
+--- a/app.py
++++ b/app.py
+@@ -1,6 +1,3 @@
+-import aikido_firewall # Aikido package import
+-aikido_firewall.protect()
+-
+ from flask import Flask, render_template, request
+ from flaskext.mysql import MySQL
+ 
+diff --git a/docker-compose.yml b/sample-apps/flask-mysql-uwsgi/docker-compose.yml
+index 5438a15..d7e0d2c 100644
+--- a/docker-compose.yml
++++ b/docker-compose.yml
+@@ -25,7 +25,7 @@ services:
+     volumes:
+       - .:/app
+     ports:
+-      - "8088:5000"
++      - "8089:5000"
+     depends_on:
+       - db
+     extra_hosts:
