@@ -45,7 +45,7 @@ def show_create_dog_form():
 def multiple_queries():
     dog_name = request.form['dog_name']
     cursor = mysql.get_db().cursor()
-    for i in range(200):
+    for i in range(20):
         cursor.execute(f'SELECT * FROM db.dogs WHERE dog_name = "%s"' % (dog_name))
         cursor.fetchmany(1)
     return f'OK'
