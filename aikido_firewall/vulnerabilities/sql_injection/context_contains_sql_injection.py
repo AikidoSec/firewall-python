@@ -16,7 +16,6 @@ def context_contains_sql_injection(sql, operation, context, dialect):
     This will check the context of the request for SQL Injections
     """
     for source in SOURCES:
-        logger.debug("Checking source %s for SQL Injection", source)
         if hasattr(context, source):
             user_inputs = extract_strings_from_user_input(getattr(context, source))
             for user_input, path in user_inputs.items():
