@@ -20,10 +20,6 @@ mysql.init_app(app)
 
 @app.route("/")
 def homepage():
-    aikido_firewall.set_user({
-        "id": 1,
-        "name": "Wout"
-    })
     cursor = mysql.get_db().cursor()
     cursor.execute("SELECT * FROM db.dogs")
     dogs = cursor.fetchall()
@@ -32,10 +28,6 @@ def homepage():
 
 @app.route('/dogpage/<int:dog_id>')
 def get_dogpage(dog_id):
-    aikido_firewall.set_user({
-        "id": 2,
-        "name": "Wout 2"
-    })
     cursor = mysql.get_db().cursor()
     cursor.execute("SELECT * FROM db.dogs WHERE id = " + str(dog_id))
     dog = cursor.fetchmany(1)[0]
