@@ -16,9 +16,9 @@ def ip_allowed_to_access_route(context, reporter):
         return True
 
     for endpoint in matches:
-        if not hasattr(endpoint, "allowedIPAddresses"):
+        if not "allowedIPAddresses" in endpoint:
             #  This feature is not supported by the current aikido server version
-            return True
+            continue
         if not isinstance(endpoint["allowedIPAddresses"], list):
             #  We will continue to check all the other matches
             continue
