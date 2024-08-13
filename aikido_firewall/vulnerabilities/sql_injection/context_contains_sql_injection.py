@@ -25,7 +25,7 @@ def context_contains_sql_injection(sql, operation, context, dialect):
                         "kind": "sql_injection",
                         "source": source,
                         "pathToPayload": path,
-                        "metadata": {},
+                        "metadata": {"sql": sql},
                         "payload": user_input,
                     }
     return {}
