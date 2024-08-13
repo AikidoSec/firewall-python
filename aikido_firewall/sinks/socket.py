@@ -23,7 +23,6 @@ def generate_aikido_function(former_func, op):
     """
 
     def aik_new_func(*args, **kwargs):
-        logger.info("socket.%s() Hostname : `%s`;", op, args[0])
         res = former_func(*args, **kwargs)
         if op is "getaddrinfo":
             inspect_getaddrinfo_result(dns_results=res, hostname=args[0], port=args[1])
