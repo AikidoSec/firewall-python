@@ -11,10 +11,6 @@ services:
       POSTGRES_DB: 'db'
       POSTGRES_USER: 'user'
       POSTGRES_PASSWORD: 'password'
-    ports:
-      - '5432:5432'
-    expose:
-      - '5432'
     networks:
       - default_network
 
