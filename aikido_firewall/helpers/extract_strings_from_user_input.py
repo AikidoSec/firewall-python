@@ -4,6 +4,18 @@ Helper function file, see funtion definition
 
 from aikido_firewall.helpers.try_decode_as_jwt import try_decode_as_jwt
 from aikido_firewall.helpers.build_path_to_payload import build_path_to_payload
+from aikido_firewall.context import get_current_context
+
+
+def extract_strings_from_user_input_cached(obj, source):
+    context = get_current_context()
+    if context.cached_ui_strings and context.cached_ui_strings.get(source):
+        return context.cached_ui_strings.get(source)
+    res = extract_strings_from_user_input(obj)
+
+    context.cached_ui_strings[source] = res
+    context.set_as_current_context()
+    return res
 
 
 def extract_strings_from_user_input(obj, path_to_payload=None):

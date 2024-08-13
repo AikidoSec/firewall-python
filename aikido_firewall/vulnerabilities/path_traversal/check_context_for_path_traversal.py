@@ -1,7 +1,7 @@
 """Exports `check_context_for_path_traversal`"""
 
 from aikido_firewall.helpers.extract_strings_from_user_input import (
-    extract_strings_from_user_input,
+    extract_strings_from_user_input_cached,
 )
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.context import UINPUT_SOURCES as SOURCES
@@ -23,7 +23,9 @@ def check_context_for_path_traversal(
 
     for source in SOURCES:
         if hasattr(context, source):
-            user_inputs = extract_strings_from_user_input(getattr(context, source))
+            user_inputs = extract_strings_from_user_input_cached(
+                getattr(context, source), source
+            )
             for user_input, path in user_inputs.items():
                 if detect_path_traversal(
                     path_string, user_input, check_path_start, is_url
