@@ -25,7 +25,7 @@ def check_context_for_ssrf(hostname, port, operation, context):
                         "kind": "ssrf",
                         "source": source,
                         "pathToPayload": path,
-                        "metadata": { "hostname": hostname },
+                        "metadata": {"hostname": hostname},
                         "payload": user_input,
                     }
     return {}
