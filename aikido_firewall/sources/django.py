@@ -20,7 +20,6 @@ def gen_aikido_middleware_function(former__middleware_chain):
         context = Context(
             req=request.META, raw_body=request.body.decode("utf-8"), source="django"
         )
-        logger.info("Context : %s", json.dumps(context.__dict__))
         context.set_as_current_context()
         request_handler(stage="init")
 

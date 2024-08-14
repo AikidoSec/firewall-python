@@ -42,7 +42,6 @@ def run_vulnerability_scan(kind, op, args):
         logger.debug("Not running a vulnerability scan due to incomplete data.")
         logger.debug("%s : %s", kind, op)
         return
-    logger.info("IPC Cache : %s", lifecycle_cache)
 
     if lifecycle_cache.protection_forced_off():
         #  The client turned protection off for this route, not scanning
