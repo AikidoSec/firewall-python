@@ -6,8 +6,6 @@ Aikido can rate limit urls, IPs, Users
 def should_ratelimit_request(context, reporter):
     """
     Checks if the request should be ratelimited or not
-    Context should include :
-    "remote_address", "method", "user", "route", "url"
     """
     match = reporter.conf.get_endpoint(context)
     if not match:
