@@ -48,7 +48,7 @@ class IPCLifecycleCache:
     def protection_forced_off(self):
         """Checks the stored matches for forceProtectionOff"""
         if len(self.matched_endpoints) > 0:
-            return self.matched_endpoints[0]["forceProtectionOff"]
+            return self.matched_endpoints[0]["endpoint"]["forceProtectionOff"]
         return False
 
     def save(self):
