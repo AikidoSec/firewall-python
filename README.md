@@ -34,6 +34,7 @@ Aikido Firewall for Python 3 is compatible with:
 * ✅ [`mysqlclient`](https://pypi.org/project/mysqlclient/)
 * ✅ [`PyMySQL`](https://pypi.org/project/PyMySQL/)
 * ✅ [`pymongo`](https://pypi.org/project/pymongo/)
+* ✅ [`psycopg2`](https://pypi.org/project/psycopg2)
 
 ## Reporting to your Aikido Security dashboard
 
