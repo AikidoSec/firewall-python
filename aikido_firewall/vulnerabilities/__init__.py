@@ -3,7 +3,6 @@ Exports `run_vulnerability_scan` function
 """
 
 import json
-import threading
 from aikido_firewall.context import get_current_context
 from aikido_firewall.errors import (
     AikidoException,
@@ -26,8 +25,6 @@ from .path_traversal.check_context_for_path_traversal import (
     check_context_for_path_traversal,
 )
 from aikido_firewall.background_process.ipc_lifecycle_cache import get_cache
-
-local = threading.local()
 
 
 def run_vulnerability_scan(kind, op, args):
