@@ -5,6 +5,7 @@ and listen for data sent by our sources and sinks
 
 import os
 from aikido_firewall.helpers.token import get_token_from_env
+from aikido_firewall.helpers.get_temp_dir import get_temp_dir
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.background_process.comms import (
     AikidoIPCCommunications,
@@ -12,7 +13,7 @@ from aikido_firewall.background_process.comms import (
     reset_comms,
 )
 
-IPC_ADDRESS = "/tmp/aikido_socket.sock"  # Specify the IP address and port
+IPC_ADDRESS = get_temp_dir() + "/aikido_python_socket.sock"
 
 
 def start_background_process():
