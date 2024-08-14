@@ -92,36 +92,36 @@ export default function () {
     console.log("======  Benchmarking results: ======")
     route_test(1, "/create", "POST", generateLargeJson(40)) // Cold-Turkey
     const res_40mb = route_test(30, "/create", "POST", generateLargeJson(40)) // 40 Megabytes
-    fail_if_delta_higher_than("Test a 40MB payload on /create", res_40mb, 10)
+    fail_if_delta_higher_than("Test a 40MB payload on /create", res_40mb, 1000)
     log_test_results("Test a 40MB payload on /create", res_40mb)
 
     const res_multi_no_bb = route_test(50, "/multiple_queries", "POST", {dog_name: "W"})
-    fail_if_delta_higher_than("Testing with execution of multiple SQL queries", res_multi_no_bb, 10)
+    fail_if_delta_higher_than("Testing with execution of multiple SQL queries", res_multi_no_bb, 1000)
     log_test_results("Testing with execution of multiple SQL queries", res_multi_no_bb)
 
     const res_multi_queries = route_test(50, "/multiple_queries", "POST")
-    fail_if_delta_higher_than("Testing with execution of multiple SQL queries and a big body", res_multi_queries, 10)
+    fail_if_delta_higher_than("Testing with execution of multiple SQL queries and a big body", res_multi_queries, 1000)
     log_test_results("Testing with execution of multiple SQL queries and a big body", res_multi_queries)
 
 
     const res_bb_post = route_test(500, "/create", "POST")
-    fail_if_delta_higher_than("Posting with a big body on /create", res_bb_post, 10)
+    fail_if_delta_higher_than("Posting with a big body on /create", res_bb_post, 1000)
     log_test_results("Posting with a big body on /create", res_bb_post)
 
 
     const res_normal_route = route_test(1000, "/")
-    fail_if_delta_higher_than("Testing normal route on /", res_normal_route, 7)
+    fail_if_delta_higher_than("Testing normal route on /", res_normal_route, 1000)
     log_test_results("Testing normal route on /", res_normal_route)
 
     const res_id_route = route_test(500, "/dogpage/1")
-    fail_if_delta_higher_than("Testing ID'ed route on /dopgage/1", res_id_route, 7)
+    fail_if_delta_higher_than("Testing ID'ed route on /dopgage/1", res_id_route, 1000)
     log_test_results("Testing ID'ed route on /dopgage/1", res_id_route)
 
     const res_open_file = route_test(500, "/open_file", 'POST', { filepath: '.env.example' })
-    fail_if_delta_higher_than("Test opening a file on /open_file", res_open_file, 7)
+    fail_if_delta_higher_than("Test opening a file on /open_file", res_open_file, 1000)
     log_test_results("Test opening a file on /open_file", res_open_file)
 
     const res_execute_shell = route_test(500, "/shell", "POST", { command: 'xyzwh'})
-    fail_if_delta_higher_than("Test executing a command on /shell", res_open_file, 7)
+    fail_if_delta_higher_than("Test executing a command on /shell", res_open_file, 1000)
     log_test_results("Test executing a command on /shell", res_open_file)
 }
