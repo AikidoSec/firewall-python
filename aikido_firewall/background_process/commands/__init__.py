@@ -13,6 +13,7 @@ from .should_block_user import process_should_block_user
 from .get_bypassed_ips import process_get_bypassed_ips
 from .statistics import process_statistics
 from .is_ip_allowed import process_is_ip_allowed
+from .match_endpoints import process_match_endpoints
 
 commands_map = {
     "ATTACK": process_attack,
@@ -27,6 +28,7 @@ commands_map = {
     "GET_BYPASSED_IPS": process_get_bypassed_ips,
     "STATISTICS": process_statistics,
     "IS_IP_ALLOWED": process_is_ip_allowed,
+    "MATCH_ENDPOINTS": process_match_endpoints,
 }
 
 
