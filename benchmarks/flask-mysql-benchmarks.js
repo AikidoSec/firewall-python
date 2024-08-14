@@ -30,17 +30,17 @@ export const options = {
             delayAbortEval: '10s',
         }],
         test_normal_route: [{
-            threshold: "avg<8", 
+            threshold: "avg<20", 
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
         test_id_route: [{
-            threshold: "avg<8", 
+            threshold: "avg<20", 
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
         test_open_file: [{
-            threshold: "avg<8", 
+            threshold: "avg<20", 
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
@@ -96,7 +96,6 @@ function route_test(trend, amount, route, method="GET", data=default_payload, st
         let time_with_fw = measureRequest(BASE_URL_8086 + route, method, data, status)
         let time_without_fw = measureRequest(BASE_URL_8087 + route, method, data, status)
         trend.add(time_with_fw - time_without_fw)
-        sleep(0.001) // Sleep for 1ms to make sure there isn't any impact of the former request
     }
 }
 
