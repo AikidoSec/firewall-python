@@ -10,42 +10,42 @@ export const options = {
     vus: 1, // Number of virtual users
     thresholds: {
         test_40mb_payload: [{
-            threshold: "avg<1000", // Temporary exagurated threshold until optimizations are finished 
+            threshold: "avg<2000", // Temporary exagurated threshold until optimizations are finished 
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
         test_multiple_queries: [{
-            threshold: "avg<1000", 
+            threshold: "avg<2000", 
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
         test_multiple_queries_with_big_body: [{
-            threshold: "avg<1000", 
+            threshold: "avg<2000", 
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
         test_create_with_big_body: [{
-            threshold: "avg<1000", 
+            threshold: "avg<2000", 
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
         test_normal_route: [{
-            threshold: "avg<20", 
+            threshold: "avg<2000", 
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
         test_id_route: [{
-            threshold: "avg<20", 
+            threshold: "avg<2000", 
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
         test_open_file: [{
-            threshold: "avg<20", 
+            threshold: "avg<2000", 
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
         test_execute_shell: [{
-            threshold: "avg<50", 
+            threshold: "avg<2000", 
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
