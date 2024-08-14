@@ -57,10 +57,10 @@ def aikido___call__(flask_app, environ, start_response):
     # We don't want to install werkzeug :
     # pylint: disable=import-outside-toplevel
     try:
-        request_handler(stage="init")
         context1 = Context(req=environ, raw_body={}, source="flask")
         logger.debug("Context : %s", json.dumps(context1.__dict__))
         context1.set_as_current_context()
+        request_handler(stage="init")
     except Exception as e:
         logger.info("Exception on aikido __call__ function : %s", e)
     res = flask_app.wsgi_app(environ, start_response)

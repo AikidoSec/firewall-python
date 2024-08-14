@@ -14,9 +14,24 @@ def request_handler(stage, status_code=0):
     if stage == "init":
         #  This gets executed the first time a request get's intercepted
         get_comms().send_data_to_bg_process("STATISTICS", {"action": "request"})
+
         # Now also build up the cache :
         if not hasattr(local, "ipc_cache"):
             local.ipc_cache = {"matched_endpoints": [], "bypassed_ips": []}
+
+        # Fetch bypassed ips:
+        res = get_comms().send_data_to_bg_process(
+            action="GET_BYPASSED_IPS", obj=(), receive=True
+        )
+        if res["success"]:
+            local.ipc_cache["bypassed_ips"] = res["data"]
+
+        # Fetch matched endpoints:
+        res = get_comms().send_data_to_bg_process(
+            action="MATCH_ENDPOINTS", obj=get_current_context().compress(), receive=True
+        )
+        if res["success"]:
+            local.ipc_cache["matched_endpoints"] = res["data"]
 
     elif stage == "pre_response":
         return pre_response()
