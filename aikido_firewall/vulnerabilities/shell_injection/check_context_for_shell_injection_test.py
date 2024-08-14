@@ -1,8 +1,9 @@
 import pytest
 from .check_context_for_shell_injection import check_context_for_shell_injection
+from aikido_firewall.context import Context
 
 
-class Context1:
+class Context1(Context):
     def __init__(self):
         self.cookies = {}
         self.headers = {}
@@ -15,9 +16,10 @@ class Context1:
         }
         self.source = "express"
         self.route = "/"
+        self.parsed_userinput = {}
 
 
-class Context2:
+class Context2(Context):
     def __init__(self):
         self.cookies = {}
         self.headers = {}
@@ -30,13 +32,16 @@ class Context2:
         }
         self.source = "express"
         self.route = "/"
+        self.parsed_userinput = {}
 
 
 def test_detect_shell_injection():
+    context = Context1()
+    context.set_as_current_context()
     result = check_context_for_shell_injection(
         command="binary --domain www.example`whoami`.com",
         operation="child_process.exec",
-        context=Context1(),
+        context=context,
     )
 
     expected = {
@@ -54,10 +59,12 @@ def test_detect_shell_injection():
 
 
 def test_detect_shell_injection_from_route_params():
+    context = Context2()
+    context.set_as_current_context()
     result = check_context_for_shell_injection(
         command="binary --domain www.example`whoami`.com",
         operation="child_process.exec",
-        context=Context2(),
+        context=context,
     )
 
     expected = {

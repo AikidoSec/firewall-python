@@ -6,7 +6,7 @@ import regex as re
 from .try_parse_url_path import try_parse_url_path
 
 
-def match_endpoint(context, endpoints):
+def match_endpoint(context, endpoints, multi=False):
     """
     Based on the context's url this tries to find a match in the list of endpoints
     """
@@ -18,13 +18,20 @@ def match_endpoint(context, endpoints):
         for endpoint in endpoints
         if endpoint["method"] == "*" or endpoint["method"] == context.method
     ]
+    results = []
 
-    endpoint = next(
-        (endpoint for endpoint in possible if endpoint["route"] == context.route), None
-    )
+    if not multi:
+        endpoint = next(
+            (endpoint for endpoint in possible if endpoint["route"] == context.route),
+            None,
+        )
 
-    if endpoint:
-        return {"endpoint": endpoint, "route": endpoint["route"]}
+        if endpoint:
+            return {"endpoint": endpoint, "route": endpoint["route"]}
+    else:
+        for endpoint in possible:
+            if endpoint["route"] == context.route:
+                results.append({"endpoint": endpoint, "route": endpoint["route"]})
 
     if not context.url:
         return None
@@ -45,6 +52,9 @@ def match_endpoint(context, endpoints):
         regex = re.compile(f"^{route.replace('*', '(.*)')}\/?$", re.IGNORECASE)
 
         if regex.match(path):
-            return {"endpoint": wildcard, "route": route}
-
+            if not multi:
+                return {"endpoint": wildcard, "route": route}
+            results.append({"endpoint": wildcard, "route": route})
+    if len(results) > 0:
+        return results
     return None

@@ -5,6 +5,7 @@ Simply exports the aikido background process
 import multiprocessing.connection as con
 import time
 import sched
+import traceback
 import sys
 from threading import Thread
 from queue import Queue
@@ -51,6 +52,7 @@ class AikidoBackgroundProcess:
                     break
                 except Exception as e:
                     logger.error("Exception occured in server thread : %s", e)
+                    logger.debug("Trace \n %s", traceback.format_exc())
                     break  # Return back to listening for new connections
 
     def reporting_thread(self):

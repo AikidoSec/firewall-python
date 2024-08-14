@@ -23,5 +23,5 @@ def update_service_config(reporter, res):
             endpoints=res["endpoints"],
             last_updated_at=get_unixtime_ms(),
             blocked_uids=res["blockedUserIds"],
-            allowed_ips=res["allowedIPAddresses"],
+            bypassed_ips=res["allowedIPAddresses"],
         )

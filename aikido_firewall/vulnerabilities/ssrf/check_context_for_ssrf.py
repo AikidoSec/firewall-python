@@ -1,7 +1,7 @@
 """Exports check_context_for_ssrf"""
 
 from aikido_firewall.helpers.extract_strings_from_user_input import (
-    extract_strings_from_user_input,
+    extract_strings_from_user_input_cached,
 )
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.context import UINPUT_SOURCES as SOURCES
@@ -14,9 +14,10 @@ def check_context_for_ssrf(hostname, port, operation, context):
     This will check the context for SSRF
     """
     for source in SOURCES:
-        logger.debug("Checking source %s for SSRF", source)
         if hasattr(context, source):
-            user_inputs = extract_strings_from_user_input(getattr(context, source))
+            user_inputs = extract_strings_from_user_input_cached(
+                getattr(context, source), source
+            )
             for user_input, path in user_inputs.items():
                 found = find_hostname_in_userinput(user_input, hostname, port)
                 if found and contains_private_ip_address(hostname):
@@ -25,7 +26,7 @@ def check_context_for_ssrf(hostname, port, operation, context):
                         "kind": "ssrf",
                         "source": source,
                         "pathToPayload": path,
-                        "metadata": {},
+                        "metadata": {"hostname": hostname},
                         "payload": user_input,
                     }
     return {}
