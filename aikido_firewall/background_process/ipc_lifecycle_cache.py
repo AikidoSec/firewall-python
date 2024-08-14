@@ -31,7 +31,7 @@ class IPCLifecycleCache:
         res = get_comms().send_data_to_bg_process(
             action="GET_BYPASSED_IPS", obj=(), receive=True
         )
-        if res["success"] and isinstance(res["data"], list):
+        if res["success"] and isinstance(res["data"], set):
             self.bypassed_ips = res["data"]
 
         # Fetch matched endpoints:
