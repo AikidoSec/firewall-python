@@ -3,19 +3,16 @@ on:
   push: {}
   workflow_call: {}
 jobs:
-  build:
+  dind:
     runs-on: ubuntu-latest
     services:
       docker:
-        image: docker:19.03.12
+        image: docker:19.03.12-dind
         options: >-
           --privileged
-          --name docker
-          --network host
-    timeout-minutes: 5
-    strategy:
-      matrix:
-        node-version: [18.x]
+        ports:
+          - 2375:2375
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
