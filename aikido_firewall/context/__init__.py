@@ -83,20 +83,10 @@ class Context:
         """
         local.current_context = self
 
-    def compress(self):
-        """Returns a compressed context"""
-        return Context(
-            context_obj={
-                "method": self.method,
-                "remote_address": self.remote_address,
-                "url": self.url,
-                "body": {},
-                "headers": {},
-                "query": {},
-                "cookies": {},
-                "source": self.source,
-                "route": self.route,
-                "subdomains": self.subdomains,
-                "user": self.user,
-            }
-        )
+    def get_metadata(self):
+        """Returns a context_metadata object"""
+        return {
+            "method": self.method,
+            "route": self.route,
+            "url": self.url,
+        }

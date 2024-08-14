@@ -6,23 +6,27 @@ import regex as re
 from .try_parse_url_path import try_parse_url_path
 
 
-def match_endpoint(context, endpoints, multi=False):
+def match_endpoint(context_metadata, endpoints, multi=False):
     """
     Based on the context's url this tries to find a match in the list of endpoints
     """
-    if not context.method:
+    if not context_metadata["method"]:
         return None
 
     possible = [
         endpoint
         for endpoint in endpoints
-        if endpoint["method"] == "*" or endpoint["method"] == context.method
+        if endpoint["method"] == "*" or endpoint["method"] == context_metadata["method"]
     ]
     results = []
 
     if not multi:
         endpoint = next(
-            (endpoint for endpoint in possible if endpoint["route"] == context.route),
+            (
+                endpoint
+                for endpoint in possible
+                if endpoint["route"] == context_metadata["route"]
+            ),
             None,
         )
 
@@ -30,13 +34,13 @@ def match_endpoint(context, endpoints, multi=False):
             return {"endpoint": endpoint, "route": endpoint["route"]}
     else:
         for endpoint in possible:
-            if endpoint["route"] == context.route:
+            if endpoint["route"] == context_metadata["route"]:
                 results.append({"endpoint": endpoint, "route": endpoint["route"]})
 
-    if not context.url:
+    if not context_metadata["url"]:
         return None
 
-    path = try_parse_url_path(context.url)
+    path = try_parse_url_path(context_metadata["url"])
 
     if not path:
         return None

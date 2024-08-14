@@ -10,10 +10,9 @@ from .should_ratelimit import process_should_ratelimit
 from .kill import process_kill
 from .hostnames_add import process_hostnames_add
 from .should_block_user import process_should_block_user
-from .get_bypassed_ips import process_get_bypassed_ips
 from .statistics import process_statistics
 from .is_ip_allowed import process_is_ip_allowed
-from .match_endpoints import process_match_endpoints
+from .fetch_initial_metadata import process_fetch_initial_metadata
 
 commands_map = {
     "ATTACK": process_attack,
@@ -25,10 +24,9 @@ commands_map = {
     "KILL": process_kill,
     "HOSTNAMES_ADD": process_hostnames_add,
     "SHOULD_BLOCK_USER": process_should_block_user,
-    "GET_BYPASSED_IPS": process_get_bypassed_ips,
     "STATISTICS": process_statistics,
     "IS_IP_ALLOWED": process_is_ip_allowed,
-    "MATCH_ENDPOINTS": process_match_endpoints,
+    "FETCH_INITIAL_METADATA": process_fetch_initial_metadata,
 }
 
 

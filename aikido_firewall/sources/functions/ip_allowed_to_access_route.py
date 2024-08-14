@@ -11,7 +11,7 @@ def ip_allowed_to_access_route(context, reporter):
     if ip and is_localhost_ip(ip):
         return True
 
-    matches = reporter.conf.get_endpoints(context)
+    matches = reporter.conf.get_endpoints(context.get_metadata())
     if not matches:
         return True
 

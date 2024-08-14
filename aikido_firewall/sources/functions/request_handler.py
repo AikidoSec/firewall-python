@@ -16,7 +16,7 @@ def request_handler(stage, status_code=0):
         get_comms().send_data_to_bg_process("STATISTICS", {"action": "request"})
 
         # Create a lifecycle cache
-        IPCLifecycleCache(get_current_context().compress())
+        IPCLifecycleCache(get_current_context())
 
     elif stage == "pre_response":
         return pre_response()
@@ -58,7 +58,13 @@ def pre_response():
 
     # Ratelimiting :
     ratelimit_res = comms.send_data_to_bg_process(
-        action="SHOULD_RATELIMIT", obj=compressed_context, receive=True
+        action="SHOULD_RATELIMIT",
+        obj={
+            "context_metadata": context.get_metadata(),
+            "user": context.user,
+            "remote_address": context.remote_address,
+        },
+        receive=True,
     )
     if ratelimit_res["success"] and ratelimit_res["data"]["block"]:
 

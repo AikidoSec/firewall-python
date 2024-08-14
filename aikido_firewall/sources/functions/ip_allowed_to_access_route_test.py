@@ -28,6 +28,13 @@ class SampleContext:
         self.source = source
         self.route = route
 
+    def get_metadata(self):
+        return {
+            "method": self.method,
+            "route": self.route,
+            "url": self.url,
+        }
+
 
 def create_reporter(allowed_ip_addresses):
     # Mock the reporter with the necessary attributes
