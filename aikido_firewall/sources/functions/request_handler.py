@@ -1,6 +1,5 @@
 """Exports request_handler function"""
 
-import threading
 from aikido_firewall.background_process import get_comms
 from aikido_firewall.context import get_current_context
 from aikido_firewall.helpers.is_useful_route import is_useful_route
@@ -8,8 +7,6 @@ from aikido_firewall.helpers.logging import logger
 from aikido_firewall.background_process.ipc_lifecycle_cache import (
     IPCLifecycleCache,
 )
-
-local = threading.local()
 
 
 def request_handler(stage, status_code=0):
