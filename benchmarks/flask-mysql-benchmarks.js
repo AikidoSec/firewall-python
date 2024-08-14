@@ -82,8 +82,9 @@ function log_test_results(test, res) {
 }
 function fail_if_delta_higher_than(test, res, upper_limit) {
     const avg_delta = res.avg_with_fw - res.avg_without_fw
+    let median_delta = res.median_with_fw - res.median_without_fw
     if(avg_delta > upper_limit) {
-        console.error(`Test: ${test}, failed. Average delta : ${avg_delta.toFixed(2)}ms`)
+        console.error(`Test: ${test}, failed. Average delta : ${avg_delta.toFixed(2)}ms | Median delta : ${avg_delta.toFixed(2)}ms`)
         exec.test.abort()
     }
 }
