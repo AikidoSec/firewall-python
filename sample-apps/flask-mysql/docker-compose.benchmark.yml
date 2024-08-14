@@ -1,0 +1,22 @@
+# docker-compose.prod.yml
+version: "3"
+services:
+  backend_firewall_disabled:
+    build: 
+      context: ./../../
+      dockerfile: ./sample-apps/flask-mysql/Dockerfile
+    command: sh -c "flask --app app run --debug --host=0.0.0.0 --no-reload"
+    restart: always
+    volumes:
+      - .:/app
+    ports:
+      - "8087:5000"
+    depends_on:
+      - db
+    extra_hosts:
+      - "app.local.aikido.io:host-gateway"
+    environment:
+      - FIREWALL_DISABLED=1
+  backend:
+    environment:
+      - AIKIDO_TOKEN="test_aikido_token
