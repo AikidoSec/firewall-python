@@ -8,7 +8,6 @@ from .user import process_user
 from .wrapped_package import process_wrapped_package
 from .should_ratelimit import process_should_ratelimit
 from .kill import process_kill
-from .force_protection_off import process_force_protection_off
 from .hostnames_add import process_hostnames_add
 from .should_block_user import process_should_block_user
 from .get_bypassed_ips import process_get_bypassed_ips
@@ -23,7 +22,6 @@ commands_map = {
     "WRAPPED_PACKAGE": process_wrapped_package,
     "SHOULD_RATELIMIT": process_should_ratelimit,
     "KILL": process_kill,
-    "FORCE_PROTECTION_OFF?": process_force_protection_off,
     "HOSTNAMES_ADD": process_hostnames_add,
     "SHOULD_BLOCK_USER": process_should_block_user,
     "GET_BYPASSED_IPS": process_get_bypassed_ips,
