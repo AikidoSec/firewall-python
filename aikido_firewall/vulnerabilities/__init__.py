@@ -3,6 +3,7 @@ Exports `run_vulnerability_scan` function
 """
 
 import json
+import threading
 from aikido_firewall.context import get_current_context
 from aikido_firewall.errors import (
     AikidoException,
@@ -25,6 +26,8 @@ from .path_traversal.check_context_for_path_traversal import (
     check_context_for_path_traversal,
 )
 
+local = threading.local()
+
 
 def run_vulnerability_scan(kind, op, args):
     """
@@ -33,21 +36,21 @@ def run_vulnerability_scan(kind, op, args):
     """
     context = get_current_context()
     comms = get_comms()
-    if not context or not comms:
+    if not context or not comms or not hasattr(local, "ipc_cache"):
         return
     compressed_context = context.compress()
 
-    force_protection_off = comms.send_data_to_bg_process(
-        action="FORCE_PROTECTION_OFF?", obj=compressed_context, receive=True
-    )
-    if force_protection_off["success"] and force_protection_off["data"]:
+    if (
+        local.ipc_cache["matched_endpoints"]
+        and local.ipc_cache["matched_endpoints"][0]
+        and local.ipc_cache["matched_endpoints"]["forceProtectionOff"]
+    ):
         #  The client turned protection off for this route, not scanning
         return
-
-    is_bypassed_ip = comms.send_data_to_bg_process(
-        action="IS_BYPASSED_IP", obj=compressed_context.remote_address, receive=True
-    )
-    if is_bypassed_ip["success"] and is_bypassed_ip["data"]:
+    if (
+        local.ipc_cache["bypassed_ips"]
+        and compressed_context.remote_address in local.ipc_cache["bypassed_ips"]
+    ):
         #  This IP is on the bypass list, not scanning
         return
 
