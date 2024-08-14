@@ -53,7 +53,7 @@ class Context:
         self.subdomains = get_subdomains_from_url(self.url)
         self.user = None
         self.remote_address = get_ip_from_request(req["REMOTE_ADDR"], self.headers)
-        self.cached_ui_strings = {}
+        self.parsed_userinput = {}
 
     def __reduce__(self):
         return (

@@ -42,7 +42,7 @@ def test_wsgi_context_1():
         "subdomains": [],
         "user": None,
         "remote_address": "198.51.100.23",
-        "cached_ui_strings": {},
+        "parsed_userinput": {},
     }
 
 
@@ -79,7 +79,7 @@ def test_wsgi_context_2():
         "subdomains": [],
         "user": None,
         "remote_address": "198.51.100.23",
-        "cached_ui_strings": {},
+        "parsed_userinput": {},
     }
 
 
