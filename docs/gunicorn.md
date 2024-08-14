@@ -7,7 +7,7 @@ pip install aikido_firewall
 
 2. Use the following template for your `gunicorn_config.py` file :
 ```python
-import aikido_firewall.middleware.django_gunicorn as aik
+import aikido_firewall.decorators.gunicorn as aik
 @aik.when_ready
 def when_ready(server):
     pass # You can put your code here
