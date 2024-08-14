@@ -14,19 +14,19 @@ class ServiceConfig:
         self.bypassed_ips = set(bypassed_ips)
         self.blocked_uids = set(blocked_uids)
 
-    def get_endpoint(self, context_metadata):
+    def get_endpoint(self, route_metadata):
         """
         Gets the endpoint that matches the current context
-        context_metadata object includes route, url and method
+        route_metadata object includes route, url and method
         """
-        return match_endpoint(context_metadata, self.endpoints)
+        return match_endpoint(route_metadata, self.endpoints)
 
-    def get_endpoints(self, context_metadata):
+    def get_endpoints(self, route_metadata):
         """
         Gets the endpoint that matches the current context
-        context_metadata object includes route, url and method
+        route_metadata object includes route, url and method
         """
-        return match_endpoint(context_metadata, self.endpoints, multi=True)
+        return match_endpoint(route_metadata, self.endpoints, multi=True)
 
     def is_bypassed_ip(self, ip):
         """Checks if the IP is on the bypass list"""

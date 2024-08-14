@@ -84,7 +84,7 @@ class Context:
         local.current_context = self
 
     def get_metadata(self):
-        """Returns a context_metadata object"""
+        """Returns a route_metadata object"""
         return {
             "method": self.method,
             "route": self.route,

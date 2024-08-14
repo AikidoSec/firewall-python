@@ -30,7 +30,7 @@ class IPCLifecycleCache:
         # Fetch bypassed ips:
         res = get_comms().send_data_to_bg_process(
             action="FETCH_INITIAL_METADATA",
-            obj={"context_metadata": context.get_metadata()},
+            obj={"route_metadata": context.get_metadata()},
             receive=True,
         )
         if res["success"]:

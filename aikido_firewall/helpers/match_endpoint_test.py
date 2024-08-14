@@ -4,37 +4,37 @@ from .match_endpoint import match_endpoint
 url = "http://localhost:4000/posts/3"
 
 
-def sample_context_metadata():
+def sample_route_metadata():
     return {"method": "POST", "url": url, "route": build_route_from_url(url)}
 
 
 def test_invalid_url_and_no_route():
-    context = sample_context_metadata()
+    context = sample_route_metadata()
     context["route"] = None
     context["url"] = "abc"
     assert match_endpoint(context, []) is None
 
 
 def test_no_url_and_no_route():
-    context = sample_context_metadata()
+    context = sample_route_metadata()
     context["route"] = None
     context["url"] = None
     assert match_endpoint(context, []) is None
 
 
 def test_no_method():
-    context = sample_context_metadata()
+    context = sample_route_metadata()
     context["method"] = None
     assert match_endpoint(context, []) is None
 
 
 def test_returns_undefined_if_nothing_found():
-    context = sample_context_metadata()
+    context = sample_route_metadata()
     assert match_endpoint(context, []) is None
 
 
 def test_returns_endpoint_based_on_route():
-    context = sample_context_metadata()
+    context = sample_route_metadata()
     assert match_endpoint(
         context,
         [
@@ -65,7 +65,7 @@ def test_returns_endpoint_based_on_route():
 
 
 def test_returns_endpoint_based_on_relative_url():
-    context = sample_context_metadata()
+    context = sample_route_metadata()
     context["route"] = build_route_from_url("/posts/3")
     context["url"] = "/posts/3"
     assert match_endpoint(
@@ -98,7 +98,7 @@ def test_returns_endpoint_based_on_relative_url():
 
 
 def test_returns_endpoint_based_on_wildcard():
-    context = sample_context_metadata()
+    context = sample_route_metadata()
     context["route"] = None
     assert match_endpoint(
         context,
@@ -130,7 +130,7 @@ def test_returns_endpoint_based_on_wildcard():
 
 
 def test_returns_endpoint_based_on_wildcard_with_relative_url():
-    context = sample_context_metadata()
+    context = sample_route_metadata()
     context["route"] = None
     context["url"] = "/posts/3"
     assert match_endpoint(
@@ -163,7 +163,7 @@ def test_returns_endpoint_based_on_wildcard_with_relative_url():
 
 
 def test_favors_more_specific_wildcard():
-    context = sample_context_metadata()
+    context = sample_route_metadata()
     context["route"] = None
     context["url"] = "http://localhost:4000/posts/3/comments/10"
     assert match_endpoint(
@@ -206,7 +206,7 @@ def test_favors_more_specific_wildcard():
 
 
 def test_matches_wildcard_route_with_specific_method():
-    context = sample_context_metadata()
+    context = sample_route_metadata()
     context["route"] = None
     context["url"] = "http://localhost:4000/posts/3/comments/10"
     context["method"] = "POST"
@@ -240,7 +240,7 @@ def test_matches_wildcard_route_with_specific_method():
 
 
 def test_prefers_specific_route_over_wildcard():
-    context = sample_context_metadata()
+    context = sample_route_metadata()
     context["route"] = "/api/coach"
     context["url"] = "http://localhost:4000/api/coach"
     context["method"] = "POST"
@@ -284,7 +284,7 @@ def test_prefers_specific_route_over_wildcard():
 
 
 def test_returns_multiple_endpoints_with_wildcards():
-    context = sample_context_metadata()
+    context = sample_route_metadata()
     context["route"] = None
     context["url"] = "http://localhost:4000/posts/3/comments/10"
     context["method"] = "GET"
@@ -335,7 +335,7 @@ def test_returns_multiple_endpoints_with_wildcards():
 
 
 def test_returns_multiple_endpoints_with_specific_method():
-    context = sample_context_metadata()
+    context = sample_route_metadata()
     context["route"] = None
     context["url"] = "http://localhost:4000/posts/3/comments/10"
     context["method"] = "POST"
@@ -398,7 +398,7 @@ def test_returns_multiple_endpoints_with_specific_method():
 
 
 def test_returns_no_endpoints_when_none_match():
-    context = sample_context_metadata()
+    context = sample_route_metadata()
     context["route"] = None
     context["url"] = "http://localhost:4000/unknown/route"
     context["method"] = "GET"
