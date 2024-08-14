@@ -1,4 +1,3 @@
-# docker-compose.prod.yml
 version: "3"
 services:
   backend_firewall_disabled:
@@ -19,4 +18,4 @@ services:
       - FIREWALL_DISABLED=1
   backend:
     environment:
-      - AIKIDO_TOKEN="test_aikido_token
+      - AIKIDO_TOKEN="test_aikido_token"
