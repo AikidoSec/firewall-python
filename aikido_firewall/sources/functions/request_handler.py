@@ -1,8 +1,12 @@
 """Exports request_handler function"""
 
+import threading
 from aikido_firewall.background_process import get_comms
 from aikido_firewall.context import get_current_context
 from aikido_firewall.helpers.is_useful_route import is_useful_route
+from aikido_firewall.helpers.logging import logger
+
+local = threading.local()
 
 
 def request_handler(stage, status_code=0):
@@ -10,6 +14,10 @@ def request_handler(stage, status_code=0):
     if stage == "init":
         #  This gets executed the first time a request get's intercepted
         get_comms().send_data_to_bg_process("STATISTICS", {"action": "request"})
+        # Now also build up the cache :
+        if not hasattr(local, "ipc_cache"):
+            local.ipc_cache = {"matched_endpoints": [], "bypassed_ips": []}
+
     elif stage == "pre_response":
         return pre_response()
     elif stage == "post_response":
@@ -25,7 +33,8 @@ def pre_response():
     """
     context = get_current_context()
     comms = get_comms()
-    if not context or not comms:
+    if not context or not comms or not hasattr(local, "ipc_cache"):
+        logger.info("Request was not complete, not running any pre_response code")
         return
     compressed_context = context.compress()
 
