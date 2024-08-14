@@ -1,12 +1,56 @@
 import http from 'k6/http';
 import { check, sleep, fail } from 'k6';
 import exec from 'k6/execution';
+import { Trend } from 'k6/metrics';
+
 const BASE_URL_8086 = 'http://localhost:8086';
 const BASE_URL_8087 = 'http://localhost:8087';
 
 export const options = {
     vus: 1, // Number of virtual users
-    abortOnFail: true, // Abort the test on any check failure
+    thresholds: {
+        test_40mb_payload: [{
+            threshold: "avg<1000", // Temporary exagurated threshold until optimizations are finished 
+            abortOnFail: true,
+            delayAbortEval: '10s',
+        }],
+        test_multiple_queries: [{
+            threshold: "avg<1000", 
+            abortOnFail: true,
+            delayAbortEval: '10s',
+        }],
+        test_multiple_queries_with_big_body: [{
+            threshold: "avg<1000", 
+            abortOnFail: true,
+            delayAbortEval: '10s',
+        }],
+        test_create_with_big_body: [{
+            threshold: "avg<1000", 
+            abortOnFail: true,
+            delayAbortEval: '10s',
+        }],
+        test_normal_route: [{
+            threshold: "avg<8", 
+            abortOnFail: true,
+            delayAbortEval: '10s',
+        }],
+        test_id_route: [{
+            threshold: "avg<8", 
+            abortOnFail: true,
+            delayAbortEval: '10s',
+        }],
+        test_open_file: [{
+            threshold: "avg<8", 
+            abortOnFail: true,
+            delayAbortEval: '10s',
+        }],
+        test_execute_shell: [{
+            threshold: "avg<50", 
+            abortOnFail: true,
+            delayAbortEval: '10s',
+        }],
+        
+    },
 };
 const default_headers = {
     "User-Agent":
@@ -22,29 +66,14 @@ const default_payload = {
 };
 function generateLargeJson(sizeInMB) {
     const sizeInBytes = sizeInMB * 1024; // Convert MB to Kilobytes
-    let currentSize = 0;
     let long_text = "b".repeat(sizeInBytes)
     return {
         dog_name: "test",
         long_texts: new Array(1024).fill(long_text)
     }
 }
-function calculateMedian(arr) {
-    if (arr.length === 0) return null; // Handle empty array case
 
-    const sortedArr = arr.slice().sort((a, b) => a - b); // Sort the array
-    const mid = Math.floor(sortedArr.length / 2);
-
-    if (sortedArr.length % 2 === 0) {
-        // If even, return the average of the two middle numbers
-        return (sortedArr[mid - 1] + sortedArr[mid]) / 2;
-    } else {
-        // If odd, return the middle number
-        return sortedArr[mid];
-    }
-}
-
-function measureRequest(url, method = 'GET', payload, headers=default_headers) {
+function measureRequest(url, method = 'GET', payload, status_code=200, headers=default_headers) {
     let res;
     if (method === 'POST') {
         res = http.post(url, payload, {
@@ -57,71 +86,46 @@ function measureRequest(url, method = 'GET', payload, headers=default_headers) {
         });
     }
     check(res, {
-        'status is 200': (r) => r.status === 200,
+        'status is correct': (r) => r.status === status_code,
     });
     return res.timings.duration; // Return the duration of the request
 }
-function route_test(amount, route, method="GET", data=default_payload) {
-    let time_in_mss_8086 = []
-    let time_in_mss_8087 = []
+
+function route_test(trend, amount, route, method="GET", data=default_payload, status=200) {
     for (let i = 0; i < amount; i++) {
-        time_in_mss_8086.push(measureRequest(BASE_URL_8086 + route, method, data));
-        time_in_mss_8087.push(measureRequest(BASE_URL_8087 + route, method, data));
-    }
-    return {
-        median_without_fw: calculateMedian(time_in_mss_8087),
-        median_with_fw: calculateMedian(time_in_mss_8086),
-        avg_without_fw: time_in_mss_8087.reduce((acc, num) => acc + num, 0)/amount,
-        avg_with_fw: time_in_mss_8086.reduce((acc, num) => acc + num, 0)/amount
+        let time_with_fw = measureRequest(BASE_URL_8086 + route, method, data, status)
+        let time_without_fw = measureRequest(BASE_URL_8087 + route, method, data, status)
+        trend.add(time_with_fw - time_without_fw)
+        sleep(0.001) // Sleep for 1ms to make sure there isn't any impact of the former request
     }
 }
-function log_test_results(test, res) {
-    let avg_delta = res.avg_with_fw - res.avg_without_fw
-    let median_delta = res.median_with_fw - res.median_without_fw
-    console.log(`\x1b[35m 🚅 ${test}\x1b[0m: ΔAverage is \x1b[4m${avg_delta.toFixed(2)}ms\x1b[0m | ΔMedian is \x1b[4m${median_delta.toFixed(2)}ms\x1b[0m`)
-}
-function fail_if_delta_higher_than(test, res, upper_limit) {
-    const avg_delta = res.avg_with_fw - res.avg_without_fw
-    let median_delta = res.median_with_fw - res.median_without_fw
-    if(avg_delta > upper_limit) {
-        console.error(`Test: ${test}, failed. Average delta : ${avg_delta.toFixed(2)}ms | Median delta : ${avg_delta.toFixed(2)}ms`)
-        exec.test.abort()
+
+export function handleSummary(data) {
+    for (const [metricName, metricValue] of Object.entries(data.metrics)) {
+        if(!metricName.startsWith('test_') || metricValue.values.avg == 0) {
+            continue
+        }
+        let values = metricValue.values
+        console.log(`\x1b[35m 🚅 ${metricName}\x1b[0m: ΔAverage is \x1b[4m${values.avg.toFixed(2)}ms\x1b[0m | ΔMedian is \x1b[4m${values.med.toFixed(2)}ms\x1b[0m`);
     }
+    return {stdout: ""};
 }
+
+let test_40mb_payload = new Trend('test_40mb_payload')
+let test_multiple_queries = new Trend("test_multiple_queries")
+let test_multiple_queries_with_big_body = new Trend("test_multiple_queries_with_big_body")
+let test_create_with_big_body = new Trend("test_create_with_big_body")
+let test_normal_route = new Trend("test_normal_route")
+let test_id_route = new Trend("test_id_route")
+let test_open_file = new Trend("test_open_file")
+let test_execute_shell = new Trend("test_execute_shell")
 export default function () {
-    console.log("======  Benchmarking results: ======")
-    route_test(1, "/create", "POST", generateLargeJson(40)) // Cold-Turkey
-    const res_40mb = route_test(30, "/create", "POST", generateLargeJson(40)) // 40 Megabytes
-    fail_if_delta_higher_than("Test a 40MB payload on /create", res_40mb, 1000)
-    log_test_results("Test a 40MB payload on /create", res_40mb)
-
-    const res_multi_no_bb = route_test(50, "/multiple_queries", "POST", {dog_name: "W"})
-    fail_if_delta_higher_than("Testing with execution of multiple SQL queries", res_multi_no_bb, 1000)
-    log_test_results("Testing with execution of multiple SQL queries", res_multi_no_bb)
-
-    const res_multi_queries = route_test(50, "/multiple_queries", "POST")
-    fail_if_delta_higher_than("Testing with execution of multiple SQL queries and a big body", res_multi_queries, 1000)
-    log_test_results("Testing with execution of multiple SQL queries and a big body", res_multi_queries)
-
-
-    const res_bb_post = route_test(500, "/create", "POST")
-    fail_if_delta_higher_than("Posting with a big body on /create", res_bb_post, 1000)
-    log_test_results("Posting with a big body on /create", res_bb_post)
-
-
-    const res_normal_route = route_test(1000, "/")
-    fail_if_delta_higher_than("Testing normal route on /", res_normal_route, 1000)
-    log_test_results("Testing normal route on /", res_normal_route)
-
-    const res_id_route = route_test(500, "/dogpage/1")
-    fail_if_delta_higher_than("Testing ID'ed route on /dopgage/1", res_id_route, 1000)
-    log_test_results("Testing ID'ed route on /dopgage/1", res_id_route)
-
-    const res_open_file = route_test(500, "/open_file", 'POST', { filepath: '.env.example' })
-    fail_if_delta_higher_than("Test opening a file on /open_file", res_open_file, 1000)
-    log_test_results("Test opening a file on /open_file", res_open_file)
-
-    const res_execute_shell = route_test(500, "/shell", "POST", { command: 'xyzwh'})
-    fail_if_delta_higher_than("Test executing a command on /shell", res_open_file, 1000)
-    log_test_results("Test executing a command on /shell", res_open_file)
+    route_test(test_40mb_payload, 30, "/create", "POST", generateLargeJson(40)) // 40 Megabytes
+    route_test(test_multiple_queries, 50, "/multiple_queries", "POST", {dog_name: "W"})
+    route_test(test_multiple_queries_with_big_body, 50, "/multiple_queries", "POST")
+    route_test(test_create_with_big_body, 500, "/create", "POST")
+    route_test(test_normal_route, 500, "/")
+    route_test(test_id_route, 500, "/dogpage/1")
+    route_test(test_open_file, 500, "/open_file", 'POST', { filepath: '.env.example' })
+    route_test(test_execute_shell, 500, "/shell", "POST", { command: 'xyzwh'})
 }
