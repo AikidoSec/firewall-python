@@ -41,7 +41,7 @@ def pre_response():
     res = comms.send_data_to_bg_process(
         action="IS_IP_ALLOWED",
         obj={
-            "route_metadata": context.get_metadata(),
+            "route_metadata": context.get_route_metadata(),
             "remote_address": context.remote_address,
         },
         receive=True,
@@ -64,7 +64,7 @@ def pre_response():
     ratelimit_res = comms.send_data_to_bg_process(
         action="SHOULD_RATELIMIT",
         obj={
-            "route_metadata": context.get_metadata(),
+            "route_metadata": context.get_route_metadata(),
             "user": context.user,
             "remote_address": context.remote_address,
         },
