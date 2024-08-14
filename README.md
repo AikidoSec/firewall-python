@@ -65,3 +65,15 @@ See [Reporting to Aikido](#reporting-to-your-aikido-security-dashboard) to learn
 ## Bug bounty program
 
 Our bug bounty program is public and can be found by all registered Intigriti users at: https://app.intigriti.com/researcher/programs/aikido/aikidoruntime
+
+## Contributing
+
+See [CONTRIBUTING.md](.github/CONTRIBUTING.md) for more information.
+
+## Code of Conduct
+
+See [CODE_OF_CONDUCT.md](.github/CODE_OF_CONDUCT.md) for more information.
+
+## Security
+
+See [SECURITY.md](.github/SECURITY.md) for more information.
