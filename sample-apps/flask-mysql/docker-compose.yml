@@ -31,6 +31,7 @@ services:
       - "app.local.aikido.io:host-gateway"
     environment:
       - FIREWALL_DISABLED=0
+      - AIKIDO_TOKEN="test_aikido_token"
 
 volumes:
   db_data:

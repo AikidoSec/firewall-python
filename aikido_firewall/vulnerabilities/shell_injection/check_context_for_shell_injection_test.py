@@ -16,7 +16,7 @@ class Context1(Context):
         }
         self.source = "express"
         self.route = "/"
-        self.cached_ui_strings = {}
+        self.parsed_userinput = {}
 
 
 class Context2(Context):
@@ -32,7 +32,7 @@ class Context2(Context):
         }
         self.source = "express"
         self.route = "/"
-        self.cached_ui_strings = {}
+        self.parsed_userinput = {}
 
 
 def test_detect_shell_injection():

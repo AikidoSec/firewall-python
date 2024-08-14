@@ -1,11 +1,12 @@
 import http from 'k6/http';
-import { check, sleep } from 'k6';
-
+import { check, sleep, fail } from 'k6';
+import exec from 'k6/execution';
 const BASE_URL_8086 = 'http://localhost:8086';
 const BASE_URL_8087 = 'http://localhost:8087';
 
 export const options = {
     vus: 1, // Number of virtual users
+    abortOnFail: true, // Abort the test on any check failure
 };
 const default_headers = {
     "User-Agent":
@@ -79,30 +80,48 @@ function log_test_results(test, res) {
     let median_delta = res.median_with_fw - res.median_without_fw
     console.log(`\x1b[35m 🚅 ${test}\x1b[0m: ΔAverage is \x1b[4m${avg_delta.toFixed(2)}ms\x1b[0m | ΔMedian is \x1b[4m${median_delta.toFixed(2)}ms\x1b[0m`)
 }
+function fail_if_delta_higher_than(test, res, upper_limit) {
+    const avg_delta = res.avg_with_fw - res.avg_without_fw
+    let median_delta = res.median_with_fw - res.median_without_fw
+    if(avg_delta > upper_limit) {
+        console.error(`Test: ${test}, failed. Average delta : ${avg_delta.toFixed(2)}ms | Median delta : ${avg_delta.toFixed(2)}ms`)
+        exec.test.abort()
+    }
+}
 export default function () {
     console.log("======  Benchmarking results: ======")
     route_test(1, "/create", "POST", generateLargeJson(40)) // Cold-Turkey
     const res_40mb = route_test(30, "/create", "POST", generateLargeJson(40)) // 40 Megabytes
+    fail_if_delta_higher_than("Test a 40MB payload on /create", res_40mb, 1000)
     log_test_results("Test a 40MB payload on /create", res_40mb)
 
     const res_multi_no_bb = route_test(50, "/multiple_queries", "POST", {dog_name: "W"})
+    fail_if_delta_higher_than("Testing with execution of multiple SQL queries", res_multi_no_bb, 1000)
     log_test_results("Testing with execution of multiple SQL queries", res_multi_no_bb)
 
     const res_multi_queries = route_test(50, "/multiple_queries", "POST")
+    fail_if_delta_higher_than("Testing with execution of multiple SQL queries and a big body", res_multi_queries, 1000)
     log_test_results("Testing with execution of multiple SQL queries and a big body", res_multi_queries)
 
+
     const res_bb_post = route_test(500, "/create", "POST")
+    fail_if_delta_higher_than("Posting with a big body on /create", res_bb_post, 1000)
     log_test_results("Posting with a big body on /create", res_bb_post)
 
+
     const res_normal_route = route_test(1000, "/")
+    fail_if_delta_higher_than("Testing normal route on /", res_normal_route, 1000)
     log_test_results("Testing normal route on /", res_normal_route)
 
     const res_id_route = route_test(500, "/dogpage/1")
+    fail_if_delta_higher_than("Testing ID'ed route on /dopgage/1", res_id_route, 1000)
     log_test_results("Testing ID'ed route on /dopgage/1", res_id_route)
 
     const res_open_file = route_test(500, "/open_file", 'POST', { filepath: '.env.example' })
+    fail_if_delta_higher_than("Test opening a file on /open_file", res_open_file, 1000)
     log_test_results("Test opening a file on /open_file", res_open_file)
 
     const res_execute_shell = route_test(500, "/shell", "POST", { command: 'xyzwh'})
+    fail_if_delta_higher_than("Test executing a command on /shell", res_open_file, 1000)
     log_test_results("Test executing a command on /shell", res_open_file)
 }
