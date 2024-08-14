@@ -3,7 +3,7 @@ on:
   push: {}
   workflow_call: {}
 jobs:
-  dind:
+  benchmark:
     runs-on: ubuntu-latest
     services:
       docker:
@@ -32,5 +32,5 @@ jobs:
         uses: grafana/setup-k6-action@v1
       - name: Run flask-mysql k6 Benchmark
         run: |
-          k6 run ./benchmarks/flask-mysql-benchmarks.js
+          k6 run -q ./benchmarks/flask-mysql-benchmarks.js
 
