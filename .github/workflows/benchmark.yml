@@ -5,13 +5,6 @@ on:
 jobs:
   benchmark:
     runs-on: ubuntu-latest
-    services:
-      docker:
-        image: docker:19.03.12-dind
-        options: >-
-          --privileged
-        ports:
-          - 2375:2375
     timeout-minutes: 10
     steps:
       - name: Checkout code
