@@ -28,11 +28,8 @@ jobs:
         working-directory: ./sample-apps/flask-mysql
         run: |
           docker-compose -f docker-compose.yml -f docker-compose.firewall_disabled.yml up --build -d
-      - name: Install k6
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y k6
-
+      - name: Install K6
+        uses: grafana/setup-k6-action@v1
       - name: Run flask-mysql k6 Benchmark
         run: |
           k6 run ./benchmarks/flask-mysql-benchmarks.js
