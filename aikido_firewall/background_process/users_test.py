@@ -23,30 +23,16 @@ def test_users(users, monkeypatch):
     assert user1["lastSeenAt"] == user1["firstSeenAt"] == 1
 
     # Simulate the passage of time
-<<<<<<< Updated upstream
-    time.sleep(0.002)  # Sleep for 2ms to simulate ticking the clock
-=======
     monkeypatch.setattr(
         "aikido_firewall.helpers.get_current_unixtime_ms.get_unixtime_ms", lambda: 2
     )
->>>>>>> Stashed changes
     users.add_user({"id": "1", "name": "John Doe", "lastIpAddress": "1.2.3.4"})
     user1_updated = users.as_array()[0]
     assert user1_updated["id"] == "1"
     assert user1_updated["name"] == "John Doe"
     assert user1_updated["lastIpAddress"] == "1.2.3.4"
-<<<<<<< Updated upstream
-    assert (
-        user1_updated["lastSeenAt"] >= user1_updated["firstSeenAt"]
-    )  # lastSeenAt should be >= firstSeenAt
-    assert (
-        user1_updated["firstSeenAt"] + 1 <= user1_updated["lastSeenAt"]
-        and user1_updated["lastSeenAt"] <= user1_updated["firstSeenAt"] + 3
-    )  # lastSeenAt should be +2, we allow a range from +1 to +3 for testing
-=======
     assert user1_updated["lastSeenAt"] == 2
     assert user1_updated["firstSeenAt"] == 1
->>>>>>> Stashed changes
 
     users.add_user({"id": "2", "name": "Jane", "lastIpAddress": "1.2.3.4"})
     user2 = users.as_array()[1]
