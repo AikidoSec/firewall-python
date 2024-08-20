@@ -50,7 +50,7 @@ class Reporter:
     def start(self, event_scheduler):
         """Send out start event and add heartbeats"""
         res = self.on_start()
-        if res["error"] == "invalid_token":
+        if res.get("error", None) == "invalid_token":
             logger.info(
                 "Token was invalid, not starting heartbeats and realtime polling."
             )
