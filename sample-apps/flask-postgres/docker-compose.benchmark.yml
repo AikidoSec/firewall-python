@@ -1,0 +1,23 @@
+version: "3"
+services:
+  backend_firewall_disabled:
+    build: 
+      context: ./../../
+      dockerfile: ./sample-apps/flask-postgres/Dockerfile
+    command: sh -c "flask --app app run --debug --host=0.0.0.0"
+    restart: always
+    volumes:
+      - .:/app
+    ports:
+      - "8091:5000"
+    depends_on:
+      - db
+    networks:
+      - default_network
+    extra_hosts:
+      - "app.local.aikido.io:host-gateway"
+    environment:
+      - FIREWALL_DISABLED=1
+  backend:
+    environment:
+      - AIKIDO_TOKEN="test_aikido_token"

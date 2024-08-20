@@ -3,41 +3,51 @@ Flask source module, intercepts flask import and adds Aikido middleware
 """
 
 import copy
-import json
-from io import BytesIO
 import importhook
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.context import Context
 from aikido_firewall.background_process.packages import add_wrapped_package
 from .functions.request_handler import request_handler
+from aikido_firewall.context import get_current_context
 
 
-class AikidoMiddleware:
+def generate_aikido_view_func_wrapper(former_view_func):
     """
-    Aikido WSGI Middleware for ratelimiting and route reporting
+    Generates our own wrapper for the function in self.view_functions[]
     """
 
-    def __init__(self, app, flask_app=None):
-        self.app = app
-        self.flask_app = flask_app
+    def aikido_view_func(*args, **kwargs):
+        from werkzeug.exceptions import HTTPException
+        from flask.globals import request_ctx
 
-    def __call__(self, environ, start_response):
-        response = request_handler(stage="pre_response")
-        if response:
-            from flask import jsonify  #  We don't want to install flask
+        req = request_ctx.request
+        # Set body :
+        context = get_current_context()
+        if context:
+            if req.is_json:
+                context.body = req.get_json()
+                context.set_as_current_context()
+            else:
+                context.body = req.form
+                context.set_as_current_context()
 
-            with self.flask_app.app_context():
-                start_response(f"{response[1]} Aikido", [])
-                return [response[0].encode("utf-8")]
-
-        def custom_start_response(status, headers):
-            """Is current route useful snippet :"""
-            status_code = int(status.split(" ")[0])
+        pre_response = request_handler(stage="pre_response")
+        if pre_response:
+            return pre_response[0], pre_response[1]
+        try:
+            res = former_view_func(*args, **kwargs)
+            status_code = 200
+            if isinstance(res, tuple):
+                status_code = res[1]
+            elif hasattr(res, "status_code"):
+                status_code = res.status_code
             request_handler(stage="post_response", status_code=status_code)
-            return start_response(status, headers)
+            return res
+        except HTTPException as e:
+            request_handler(stage="post_response", status_code=e.code)
+            raise e
 
-        response = self.app(environ, custom_start_response)
-        return response
+    return aikido_view_func
 
 
 def aikido___call__(flask_app, environ, start_response):
@@ -45,16 +55,9 @@ def aikido___call__(flask_app, environ, start_response):
     # We don't want to install werkzeug :
     # pylint: disable=import-outside-toplevel
     try:
-        request_handler(stage="init")
-        #  https://stackoverflow.com/a/11163649 :
-        length = int(environ.get("CONTENT_LENGTH") or 0)
-        body = environ["wsgi.input"].read(length)
-        # replace the stream since it was exhausted by read()
-        environ["wsgi.input"] = BytesIO(body)
-
-        context1 = Context(req=environ, raw_body=body.decode("utf-8"), source="flask")
-        logger.debug("Context : %s", json.dumps(context1.__dict__))
+        context1 = Context(req=environ, raw_body={}, source="flask")
         context1.set_as_current_context()
+        request_handler(stage="init")
     except Exception as e:
         logger.info("Exception on aikido __call__ function : %s", e)
     res = flask_app.wsgi_app(environ, start_response)
@@ -67,18 +70,24 @@ def on_flask_import(flask):
     Hook 'n wrap on `flask.app`
     Our goal is to wrap the __init__ function of the "Flask" class,
     so we can insert our middleware. Returns : Modified flask.app object
+
+    Flask class |-> App class |-> Scaffold class
+    @app.route is implemented in Scaffold and calls `add_url_rule` in App class
+    This function writes to self.view_functions[endpoint] = view_func
+    The only other reference where view_functions is called is on this line:
+    https://github.com/pallets/flask/blob/8a6cdf1e2a5efa81c30f6166602064ceefb0a35b/src/flask/app.py#L882
+    So we would have to wrap the `ensure_sync` function of the app object
     """
     modified_flask = importhook.copy_module(flask)
 
-    prev_flask_init = copy.deepcopy(flask.Flask.__init__)
+    def aikido_ensure_sync(_self, func):
+        """
+        We're wrapping this function, so we can wrap the passed along function `func`
+        https://github.com/pallets/flask/blob/8a6cdf1e2a5efa81c30f6166602064ceefb0a35b/src/flask/app.py#L946
+        """
+        return generate_aikido_view_func_wrapper(func)
 
-    def aikido_flask_init(_self, *args, **kwargs):
-        prev_flask_init(_self, *args, **kwargs)
-        setattr(_self, "__call__", aikido___call__)
-        _self.wsgi_app = AikidoMiddleware(_self.wsgi_app, _self)
-
-    # pylint: disable=no-member
-    setattr(modified_flask.Flask, "__init__", aikido_flask_init)
     setattr(modified_flask.Flask, "__call__", aikido___call__)
+    setattr(modified_flask.Flask, "ensure_sync", aikido_ensure_sync)
     add_wrapped_package("flask")
     return modified_flask

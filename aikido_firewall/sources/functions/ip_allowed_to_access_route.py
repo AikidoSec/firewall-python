@@ -3,15 +3,15 @@
 from aikido_firewall.helpers.is_localhost_ip import is_localhost_ip
 
 
-def ip_allowed_to_access_route(context, reporter):
+def ip_allowed_to_access_route(remote_address, route_metadata, reporter):
     """
     Checks if the ip address can access the route, given the service conf
     """
-    ip = context.remote_address
+    ip = remote_address
     if ip and is_localhost_ip(ip):
         return True
 
-    matches = reporter.conf.get_endpoints(context)
+    matches = reporter.conf.get_endpoints(route_metadata)
     if not matches:
         return True
 
@@ -25,11 +25,11 @@ def ip_allowed_to_access_route(context, reporter):
         if len(endpoint["allowedIPAddresses"]) == 0:
             #  We will continue to check all the other matches
             continue
-        if not context.remote_address:
+        if not ip:
             # We only check it here because if allowedIPAddresses isn't set
             # We don't want to change any default behaviour
             return False
-        if not context.remote_address in endpoint["allowedIPAddresses"]:
+        if not ip in endpoint["allowedIPAddresses"]:
             # The IP is not in the allowlist, so block
             return False
     return True

@@ -3,6 +3,10 @@
 from aikido_firewall.background_process import get_comms
 from aikido_firewall.context import get_current_context
 from aikido_firewall.helpers.is_useful_route import is_useful_route
+from aikido_firewall.helpers.logging import logger
+from aikido_firewall.background_process.ipc_lifecycle_cache import (
+    IPCLifecycleCache,
+)
 
 
 def request_handler(stage, status_code=0):
@@ -10,6 +14,10 @@ def request_handler(stage, status_code=0):
     if stage == "init":
         #  This gets executed the first time a request get's intercepted
         get_comms().send_data_to_bg_process("STATISTICS", {"action": "request"})
+
+        # Create a lifecycle cache
+        IPCLifecycleCache(get_current_context())
+
     elif stage == "pre_response":
         return pre_response()
     elif stage == "post_response":
@@ -26,11 +34,17 @@ def pre_response():
     context = get_current_context()
     comms = get_comms()
     if not context or not comms:
+        logger.info("Request was not complete, not running any pre_response code")
         return
 
     # IP Allowlist:
     res = comms.send_data_to_bg_process(
-        action="IS_IP_ALLOWED", obj=(context,), receive=True
+        action="IS_IP_ALLOWED",
+        obj={
+            "route_metadata": context.get_route_metadata(),
+            "remote_address": context.remote_address,
+        },
+        receive=True,
     )
     if res["success"] and not res["data"]:
         message = "Your IP address is not allowed to access this resource."
@@ -48,7 +62,13 @@ def pre_response():
 
     # Ratelimiting :
     ratelimit_res = comms.send_data_to_bg_process(
-        action="SHOULD_RATELIMIT", obj=context, receive=True
+        action="SHOULD_RATELIMIT",
+        obj={
+            "route_metadata": context.get_route_metadata(),
+            "user": context.user,
+            "remote_address": context.remote_address,
+        },
+        receive=True,
     )
     if ratelimit_res["success"] and ratelimit_res["data"]["block"]:
 

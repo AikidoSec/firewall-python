@@ -11,7 +11,7 @@ from threading import Thread
 from queue import Queue
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.background_process.reporter import Reporter
-from aikido_firewall.helpers.should_block import should_block
+from aikido_firewall.helpers.check_env_for_blocking import check_env_for_blocking
 from aikido_firewall.helpers.token import get_token_from_env
 from aikido_firewall.background_process.api.http_api import ReportingApiHTTP
 from .commands import process_incoming_command
@@ -66,7 +66,7 @@ class AikidoBackgroundProcess:
         api = ReportingApiHTTP("http://app.local.aikido.io/")
         # We need to pass along the scheduler so that the heartbeat also gets sent
         self.reporter = Reporter(
-            block=should_block(),
+            block=check_env_for_blocking(),
             api=api,
             token=get_token_from_env(),
             serverless=False,

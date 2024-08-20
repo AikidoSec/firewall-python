@@ -1,5 +1,11 @@
-import aikido_firewall # Aikido package import
-aikido_firewall.protect()
+from dotenv import load_dotenv
+import os
+load_dotenv()
+firewall_disabled = os.getenv("FIREWALL_DISABLED")
+if firewall_disabled is not None:
+    if firewall_disabled.lower() != "1":
+        import aikido_firewall # Aikido package import
+        aikido_firewall.protect()
 
 from flask import Flask, render_template, request
 import psycopg2

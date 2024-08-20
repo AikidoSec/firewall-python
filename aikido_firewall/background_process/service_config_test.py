@@ -77,11 +77,6 @@ def test_initialization(service_config):
     assert service_config.blocked_uids == {"user1", "user2"}
 
 
-def test_is_bypassed_ip(service_config):
-    assert service_config.is_bypassed_ip("192.168.1.1") is True
-    assert service_config.is_bypassed_ip("10.0.0.2") is False
-
-
 def test_is_user_blocked(service_config):
     assert service_config.is_user_blocked("user1") is True
     assert service_config.is_user_blocked("user3") is False

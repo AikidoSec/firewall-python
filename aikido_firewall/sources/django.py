@@ -17,12 +17,11 @@ def gen_aikido_middleware_function(former__middleware_chain):
     """
 
     def aikido_middleware_function(request):
-        request_handler(stage="init")
         context = Context(
             req=request.META, raw_body=request.body.decode("utf-8"), source="django"
         )
-        logger.info("Context : %s", json.dumps(context.__dict__))
         context.set_as_current_context()
+        request_handler(stage="init")
 
         res = former__middleware_chain(request)
         request_handler(stage="post_response", status_code=res.status_code)

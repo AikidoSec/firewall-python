@@ -29,7 +29,15 @@ def test_process_should_ratelimit(
     """Test rate limiting behavior based on different return values."""
     # Arrange
     mock_bg_process.reporter = Mock()
-    data = {"key": "value"}  # Replace with appropriate test data
+    data = {
+        "route_metadata": {
+            "route": "/test",
+            "url": "http://example.com/test",
+            "method": "GET",
+        },
+        "remote_address": "192.168.1.1",
+        "user": {"id": 1, "name": "Test User"},
+    }
     with patch(
         "aikido_firewall.ratelimiting.should_ratelimit_request",
         return_value=should_ratelimit,
@@ -45,7 +53,15 @@ def test_process_should_ratelimit_multiple_calls(mock_bg_process, mock_conn):
     """Test multiple calls to process_should_ratelimit."""
     # Arrange
     mock_bg_process.reporter = Mock()
-    data = {"key": "value"}  # Replace with appropriate test data
+    data = {
+        "route_metadata": {
+            "route": "/test",
+            "url": "http://example.com/test",
+            "method": "GET",
+        },
+        "remote_address": "192.168.1.1",
+        "user": {"id": 1, "name": "Test User"},
+    }
     with patch(
         "aikido_firewall.ratelimiting.should_ratelimit_request",
         side_effect=[True, False],
@@ -67,7 +83,15 @@ def test_process_should_ratelimit_with_different_reporter(mock_conn):
     mock_bg_process_1.reporter = Mock(name="Reporter1")
     mock_bg_process_2 = Mock()
     mock_bg_process_2.reporter = Mock(name="Reporter2")
-    data = {"key": "value"}  # Replace with appropriate test data
+    data = {
+        "route_metadata": {
+            "route": "/test",
+            "url": "http://example.com/test",
+            "method": "GET",
+        },
+        "remote_address": "192.168.1.1",
+        "user": {"id": 1, "name": "Test User"},
+    }
 
     with patch(
         "aikido_firewall.ratelimiting.should_ratelimit_request", return_value=True
