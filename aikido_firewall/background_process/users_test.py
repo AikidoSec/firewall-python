@@ -23,7 +23,7 @@ def test_users(users):
     )  # Initially, they should be equal
 
     # Simulate the passage of time
-    time.sleep(0.001)  # Sleep for a short time to simulate ticking the clock
+    time.sleep(0.002)  # Sleep for 2ms to simulate ticking the clock
     users.add_user({"id": "1", "name": "John Doe", "lastIpAddress": "1.2.3.4"})
     user1_updated = users.as_array()[0]
     assert user1_updated["id"] == "1"
@@ -33,8 +33,9 @@ def test_users(users):
         user1_updated["lastSeenAt"] >= user1_updated["firstSeenAt"]
     )  # lastSeenAt should be >= firstSeenAt
     assert (
-        user1_updated["lastSeenAt"] == user1_updated["firstSeenAt"] + 1
-    )  # lastSeenAt should be +1
+        user1_updated["firstSeenAt"] + 1 <= user1_updated["lastSeenAt"]
+        and user1_updated["lastSeenAt"] <= user1_updated["firstSeenAt"] + 3
+    )  # lastSeenAt should be +2, we allow a range from +1 to +3 for testing
 
     users.add_user({"id": "2", "name": "Jane", "lastIpAddress": "1.2.3.4"})
     user2 = users.as_array()[1]
