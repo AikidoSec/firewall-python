@@ -11,34 +11,26 @@ from aikido_firewall.context import Context
 from aikido_firewall.background_process.packages import add_wrapped_package
 from .functions.request_handler import request_handler
 
-
-class AikidoMiddleware:
+def aikido_middleware_call(flask_app, environ, start_response):
     """
     Aikido WSGI Middleware for ratelimiting and route reporting
     """
+    response = request_handler(stage="pre_response")
+    if response:
+        from flask import jsonify  #  We don't want to install flask
 
-    def __init__(self, app, flask_app=None):
-        self.app = app
-        self.flask_app = flask_app
+        with flask_app.app_context():
+            start_response(f"{response[1]} Aikido", [])
+            return [response[0].encode("utf-8")]
 
-    def __call__(self, environ, start_response):
-        response = request_handler(stage="pre_response")
-        if response:
-            from flask import jsonify  #  We don't want to install flask
+    def custom_start_response(status, headers):
+        """Is current route useful snippet :"""
+        status_code = int(status.split(" ")[0])
+        request_handler(stage="post_response", status_code=status_code)
+        return start_response(status, headers)
 
-            with self.flask_app.app_context():
-                start_response(f"{response[1]} Aikido", [])
-                return [response[0].encode("utf-8")]
-
-        def custom_start_response(status, headers):
-            """Is current route useful snippet :"""
-            status_code = int(status.split(" ")[0])
-            request_handler(stage="post_response", status_code=status_code)
-            return start_response(status, headers)
-
-        response = self.app(environ, custom_start_response)
-        return response
-
+    response = flask_app.wsgi_app(environ, custom_start_response)
+    return response
 
 def aikido___call__(flask_app, environ, start_response):
     """Aikido's __call__ wrapper"""
@@ -57,8 +49,7 @@ def aikido___call__(flask_app, environ, start_response):
         context1.set_as_current_context()
     except Exception as e:
         logger.info("Exception on aikido __call__ function : %s", e)
-    res = flask_app.wsgi_app(environ, start_response)
-    return res
+    return aikido_middleware_call(flask_app, environ, start_response)
 
 
 @importhook.on_import("flask.app")
@@ -69,16 +60,7 @@ def on_flask_import(flask):
     so we can insert our middleware. Returns : Modified flask.app object
     """
     modified_flask = importhook.copy_module(flask)
-
-    prev_flask_init = copy.deepcopy(flask.Flask.__init__)
-
-    def aikido_flask_init(_self, *args, **kwargs):
-        prev_flask_init(_self, *args, **kwargs)
-        setattr(_self, "__call__", aikido___call__)
-        _self.wsgi_app = AikidoMiddleware(_self.wsgi_app, _self)
-
     # pylint: disable=no-member
-    setattr(modified_flask.Flask, "__init__", aikido_flask_init)
     setattr(modified_flask.Flask, "__call__", aikido___call__)
     add_wrapped_package("flask")
     return modified_flask
