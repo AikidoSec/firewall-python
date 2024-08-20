@@ -63,7 +63,7 @@ jobs:
 
     environment:
       name: pypi
-      url: https://pypi.org/p/aikido_zen
+      url: https://pypi.org/p/aikido_firewall
 
     permissions:
       id-token: write  # IMPORTANT: mandatory for trusted publishing
