@@ -1,5 +1,5 @@
 """
-Contains the `IPCLifecycleCache` cache
+Contains the `IPCLifecycleCache` cache for the duration of a single request
 """
 
 import threading
