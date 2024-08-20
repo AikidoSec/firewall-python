@@ -28,5 +28,4 @@ def on_http_import(http):
 
     # pylint: disable=no-member
     setattr(http.HTTPConnection, "putrequest", aik_new_putrequest)
-    logger.debug("Wrapped `http` module")
     return modified_http

@@ -84,7 +84,6 @@ class AikidoBackgroundProcess:
         event_scheduler.enter(
             EMPTY_QUEUE_INTERVAL, 1, self.send_to_reporter, (event_scheduler,)
         )
-        logger.debug("Checking queue")
         while not self.queue.empty():
             attack = self.queue.get()
             logger.debug("Reporting attack : %s", attack)

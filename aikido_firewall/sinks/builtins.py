@@ -4,7 +4,6 @@ Sink module for `builtins`, python's built-in function
 
 import copy
 import importhook
-from aikido_firewall.helpers.logging import logger
 from aikido_firewall.vulnerabilities import run_vulnerability_scan
 
 
@@ -28,5 +27,4 @@ def on_builtins_import(builtins):
 
     # pylint: disable=no-member
     setattr(builtins, "open", aikido_new_open)
-    logger.debug("Wrapped `builtins` module")
     return modified_builtins
