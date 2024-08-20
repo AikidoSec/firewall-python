@@ -83,4 +83,4 @@ def test_on_detected_attack_exception_handling(mock_reporter, mock_context, capl
 
     on_detected_attack(mock_reporter, attack, mock_context)
 
-    assert "Failed to report attack" in caplog.text
+    assert "Failed to report an attack" in caplog.text
