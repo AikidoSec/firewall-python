@@ -74,10 +74,13 @@ def run_vulnerability_scan(kind, op, args):
         error_type = AikidoPathTraversal
     elif kind == "ssrf":
         # Report hostname and port to background process :
-        get_comms().send_data_to_bg_process("HOSTNAMES_ADD", (args[0], args[1]))
         injection_results = check_context_for_ssrf(
             hostname=args[0], port=args[1], operation=op, context=context
         )
+        if not is_blocking_enabled() or not injection_results:
+            #  If there is an actual injection, and blocking is enabled
+            #  We shouldn't report this hostname, since a request was never made.
+            get_comms().send_data_to_bg_process("HOSTNAMES_ADD", (args[0], args[1]))
         error_type = AikidoSSRF
     else:
         logger.error("Vulnerability type %s currently has no scans implemented", kind)
