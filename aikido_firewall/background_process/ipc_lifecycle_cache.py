@@ -5,7 +5,7 @@ Contains the `IPCLifecycleCache` cache for the duration of a single request
 import threading
 from .comms import get_comms
 
-local = threading.local()
+local = threading.local() #  cache needs to be per thread, not shared in the entire process
 
 
 def get_cache():
