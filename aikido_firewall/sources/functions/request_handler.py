@@ -34,7 +34,7 @@ def pre_response():
     context = get_current_context()
     comms = get_comms()
     if not context or not comms:
-        logger.info("Request was not complete, not running any pre_response code")
+        logger.debug("Request was not complete, not running any pre_response code")
         return
 
     # IP Allowlist:

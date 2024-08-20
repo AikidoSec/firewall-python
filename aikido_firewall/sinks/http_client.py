@@ -20,7 +20,7 @@ def on_http_import(http):
     former_putrequest = copy.deepcopy(http.HTTPConnection.putrequest)
 
     def aik_new_putrequest(_self, method, url, *args, **kwargs):
-        logger.info("HTTP Request [%s] %s:%s %s", method, _self.host, _self.port, url)
+        logger.debug("HTTP Request [%s] %s:%s %s", method, _self.host, _self.port, url)
         run_vulnerability_scan(
             kind="ssrf", op="http.client.putrequest", args=(_self.host, _self.port)
         )
