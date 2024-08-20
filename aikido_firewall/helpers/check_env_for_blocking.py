@@ -5,7 +5,7 @@ Helper function file, see function docstring
 import os
 
 
-def should_block():
+def check_env_for_blocking():
     """
     Checks the environment variable "AIKIDO_BLOCKING"
     """

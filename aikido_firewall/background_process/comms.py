@@ -43,6 +43,11 @@ class AikidoIPCCommunications:
         self.address = address
         self.key = key
         self.background_process = None
+        if self.key == b"None":
+            logger.warning(
+                "You are running without AIKIDO_TOKEN set, not starting background process.."
+            )
+            self.key = None
 
         # Set as global ipc object :
         reset_comms()
@@ -52,6 +57,10 @@ class AikidoIPCCommunications:
 
     def start_aikido_listener(self):
         """This will start the aikido process which listens"""
+        if not self.key:
+            # If the key is not set, there isn't going to be any communication with
+            # the aikido server, so we shouldn't start the background process
+            return
         #  Daemon is set to True so that the process kills itself when the main process dies
         self.background_process = Process(
             target=AikidoBackgroundProcess, args=(self.address, self.key), daemon=True
@@ -62,6 +71,9 @@ class AikidoIPCCommunications:
         """
         This creates a new client for comms to the background process
         """
+        if not self.key:
+            # If no key is set, the background process will not start
+            return {"success": False, "error": "invalid_key"}
 
         # We want to make sure that sending out this data affects the process as little as possible
         # So we run it inside a seperate thread with a timeout of 100ms
