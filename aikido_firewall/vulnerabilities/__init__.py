@@ -24,6 +24,7 @@ from .shell_injection.check_context_for_shell_injection import (
 from .path_traversal.check_context_for_path_traversal import (
     check_context_for_path_traversal,
 )
+from aikido_firewall.background_process.ipc_lifecycle_cache import get_cache
 
 
 def run_vulnerability_scan(kind, op, args):
@@ -33,20 +34,16 @@ def run_vulnerability_scan(kind, op, args):
     """
     context = get_current_context()
     comms = get_comms()
-    if not context or not comms:
+    lifecycle_cache = get_cache()
+    if not context or not comms or not lifecycle_cache:
+        logger.debug("Not running a vulnerability scan due to incomplete data.")
+        logger.debug("%s : %s", kind, op)
         return
 
-    force_protection_off = comms.send_data_to_bg_process(
-        action="FORCE_PROTECTION_OFF?", obj=context, receive=True
-    )
-    if force_protection_off["success"] and force_protection_off["data"]:
+    if lifecycle_cache.protection_forced_off():
         #  The client turned protection off for this route, not scanning
         return
-
-    is_bypassed_ip = comms.send_data_to_bg_process(
-        action="IS_BYPASSED_IP", obj=context.remote_address, receive=True
-    )
-    if is_bypassed_ip["success"] and is_bypassed_ip["data"]:
+    if lifecycle_cache.is_bypassed_ip(context.remote_address):
         #  This IP is on the bypass list, not scanning
         return
 
