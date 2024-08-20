@@ -103,18 +103,17 @@ Enhancement suggestions are tracked as [GitHub issues](https://github.com/Aikido
 ### Your First Code Contribution
 
 - clone the repository to your local machine
-- run `$ make install` to install dependencies
+- run `$ make install` to install dependencies (Or use Poetry CLI)
 - run `$ make build` to build the library
-- run `$ make watch` to watch for changes and rebuild the library
-- run `$ make test` to run tests using tap
-- run `$ make end2end` to run end-to-end tests using tap
-- run `$ make lint` to run ESLint
+- run `$ make test` to run pytest testing
+- run `$ make benchmark` to run benchmarks using k6
+- run `$ make lint` to run pylint
 
 ## Styleguides
 
 ### Code format
 
-Code is formatted using [Prettier](https://prettier.io/). See [`.prettierrc`](../.prettierrc) for the configuration.
+Code is formatted using [Pylint](https://www.pylint.org/). See [`.pylintrc`](../.pylintrc) for the configuration.
 
 ### Commit Messages
 
