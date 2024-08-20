@@ -13,12 +13,6 @@ services:
       MYSQL_PASSWORD: 'password'
       MYSQL_ROOT_PASSWORD: 'password'
     command: --init-file /data/application/init.sql
-    ports:
-      # <Port exposed> : <MySQL Port running inside container>
-      - '3306:3306'
-    expose:
-      # Opens port 3306 on the container
-      - '3306'
 
   backend:
     build: 
@@ -30,11 +24,13 @@ services:
     volumes:
       - .:/app
     ports:
-      - "8080:5000"
+      - "8086:5000"
     depends_on:
       - db
     extra_hosts:
       - "app.local.aikido.io:host-gateway"
+    environment:
+      - FIREWALL_DISABLED=0
 
 volumes:
   db_data:

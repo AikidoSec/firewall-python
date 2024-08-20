@@ -11,10 +11,6 @@ services:
       POSTGRES_DB: 'db'
       POSTGRES_USER: 'user'
       POSTGRES_PASSWORD: 'password'
-    ports:
-      - '5432:5432'
-    expose:
-      - '5432'
     networks:
       - default_network
 
@@ -28,14 +24,15 @@ services:
     volumes:
       - .:/app
     ports:
-      - "8080:5000"
+      - "8090:5000"
     depends_on:
       - db
     networks:
       - default_network
     extra_hosts:
       - "app.local.aikido.io:host-gateway"
-
+    environment:
+      - FIREWALL_DISABLED=0
 
 volumes:
   db_data2:
