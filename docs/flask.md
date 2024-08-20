@@ -20,6 +20,23 @@ AIKIDO_TOKEN="AIK_RUNTIME_YOUR_TOKEN_HERE"
 
 ## Using gUnicorn
 If you're using gunicorn, please check our docs on that first : [Click Here](./gunicorn.md)
+## Warning: Installing middleware
+When installing middleware make sure to install it like this :
+
+```python
+from flask import Flask
+app = Flask(__name__)
+...
+app.wsgi_app = my_middleware(app.wsgi_app)
+```
+
+and not like this :
+
+```python
+app.wsgi_app = my_middleware
+```
+
+Since this removes all other middleware.
 
 ## Blocking mode
 
