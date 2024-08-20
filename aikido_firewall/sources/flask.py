@@ -11,6 +11,7 @@ from aikido_firewall.context import Context
 from aikido_firewall.background_process.packages import add_wrapped_package
 from .functions.request_handler import request_handler
 
+
 def aikido_middleware_call(flask_app, environ, start_response):
     """
     Aikido WSGI Middleware for ratelimiting and route reporting
@@ -31,6 +32,7 @@ def aikido_middleware_call(flask_app, environ, start_response):
 
     response = flask_app.wsgi_app(environ, custom_start_response)
     return response
+
 
 def aikido___call__(flask_app, environ, start_response):
     """Aikido's __call__ wrapper"""
