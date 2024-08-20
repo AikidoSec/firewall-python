@@ -1,7 +1,7 @@
 """Helper function file, see function docstring"""
 
 from aikido_firewall.background_process import get_comms
-from aikido_firewall.helpers.should_block import should_block
+from aikido_firewall.helpers.check_env_for_blocking import check_env_for_blocking
 
 
 def is_blocking_enabled():
@@ -13,4 +13,4 @@ def is_blocking_enabled():
     )
     if should_block_res["success"]:
         return should_block_res["data"]
-    return should_block()
+    return check_env_for_blocking()
