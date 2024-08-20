@@ -2,7 +2,7 @@
 Export the Users class
 """
 
-from aikido_firewall.helpers.get_current_unixtime_ms import get_unixtime_ms
+import aikido_firewall.helpers.get_current_unixtime_ms as t
 
 
 class Users:
@@ -17,7 +17,7 @@ class Users:
     def add_user(self, user):
         """Store a user"""
         user_id = user["id"]
-        current_time = get_unixtime_ms()
+        current_time = t.get_unixtime_ms()
 
         existing = self.users.get(user_id)
         if existing:
