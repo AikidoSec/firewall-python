@@ -43,6 +43,7 @@ def test_wsgi_context_1():
         "user": None,
         "remote_address": "198.51.100.23",
         "parsed_userinput": {},
+        "xml": [],
     }
 
 
@@ -80,6 +81,7 @@ def test_wsgi_context_2():
         "user": None,
         "remote_address": "198.51.100.23",
         "parsed_userinput": {},
+        "xml": [],
     }
 
 
