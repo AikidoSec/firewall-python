@@ -32,8 +32,10 @@ def send_heartbeat_wrapper(rep, interval_in_secs, event_scheduler, first_time=Fa
         send_heartbeat_wrapper,
         (rep, interval_in_secs, event_scheduler),
     )
+    # If it's the first time (e.g. first_time is set to True), this means that we
+    # only want to schedule sending a heartbeat and not actually send a heartbeat yet.
+    # We run this code with first_time right after starting the reporter.
     if not first_time:
-        #  If first_time is true it means it's the first time this gets executed, so we
-        #  need to wait for the interval in the event scheduler to finish
+        # We're not in the starting phase anymore so from now on we send heartbeats :
         logger.debug("Heartbeat...")
         rep.send_heartbeat()
