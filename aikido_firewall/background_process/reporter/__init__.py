@@ -64,12 +64,10 @@ class Reporter:
         This is run 1m after startup, and checks if we should send out
         a preliminary heartbeat with some stats.
         """
-        logger.info("Reporting initial statistics")
-        should_report_initial_stats = (
-            self.statistics.has_compressed_stats() and not self.conf.received_any_stats
+        should_report_initial_stats = not (
+            self.statistics.is_empty() or self.conf.received_any_stats
         )
         if should_report_initial_stats:
-            logger.info("Sending heartbeat")
             self.send_heartbeat()
 
     def on_detected_attack(self, attack, context):
