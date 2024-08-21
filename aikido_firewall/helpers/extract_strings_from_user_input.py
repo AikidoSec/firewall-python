@@ -45,7 +45,7 @@ def extract_strings_from_user_input(obj, path_to_payload=None):
             ).items():
                 results[k] = v
 
-    if isinstance(obj, list):
+    if isinstance(obj, (set, list, tuple)):
         #  Add the stringified array as well to the results, there might
         #  be accidental concatenation if the client expects a string but gets the array
         #  E.g. HTTP Parameter pollution
