@@ -18,3 +18,6 @@ Overview :
 - `flask-postres/` is a Flask app using Postgres
   - It runs **multi-threaded**
   - Runs on 8090. Without aikido runs on 8091
+- `flask-postres-xml/` is a Flask app using Postgres and XML
+  - It runs **multi-threaded**
+  - Runs on 8092. Without aikido runs on 8093
