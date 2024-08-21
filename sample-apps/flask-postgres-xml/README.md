@@ -7,8 +7,10 @@ Run (with docker-compose installed) :
 docker-compose up --build
 ```
 
-- You'll be able to access the Flask Server at : [localhost:8090](http://localhost:8090)
-- To Create a reference test dog use `http://localhost:8090/create/`
-- To Create a reference test dog (with executemany) use `http://localhost:8090/create_many/`
+- You'll be able to access the Flask Server at : [localhost:8092](http://localhost:8092)
+- To upload xml use `http://localhost:8092/upload_xml/`
 
-- To test a sql injection enter the following dog name : `Malicious dog', TRUE); -- `
+- To test a sql injection enter the following xml snippet: 
+```xml
+<dogs><dog dog_name="Malicious dog', TRUE); -- " /></dogs>
+```
