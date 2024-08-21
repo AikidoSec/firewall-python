@@ -14,6 +14,7 @@ from aikido_firewall.errors import (
 )
 from aikido_firewall.background_process import get_comms
 from aikido_firewall.helpers.logging import logger
+from aikido_firewall.helpers.get_clean_stacktrace import get_clean_stacktrace
 from aikido_firewall.helpers.blocking_enabled import is_blocking_enabled
 from .sql_injection.context_contains_sql_injection import context_contains_sql_injection
 from .nosql_injection.check_context import check_context_for_nosql_injection
@@ -87,6 +88,9 @@ def run_vulnerability_scan(kind, op, args):
     if injection_results:
         logger.debug("Injection results : %s", json.dumps(injection_results))
         blocked = is_blocking_enabled()
-        comms.send_data_to_bg_process("ATTACK", (injection_results, context, blocked))
+        stack = get_clean_stacktrace()
+        comms.send_data_to_bg_process(
+            "ATTACK", (injection_results, context, blocked, stack)
+        )
         if blocked:
             raise error_type(*error_args)
