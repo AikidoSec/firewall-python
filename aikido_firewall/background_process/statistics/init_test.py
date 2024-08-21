@@ -361,3 +361,42 @@ def test_it_keeps_track_of_aborted_requests(stats):
             },
         },
     }
+
+
+def test_is_empty_when_stats_are_empty(stats):
+    assert stats.is_empty() is True
+
+
+def test_is_empty_when_requests_are_empty(stats):
+    stats.requests["total"] = 0
+    stats.requests["attacksDetected"]["total"] = 0
+    stats.stats = {}  # Assuming stats is a dictionary
+    assert stats.is_empty() is True
+
+
+def test_is_empty_when_requests_have_data(stats):
+    stats.requests["total"] = 1
+    stats.requests["attacksDetected"]["total"] = 0
+    stats.stats = {}
+    assert stats.is_empty() is False
+
+
+def test_is_empty_when_attacks_detected(stats):
+    stats.requests["total"] = 0
+    stats.requests["attacksDetected"]["total"] = 1
+    stats.stats = {}
+    assert stats.is_empty() is False
+
+
+def test_is_empty_when_stats_have_data(stats):
+    stats.requests["total"] = 0
+    stats.requests["attacksDetected"]["total"] = 0
+    stats.stats = {"some_stat": 1}  # Adding some data to stats
+    assert stats.is_empty() is False
+
+
+def test_is_empty_when_all_data_present(stats):
+    stats.requests["total"] = 1
+    stats.requests["attacksDetected"]["total"] = 1
+    stats.stats = {"some_stat": 1}
+    assert stats.is_empty() is False

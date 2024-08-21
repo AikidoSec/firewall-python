@@ -14,16 +14,15 @@ def event_scheduler():
             self.events.append((delay, priority, action, argument))
 
         def run(self):
-            self.events[0][2](*self.events[0][3])
+            if self.events:
+                self.events[0][2](*self.events[0][3])
 
     return EventScheduler()
 
 
 def test_no_token(event_scheduler, caplog):
     start_polling_for_changes(
-        on_config_update=lambda config: pytest.fail("Should not be called"),
-        serverless=None,
-        token=None,
+        reporter=MagicMock(token=None, serverless=None),
         event_scheduler=event_scheduler,
     )
 
@@ -32,9 +31,7 @@ def test_no_token(event_scheduler, caplog):
 
 def test_serverless_environment(event_scheduler, caplog):
     start_polling_for_changes(
-        on_config_update=lambda config: pytest.fail("Should not be called"),
-        serverless=True,
-        token=Token("123"),
+        reporter=MagicMock(token=Token("123"), serverless=True),
         event_scheduler=event_scheduler,
     )
 
@@ -64,10 +61,15 @@ def test_check_for_config_updates(event_scheduler):
 
         config_updates = []
 
-        start_polling_for_changes(
-            on_config_update=lambda config: config_updates.append(config),
-            serverless=None,
+        reporter = MagicMock(
+            update_service_config=lambda config: config_updates.append(config),
             token=Token("123"),
+            conf=MagicMock(last_updated_at=config_updated_at),
+            serverless=None,
+        )
+
+        start_polling_for_changes(
+            reporter=reporter,
             event_scheduler=event_scheduler,
         )
 
@@ -78,6 +80,7 @@ def test_check_for_config_updates(event_scheduler):
 
         # Simulate a config update
         config_updated_at = 1
+        reporter.conf.last_updated_at = config_updated_at
         event_scheduler.run()
 
         assert config_updates == [
@@ -99,10 +102,15 @@ def test_api_error_handling(event_scheduler, caplog):
     ):
         config_updates = []
 
-        start_polling_for_changes(
-            on_config_update=lambda config: config_updates.append(config),
+        reporter = MagicMock(
+            update_service_config=lambda config: config_updates.append(config),
             token=Token("123"),
+            conf=MagicMock(last_updated_at=0),
             serverless=None,
+        )
+
+        start_polling_for_changes(
+            reporter=reporter,
             event_scheduler=event_scheduler,
         )
 
