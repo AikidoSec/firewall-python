@@ -1,0 +1,50 @@
+html
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XML</title>
+</head>
+<body>
+    <h1>Send XML Data (application/xml)</h1>
+    <textarea id="xmlData" rows="10" cols="50"></textarea>
+    <br>
+    <button id="sendRequest">Send XML</button>
+    <div id="response"></div>
+
+    <h1>Send XML Data (Body)</h1>
+    <form method="post" action="/xml_body">
+        <textarea id="raw_xml" name="raw_xml" rows="10" cols="50"></textarea>
+        <br>
+        <button type="submit">Send XML</button>
+    </form>
+    
+    <script>
+        document.getElementById('sendRequest').addEventListener('click', function() {
+            const xmlData = document.getElementById('xmlData').value;
+            const endpoint = '/xml_post'; // Change this to your XML endpoint
+
+            fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/xml',
+                },
+                body: xmlData,
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+            })
+            .then(data => {
+                document.getElementById('response').innerText = "OK"
+            })
+            .catch(error => {
+                document.getElementById('response').innerText = 'Error: ' + error.message;
+            });
+        });
+    </script>
+</body>
+</html>

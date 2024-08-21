@@ -9,6 +9,7 @@ if firewall_disabled is not None:
 
 from flask import Flask, render_template, request
 import psycopg2
+import xml.etree.ElementTree as ET
 
 app = Flask(__name__)
 if __name__ == '__main__':
@@ -36,21 +37,36 @@ def get_dogpage(dog_id):
     dog = cursor.fetchmany(1)[0]
     return render_template('dogpage.html', title=f'Dog', dog=dog, isAdmin=("Yes" if dog[2] else "No"))
 
-@app.route("/upload_xml", methods=['GET'])
+@app.route("/xml", methods=['GET'])
 def show_upload_xml():
-    return render_template('upload_xml.html')
+    return render_template('xml.html')
 
 
 
-@app.route("/upload_xml", methods=['POST'])
+@app.route("/xml_body", methods=['POST'])
 def post_upload_xml():
-    #dog_name = request.form['dog_name']
-    dog_name = ""
-
+    raw_xml = request.form['raw_xml']
+    root = ET.fromstring(raw_xml)
     conn = get_db_connection()
     cursor =  conn.cursor()
-    cursor.execute(f"INSERT INTO dogs (dog_name, isAdmin) VALUES ('%s', FALSE)" % (dog_name))
-    conn.commit()
+    for dog in root.findall('dog'):
+        dog_name = dog.get('dog_name')
+        cursor.execute(f"INSERT INTO dogs (dog_name, isAdmin) VALUES ('%s', FALSE)" % (dog_name))
+        conn.commit()
     cursor.close()
     conn.close()
-    return f'Dog {dog_name} created successfully'
+    return f'Dogs created successfully'
+
+@app.route("/xml_post", methods=['POST'])
+def post_xml():
+    raw_xml = request.data.decode('utf-8')
+    root = ET.fromstring(raw_xml)
+    conn = get_db_connection()
+    cursor =  conn.cursor()
+    for dog in root.findall('dog'):
+        dog_name = dog.get('dog_name')
+        cursor.execute(f"INSERT INTO dogs (dog_name, isAdmin) VALUES ('%s', FALSE)" % (dog_name))
+        conn.commit()
+    cursor.close()
+    conn.close()
+    return f'Dogs created successfully'
