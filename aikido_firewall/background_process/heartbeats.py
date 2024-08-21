@@ -22,7 +22,7 @@ def send_heartbeats_every_x_secs(reporter, interval_in_secs, event_scheduler):
     send_heartbeat_wrapper(reporter, interval_in_secs, event_scheduler, True)
 
 
-def send_heartbeat_wrapper(rep, interval_in_secs, event_scheduler, boot=False):
+def send_heartbeat_wrapper(rep, interval_in_secs, event_scheduler, first_time=False):
     """
     Wrapper function for send_heartbeat so we get an interval
     """
@@ -32,8 +32,8 @@ def send_heartbeat_wrapper(rep, interval_in_secs, event_scheduler, boot=False):
         send_heartbeat_wrapper,
         (rep, interval_in_secs, event_scheduler),
     )
-    if not boot:
-        #  If boot is true it means it's the first time this gets executed, so we
+    if not first_time:
+        #  If first_time is true it means it's the first time this gets executed, so we
         #  need to wait for the interval in the event scheduler to finish
         logger.debug("Heartbeat...")
         rep.send_heartbeat()
