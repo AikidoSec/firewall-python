@@ -1,5 +1,5 @@
 """Exports create_interval"""
-from aikido_firewall.helpers.logging import logger
+
 
 def create_interval(event_scheduler, interval_in_secs, function, args):
     """
@@ -20,7 +20,6 @@ def interval_loop(event_scheduler, interval_in_secs, function, args):
     """
     This is the actual interval loop which executes and schedules the function
     """
-    logger.critical("Interval loop executing")
     # Execute function :
     function(*args)
     # Schedule the execution of the function in interval_in_secs seconds :
