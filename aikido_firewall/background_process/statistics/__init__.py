@@ -70,3 +70,11 @@ class Statistics:
     def get_stats(self):
         """This will return the stats as a dict, from a Statistics class"""
         return get_stats(self)
+
+    def is_empty(self):
+        """This will return a boolean value indicating if the stats are empty"""
+        return (
+            len(self.stats) == 0
+            and self.requests["total"] == 0
+            and self.requests["attacksDetected"]["total"] == 0
+        )
