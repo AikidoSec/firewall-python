@@ -33,7 +33,7 @@ class Reporter:
         self.token = token  # Should be instance of the Token class!
         self.routes = Routes(200)
         self.hostnames = Hostnames(200)
-        self.conf = ServiceConfig([], get_unixtime_ms(), [], [])
+        self.conf = ServiceConfig([], get_unixtime_ms(), [], [], True)
         self.rate_limiter = RateLimiter(
             max_items=5000, time_to_live_in_ms=120 * 60 * 1000  # 120 minutes
         )
@@ -55,6 +55,12 @@ class Reporter:
                 "Token was invalid, not starting heartbeats and realtime polling."
             )
             return
+        should_report_initial_stats = (
+            self.statistics.has_compressed_stats() and not self.conf.received_any_stats
+        )
+        if should_report_initial_stats:
+            logger.info("Should report initial statistics")
+            event_scheduler.enter(60, 1, send_heartbeat)
         send_heartbeats_every_x_secs(self, self.heartbeat_secs, event_scheduler)
         start_polling_for_changes(
             self.update_service_config, self.serverless, self.token, event_scheduler

@@ -20,8 +20,9 @@ def update_service_config(reporter, res):
         if not isinstance(res["endpoints"], list):
             res["endpoints"] = []  # Empty list
         reporter.conf = ServiceConfig(
-            endpoints=res["endpoints"],
-            last_updated_at=get_unixtime_ms(),
-            blocked_uids=res["blockedUserIds"],
-            bypassed_ips=res["allowedIPAddresses"],
+            endpoints=res.get("endpoints", []),
+            last_updated_at=res.get("configUpdatedAt", get_unixtime_ms()),
+            blocked_uids=res.get("blockedUserIds", []),
+            bypassed_ips=res.get("allowedIPAddresses", []),
+            received_any_stats=res.get("receivedAnyStats", True)
         )
