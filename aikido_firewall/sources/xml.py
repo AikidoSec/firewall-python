@@ -5,7 +5,11 @@ Sink module for `xml`, python's built-in function
 import copy
 import importhook
 from aikido_firewall.helpers.logging import logger
+from aikido_firewall.helpers.extract_strings_from_user_input import (
+    reset_userinput_cache_for_given_source,
+)
 from aikido_firewall.context import get_current_context
+
 
 def process_xml(user_input, root_element):
     """Extracts all attributes from the xml and adds them to context"""
@@ -13,6 +17,7 @@ def process_xml(user_input, root_element):
     for el in root_element:
         extracted_xml_attrs += el.items()
     context = get_current_context()
+    reset_userinput_cache_for_given_source("xml")
     context.xml += extracted_xml_attrs
 
 
@@ -25,6 +30,7 @@ def on_xml_import(eltree):
     """
     modified_eltree = importhook.copy_module(eltree)
     copy_xml_parser = copy.deepcopy(eltree.XMLParser)
+
     class MutableAikidoXMLParser:
         """Aikido's mutable connection class"""
 
