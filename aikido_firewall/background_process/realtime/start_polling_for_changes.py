@@ -9,7 +9,7 @@ import aikido_firewall.background_process.realtime as realtime
 POLL_FOR_CONFIG_CHANGES_INTERVAL = 60  #  Poll for config changes every 60 seconds
 
 
-def start_polling_for_changes(on_config_update, serverless, token, event_scheduler):
+def start_polling_for_changes(reporter, event_scheduler):
     """
     Arguments :
     - on_config_update : A function that will run with the new config if changed
@@ -17,15 +17,20 @@ def start_polling_for_changes(on_config_update, serverless, token, event_schedul
     - last_updated_at : The last time the config was updated (unixtime in ms)
     This function will check if the config was updated or not
     """
-    if not isinstance(token, Token):
+    if not isinstance(reporter.token, Token):
         logger.info("No token provided, not polling for config updates")
         return
-    if serverless:
+    if reporter.serverless:
         logger.info("Running in serverless environment, not polling for config updates")
         return
 
     # Start the interval by booting the first settimeout
-    poll_for_changes(on_config_update, token, 0, event_scheduler)
+    poll_for_changes(
+        on_config_update=reporter.update_service_config,
+        token=reporter.token,
+        former_last_updated=reporter.conf.last_updated_at,
+        event_scheduler=event_scheduler,
+    )
 
 
 def poll_for_changes(on_config_update, token, former_last_updated, event_scheduler):
@@ -34,14 +39,15 @@ def poll_for_changes(on_config_update, token, former_last_updated, event_schedul
     """
     # If something went wrong, or we don't know when the config was
     # last updated, set to prev value
-    config_last_updated_at = former_last_updated
+    last_updated = former_last_updated
     try:
-        config_last_updated_at = realtime.get_config_last_updated_at(token)
-        if (
-            isinstance(former_last_updated, int)
-            and config_last_updated_at > former_last_updated
-        ):
+        last_updated = realtime.get_config_last_updated_at(token)
+        config_changed = (
+            isinstance(former_last_updated, int) and last_updated > former_last_updated
+        )
+        if config_changed:
             #  The config changed
+            logger.debug("According to realtime: Config changed")
             config = realtime.get_config(token)
             on_config_update({**config, "success": True})
     except Exception as e:
@@ -53,5 +59,5 @@ def poll_for_changes(on_config_update, token, former_last_updated, event_schedul
         POLL_FOR_CONFIG_CHANGES_INTERVAL,
         1,
         poll_for_changes,
-        (on_config_update, token, config_last_updated_at, event_scheduler),
+        (on_config_update, token, last_updated, event_scheduler),
     )
