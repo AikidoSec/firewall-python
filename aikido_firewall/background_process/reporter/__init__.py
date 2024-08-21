@@ -55,16 +55,22 @@ class Reporter:
                 "Token was invalid, not starting heartbeats and realtime polling."
             )
             return
+        event_scheduler.enter(60, 1, self.report_initial_stats)
+        send_heartbeats_every_x_secs(self, self.heartbeat_secs, event_scheduler)
+        start_polling_for_changes(self, event_scheduler)
+
+    def report_initial_stats(self):
+        """
+        This is run 1m after startup, and checks if we should send out
+        a preliminary heartbeat with some stats.
+        """
+        logger.info("Reporting initial statistics")
         should_report_initial_stats = (
             self.statistics.has_compressed_stats() and not self.conf.received_any_stats
         )
         if should_report_initial_stats:
-            logger.info("Should report initial statistics")
-            event_scheduler.enter(60, 1, send_heartbeat)
-        send_heartbeats_every_x_secs(self, self.heartbeat_secs, event_scheduler)
-        start_polling_for_changes(
-            self.update_service_config, self.serverless, self.token, event_scheduler
-        )
+            logger.info("Sending heartbeat")
+            self.send_heartbeat()
 
     def on_detected_attack(self, attack, context):
         """This will send something to the API when an attack is detected"""
