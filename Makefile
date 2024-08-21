@@ -23,3 +23,7 @@ test:
 .PHONY: cov
 cov:
 	poetry run pytest --cov=aikido_firewall --cov-report=xml
+
+.PHONY: benchmark
+e2e:
+	k6 run -q ./benchmarks/flask-mysql-benchmarks.js
