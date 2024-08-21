@@ -40,7 +40,11 @@ def test_service_config_initialization():
     ]
     last_updated_at = "2023-10-01"
     service_config = ServiceConfig(
-        endpoints, last_updated_at, ["0", "0", "1", "5"], ["5", "1", "2", "1", "5"]
+        endpoints,
+        last_updated_at,
+        ["0", "0", "1", "5"],
+        ["5", "1", "2", "1", "5"],
+        True,
     )
 
     # Check that non-GraphQL endpoints are correctly filtered
@@ -67,6 +71,7 @@ def service_config():
         last_updated_at="2023-10-01T00:00:00Z",
         blocked_uids=["user1", "user2"],
         bypassed_ips=["192.168.1.1", "10.0.0.1"],
+        received_any_stats=True,
     )
 
 

@@ -32,7 +32,7 @@ class Reporter:
         self.token = token  # Should be instance of the Token class!
         self.routes = Routes(200)
         self.hostnames = Hostnames(200)
-        self.conf = ServiceConfig([], get_unixtime_ms(), [], [])
+        self.conf = ServiceConfig([], get_unixtime_ms(), [], [], True)
         self.rate_limiter = RateLimiter(
             max_items=5000, time_to_live_in_ms=120 * 60 * 1000  # 120 minutes
         )
