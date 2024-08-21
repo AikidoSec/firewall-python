@@ -21,3 +21,4 @@ def parse_raw_body(raw_body, content_type):
         return parsed_body
     except Exception as e:
         logger.debug("Exception in parse_raw_body : %s", e)
+        return raw_body
