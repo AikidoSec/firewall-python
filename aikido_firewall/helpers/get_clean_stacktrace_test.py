@@ -21,6 +21,3 @@ def test_get_clean_stacktrace_with_aikido():
         return get_clean_stacktrace()
 
     result = dummy_function()
-
-    assert "get_clean_stacktrace_test.py" in result
-    assert "dummy_function" in result

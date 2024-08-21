@@ -1,17 +1,26 @@
 """Exports function `get_clean_stacktrace`"""
 
-import traceback
+import inspect
+import sys
 
 
 def get_clean_stacktrace():
     """Returns a cleaned up stacktrace"""
-    stack_trace = traceback.extract_stack()
-    filtered_stack_trace = filter(filter_no_aikido, stack_trace)
+    # Get the current stack
+    stack = inspect.stack()
 
-    formatted_trace = "".join(traceback.format_list(filtered_stack_trace))
-    return formatted_trace
+    # List of built-in modules to filter out
+    ignored_modules = sys.builtin_module_names
 
+    cleaned_stack = []
 
-def filter_no_aikido(frame):
-    """Custom filter to remove aikido frames"""
-    return "/site-packages/aikido_firewall/" not in frame.filename
+    for frame_info in stack:
+        name = frame_info.frame.f_globals.get("__name__", "")
+
+        if name not in ignored_modules and not name.startswith("aikido_firewall"):
+            cleaned_stack.append(
+                f"File: {frame_info.filename}, L{frame_info.lineno} {frame_info.function}(...)"
+            )
+
+    cleaned_stack.reverse()
+    return "• " + "\n\n• ".join(cleaned_stack)
