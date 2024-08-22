@@ -1,5 +1,5 @@
 """
-?
+Exports ServiceConfig class
 """
 
 from aikido_firewall.helpers.match_endpoint import match_endpoint

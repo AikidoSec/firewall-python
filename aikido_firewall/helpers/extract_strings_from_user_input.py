@@ -8,6 +8,7 @@ from aikido_firewall.context import get_current_context
 
 
 def extract_strings_from_user_input_cached(obj, source):
+    """Use the cache to speed up getting user input"""
     context = get_current_context()
     if context.parsed_userinput and context.parsed_userinput.get(source):
         return context.parsed_userinput.get(source)
@@ -37,7 +38,7 @@ def extract_strings_from_user_input(obj, path_to_payload=None):
             ).items():
                 results[k] = v
 
-    if isinstance(obj, list):
+    if isinstance(obj, (set, list, tuple)):
         #  Add the stringified array as well to the results, there might
         #  be accidental concatenation if the client expects a string but gets the array
         #  E.g. HTTP Parameter pollution

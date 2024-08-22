@@ -17,9 +17,18 @@ def gen_aikido_middleware_function(former__middleware_chain):
     """
 
     def aikido_middleware_function(request):
-        context = Context(
-            req=request.META, raw_body=request.body.decode("utf-8"), source="django"
-        )
+        # Get a parsed body from Django :
+        body = request.POST.dict()
+        if len(body) == 0 and request.content_type == "application/json":
+            try:
+                body = json.loads(request.body)
+            except Exception:
+                pass
+        if len(body) == 0:
+            # E.g. XML Data
+            body = request.body
+
+        context = Context(req=request.META, body=body, source="django")
         context.set_as_current_context()
         request_handler(stage="init")
 
