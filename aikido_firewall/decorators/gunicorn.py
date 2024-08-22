@@ -25,7 +25,7 @@ def post_fork(prev_func):
     """
 
     def aik_post_fork(server, worker):
-        aikido_firewall.protect("django-gunicorn", False)
+        aikido_firewall.protect(server=False)
         prev_func(server, worker)
 
     return aik_post_fork
