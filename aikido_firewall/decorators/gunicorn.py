@@ -7,11 +7,15 @@ import aikido_firewall
 from aikido_firewall.background_process import get_comms
 from aikido_firewall.helpers.logging import logger
 
-
-def signal_handler(sig, frame):
+def signal_handler():
     """Signal handler on SIGTERM/SIGKILL"""
-    logger.info("Killing background process... (Received SIGINT/SIGTERM)")
-    get_comms().background_process.terminate()
+    try:
+        logger.info("Killing background process... (Received SIGINT/SIGTERM)")
+        get_comms().background_process.terminate()
+    except Exception:
+        pass
+
+atexit.register(signal_handler)
 
 
 def when_ready(prev_func):
