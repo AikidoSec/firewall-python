@@ -16,7 +16,7 @@ def test_create_dog_fw():
     assert "created successfully" in res.text
     assert res.status_code == 200
 def test_create_dog_no_fw():
-    dog_name = "bobby_tables"
+    dog_name = "bobby_tables2"
     pswd = "bobby123"
     res = requests.post(post_url_nofw, data={'dog_name': dog_name, 'pswd': pswd})
     print(res.text)
