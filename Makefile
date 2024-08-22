@@ -18,11 +18,15 @@ install:
 
 .PHONY: test
 test:
-	poetry run pytest
+	poetry run pytest aikido_firewall/
+
+.PHONY: end2end
+end2end:
+	poetry run pytest end2end/ 	
 
 .PHONY: cov
 cov:
-	poetry run pytest --cov=aikido_firewall --cov-report=xml
+	poetry run pytest aikido_firewall/ --cov=aikido_firewall --cov-report=xml
 
 .PHONY: benchmark
 e2e:

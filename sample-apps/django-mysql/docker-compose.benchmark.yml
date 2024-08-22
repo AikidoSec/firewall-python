@@ -1,23 +1,26 @@
 version: "3"
 services:
   backend_firewall_disabled:
-    build: 
-      context: ./../../
-      dockerfile: ./sample-apps/django-mysql/Dockerfile
+    image: sample_django_mysql
     command: sh -c "python3 manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
     restart: always
     volumes:
       - .:/app
     ports:
       - "8081:8000"
-    env_file:
-      - .env
     depends_on:
       - db
     extra_hosts:
       - "app.local.aikido.io:host-gateway"
     environment:
-      - FIREWALL_DISABLED=1
+      FIREWALL_DISABLED: 1
+      SECRET_KEY: 'Test key'
+      MYSQL_DATABASE: 'db'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
   backend:
     environment:
-      - AIKIDO_TOKEN="test_aikido_token"
+      AIKIDO_TOKEN: "test_aikido_token"
+      AIKIDO_BLOCKING: 1
+

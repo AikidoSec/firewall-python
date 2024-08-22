@@ -16,6 +16,7 @@ services:
 
 
   backend:
+    image: sample_flask_mysql_uwsgi
     build: 
       context: ./../../
       dockerfile: ./sample-apps/flask-mysql-uwsgi/Dockerfile

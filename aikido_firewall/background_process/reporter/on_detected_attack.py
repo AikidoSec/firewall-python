@@ -7,7 +7,7 @@ from aikido_firewall.helpers.limit_length_metadata import limit_length_metadata
 from aikido_firewall.helpers.get_ua_from_context import get_ua_from_context
 
 
-def on_detected_attack(reporter, attack, context):
+def on_detected_attack(reporter, attack, context, blocked, stack):
     """
     This will send something to the API when an attack is detected
     """
@@ -18,7 +18,8 @@ def on_detected_attack(reporter, attack, context):
         attack["user"] = None
         attack["payload"] = json.dumps(attack["payload"])[:4096]
         attack["metadata"] = limit_length_metadata(attack["metadata"], 4096)
-        attack["blocked"] = reporter.block
+        attack["blocked"] = blocked
+        attack["stack"] = stack
 
         payload = {
             "type": "detected_attack",

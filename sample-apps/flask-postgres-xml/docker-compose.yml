@@ -2,7 +2,7 @@ version: '3'
 services:
   db:
     image: postgres:14-alpine
-    container_name: flask_postgres_db
+    container_name: flask_postgres_xml_db
     restart: always
     volumes:
       - db_data2:/var/lib/postgresql/data
@@ -15,17 +15,17 @@ services:
       - default_network
 
   backend:
-    image: sample_flask_postgres
+    image: sample_flask_postgres_xml
     build: 
       context: ./../../
-      dockerfile: ./sample-apps/flask-postgres/Dockerfile
-    container_name: flask_postgres_backend
+      dockerfile: ./sample-apps/flask-postgres-xml/Dockerfile
+    container_name: flask_postgres_xml_backend
     command: sh -c "flask --app app run --debug --host=0.0.0.0"
     restart: always
     volumes:
       - .:/app
     ports:
-      - "8090:5000"
+      - "8092:5000"
     depends_on:
       - db
     networks:
