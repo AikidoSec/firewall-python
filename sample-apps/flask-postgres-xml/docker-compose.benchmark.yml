@@ -1,9 +1,7 @@
 version: "3"
 services:
   backend_firewall_disabled:
-    build: 
-      context: ./../../
-      dockerfile: ./sample-apps/flask-postgres-xml/Dockerfile
+    image: sample_flask_postgres_xml
     command: sh -c "flask --app app run --debug --host=0.0.0.0"
     restart: always
     volumes:
@@ -21,3 +19,5 @@ services:
   backend:
     environment:
       - AIKIDO_TOKEN="test_aikido_token"
+      - AIKIDO_BLOCKING=1
+

@@ -1,15 +1,13 @@
 version: "3"
 services:
   backend_firewall_disabled:
-    build: 
-      context: ./../../
-      dockerfile: ./sample-apps/flask-mongo/Dockerfile
+    image: sample_flask_mongo
     command: sh -c "flask --app app run --debug --host=0.0.0.0"
     restart: always
     volumes:
       - .:/app
     ports:
-      - "8085:5000"
+      - "8095:5000"
     depends_on:
       - db
     networks:
@@ -21,3 +19,5 @@ services:
   backend:
     environment:
       - AIKIDO_TOKEN="test_aikido_token"
+      - AIKIDO_BLOCKING=1
+
