@@ -1,4 +1,4 @@
-name: Pytest Coverage | Reports to codecov
+name: Run End-2-End Tests
 
 on: [pull_request]
 
