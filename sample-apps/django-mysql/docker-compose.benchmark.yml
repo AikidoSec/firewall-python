@@ -10,16 +10,19 @@ services:
       - .:/app
     ports:
       - "8081:8000"
-    env_file:
-      - .env
     depends_on:
       - db
     extra_hosts:
       - "app.local.aikido.io:host-gateway"
     environment:
-      - FIREWALL_DISABLED=1
+      FIREWALL_DISABLED: 1
+      SECRET_KEY: 'Test key'
+      MYSQL_DATABASE: 'db'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
   backend:
     environment:
-      - AIKIDO_TOKEN="test_aikido_token"
-      - AIKIDO_BLOCKING=1
+      AIKIDO_TOKEN: "test_aikido_token"
+      AIKIDO_BLOCKING: 1
 
