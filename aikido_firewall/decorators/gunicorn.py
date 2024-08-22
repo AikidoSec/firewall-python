@@ -8,18 +8,6 @@ from aikido_firewall.background_process import get_comms
 from aikido_firewall.helpers.logging import logger
 
 
-def signal_handler():
-    """Signal handler on SIGTERM/SIGKILL"""
-    try:
-        logger.info("Killing background process... (Received SIGINT/SIGTERM)")
-        get_comms().background_process.join()
-    except Exception as e:
-        logger.critical("Exception : %s", e)
-
-
-atexit.register(signal_handler)
-
-
 def when_ready(prev_func):
     """
     Aikido decorator for gunicorn config
@@ -27,8 +15,6 @@ def when_ready(prev_func):
     """
 
     def aik_when_ready(server):
-
-        aikido_firewall.protect("background-process-only")
         prev_func(server)
 
     return aik_when_ready
@@ -41,7 +27,7 @@ def post_fork(prev_func):
     """
 
     def aik_post_fork(server, worker):
-        aikido_firewall.protect(server=False)
+        aikido_firewall.protect()
         prev_func(server, worker)
 
     return aik_post_fork
