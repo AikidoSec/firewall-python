@@ -58,9 +58,9 @@ class Reporter:
         send_heartbeats_every_x_secs(self, self.heartbeat_secs, event_scheduler)
         start_polling_for_changes(self, event_scheduler)
 
-    def on_detected_attack(self, attack, context):
+    def on_detected_attack(self, attack, context, blocked, stack):
         """This will send something to the API when an attack is detected"""
-        return on_detected_attack(self, attack, context)
+        return on_detected_attack(self, attack, context, blocked, stack)
 
     def on_start(self):
         """This will send out an Event signalling the start to the server"""

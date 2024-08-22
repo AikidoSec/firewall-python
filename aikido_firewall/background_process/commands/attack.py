@@ -4,7 +4,7 @@
 def process_attack(bg_process, data, conn):
     """
     Adds ATTACK data object to queue
-    Expected data object : [injection_results, context, blocked_or_not]
+    Expected data object : [injection_results, context, blocked_or_not, stacktrace]
     """
     bg_process.queue.put(data)
     if bg_process.reporter.statistics:

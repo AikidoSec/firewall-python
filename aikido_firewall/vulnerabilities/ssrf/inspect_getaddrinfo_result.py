@@ -9,6 +9,7 @@ from aikido_firewall.helpers.logging import logger
 from aikido_firewall.background_process import get_comms
 from aikido_firewall.errors import AikidoSSRF
 from aikido_firewall.helpers.blocking_enabled import is_blocking_enabled
+from aikido_firewall.helpers.get_clean_stacktrace import get_clean_stacktrace
 from .imds import is_trusted_hostname, is_imds_ip_address
 from .is_private_ip import is_private_ip
 from .find_hostname_in_context import find_hostname_in_context
@@ -59,7 +60,10 @@ def inspect_getaddrinfo_result(dns_results, hostname, port):
     logger.debug("Attack results : %s", attack)
 
     logger.debug("Sending data to bg process :")
-    get_comms().send_data_to_bg_process("ATTACK", (attack, context, should_block))
+    stack = get_clean_stacktrace()
+    get_comms().send_data_to_bg_process(
+        "ATTACK", (attack, context, should_block, stack)
+    )
 
     if should_block:
         raise AikidoSSRF()

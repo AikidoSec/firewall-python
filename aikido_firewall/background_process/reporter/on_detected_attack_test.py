@@ -31,7 +31,7 @@ def mock_context():
 def test_on_detected_attack_no_token(mock_context):
     reporter = MagicMock()
     reporter.token = None
-    on_detected_attack(reporter, {}, mock_context)
+    on_detected_attack(reporter, {}, mock_context, blocked=False, stack=None)
     reporter.api.report.assert_not_called()
 
 
@@ -42,7 +42,7 @@ def test_on_detected_attack_with_long_payload(mock_reporter, mock_context):
         "metadata": {"test": "1"},
     }
 
-    on_detected_attack(mock_reporter, attack, mock_context)
+    on_detected_attack(mock_reporter, attack, mock_context, blocked=False, stack=None)
     assert len(attack["payload"]) == 4096  # Ensure payload is truncated
     mock_reporter.api.report.assert_called_once()
 
@@ -54,7 +54,7 @@ def test_on_detected_attack_with_long_metadata(mock_reporter, mock_context):
         "metadata": {"test": long_metadata},
     }
 
-    on_detected_attack(mock_reporter, attack, mock_context)
+    on_detected_attack(mock_reporter, attack, mock_context, blocked=False, stack=None)
 
     assert (
         attack["metadata"]["test"] == long_metadata[:4096]
@@ -68,7 +68,7 @@ def test_on_detected_attack_success(mock_reporter, mock_context):
         "metadata": {},
     }
 
-    on_detected_attack(mock_reporter, attack, mock_context)
+    on_detected_attack(mock_reporter, attack, mock_context, blocked=False, stack=None)
     assert mock_reporter.api.report.call_count == 1
 
 
@@ -81,6 +81,24 @@ def test_on_detected_attack_exception_handling(mock_reporter, mock_context, capl
     # Simulate an exception during the API call
     mock_reporter.api.report.side_effect = Exception("API error")
 
-    on_detected_attack(mock_reporter, attack, mock_context)
+    on_detected_attack(mock_reporter, attack, mock_context, blocked=False, stack=None)
 
     assert "Failed to report attack" in caplog.text
+
+
+def test_on_detected_attack_with_blocked_and_stack(mock_reporter, mock_context):
+    attack = {
+        "payload": {"key": "value"},
+        "metadata": {},
+    }
+    blocked = True
+    stack = "sample stack trace"
+
+    on_detected_attack(
+        mock_reporter, attack, mock_context, blocked=blocked, stack=stack
+    )
+
+    # Check that the attack dictionary has the blocked and stack fields set
+    assert attack["blocked"] is True
+    assert attack["stack"] == stack
+    assert mock_reporter.api.report.call_count == 1
