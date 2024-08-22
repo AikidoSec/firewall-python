@@ -5,7 +5,9 @@ Sink module for `xml`, python's built-in function
 import copy
 import importhook
 from aikido_firewall.helpers.logging import logger
-from aikido_firewall.helpers.process_xml import process_xml
+from aikido_firewall.helpers.extract_data_from_xml_body import (
+    extract_data_from_xml_body,
+)
 
 
 @importhook.on_import("xml.etree.ElementTree")
@@ -36,7 +38,7 @@ def on_xml_import(eltree):
                 # Fetch the data, this should just return an internal attribute and not close a stream
                 # Or something that is noticable by the end-user
                 parsed_xml = self.target.close()
-                process_xml(user_input=data, root_element=parsed_xml)
+                extract_data_from_xml_body(user_input=data, root_element=parsed_xml)
 
                 return former_feed_result
 
