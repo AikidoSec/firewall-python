@@ -23,8 +23,7 @@ def test_wsgi_context_1():
         "CONTENT_TYPE": "application/x-www-form-urlencoded",
         "REMOTE_ADDR": "198.51.100.23",
     }
-    wsgi_raw_body = "dog_name=Doggo 1&test=Test 1"
-    context = Context(req=wsgi_request, raw_body=wsgi_raw_body, source="django")
+    context = Context(req=wsgi_request, body=123, source="django")
     assert context.__dict__ == {
         "source": "django",
         "method": "POST",
@@ -37,7 +36,7 @@ def test_wsgi_context_1():
         "cookies": {"sessionId": "abc123xyz456"},
         "url": "https://example.com/hello",
         "query": {"user": ["JohnDoe"], "age": ["30", "35"]},
-        "body": {"dog_name": ["Doggo 1"], "test": ["Test 1"]},
+        "body": 123,
         "route": "/hello",
         "subdomains": [],
         "user": None,
@@ -61,8 +60,7 @@ def test_wsgi_context_2():
         "CONTENT_TYPE": "application/json",
         "REMOTE_ADDR": "198.51.100.23",
     }
-    wsgi_raw_body = '{"a": 23, "b": 45, "Hello": [1, 2, 3]}'
-    context = Context(req=wsgi_request, raw_body=wsgi_raw_body, source="flask")
+    context = Context(req=wsgi_request, body={"test": True}, source="flask")
     assert context.__dict__ == {
         "source": "flask",
         "method": "GET",
@@ -75,7 +73,7 @@ def test_wsgi_context_2():
         "cookies": {"sessionId": "abc123xyz456"},
         "url": "http://localhost:8080/hello",
         "query": {"user": ["JohnDoe"], "age": ["30", "35"]},
-        "body": {"a": 23, "b": 45, "Hello": [1, 2, 3]},
+        "body": {"test": True},
         "route": "/hello",
         "subdomains": [],
         "user": None,
@@ -100,8 +98,7 @@ def test_set_as_current_context(mocker):
         "CONTENT_TYPE": "application/json",
         "REMOTE_ADDR": "198.51.100.23",
     }
-    wsgi_raw_body = '{"a": 23, "b": 45, "Hello": [1, 2, 3]}'
-    context = Context(req=wsgi_request, raw_body=wsgi_raw_body, source="flask")
+    context = Context(req=wsgi_request, body=12, source="flask")
     context.set_as_current_context()
     assert get_current_context() == context
 
@@ -121,8 +118,7 @@ def test_get_current_context_with_context(mocker):
         "CONTENT_TYPE": "application/json",
         "REMOTE_ADDR": "198.51.100.23",
     }
-    wsgi_raw_body = '{"a": 23, "b": 45, "Hello": [1, 2, 3]}'
-    context = Context(req=wsgi_request, raw_body=wsgi_raw_body, source="flask")
+    context = Context(req=wsgi_request, body=456, source="flask")
     context.set_as_current_context()
     assert get_current_context() == context
 
@@ -141,15 +137,14 @@ def test_context_is_picklable(mocker):
         "CONTENT_TYPE": "application/json",
         "REMOTE_ADDR": "198.51.100.23",
     }
-    wsgi_raw_body = '{"a": 23, "b": 45, "Hello": [1, 2, 3]}'
-    context = Context(req=wsgi_request, raw_body=wsgi_raw_body, source="flask")
+    context = Context(req=wsgi_request, body=123, source="flask")
     pickled_obj = pickle.dumps(context)
     unpickled_obj = pickle.loads(pickled_obj)
     assert unpickled_obj.source == "flask"
     assert unpickled_obj.method == "GET"
     assert unpickled_obj.remote_address == "198.51.100.23"
     assert unpickled_obj.url == "http://localhost:8080/hello"
-    assert unpickled_obj.body == {"a": 23, "b": 45, "Hello": [1, 2, 3]}
+    assert unpickled_obj.body == 123
     assert unpickled_obj.headers == {
         "HEADER_1": "header 1 value",
         "HEADER_2": "Header 2 value",

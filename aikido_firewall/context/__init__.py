@@ -12,7 +12,6 @@ from aikido_firewall.helpers.get_ip_from_request import get_ip_from_request
 from .parse_cookies import parse_cookies
 from .extract_wsgi_headers import extract_wsgi_headers
 from .build_url_from_wsgi import build_url_from_wsgi
-from .parse_raw_body import parse_raw_body
 
 UINPUT_SOURCES = ["body", "cookies", "query", "headers", "xml"]
 local = threading.local()
@@ -32,7 +31,7 @@ class Context:
     for vulnerability detection
     """
 
-    def __init__(self, context_obj=None, req=None, raw_body=None, source=None):
+    def __init__(self, context_obj=None, body=None, req=None, source=None):
         if context_obj:
             logger.debug("Creating Context instance based on dict object.")
             self.__dict__.update(context_obj)
@@ -48,7 +47,7 @@ class Context:
         self.url = build_url_from_wsgi(req)
         self.query = parse_qs(req["QUERY_STRING"])
         content_type = req.get("CONTENT_TYPE", None)
-        self.body = parse_raw_body(raw_body, content_type)
+        self.body = body
         self.route = build_route_from_url(self.url)
         self.subdomains = get_subdomains_from_url(self.url)
         self.user = None

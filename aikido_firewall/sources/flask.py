@@ -56,7 +56,7 @@ def aikido___call__(flask_app, environ, start_response):
     # We don't want to install werkzeug :
     # pylint: disable=import-outside-toplevel
     try:
-        context1 = Context(req=environ, raw_body={}, source="flask")
+        context1 = Context(req=environ, source="flask")
         context1.set_as_current_context()
         request_handler(stage="init")
     except Exception as e:
