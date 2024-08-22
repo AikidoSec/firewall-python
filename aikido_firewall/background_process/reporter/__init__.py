@@ -6,6 +6,7 @@ from aikido_firewall.helpers.get_current_unixtime_ms import get_unixtime_ms
 from aikido_firewall.background_process.heartbeats import send_heartbeats_every_x_secs
 from aikido_firewall.background_process.routes import Routes
 from aikido_firewall.ratelimiting.rate_limiter import RateLimiter
+from aikido_firewall.helpers.logging import logger
 from ..service_config import ServiceConfig
 from ..users import Users
 from ..hostnames import Hostnames
@@ -48,15 +49,18 @@ class Reporter:
 
     def start(self, event_scheduler):
         """Send out start event and add heartbeats"""
-        self.on_start()
+        res = self.on_start()
+        if res.get("error", None) == "invalid_token":
+            logger.info(
+                "Token was invalid, not starting heartbeats and realtime polling."
+            )
+            return
         send_heartbeats_every_x_secs(self, self.heartbeat_secs, event_scheduler)
-        start_polling_for_changes(
-            self.update_service_config, self.serverless, self.token, event_scheduler
-        )
+        start_polling_for_changes(self, event_scheduler)
 
-    def on_detected_attack(self, attack, context):
+    def on_detected_attack(self, attack, context, blocked, stack):
         """This will send something to the API when an attack is detected"""
-        return on_detected_attack(self, attack, context)
+        return on_detected_attack(self, attack, context, blocked, stack)
 
     def on_start(self):
         """This will send out an Event signalling the start to the server"""

@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from django.template import loader
 from .models import Dogs
 from django.db import connection
+from django.views.decorators.csrf import csrf_exempt
 # Create your views here.
 
 
@@ -20,6 +21,7 @@ def dog_page(request, dog_id):
     dog = get_object_or_404(Dogs, pk=dog_id)
     return HttpResponse("Your dog, %s, is lovely. Boss name is : %s" % (dog.dog_name, dog.dog_boss))
 
+@csrf_exempt
 def create_dogpage(request):
     if request.method == 'GET':
         return render(request, 'app/create_dog.html')

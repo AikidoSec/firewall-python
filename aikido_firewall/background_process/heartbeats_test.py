@@ -1,9 +1,6 @@
 import pytest
 from unittest.mock import Mock, patch
-from aikido_firewall.background_process.heartbeats import (
-    send_heartbeats_every_x_secs,
-    send_heartbeat_wrapper,
-)
+from aikido_firewall.background_process.heartbeats import send_heartbeats_every_x_secs
 
 
 def test_send_heartbeats_serverless():
@@ -42,16 +39,3 @@ def test_send_heartbeats_success():
 
     with patch("aikido_firewall.helpers.logging.logger.debug") as mock_debug:
         send_heartbeats_every_x_secs(reporter, 5, event_scheduler)
-
-
-def test_send_heartbeat_wrapper():
-    reporter = Mock()
-    reporter.send_heartbeat = Mock()
-    event_scheduler = Mock()
-
-    send_heartbeat_wrapper(reporter, 5, event_scheduler)
-
-    reporter.send_heartbeat.assert_called_once()
-    event_scheduler.enter.assert_called_once_with(
-        5, 1, send_heartbeat_wrapper, (reporter, 5, event_scheduler)
-    )

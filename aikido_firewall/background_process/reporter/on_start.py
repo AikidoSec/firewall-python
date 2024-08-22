@@ -24,3 +24,4 @@ def on_start(reporter):
     else:
         reporter.update_service_config(res)
         logger.info("Established connection with Aikido Server")
+    return res
