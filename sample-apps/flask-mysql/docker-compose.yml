@@ -15,6 +15,7 @@ services:
     command: --init-file /data/application/init.sql
 
   backend:
+    image: sample_flask_mysql
     build: 
       context: ./../../
       dockerfile: ./sample-apps/flask-mysql/Dockerfile

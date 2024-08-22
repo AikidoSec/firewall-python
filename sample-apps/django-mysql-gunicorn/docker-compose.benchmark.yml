@@ -1,24 +1,27 @@
 version: "3"
 services:
   backend_firewall_disabled:
-    build: 
-      context: ./../../
-      dockerfile: ./sample-apps/django-mysql-gunicorn/Dockerfile
+    image: sample_django_mysql_gunicorn
     command: sh -c "python manage.py migrate && gunicorn -c gunicorn_config.py --workers 4 --threads 2 --log-level debug --access-logfile '-' --error-logfile '-' --bind 0.0.0.0:8000 sample-django-mysql-gunicorn-app.wsgi"
     restart: always
     volumes:
       - .:/app
     ports:
       - "8083:8000"
-    env_file:
-      - .env
     depends_on:
       db:
         condition: service_healthy
     extra_hosts:
       - "app.local.aikido.io:host-gateway"
     environment:
-      - FIREWALL_DISABLED=1
+      FIREWALL_DISABLED: 1
+      SECRET_KEY: 'abc'
+      MYSQL_DATABASE: 'db'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
   backend:
     environment:
-      - AIKIDO_TOKEN="test_aikido_token"
+      AIKIDO_TOKEN: "test_aikido_token"
+      AIKIDO_BLOCKING: 1
+

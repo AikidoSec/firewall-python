@@ -1,0 +1,53 @@
+name: Run End-2-End Tests
+
+on: [pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Start django-mysql
+      working-directory: ./sample-apps/django-mysql
+      run: |
+        docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
+    - name: Start django-mysql-gunicorn
+      working-directory: ./sample-apps/django-mysql-gunicorn
+      run: |
+        docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
+    - name: Start flask-mongo
+      working-directory: ./sample-apps/flask-mongo
+      run: |
+        docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
+    - name: Start flask-mysql
+      working-directory: ./sample-apps/flask-mysql
+      run: |
+        docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
+    - name: Start flask-mysql-uwsgi
+      working-directory: ./sample-apps/flask-mysql-uwsgi
+      run: |
+        docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
+    - name: Start flask-postgres
+      working-directory: ./sample-apps/flask-postgres
+      run: |
+        docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
+    - name: Start flask-postgres-xml
+      working-directory: ./sample-apps/flask-postgres-xml
+      run: |
+        docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        make install
+
+    - name: Run end2end tests
+      run: |
+        make end2end

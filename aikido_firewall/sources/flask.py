@@ -26,10 +26,11 @@ def generate_aikido_view_func_wrapper(former_view_func):
         if context:
             if req.is_json:
                 context.body = req.get_json()
-                context.set_as_current_context()
-            else:
+            elif req.form:
                 context.body = req.form
-                context.set_as_current_context()
+            else:
+                context.body = req.data.decode("utf-8")
+            context.set_as_current_context()
 
         pre_response = request_handler(stage="pre_response")
         if pre_response:
