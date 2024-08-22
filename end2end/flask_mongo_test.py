@@ -12,11 +12,15 @@ def test_create_dog_fw():
     dog_name = "bobby_tables"
     pswd = "bobby123"
     res = requests.post(post_url_fw, data={'dog_name': dog_name, 'pswd': pswd})
+    print(res.text)
+    assert "created successfully" in res.text
     assert res.status_code == 200
 def test_create_dog_no_fw():
     dog_name = "bobby_tables"
     pswd = "bobby123"
     res = requests.post(post_url_nofw, data={'dog_name': dog_name, 'pswd': pswd})
+    print(res.text)
+    assert "created successfully" in res.text
     assert res.status_code == 200
 
 # Auth dogs with right password:
