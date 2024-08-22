@@ -54,7 +54,7 @@ class Context:
         self.user = None
         self.remote_address = get_ip_from_request(req["REMOTE_ADDR"], self.headers)
         self.parsed_userinput = {}
-        self.xml = []
+        self.xml = {}
 
     def __reduce__(self):
         return (
