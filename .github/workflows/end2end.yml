@@ -33,6 +33,10 @@ jobs:
       working-directory: ./sample-apps/flask-postgres
       run: |
         docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
+    - name: Start flask-postgres-xml
+      working-directory: ./sample-apps/flask-postgres-xml
+      run: |
+        docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
