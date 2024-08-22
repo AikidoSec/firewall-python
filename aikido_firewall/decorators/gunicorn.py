@@ -2,10 +2,7 @@
 Includes all the wrappers for gunicorn config file
 """
 
-import atexit
 import aikido_firewall
-from aikido_firewall.background_process import get_comms
-from aikido_firewall.helpers.logging import logger
 
 
 def when_ready(prev_func):
@@ -15,6 +12,7 @@ def when_ready(prev_func):
     """
 
     def aik_when_ready(server):
+        aikido_firewall.protect("background-process-only")
         prev_func(server)
 
     return aik_when_ready
@@ -27,7 +25,7 @@ def post_fork(prev_func):
     """
 
     def aik_post_fork(server, worker):
-        aikido_firewall.protect()
+        aikido_firewall.protect(server=False)
         prev_func(server, worker)
 
     return aik_post_fork
