@@ -5,9 +5,6 @@ Sink module for `xml`, python's built-in function
 import copy
 import importhook
 from aikido_firewall.helpers.logging import logger
-from aikido_firewall.helpers.extract_strings_from_user_input import (
-    reset_userinput_cache_for_given_source,
-)
 from aikido_firewall.context import get_current_context
 
 
@@ -24,8 +21,6 @@ def process_xml(user_input, root_element):
                 extracted_xml_attrs[k] = set()
             extracted_xml_attrs[k].add(v)
         extracted_xml_attrs.update(set(el.items()))
-
-    reset_userinput_cache_for_given_source("xml")
     context.xml.append(extracted_xml_attrs)
     context.set_as_current_context()
 

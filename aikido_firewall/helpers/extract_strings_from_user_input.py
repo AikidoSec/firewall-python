@@ -19,13 +19,6 @@ def extract_strings_from_user_input_cached(obj, source):
     return res
 
 
-def reset_userinput_cache_for_given_source(source):
-    """Resets cache for the given source"""
-    context = get_current_context()
-    if context.parsed_userinput and context.parsed_userinput.get(source):
-        context.parsed_userinput[source] = None  # Empty cache
-
-
 def extract_strings_from_user_input(obj, path_to_payload=None):
     """
     Extracts strings from an object (user input)
