@@ -10,6 +10,7 @@ if firewall_disabled is not None:
 from flask import Flask, render_template, request
 import psycopg2
 import xml.etree.ElementTree as ET
+import lxml.etree as ET2
 
 app = Flask(__name__)
 if __name__ == '__main__':
@@ -61,6 +62,21 @@ def post_upload_xml():
 def post_xml():
     raw_xml = request.data.decode('utf-8')
     root = ET.fromstring(raw_xml)
+    ET2.fromstring(raw_xml)
+    conn = get_db_connection()
+    cursor =  conn.cursor()
+    for dog in root.findall('dog'):
+        dog_name = dog.get('dog_name')
+        cursor.execute(f"INSERT INTO dogs (dog_name, isAdmin) VALUES ('%s', FALSE)" % (dog_name))
+        conn.commit()
+    cursor.close()
+    conn.close()
+    return f'Dogs created successfully'
+
+@app.route("/xml_post_lxml", methods=['POST'])
+def post_xml():
+    raw_xml = request.data.decode('utf-8')
+    root = ET2.fromstring(raw_xml)
     conn = get_db_connection()
     cursor =  conn.cursor()
     for dog in root.findall('dog'):
