@@ -72,3 +72,17 @@ def post_xml():
     cursor.close()
     conn.close()
     return f'Dogs created successfully'
+
+@app.route("/xml_post_lxml", methods=['POST'])
+def post_xml():
+    raw_xml = request.data.decode('utf-8')
+    root = ET2.fromstring(raw_xml)
+    conn = get_db_connection()
+    cursor =  conn.cursor()
+    for dog in root.findall('dog'):
+        dog_name = dog.get('dog_name')
+        cursor.execute(f"INSERT INTO dogs (dog_name, isAdmin) VALUES ('%s', FALSE)" % (dog_name))
+        conn.commit()
+    cursor.close()
+    conn.close()
+    return f'Dogs created successfully'
