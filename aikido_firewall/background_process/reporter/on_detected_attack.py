@@ -46,4 +46,4 @@ def on_detected_attack(reporter, attack, context, blocked, stack):
         logger.debug("Result : %s", result)
     except Exception as e:
         logger.debug(e)
-        logger.info("Failed to report attack")
+        logger.info("Failed to report an attack")

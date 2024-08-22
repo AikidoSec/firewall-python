@@ -60,7 +60,7 @@ def aikido___call__(flask_app, environ, start_response):
         context1.set_as_current_context()
         request_handler(stage="init")
     except Exception as e:
-        logger.info("Exception on aikido __call__ function : %s", e)
+        logger.debug("Exception on aikido __call__ function : %s", e)
     res = flask_app.wsgi_app(environ, start_response)
     return res
 

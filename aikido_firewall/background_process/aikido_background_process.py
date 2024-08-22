@@ -63,7 +63,7 @@ class AikidoBackgroundProcess:
         )  # Create an event scheduler
         self.send_to_reporter(event_scheduler)
 
-        api = ReportingApiHTTP("http://app.local.aikido.io/")
+        api = ReportingApiHTTP("https://guard.aikido.dev/")
         # We need to pass along the scheduler so that the heartbeat also gets sent
         self.reporter = Reporter(
             block=check_env_for_blocking(),
@@ -84,7 +84,6 @@ class AikidoBackgroundProcess:
         event_scheduler.enter(
             EMPTY_QUEUE_INTERVAL, 1, self.send_to_reporter, (event_scheduler,)
         )
-        logger.debug("Checking queue")
         while not self.queue.empty():
             queue_attack_item = self.queue.get()
             self.reporter.on_detected_attack(

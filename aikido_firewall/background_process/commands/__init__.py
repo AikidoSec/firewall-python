@@ -37,4 +37,4 @@ def process_incoming_command(bg_process, obj, conn):
     if action in commands_map:
         commands_map[action](bg_process, data, conn)
     else:
-        logger.info("Command : `%s` not found, aborting", action)
+        logger.debug("Command : `%s` not found, aborting", action)

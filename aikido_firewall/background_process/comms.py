@@ -102,8 +102,8 @@ class AikidoIPCCommunications:
         t.start()
         t.join(timeout=0.1)
         if not result_obj[0]:
-            logger.info(
-                "Communication returned None between background process and threads"
+            logger.debug(
+                " Failure in communication to background process, %s(%s)", action, obj
             )
             return {"success": False, "error": "timeout"}
 
