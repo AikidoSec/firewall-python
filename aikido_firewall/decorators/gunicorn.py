@@ -12,9 +12,9 @@ def signal_handler():
     """Signal handler on SIGTERM/SIGKILL"""
     try:
         logger.info("Killing background process... (Received SIGINT/SIGTERM)")
-        get_comms().background_process.terminate()
-    except Exception:
-        pass
+        get_comms().background_process.join()
+    except Exception as e:
+        logger.critical("Exception : %s", e)
 
 
 atexit.register(signal_handler)
@@ -27,7 +27,6 @@ def when_ready(prev_func):
     """
 
     def aik_when_ready(server):
-        atexit.register(signal_handler)
 
         aikido_firewall.protect("background-process-only")
         prev_func(server)
