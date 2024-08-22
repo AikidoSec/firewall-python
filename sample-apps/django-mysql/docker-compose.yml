@@ -13,6 +13,7 @@ services:
       MYSQL_ROOT_PASSWORD: 'password'
 
   backend:
+    image: sample_django_mysql
     build: 
       context: ./../../
       dockerfile: ./sample-apps/django-mysql/Dockerfile
@@ -23,12 +24,17 @@ services:
       - .:/app
     ports:
       - "8080:8000"
-    env_file:
-      - .env
     depends_on:
       - db
     extra_hosts:
       - "app.local.aikido.io:host-gateway"
+    environment:
+      SECRET_KEY: 'Test key'
+      MYSQL_DATABASE: 'db'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+      FIREWALL_DISABLED: 0
 
 
 volumes:

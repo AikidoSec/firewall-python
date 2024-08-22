@@ -17,6 +17,7 @@ services:
 
 
   backend:
+    image: sample_flask_mongo
     build: 
       context: ./../../
       dockerfile: ./sample-apps/flask-mongo/Dockerfile
@@ -26,14 +27,15 @@ services:
     volumes:
       - .:/app
     ports:
-      - "8084:5000"
+      - "8094:5000"
     depends_on:
       - db
     networks:
       - default_network
     extra_hosts:
       - "app.local.aikido.io:host-gateway"
-
+    environment:
+      FIREWALL_DISABLED: 0
 
 volumes:
   db_data:

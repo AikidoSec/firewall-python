@@ -8,7 +8,7 @@ Overview :
   - Runs on 8082. Without Aikido runs on 8083
 - `flask-mongo/` is a Flask app using MongoDB.
   - It runs **multi-threaded**
-  - Runs on 8084. Without Aikido runs on 8085
+  - Runs on 8094. Without Aikido runs on 8095
 - `flask-mysql/` is a Flask app using MySQL.
   - It runs **single-threaded**
   - Runs on 8086. Without Aikido runs on 8087

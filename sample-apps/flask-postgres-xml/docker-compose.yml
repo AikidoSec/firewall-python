@@ -15,6 +15,7 @@ services:
       - default_network
 
   backend:
+    image: sample_flask_postgres_xml
     build: 
       context: ./../../
       dockerfile: ./sample-apps/flask-postgres-xml/Dockerfile
