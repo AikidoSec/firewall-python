@@ -2,7 +2,7 @@
 Includes all the wrappers for gunicorn config file
 """
 
-import signal
+import atexit
 import aikido_firewall
 from aikido_firewall.background_process import get_comms
 from aikido_firewall.helpers.logging import logger
@@ -10,9 +10,8 @@ from aikido_firewall.helpers.logging import logger
 
 def signal_handler(sig, frame):
     """Signal handler on SIGTERM/SIGKILL"""
-    if __name__ == "__main__":
-        logger.info("Killing background process... (Received SIGINT/SIGTERM)")
-        get_comms().background_process.terminate()
+    logger.info("Killing background process... (Received SIGINT/SIGTERM)")
+    get_comms().background_process.terminate()
 
 
 def when_ready(prev_func):
@@ -22,8 +21,7 @@ def when_ready(prev_func):
     """
 
     def aik_when_ready(server):
-        signal.signal(signal.SIGINT, signal_handler)  # Handle Ctrl+C
-        signal.signal(signal.SIGTERM, signal_handler)  # Handle termination signal
+        atexit.register(signal_handler)
 
         aikido_firewall.protect("background-process-only")
         prev_func(server)
