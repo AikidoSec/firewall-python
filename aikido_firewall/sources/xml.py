@@ -8,7 +8,6 @@ from aikido_firewall.helpers.logging import logger
 from aikido_firewall.helpers.process_xml import process_xml
 
 
-
 @importhook.on_import("xml.etree.ElementTree")
 def on_xml_import(eltree):
     """
