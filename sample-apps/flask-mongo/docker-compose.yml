@@ -27,7 +27,7 @@ services:
     volumes:
       - .:/app
     ports:
-      - "8084:5000"
+      - "8094:5000"
     depends_on:
       - db
     networks:

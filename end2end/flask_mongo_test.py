@@ -1,11 +1,11 @@
 import pytest
 import requests
 # e2e tests for flask_mysql sample app
-post_url_fw = "http://localhost:8084/create"
-post_url_nofw = "http://localhost:8085/create"
+post_url_fw = "http://localhost:8094/create"
+post_url_nofw = "http://localhost:8095/create"
 
-post_json_url_fw = "http://localhost:8084/auth"
-post_json_url_nofw = "http://localhost:8085/auth"
+post_json_url_fw = "http://localhost:8094/auth"
+post_json_url_nofw = "http://localhost:8095/auth"
 
 # Create dogs:
 def test_create_dog_fw():
