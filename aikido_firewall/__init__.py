@@ -32,6 +32,7 @@ def protect(module="any", server=True):
     import aikido_firewall.sources.django
     import aikido_firewall.sources.flask
     import aikido_firewall.sources.xml
+    import aikido_firewall.sources.lxml
 
     import aikido_firewall.sources.gunicorn
     import aikido_firewall.sources.uwsgi
