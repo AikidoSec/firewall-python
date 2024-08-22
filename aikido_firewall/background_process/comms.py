@@ -62,6 +62,7 @@ class AikidoIPCCommunications:
             # the aikido server, so we shouldn't start the background process
             return
         #  Daemon is set to True so that the process kills itself when the main process dies
+        self.send_data_to_bg_process("KILL", None)
         self.background_process = Process(
             target=AikidoBackgroundProcess, args=(self.address, self.key), daemon=True
         )
