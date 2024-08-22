@@ -10,8 +10,9 @@ from aikido_firewall.helpers.logging import logger
 
 def signal_handler(sig, frame):
     """Signal handler on SIGTERM/SIGKILL"""
-    logger.critical("Killing background process... (Received SIGINT/SIGTERM)")
-    get_comms().send_data_to_bg_process("KILL", None)
+    if __name__ == "__main__":
+        logger.info("Killing background process... (Received SIGINT/SIGTERM)")
+        get_comms().background_process.terminate()
 
 
 def when_ready(prev_func):
