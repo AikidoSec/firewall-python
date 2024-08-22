@@ -4,7 +4,9 @@ Sink module for `xml`, python's built-in function
 
 import copy
 import importhook
-from aikido_firewall.helpers.process_xml import process_xml
+from aikido_firewall.helpers.extract_data_from_xml_body import (
+    extract_data_from_xml_body,
+)
 from aikido_firewall.background_process.packages import add_wrapped_package
 
 
@@ -22,7 +24,7 @@ def on_lxml_import(eltree):
 
     def aikido_fromstring(text, *args, **kwargs):
         res = former_fromstring(text, *args, **kwargs)
-        process_xml(user_input=text, root_element=res)
+        extract_data_from_xml_body(user_input=text, root_element=res)
         return res
 
     former_fromstringlist = copy.deepcopy(eltree.fromstringlist)
@@ -30,7 +32,7 @@ def on_lxml_import(eltree):
     def aikido_fromstringlist(strings, *args, **kwargs):
         res = former_fromstringlist(strings, *args, **kwargs)
         for string in strings:
-            process_xml(user_input=string, root_element=res)
+            extract_data_from_xml_body(user_input=string, root_element=res)
         return res
 
     # pylint: disable=no-member
