@@ -1,9 +1,9 @@
-"""Exports process_xml helper function"""
+"""Exports extract_data_from_xml_body helper function"""
 
 import aikido_firewall.context as ctx
 
 
-def process_xml(user_input, root_element):
+def extract_data_from_xml_body(user_input, root_element):
     """Extracts all attributes from the xml and adds them to context"""
     context = ctx.get_current_context()
     if not isinstance(context.body, str) or user_input != context.body:
