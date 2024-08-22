@@ -1,5 +1,5 @@
 """
-?
+Exports ServiceConfig class
 """
 
 from aikido_firewall.helpers.match_endpoint import match_endpoint
@@ -8,11 +8,14 @@ from aikido_firewall.helpers.match_endpoint import match_endpoint
 class ServiceConfig:
     """Class holding the config of the reporter"""
 
-    def __init__(self, endpoints, last_updated_at, blocked_uids, bypassed_ips):
+    def __init__(
+        self, endpoints, last_updated_at, blocked_uids, bypassed_ips, received_any_stats
+    ):
         self.endpoints = [endpoint for endpoint in endpoints if not endpoint["graphql"]]
         self.last_updated_at = last_updated_at
         self.bypassed_ips = set(bypassed_ips)
         self.blocked_uids = set(blocked_uids)
+        self.received_any_stats = bool(received_any_stats)
 
     def get_endpoint(self, route_metadata):
         """

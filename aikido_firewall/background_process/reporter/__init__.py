@@ -26,6 +26,7 @@ class Reporter:
 
     timeout_in_sec = 5  # Timeout of API calls to Aikido Server
     heartbeat_secs = 600  # Heartbeat every 10 minutes
+    initial_stats_timeout = 60  # Wait 60 seconds after startup for initial stats
 
     def __init__(self, block, api, token, serverless):
         self.block = block
@@ -33,7 +34,13 @@ class Reporter:
         self.token = token  # Should be instance of the Token class!
         self.routes = Routes(200)
         self.hostnames = Hostnames(200)
-        self.conf = ServiceConfig([], get_unixtime_ms(), [], [])
+        self.conf = ServiceConfig(
+            endpoints=[],
+            last_updated_at=get_unixtime_ms(),
+            blocked_uids=[],
+            bypassed_ips=[],
+            received_any_stats=True,
+        )
         self.rate_limiter = RateLimiter(
             max_items=5000, time_to_live_in_ms=120 * 60 * 1000  # 120 minutes
         )
@@ -55,8 +62,20 @@ class Reporter:
                 "Token was invalid, not starting heartbeats and realtime polling."
             )
             return
+        event_scheduler.enter(self.initial_stats_timeout, 1, self.report_initial_stats)
         send_heartbeats_every_x_secs(self, self.heartbeat_secs, event_scheduler)
         start_polling_for_changes(self, event_scheduler)
+
+    def report_initial_stats(self):
+        """
+        This is run 1m after startup, and checks if we should send out
+        a preliminary heartbeat with some stats.
+        """
+        should_report_initial_stats = not (
+            self.statistics.is_empty() or self.conf.received_any_stats
+        )
+        if should_report_initial_stats:
+            self.send_heartbeat()
 
     def on_detected_attack(self, attack, context, blocked, stack):
         """This will send something to the API when an attack is detected"""
