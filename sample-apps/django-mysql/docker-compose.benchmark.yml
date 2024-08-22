@@ -1,9 +1,7 @@
 version: "3"
 services:
   backend_firewall_disabled:
-    build: 
-      context: ./../../
-      dockerfile: ./sample-apps/django-mysql/Dockerfile
+    image: sample_django_mysql
     command: sh -c "python3 manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
     restart: always
     volumes:

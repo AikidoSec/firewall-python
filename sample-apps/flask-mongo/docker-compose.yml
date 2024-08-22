@@ -17,6 +17,7 @@ services:
 
 
   backend:
+    image: sample_flask_mongo
     build: 
       context: ./../../
       dockerfile: ./sample-apps/flask-mongo/Dockerfile

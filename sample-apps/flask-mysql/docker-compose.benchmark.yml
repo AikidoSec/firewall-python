@@ -1,9 +1,7 @@
 version: "3"
 services:
   backend_firewall_disabled:
-    build: 
-      context: ./../../
-      dockerfile: ./sample-apps/flask-mysql/Dockerfile
+    image: sample_flask_mysql
     command: sh -c "flask --app app run --debug --host=0.0.0.0 --no-reload"
     restart: always
     volumes:

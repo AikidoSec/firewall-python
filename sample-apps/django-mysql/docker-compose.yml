@@ -13,6 +13,7 @@ services:
       MYSQL_ROOT_PASSWORD: 'password'
 
   backend:
+    image: sample_django_mysql
     build: 
       context: ./../../
       dockerfile: ./sample-apps/django-mysql/Dockerfile

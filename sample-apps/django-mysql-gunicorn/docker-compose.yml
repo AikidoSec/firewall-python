@@ -18,6 +18,7 @@ services:
       start_period: 10s
 
   backend:
+    image: sample_django_mysql_gunicorn
     build: 
       context: ./../../
       dockerfile: ./sample-apps/django-mysql-gunicorn/Dockerfile
