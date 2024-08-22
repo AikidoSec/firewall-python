@@ -18,7 +18,11 @@ install:
 
 .PHONY: test
 test:
-	poetry run pytest
+	poetry run pytest aikido_firewall/
+
+.PHONY: end2end
+end2end:
+	poetry run pytest end2end/
 
 .PHONY: cov
 cov:
