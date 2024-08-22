@@ -13,7 +13,7 @@ from .parse_cookies import parse_cookies
 from .extract_wsgi_headers import extract_wsgi_headers
 from .build_url_from_wsgi import build_url_from_wsgi
 
-UINPUT_SOURCES = ["body", "cookies", "query", "headers"]
+UINPUT_SOURCES = ["body", "cookies", "query", "headers", "xml"]
 local = threading.local()
 
 
@@ -53,6 +53,7 @@ class Context:
         self.user = None
         self.remote_address = get_ip_from_request(req["REMOTE_ADDR"], self.headers)
         self.parsed_userinput = {}
+        self.xml = {}
 
     def __reduce__(self):
         return (
@@ -70,6 +71,7 @@ class Context:
                     "route": self.route,
                     "subdomains": self.subdomains,
                     "user": self.user,
+                    "xml": self.xml,
                 },
                 None,
                 None,
