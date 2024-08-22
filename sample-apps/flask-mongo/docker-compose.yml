@@ -33,7 +33,8 @@ services:
       - default_network
     extra_hosts:
       - "app.local.aikido.io:host-gateway"
-
+    environment:
+      FIREWALL_DISABLED: 0
 
 volumes:
   db_data:
