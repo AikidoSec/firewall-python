@@ -20,16 +20,21 @@ from aikido_firewall.config import PKG_VERSION
 load_dotenv()
 
 
-def protect(module="any", server=True):
+def protect(mode="daemon"):
     """
+    Mode can be set to :
+    - daemon : Default, imports sinks/sources and starts background_process
+    - daemon_only: Only starts background process and doesn't wrap
+    - daemon_disabled : This will import sinks/sources but won't start a background process
     Protect user's application
     """
-    if server:
+    if mode == "daemon" or mode == "daemon_only":
         start_background_process()
-    else:
-        logger.debug("Not starting background process")
-    if module == "background-process-only":
+    if mode == "daemon_only":
+        # Do not import sinks/sources
         return
+    if mode == "daemon_disabled":
+        logger.debug("Not starting the background process, daemon disabled.")
 
     # Import sources
     import aikido_firewall.sources.django
