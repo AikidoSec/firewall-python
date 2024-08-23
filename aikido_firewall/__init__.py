@@ -13,7 +13,9 @@ from aikido_firewall.helpers.logging import logger
 # Import background process
 from aikido_firewall.background_process import start_background_process
 
-# Load environment variables
+# Load environment variables and constants
+from aikido_firewall.config import PKG_VERSION
+
 load_dotenv()
 
 
@@ -56,4 +58,4 @@ def protect(mode="daemon"):
     import aikido_firewall.sinks.os_system
     import aikido_firewall.sinks.subprocess
 
-    logger.info("Aikido python firewall started")
+    logger.info("Aikido python firewall started, v%s", PKG_VERSION)
