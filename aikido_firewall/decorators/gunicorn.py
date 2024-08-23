@@ -5,18 +5,8 @@ Includes all the wrappers for gunicorn config file
 import aikido_firewall
 
 
-def when_ready(prev_func):
-    """
-    Aikido decorator for gunicorn config
-    Function: pre_request(worker, req)
-    """
-
-    def aik_when_ready(server):
-        aikido_firewall.protect("background-process-only")
-        prev_func(server)
-
-    return aik_when_ready
-
+# Run our background process as a child of gunicorn (exits safely)
+aikido_firewall.protect("background-process-only")
 
 def post_fork(prev_func):
     """
