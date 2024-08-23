@@ -70,7 +70,7 @@ class AikidoIPCCommunications:
     def send_data_to_bg_process(self, action, obj, receive=False):
         """Try-catched send_data_to_bg_process"""
         try:
-            return self._send_data_to_bg_process(action, obj, receive=False)
+            return self._send_data_to_bg_process(action, obj, receive)
         except Exception as e:
             logger.debug("Exception happened in send_data_to_bg_process : %s", e)
             return {"success": False, "error": "unknown"}
@@ -118,4 +118,4 @@ class AikidoIPCCommunications:
         if receive:
             return {"success": True, "data": result_obj[1]}
         else:
-            return {"success": True}
+            return {"success": True, "data": None}
