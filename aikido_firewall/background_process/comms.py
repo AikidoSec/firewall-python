@@ -29,7 +29,7 @@ def reset_comms():
     # pylint: disable=global-statement # This needs to be global
     global comms
     if comms:
-        comms.send_data_to_bg_process("KILL", {})
+        logger.debug("Resetting communications. (comms = None)")
         comms = None
 
 
