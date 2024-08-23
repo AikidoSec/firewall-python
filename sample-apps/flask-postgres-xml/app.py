@@ -74,7 +74,7 @@ def post_xml():
     return f'Dogs created successfully'
 
 @app.route("/xml_post_lxml", methods=['POST'])
-def post_xml():
+def post_xml_lxml():
     raw_xml = request.data.decode('utf-8')
     root = ET2.fromstring(raw_xml)
     conn = get_db_connection()
