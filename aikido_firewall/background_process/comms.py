@@ -30,7 +30,7 @@ def reset_comms():
     global comms
     if comms:
         logger.debug("Resetting communications object.")
-        #comms.send_data_to_bg_process("KILL", {})
+        # comms.send_data_to_bg_process("KILL", {})
         comms = None
 
 
@@ -106,7 +106,9 @@ class AikidoIPCCommunications:
             t.join(timeout=0.1)
             if not result_obj[0]:
                 logger.debug(
-                    " Failure in communication to background process, %s(%s)", action, obj
+                    " Failure in communication to background process, %s(%s)",
+                    action,
+                    obj,
                 )
                 return {"success": False, "error": "timeout"}
 
