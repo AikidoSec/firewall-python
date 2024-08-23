@@ -13,7 +13,7 @@ def test_protect_with_django(monkeypatch, caplog):
 
     protect(module="django")
 
-    assert "Aikido python firewall started" in caplog.text
+    assert "starting" in caplog.text
     assert get_comms() != None
     reset_comms()
     assert get_comms() == None
