@@ -6,7 +6,8 @@ import aikido_firewall
 
 
 # Run our background process as a child of gunicorn (exits safely)
-aikido_firewall.protect("background-process-only")
+aikido_firewall.protect(daemon_only=True)
+
 
 def post_fork(prev_func):
     """
@@ -15,7 +16,7 @@ def post_fork(prev_func):
     """
 
     def aik_post_fork(server, worker):
-        aikido_firewall.protect(server=False)
+        aikido_firewall.protect(daemon=False)
         prev_func(server, worker)
 
     return aik_post_fork

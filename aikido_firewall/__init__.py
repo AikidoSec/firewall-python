@@ -17,15 +17,15 @@ from aikido_firewall.background_process import start_background_process
 load_dotenv()
 
 
-def protect(module="any", server=True):
+def protect(daemon=True, daemon_only=False):
     """
     Protect user's application
     """
-    if server:
+    if daemon:
         start_background_process()
     else:
         logger.debug("Not starting background process")
-    if module == "background-process-only":
+    if daemon_only:
         return
 
     # Import sources
