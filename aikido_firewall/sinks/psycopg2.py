@@ -22,7 +22,7 @@ def wrap_cursor_factory(cursor_factory):
                 args=(args[0], Postgres()),  #  args[0] : sql
             )
             if former_cursor_factory and hasattr(former_cursor_factory, "execute"):
-                return former_cursor_factory.execute(*args, **kwargs)
+                return former_cursor_factory.execute(self, *args, **kwargs)
             return super().execute(*args, **kwargs)
 
         def executemany(self, *args, **kwargs):
@@ -34,7 +34,7 @@ def wrap_cursor_factory(cursor_factory):
                     args=(sql, Postgres()),
                 )
             if former_cursor_factory and hasattr(former_cursor_factory, "executemany"):
-                return former_cursor_factory.executemany(*args, **kwargs)
+                return former_cursor_factory.executemany(self, *args, **kwargs)
             return super().executemany(*args, **kwargs)
 
     return AikidoWrappedCursor
