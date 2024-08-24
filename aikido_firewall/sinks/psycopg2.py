@@ -9,6 +9,7 @@ from aikido_firewall.background_process.packages import add_wrapped_package
 from aikido_firewall.vulnerabilities import run_vulnerability_scan
 from aikido_firewall.helpers.logging import logger
 
+
 def generate_aikido_cursor(cursor_class):
 
     class AikidoCursor(cursor_class):
@@ -19,6 +20,7 @@ def generate_aikido_cursor(cursor_class):
             super().__init__(*args, **kwargs)
 
             # Return a function dynamically
+
         def execute(self, *args, **kwargs):
             """Aikido's wrapped execute function"""
             logger.critical(args[0])
@@ -39,7 +41,9 @@ def generate_aikido_cursor(cursor_class):
                     args=(sql, Postgres()),
                 )
             return super().executemany(*args, **kwargs)
+
     return AikidoCursor
+
 
 @importhook.on_import("psycopg2")
 def on_psycopg2_import(psycopg2):
