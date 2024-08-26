@@ -1,6 +1,8 @@
 import pytest
+from unittest.mock import MagicMock, patch
 from aikido_firewall.helpers.extract_strings_from_user_input import (
     extract_strings_from_user_input,
+    extract_strings_from_user_input_cached,
 )
 
 
@@ -138,21 +140,113 @@ def test_extracts_strings_from_mixed_array_containing_array():
     )
 
 
-"""
+# Mocking the dependencies
+def mock_extract_strings_from_user_input(obj):
+    return {"input1": "value1", "input2": "value2"}
 
-  t.same(
-    extractStringsFromUserInput({
-      arr: ["1", 2, true, null, undefined, { test: ["test123", "test345"] }],
-    }),
-    fromObj({
-      arr: ".",
-      "1": ".arr.[0]",
-      test: ".arr.[5]",
-      test123: ".arr.[5].test.[0]",
-      test345: ".arr.[5].test.[1]",
-      "test123,test345": ".arr.[5].test",
-      "1,2,true,,,[object Object]": ".arr",
-    })
-  );
-});
-"""
+
+@pytest.fixture
+def mock_context():
+    """Fixture to create a mock context."""
+    context = MagicMock()
+    context.parsed_userinput = {}
+    return context
+
+
+def test_extract_strings_from_user_input_cached_no_context(mock_context):
+    # Arrange
+    obj = "some input object"
+    with patch("aikido_firewall.context.get_current_context", return_value=None):
+        with patch(
+            "aikido_firewall.helpers.extract_strings_from_user_input.extract_strings_from_user_input",
+            side_effect=mock_extract_strings_from_user_input,
+        ):
+            # Act
+            result = extract_strings_from_user_input_cached(obj, "source1")
+
+            # Assert
+            assert result == {"input1": "value1", "input2": "value2"}
+
+
+def test_extract_strings_from_user_input_cached_with_context_no_cache(mock_context):
+    # Arrange
+    obj = "some input object"
+    with patch(
+        "aikido_firewall.context.get_current_context", return_value=mock_context
+    ):
+        with patch(
+            "aikido_firewall.helpers.extract_strings_from_user_input.extract_strings_from_user_input",
+            side_effect=mock_extract_strings_from_user_input,
+        ):
+            # Act
+            result = extract_strings_from_user_input_cached(obj, "source1")
+
+            # Assert
+            assert result == {"input1": "value1", "input2": "value2"}
+            assert mock_context.parsed_userinput["source1"] == result
+
+
+def test_extract_strings_from_user_input_cached_with_context_cache_hit(mock_context):
+    # Arrange
+    obj = "some input object"
+    mock_context.parsed_userinput["source1"] = {
+        "input1": "cached_value1",
+        "input2": "cached_value2",
+    }
+    with patch(
+        "aikido_firewall.context.get_current_context", return_value=mock_context
+    ):
+        # Act
+        result = extract_strings_from_user_input_cached(obj, "source1")
+
+        # Assert
+        assert result == {"input1": "cached_value1", "input2": "cached_value2"}
+        # Ensure extract_strings_from_user_input is not called
+        with patch(
+            "aikido_firewall.helpers.extract_strings_from_user_input.extract_strings_from_user_input"
+        ) as mock_extract:
+            extract_strings_from_user_input_cached(obj, "source1")
+            mock_extract.assert_not_called()
+
+
+def test_extract_strings_from_user_input_cached_with_context_cache_update(mock_context):
+    # Arrange
+    obj = "some input object"
+    mock_context.parsed_userinput["source1"] = {}
+    with patch(
+        "aikido_firewall.context.get_current_context", return_value=mock_context
+    ):
+        with patch(
+            "aikido_firewall.helpers.extract_strings_from_user_input.extract_strings_from_user_input",
+            side_effect=mock_extract_strings_from_user_input,
+        ):
+            # Act
+            result = extract_strings_from_user_input_cached(obj, "source1")
+
+            # Assert
+            assert result == {"input1": "value1", "input2": "value2"}
+            assert mock_context.parsed_userinput["source1"] == result
+
+
+def test_extract_strings_from_user_input_cached_multiple_sources(mock_context):
+    # Arrange
+    obj = "some input object"
+    with patch(
+        "aikido_firewall.context.get_current_context", return_value=mock_context
+    ):
+        with patch(
+            "aikido_firewall.helpers.extract_strings_from_user_input.extract_strings_from_user_input",
+            side_effect=mock_extract_strings_from_user_input,
+        ):
+            # Act
+            result1 = extract_strings_from_user_input_cached(obj, "source1")
+            result2 = extract_strings_from_user_input_cached(obj, "source2")
+
+            # Assert
+            assert result1 == {"input1": "value1", "input2": "value2"}
+            assert result2 == {"input1": "value1", "input2": "value2"}
+            assert mock_context.parsed_userinput["source1"] == result1
+            assert mock_context.parsed_userinput["source2"] == result2
+
+
+# To run the tests, use the command: pytest <filename>.py
