@@ -1,7 +1,7 @@
 """Exports `process_statistics` function"""
 
 
-def process_statistics(reporter, data, conn):
+def process_statistics(reporter, data, conn, queue=None):
     """Changes statistics"""
     if not reporter or not reporter.statistics:
         return

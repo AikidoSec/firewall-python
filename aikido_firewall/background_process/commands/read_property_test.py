@@ -21,7 +21,7 @@ def mock_conn():
     return conn
 
 
-def test_process_read_property_sends_value(mock_reporter, mock_conn):
+def test_process_read_property_sends_value(mock_reporter, mock_conn, queue=None):
     """Test that process_read_property sends the value of the property."""
     data = "some_property"
 

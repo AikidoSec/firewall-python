@@ -3,7 +3,7 @@
 from aikido_firewall.helpers.logging import logger
 
 
-def process_wrapped_package(reporter, data, conn):
+def process_wrapped_package(reporter, data, conn, queue=None):
     """A package has been wrapped"""
     try:
         pkg_name = data["name"]
