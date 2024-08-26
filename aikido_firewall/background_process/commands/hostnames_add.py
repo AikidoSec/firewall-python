@@ -3,7 +3,7 @@
 from aikido_firewall.helpers.logging import logger
 
 
-def process_hostnames_add(connection_manager, data, conn, queue=None):
+def process_hostnames_add(connection_manager, data, queue=None):
     """Add a hostname to hostnames object in connection_manager"""
     logger.debug("Adding a hostname : %s:%s", data[0], data[1])
     if connection_manager:
