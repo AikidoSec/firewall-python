@@ -38,7 +38,7 @@ def process_incoming_command(reporter, obj, conn, queue):
     if action in commands_map:
         func, returns_data = commands_map[action]
         if returns_data:
-            conn.send(func(reporter, data, conn, queue))
-        func(reporter, data, conn, queue)
+            return conn.send(func(reporter, data, queue))
+        func(reporter, data, queue)
     else:
         logger.debug("Command : `%s` not found, aborting", action)
