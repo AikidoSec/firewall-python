@@ -35,9 +35,10 @@ class Context2(Context):
         self.parsed_userinput = {}
 
 
-def test_detect_shell_injection():
+def test_detect_shell_injection(monkeypatch):
+    monkeypatch.setattr("aikido_firewall.context.get_current_context", lambda: None)
+
     context = Context1()
-    context.set_as_current_context()
     result = check_context_for_shell_injection(
         command="binary --domain www.example`whoami`.com",
         operation="child_process.exec",
@@ -58,9 +59,10 @@ def test_detect_shell_injection():
     assert result == expected
 
 
-def test_detect_shell_injection_from_route_params():
+def test_detect_shell_injection_from_route_params(monkeypatch):
+    monkeypatch.setattr("aikido_firewall.context.get_current_context", lambda: None)
+
     context = Context2()
-    context.set_as_current_context()
     result = check_context_for_shell_injection(
         command="binary --domain www.example`whoami`.com",
         operation="child_process.exec",
