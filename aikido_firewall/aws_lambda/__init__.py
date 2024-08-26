@@ -22,6 +22,8 @@ def protect(handler):
         token=get_token_from_env(),
         serverless="lambda",
     )
+    cloud_connection_manager.timeout_in_sec = 1 # 1 second timeout
+    cloud_connection_manager.on_start()
     set_global_cloud_connection_manager(cloud_connection_manager)
 
     # Wrapping :
