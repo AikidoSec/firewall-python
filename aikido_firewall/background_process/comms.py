@@ -74,9 +74,10 @@ class AikidoIPCCommunications:
         try:
             connection_manager = get_global_cloud_connection_manager()
             if connection_manager:
-                return process_incoming_command(
+                data = process_incoming_command(
                     connection_manager, (action, obj), conn=None, queue=None
                 )
+                return {"success": True, "data": data}
             return self._send_data_to_bg_process(action, obj, receive)
         except Exception as e:
             logger.debug("Exception happened in send_data_to_bg_process : %s", e)
