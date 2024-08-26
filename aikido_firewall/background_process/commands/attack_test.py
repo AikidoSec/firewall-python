@@ -13,7 +13,7 @@ def test_process_attack_adds_data_to_queue():
     queue = Queue()
     reporter = MockReporter()
     data = ("injection_results", "context", True, "stacktrace")  # Example data
-    process_attack(reporter, data, None, queue)
+    process_attack(reporter, data, queue)
 
     # Check if the data is added to the queue
     assert not queue.empty()
@@ -24,7 +24,7 @@ def test_process_attack_statistics_called_when_enabled():
     queue = Queue()
     reporter = MockReporter()
     data = ("injection_results", "context", True, "stacktrace")  # Example data
-    process_attack(reporter, data, None, queue)
+    process_attack(reporter, data, queue)
 
     # Check if on_detected_attack was called
     reporter.statistics.on_detected_attack.assert_called_once_with(blocked=True)
@@ -35,7 +35,7 @@ def test_process_attack_statistics_not_called_when_disabled():
     reporter = MockReporter()
     reporter.statistics = None  # Disable statistics
     data = ("injection_results", "context", True, "stacktrace")  # Example data
-    process_attack(reporter, data, None, queue)
+    process_attack(reporter, data, queue)
 
     # Check if on_detected_attack was not called
     assert (
@@ -49,8 +49,8 @@ def test_process_attack_multiple_calls():
     data1 = ("injection_results_1", "context_1", True, "stacktrace_1")
     data2 = ("injection_results_2", "context_2", False, "stacktrace_2")
 
-    process_attack(reporter, data1, None, queue)
-    process_attack(reporter, data2, None, queue)
+    process_attack(reporter, data1, queue)
+    process_attack(reporter, data2, queue)
 
     # Check if both data items are added to the queue
     assert queue.qsize() == 2
@@ -67,9 +67,9 @@ def test_process_attack_with_different_data_formats():
     data2 = ("injection_results", "context", False, "stacktrace")
     data3 = ("injection_results", "context", None, "stacktrace")
 
-    process_attack(reporter, data1, None, queue)
-    process_attack(reporter, data2, None, queue)
-    process_attack(reporter, data3, None, queue)
+    process_attack(reporter, data1, queue)
+    process_attack(reporter, data2, queue)
+    process_attack(reporter, data3, queue)
 
     # Check if all data items are added to the queue
     assert queue.qsize() == 3
