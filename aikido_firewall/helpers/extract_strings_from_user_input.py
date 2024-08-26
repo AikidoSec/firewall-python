@@ -4,12 +4,16 @@ Helper function file, see funtion definition
 
 from aikido_firewall.helpers.try_decode_as_jwt import try_decode_as_jwt
 from aikido_firewall.helpers.build_path_to_payload import build_path_to_payload
-from aikido_firewall.context import get_current_context
+import aikido_firewall.context as ctx
 
 
 def extract_strings_from_user_input_cached(obj, source):
     """Use the cache to speed up getting user input"""
-    context = get_current_context()
+    context = ctx.get_current_context()
+
+    if not context:
+        return extract_strings_from_user_input(obj)
+
     if context.parsed_userinput and context.parsed_userinput.get(source):
         return context.parsed_userinput.get(source)
     res = extract_strings_from_user_input(obj)
