@@ -35,6 +35,6 @@ def process_incoming_command(bg_process, obj, conn):
     action = obj[0]
     data = obj[1]
     if action in commands_map:
-        commands_map[action](bg_process, data, conn)
+        commands_map[action](bg_process.reporter, data, conn, queue=bg_process.queue)
     else:
         logger.debug("Command : `%s` not found, aborting", action)
