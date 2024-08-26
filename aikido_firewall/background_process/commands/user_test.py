@@ -16,7 +16,7 @@ def test_process_user_adds_user(mock_connection_manager):
     user_data = {"username": "test_user", "email": "test@example.com"}
 
     process_user(
-        mock_connection_manager, user_data, None
+        mock_connection_manager, user_data
     )  # conn is not used in this function
 
     # Check that the add_user method was called with the correct arguments
@@ -27,6 +27,4 @@ def test_process_user_no_connection_manager():
     """Test that process_user does nothing when connection_manager is not present."""
     user_data = {"username": "test_user", "email": "test@example.com"}
 
-    process_user(None, user_data, None)  # conn is not used in this function
-
-    # Make sure there were no errors
+    process_user(None, user_data)  # conn is not used in this function
