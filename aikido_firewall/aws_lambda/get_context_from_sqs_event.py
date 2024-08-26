@@ -13,11 +13,11 @@ def get_context_from_sqs_event(event):
     return {
         "url": None,
         "method": None,
-        "remoteAddress": None,
+        "remote_address": None,
         "body": {
             "Records": [{"body": record} for record in body],
         },
-        "routeParams": {},
+        "route_params": {},
         "headers": {},
         "query": {},
         "cookies": {},

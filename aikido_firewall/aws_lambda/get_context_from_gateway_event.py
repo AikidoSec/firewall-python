@@ -32,10 +32,10 @@ def get_context_from_gateway_event(event):
     return {
         "url": None,
         "method": event.get("httpMethod"),
-        "remoteAddress": remote_address,
+        "remote_address": remote_address,
         "body": parse_body(event),
         "headers": event.get("headers", {}),
-        "routeParams": event.get("pathParameters", {}),
+        "route_params": event.get("pathParameters", {}),
         "query": event.get("queryStringParameters", {}),
         "cookies": parse_cookies(event.get("headers", {}).get("cookie")),
         "source": "lambda/gateway",
