@@ -89,5 +89,6 @@ def run_vulnerability_scan(kind, op, args):
         logger.debug("Injection results : %s", json.dumps(injection_results))
         blocked = is_blocking_enabled()
         stack = get_clean_stacktrace()
+        dispatch_command("ATTACK", (injection_results, context, blocked, stack))
         if blocked:
             raise error_type(*error_args)
