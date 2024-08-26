@@ -2,12 +2,12 @@
 
 from aikido_firewall.context import Context
 from aikido_firewall.helpers.logging import logger
-from .events import is_gateway_event, is_sqs_event
-from .get_context_from_sqs_event import get_context_from_sqs_event
-from .get_context_from_gateway_event import get_context_from_gateway_event
 from aikido_firewall.background_process.cloud_connection_manager.globals import (
     get_global_cloud_connection_manager,
 )
+from .events import is_gateway_event, is_sqs_event
+from .get_context_from_sqs_event import get_context_from_sqs_event
+from .get_context_from_gateway_event import get_context_from_gateway_event
 
 
 def wrap_lambda_handler(handler):
