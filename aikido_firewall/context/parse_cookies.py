@@ -8,9 +8,10 @@ from http.cookies import SimpleCookie
 def parse_cookies(cookie_str):
     """Parse cookie string from headers"""
     cookie_dict = {}
+    if not cookie_str:
+        return {}
     cookies = SimpleCookie()
     cookies.load(cookie_str)
-
     for key, morsel in cookies.items():
         cookie_dict[key] = morsel.value
 
