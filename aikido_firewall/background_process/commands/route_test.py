@@ -4,27 +4,29 @@ from .route import process_route
 
 
 @pytest.fixture
-def mock_reporter():
-    """Fixture to create a mock reporter with a routes attribute."""
-    reporter = MagicMock()
-    reporter.routes = MagicMock()
-    return reporter
+def mock_connection_manager():
+    """Fixture to create a mock connection_manager with a routes attribute."""
+    connection_manager = MagicMock()
+    connection_manager.routes = MagicMock()
+    return connection_manager
 
 
-def test_process_route_adds_route(mock_reporter):
-    """Test that process_route adds a route when reporter is present."""
+def test_process_route_adds_route(mock_connection_manager):
+    """Test that process_route adds a route when connection_manager is present."""
     data = ["GET", "/api/test"]
 
-    process_route(mock_reporter, data, None)  # conn is not used in this function
+    process_route(
+        mock_connection_manager, data, None
+    )  # conn is not used in this function
 
     # Check that the add_route method was called with the correct arguments
-    mock_reporter.routes.add_route.assert_called_once_with(
+    mock_connection_manager.routes.add_route.assert_called_once_with(
         method="GET", path="/api/test"
     )
 
 
-def test_process_route_no_reporter():
-    """Test that process_route does nothing when reporter is not present."""
+def test_process_route_no_connection_manager():
+    """Test that process_route does nothing when connection_manager is not present."""
     data = ["POST", "/api/test"]
 
     process_route(None, data, None)  # conn is not used in this function

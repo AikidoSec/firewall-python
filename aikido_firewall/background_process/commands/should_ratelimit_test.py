@@ -20,7 +20,7 @@ def mock_conn():
 def test_process_should_ratelimit(mock_conn, should_ratelimit, expected_call):
     """Test rate limiting behavior based on different return values."""
     # Arrange
-    reporter = Mock()
+    connection_manager = Mock()
     data = {
         "route_metadata": {
             "route": "/test",
@@ -35,7 +35,7 @@ def test_process_should_ratelimit(mock_conn, should_ratelimit, expected_call):
         return_value=should_ratelimit,
     ):
         # Act
-        process_should_ratelimit(reporter, data, mock_conn)
+        process_should_ratelimit(connection_manager, data, mock_conn)
 
     # Assert
     mock_conn.send.assert_called_once_with(expected_call)
@@ -44,7 +44,7 @@ def test_process_should_ratelimit(mock_conn, should_ratelimit, expected_call):
 def test_process_should_ratelimit_multiple_calls(mock_conn):
     """Test multiple calls to process_should_ratelimit."""
     # Arrange
-    reporter = Mock()
+    connection_manager = Mock()
     data = {
         "route_metadata": {
             "route": "/test",
@@ -59,8 +59,8 @@ def test_process_should_ratelimit_multiple_calls(mock_conn):
         side_effect=[True, False],
     ):
         # Act
-        process_should_ratelimit(reporter, data, mock_conn)  # First call
-        process_should_ratelimit(reporter, data, mock_conn)  # Second call
+        process_should_ratelimit(connection_manager, data, mock_conn)  # First call
+        process_should_ratelimit(connection_manager, data, mock_conn)  # Second call
 
     # Assert
     assert mock_conn.send.call_count == 2
@@ -68,11 +68,11 @@ def test_process_should_ratelimit_multiple_calls(mock_conn):
     mock_conn.send.assert_any_call(False)
 
 
-def test_process_should_ratelimit_with_different_reporter(mock_conn):
-    """Test with different reporter configurations."""
+def test_process_should_ratelimit_with_different_connection_manager(mock_conn):
+    """Test with different connection_manager configurations."""
     # Arrange
-    reporter1 = Mock(name="Reporter1")
-    reporter2 = Mock(name="Reporter2")
+    connection_manager1 = Mock(name="CloudConnectionManager1")
+    connection_manager2 = Mock(name="CloudConnectionManager2")
     data = {
         "route_metadata": {
             "route": "/test",
@@ -87,8 +87,8 @@ def test_process_should_ratelimit_with_different_reporter(mock_conn):
         "aikido_firewall.ratelimiting.should_ratelimit_request", return_value=True
     ):
         # Act
-        process_should_ratelimit(reporter1, data, mock_conn)
-        process_should_ratelimit(reporter2, data, mock_conn)
+        process_should_ratelimit(connection_manager1, data, mock_conn)
+        process_should_ratelimit(connection_manager2, data, mock_conn)
 
     # Assert
     assert mock_conn.send.call_count == 2

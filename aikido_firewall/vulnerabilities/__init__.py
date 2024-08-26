@@ -31,7 +31,7 @@ from aikido_firewall.background_process.ipc_lifecycle_cache import get_cache
 def run_vulnerability_scan(kind, op, args):
     """
     Generally checks context for the provided "kind" of injection,
-    raises error if blocking is enabled, communicates it with reporter
+    raises error if blocking is enabled, communicates it with connection_manager
     """
     context = get_current_context()
     comms = get_comms()

@@ -30,11 +30,11 @@ commands_map = {
 }
 
 
-def process_incoming_command(reporter, obj, conn, queue):
+def process_incoming_command(connection_manager, obj, conn, queue):
     """Processes an incoming command"""
     action = obj[0]
     data = obj[1]
     if action in commands_map:
-        commands_map[action](reporter, data, conn, queue)
+        commands_map[action](connection_manager, data, conn, queue)
     else:
         logger.debug("Command : `%s` not found, aborting", action)

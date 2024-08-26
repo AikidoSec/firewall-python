@@ -1,4 +1,4 @@
-"""Exports get_reporter_info function"""
+"""Exports get_manager_info function"""
 
 import socket
 import platform
@@ -6,24 +6,24 @@ import aikido_firewall.config as config
 import aikido_firewall.helpers.get_machine_ip as h
 
 
-def get_reporter_info(reporter):
+def get_manager_info(connection_manager):
     """
-    This returns info about the reporter
+    This returns info about the connection_manager
     """
     return {
-        "dryMode": not reporter.block,
+        "dryMode": not connection_manager.block,
         "hostname": socket.gethostname(),
         "version": config.PKG_VERSION,
         "library": "firewall-python",
         "ipAddress": h.get_ip(),
         "packages": {
             pkg: details["version"]
-            for pkg, details in reporter.packages.items()
+            for pkg, details in connection_manager.packages.items()
             if "version" in details and "supported" in details and details["supported"]
         },
-        "serverless": bool(reporter.serverless),
-        "stack": list(reporter.packages.keys())
-        + ([reporter.serverless] if reporter.serverless else []),
+        "serverless": bool(connection_manager.serverless),
+        "stack": list(connection_manager.packages.keys())
+        + ([connection_manager.serverless] if connection_manager.serverless else []),
         "os": {"name": platform.system(), "version": platform.release()},
         "preventedPrototypePollution": False,  # Get this out of the API maybe?
         "nodeEnv": "",

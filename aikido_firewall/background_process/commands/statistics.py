@@ -1,11 +1,11 @@
 """Exports `process_statistics` function"""
 
 
-def process_statistics(reporter, data, conn):
+def process_statistics(connection_manager, data, conn):
     """Changes statistics"""
-    if not reporter or not reporter.statistics:
+    if not connection_manager or not connection_manager.statistics:
         return
-    stats = reporter.statistics
+    stats = connection_manager.statistics
 
     if data["action"] == "aborted_request":
         stats.requests["aborted"] += 1

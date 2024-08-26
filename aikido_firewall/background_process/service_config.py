@@ -6,7 +6,7 @@ from aikido_firewall.helpers.match_endpoint import match_endpoint
 
 
 class ServiceConfig:
-    """Class holding the config of the reporter"""
+    """Class holding the config of the connection_manager"""
 
     def __init__(
         self, endpoints, last_updated_at, blocked_uids, bypassed_ips, received_any_stats
