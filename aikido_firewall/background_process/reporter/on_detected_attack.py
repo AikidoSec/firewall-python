@@ -15,7 +15,7 @@ def on_detected_attack(reporter, attack, context, blocked, stack):
         return
     # Modify attack so we can send it out :
     try:
-        attack["user"] = None
+        attack["user"] = getattr(context, "user", None)
         attack["payload"] = json.dumps(attack["payload"])[:4096]
         attack["metadata"] = limit_length_metadata(attack["metadata"], 4096)
         attack["blocked"] = blocked
