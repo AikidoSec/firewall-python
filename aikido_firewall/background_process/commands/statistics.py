@@ -1,11 +1,12 @@
 """Exports `process_statistics` function"""
 
 
-def process_statistics(bg_process, data, conn):
+def process_statistics(reporter, data, conn):
     """Changes statistics"""
-    stats = bg_process.reporter.statistics
-    if not stats:
+    if not reporter or not reporter.statistics:
         return
+    stats = reporter.statistics
+
     if data["action"] == "aborted_request":
         stats.requests["aborted"] += 1
     elif data["action"] == "request":
