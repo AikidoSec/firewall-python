@@ -47,7 +47,9 @@ class AikidoBackgroundProcess:
                 try:
                     data = conn.recv()  #  because of this no sleep needed in thread
                     logger.debug("Incoming data : %s", data)
-                    process_incoming_command(bg_process=self, obj=data, conn=conn)
+                    process_incoming_command(
+                        reporter=self.reporter, obj=data, conn=conn, queue=self.queue
+                    )
                     conn.close()  # Sort of EOL for Python IPC
                     break
                 except Exception as e:
