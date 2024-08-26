@@ -3,7 +3,7 @@
 from aikido_firewall.helpers.logging import logger
 
 
-def process_read_property(connection_manager, data, conn):
+def process_read_property(connection_manager, data, conn, queue=None):
     """
     Takes in one arg : name of property on connection_manager, tries to read it.
     Meant to get config props

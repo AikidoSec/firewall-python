@@ -5,7 +5,7 @@ from aikido_firewall.sources.functions.ip_allowed_to_access_route import (
 )
 
 
-def process_is_ip_allowed(connection_manager, data, conn):
+def process_is_ip_allowed(connection_manager, data, conn, queue=None):
     """Checks if the IP is allowed to access the route"""
     if not connection_manager:
         return conn.send(True)
