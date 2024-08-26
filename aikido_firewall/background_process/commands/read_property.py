@@ -3,17 +3,17 @@
 from aikido_firewall.helpers.logging import logger
 
 
-def process_read_property(bg_process, data, conn):
+def process_read_property(reporter, data, conn):
     """
     Takes in one arg : name of property on reporter, tries to read it.
     Meant to get config props
     """
     try:
-        conn.send(bg_process.reporter.__dict__[data])
+        conn.send(reporter.__dict__[data])
     except KeyError:
         logger.debug(
             "Reporter has no attribute %s, current reporter: %s",
             data,
-            bg_process.reporter,
+            reporter,
         )
         conn.send(None)
