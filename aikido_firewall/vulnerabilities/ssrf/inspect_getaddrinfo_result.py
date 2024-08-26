@@ -10,9 +10,10 @@ from aikido_firewall.background_process import get_comms
 from aikido_firewall.errors import AikidoSSRF
 from aikido_firewall.helpers.blocking_enabled import is_blocking_enabled
 from aikido_firewall.helpers.get_clean_stacktrace import get_clean_stacktrace
-from .imds import is_trusted_hostname, is_imds_ip_address
+from .imds import resolves_to_imds_ip
 from .is_private_ip import is_private_ip
 from .find_hostname_in_context import find_hostname_in_context
+from .extract_ip_array_from_results import extract_ip_array_from_results
 
 
 #  gets called when the result of the DNS resolution has come in
@@ -67,24 +68,3 @@ def inspect_getaddrinfo_result(dns_results, hostname, port):
 
     if should_block:
         raise AikidoSSRF()
-
-
-def resolves_to_imds_ip(resolved_ip_addresses, hostname):
-    """
-    returns a boolean, true if the IP is an imds ip
-    """
-    #  Allow access to Google Cloud metadata service as you need to set specific headers to access it
-    #  We don't want to block legitimate requests
-    if is_trusted_hostname(hostname):
-        return False
-    return any(is_imds_ip_address(ip) for ip in resolved_ip_addresses)
-
-
-def extract_ip_array_from_results(dns_results):
-    """Extracts IP's from dns results"""
-    ip_addresses = []
-    for result in dns_results:
-        ip_object = result[4]
-        if ip_object is not None and ip_object[0] is not None:
-            ip_addresses.append(ip_object[0])
-    return ip_addresses
