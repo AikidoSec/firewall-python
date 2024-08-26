@@ -54,6 +54,7 @@ class Context:
         self.remote_address = get_ip_from_request(req["REMOTE_ADDR"], self.headers)
         self.parsed_userinput = {}
         self.xml = {}
+        self.outgoing_req_redirects = []
 
     def __reduce__(self):
         return (
@@ -72,6 +73,7 @@ class Context:
                     "subdomains": self.subdomains,
                     "user": self.user,
                     "xml": self.xml,
+                    "outgoing_req_redirects": self.outgoing_req_redirects,
                 },
                 None,
                 None,
