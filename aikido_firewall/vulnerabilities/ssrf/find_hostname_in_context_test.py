@@ -15,13 +15,13 @@ def mock_find_hostname_in_userinput(user_input, hostname, port):
 
 
 # Test cases
-def test_find_hostname_in_context_found():
+def test_find_hostname_in_context_found(monkeypatch):
     # Arrange
     hostname = "example.com"
     context = MagicMock()
     context.cookies = "example.com"
     context.body = "another user input"
-    context.parsed_userinput = {}
+    monkeypatch.setattr("aikido_firewall.context.get_current_context", lambda: None)
 
     with patch(
         "aikido_firewall.helpers.extract_strings_from_user_input.extract_strings_from_user_input_cached",
@@ -42,12 +42,12 @@ def test_find_hostname_in_context_found():
             }
 
 
-def test_find_hostname_in_context_not_found():
+def test_find_hostname_in_context_not_found(monkeypatch):
     # Arrange
     hostname = "notfound.com"
     context = MagicMock()
     context.body = "some user input"
-    context.parsed_userinput = {}
+    monkeypatch.setattr("aikido_firewall.context.get_current_context", lambda: None)
 
     with patch(
         "aikido_firewall.helpers.extract_strings_from_user_input.extract_strings_from_user_input_cached",
@@ -64,10 +64,11 @@ def test_find_hostname_in_context_not_found():
             assert result is None
 
 
-def test_find_hostname_in_context_no_sources():
+def test_find_hostname_in_context_no_sources(monkeypatch):
     # Arrange
     hostname = "example.com"
     context = MagicMock()  # No attributes
+    monkeypatch.setattr("aikido_firewall.context.get_current_context", lambda: None)
 
     # Act
     result = find_hostname_in_context(hostname, context, 80)
