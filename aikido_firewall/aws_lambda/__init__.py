@@ -11,6 +11,7 @@ from aikido_firewall.helpers.logging import logger
 from aikido_firewall.background_process.cloud_connection_manager.globals import (
     set_global_cloud_connection_manager,
 )
+from .wrap_lambda_handler import wrap_lambda_handler
 
 
 def protect(handler):
@@ -32,4 +33,4 @@ def protect(handler):
     # Wrapping :
     aikido_firewall.protect("daemon_disabled")
 
-    return handler
+    return wrap_lambda_handler(handler)
