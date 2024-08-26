@@ -11,6 +11,8 @@ from aikido_firewall.helpers.logging import logger
 from aikido_firewall.background_process.aikido_background_process import (
     AikidoBackgroundProcess,
 )
+from .cloud_connection_manager.globals import get_global_cloud_connection_manager
+from .commands import process_incoming_command
 
 # pylint: disable=invalid-name # This variable does change
 comms = None
@@ -70,6 +72,11 @@ class AikidoIPCCommunications:
     def send_data_to_bg_process(self, action, obj, receive=False):
         """Try-catched send_data_to_bg_process"""
         try:
+            connection_manager = get_global_cloud_connection_manager()
+            if connection_manager:
+                return process_incoming_command(
+                    connection_manager, (action, obj), conn=None, queue=None
+                )
             return self._send_data_to_bg_process(action, obj, receive)
         except Exception as e:
             logger.debug("Exception happened in send_data_to_bg_process : %s", e)
