@@ -1,0 +1,9 @@
+{% if dogs %}
+    <ul>
+    {% for dog in dogs %}
+        <li><a href="/app/dogpage/{{ dog.id }}">{{ dog.dog_name }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No dogs found.</p>
+{% endif %}
