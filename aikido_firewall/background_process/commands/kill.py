@@ -4,8 +4,7 @@ import sys
 from aikido_firewall.helpers.logging import logger
 
 
-def process_kill(reporter, data, conn, queue=None):
+def process_kill(reporter, data, queue=None):
     """when main process quits , or during testing etc"""
     logger.info("Killing background process")
-    conn.close()
     sys.exit(0)

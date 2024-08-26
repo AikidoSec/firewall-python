@@ -1,7 +1,7 @@
 """Main export is process_attack"""
 
 
-def process_attack(reporter, data, conn, queue):
+def process_attack(reporter, data, queue):
     """
     Adds ATTACK data object to queue
     Expected data object : [injection_results, context, blocked_or_not, stacktrace]

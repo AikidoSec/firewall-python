@@ -15,18 +15,19 @@ from .is_ip_allowed import process_is_ip_allowed
 from .fetch_initial_metadata import process_fetch_initial_metadata
 
 commands_map = {
-    "ATTACK": process_attack,
-    "READ_PROPERTY": process_read_property,
-    "ROUTE": process_route,
-    "USER": process_user,
-    "WRAPPED_PACKAGE": process_wrapped_package,
-    "SHOULD_RATELIMIT": process_should_ratelimit,
-    "KILL": process_kill,
-    "HOSTNAMES_ADD": process_hostnames_add,
-    "SHOULD_BLOCK_USER": process_should_block_user,
-    "STATISTICS": process_statistics,
-    "IS_IP_ALLOWED": process_is_ip_allowed,
-    "FETCH_INITIAL_METADATA": process_fetch_initial_metadata,
+    # This maps to a tuple : (function, returns_data?)
+    "ATTACK": (process_attack, False),
+    "READ_PROPERTY": (process_read_property, True),
+    "ROUTE": (process_route, False),
+    "USER": (process_user, False),
+    "WRAPPED_PACKAGE": (process_wrapped_package, True),
+    "SHOULD_RATELIMIT": (process_should_ratelimit, True),
+    "KILL": (process_kill, False),
+    "HOSTNAMES_ADD": (process_hostnames_add, False),
+    "SHOULD_BLOCK_USER": (process_should_block_user, True),
+    "STATISTICS": (process_statistics, False),
+    "IS_IP_ALLOWED": (process_is_ip_allowed, True),
+    "FETCH_INITIAL_METADATA": (process_fetch_initial_metadata, True),
 }
 
 
@@ -35,6 +36,9 @@ def process_incoming_command(reporter, obj, conn, queue):
     action = obj[0]
     data = obj[1]
     if action in commands_map:
-        commands_map[action](reporter, data, conn, queue)
+        func, returns_data = commands_map[action]
+        if returns_data:
+            conn.send(func(reporter, data, conn, queue))
+        func(reporter, data, conn, queue)
     else:
         logger.debug("Command : `%s` not found, aborting", action)
