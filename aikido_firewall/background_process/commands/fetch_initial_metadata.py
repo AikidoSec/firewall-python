@@ -1,7 +1,7 @@
 """Exports `process_fetch_initial_metadata`"""
 
 
-def process_fetch_initial_metadata(connection_manager, data, conn):
+def process_fetch_initial_metadata(connection_manager, data, conn, queue=None):
     """Fetches initial metadata"""
     if not connection_manager:
         return conn.send({"bypassed_ips": [], "matched_endpoints": []})

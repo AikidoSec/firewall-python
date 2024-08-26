@@ -1,7 +1,7 @@
 """Exports `process_statistics` function"""
 
 
-def process_statistics(connection_manager, data, conn):
+def process_statistics(connection_manager, data, conn, queue=None):
     """Changes statistics"""
     if not connection_manager or not connection_manager.statistics:
         return
