@@ -9,7 +9,7 @@ def on_start(connection_manager):
     This will send out an Event signalling the start to the server
     """
     if not connection_manager.token:
-        return
+        return {"error": "invalid_token"}
     res = connection_manager.api.report(
         connection_manager.token,
         {
