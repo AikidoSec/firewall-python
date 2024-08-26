@@ -11,7 +11,8 @@ def extract_strings_from_user_input_cached(obj, source):
     """Use the cache to speed up getting user input"""
     context = ctx.get_current_context()
 
-    if not context: #  context may not exist in all situations, in that cases the cache should be skipped
+    if not context:
+        #  context may not exist in all situations, in that cases the cache should be skipped
         return extract_strings_from_user_input(obj)
 
     if context.parsed_userinput and context.parsed_userinput.get(source):
