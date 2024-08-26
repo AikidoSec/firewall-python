@@ -1,5 +1,7 @@
 """Exports get_redirect_origin function"""
 
+import copy
+
 
 def get_redirect_origin(redirects, url):
     """
@@ -17,7 +19,7 @@ def get_redirect_origin(redirects, url):
     if not isinstance(redirects, list):
         return None
 
-    current_url = url
+    current_url = copy.deepcopy(url)
 
     # Follow the redirect chain until we reach the origin or don't find a redirect
     while True:
