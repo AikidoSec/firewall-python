@@ -1,0 +1,20 @@
+service: lambda-mongodb
+frameworkVersion: '3'
+
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: python3.9  # Change to the desired Python version
+
+functions:
+  login:
+    handler: handler.lambda_handler  # Change to the Python file and function name
+    events:
+      - httpApi:
+          path: /
+          method: post
+
+# Optional: Environment variables
+environment:
+  MONGO_URI: ${env:MONGO_URI}  # Use environment variable for MongoDB connection string
