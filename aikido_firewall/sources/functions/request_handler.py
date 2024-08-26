@@ -1,6 +1,6 @@
 """Exports request_handler function"""
 
-from aikido_firewall.background_process import get_comms
+from aikido_firewall.background_process.comms import get_comms, dispatch_command
 from aikido_firewall.context import get_current_context
 from aikido_firewall.helpers.is_useful_route import is_useful_route
 from aikido_firewall.helpers.logging import logger
@@ -13,7 +13,7 @@ def request_handler(stage, status_code=0):
     """This will check for rate limiting, Allowed IP's, useful routes, etc."""
     if stage == "init":
         #  This gets executed the first time a request get's intercepted
-        get_comms().send_data_to_bg_process("STATISTICS", {"action": "request"})
+        dispatch_command("STATISTICS", {"action": "request"})
 
         # Create a lifecycle cache
         IPCLifecycleCache(get_current_context())
@@ -32,13 +32,12 @@ def pre_response():
     - Ratelimiting
     """
     context = get_current_context()
-    comms = get_comms()
-    if not context or not comms:
+    if not context or not get_comms():
         logger.debug("Request was not complete, not running any pre_response code")
         return
 
     # IP Allowlist:
-    res = comms.send_data_to_bg_process(
+    res = dispatch_command(
         action="IS_IP_ALLOWED",
         obj={
             "route_metadata": context.get_route_metadata(),
@@ -54,14 +53,14 @@ def pre_response():
 
     # Blocked users:
     if context.user:
-        blocked_res = comms.send_data_to_bg_process(
+        blocked_res = dispatch_command(
             action="SHOULD_BLOCK_USER", obj=context.user["id"], receive=True
         )
         if blocked_res["success"] and blocked_res["data"]:
             return ("You are blocked by Aikido Firewall.", 403)
 
     # Ratelimiting :
-    ratelimit_res = comms.send_data_to_bg_process(
+    ratelimit_res = dispatch_command(
         action="SHOULD_RATELIMIT",
         obj={
             "route_metadata": context.get_route_metadata(),
@@ -90,4 +89,4 @@ def post_response(status_code):
         context.method,
     )
     if is_curr_route_useful:
-        get_comms().send_data_to_bg_process("ROUTE", (context.method, context.route))
+        dispatch_command("ROUTE", (context.method, context.route))

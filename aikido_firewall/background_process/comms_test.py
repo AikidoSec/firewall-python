@@ -11,7 +11,7 @@ def test_comms_init():
     assert comms.key == key
 
 
-def test_send_data_to_bg_process_exception(monkeypatch, caplog):
+def test_dispatch_command_exception(monkeypatch, caplog):
     def mock_client(address, authkey):
         raise Exception("Connection Error")
 
@@ -19,13 +19,13 @@ def test_send_data_to_bg_process_exception(monkeypatch, caplog):
     monkeypatch.setitem(globals(), "logger", caplog)
 
     comms = AikidoIPCCommunications(("localhost", 9898), "mock_key")
-    comms.send_data_to_bg_process("ACTION", "Test Object")
+    comms.dispatch_command("ACTION", "Test Object")
 
 
-def test_send_data_to_bg_process_successful(monkeypatch, caplog, mocker):
+def test_dispatch_command_successful(monkeypatch, caplog, mocker):
     comms = AikidoIPCCommunications(("localhost"), "mock_key")
     mock_client = mocker.MagicMock()
     monkeypatch.setattr("multiprocessing.connection.Client", mock_client)
 
-    # Call the send_data_to_bg_process function
-    comms.send_data_to_bg_process("ACTION", {"key": "value"})
+    # Call the dispatch_command function
+    comms.dispatch_command("ACTION", {"key": "value"})
