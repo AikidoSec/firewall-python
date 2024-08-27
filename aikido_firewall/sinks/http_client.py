@@ -21,8 +21,9 @@ def on_http_import(http):
 
     def aik_new_putrequest(_self, method, url, *args, **kwargs):
         logger.debug("HTTP Request [%s] %s:%s %s", method, _self.host, _self.port, url)
+        url_object = {"href": url, "hostname": _self.host}
         run_vulnerability_scan(
-            kind="ssrf", op="http.client.putrequest", args=(_self.host, _self.port)
+            kind="ssrf", op="http.client.putrequest", args=(url_object, _self.port)
         )
         return former_putrequest(_self, method, url, *args, **kwargs)
 

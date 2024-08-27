@@ -18,7 +18,7 @@ from aikido_firewall.helpers.get_clean_stacktrace import get_clean_stacktrace
 from aikido_firewall.helpers.blocking_enabled import is_blocking_enabled
 from .sql_injection.context_contains_sql_injection import context_contains_sql_injection
 from .nosql_injection.check_context import check_context_for_nosql_injection
-from .ssrf.check_context_for_ssrf import check_context_for_ssrf
+from .ssrf import scan_for_ssrf_in_request
 from .shell_injection.check_context_for_shell_injection import (
     check_context_for_shell_injection,
 )
@@ -74,14 +74,14 @@ def run_vulnerability_scan(kind, op, args):
         )
         error_type = AikidoPathTraversal
     elif kind == "ssrf":
+        # args[0] : URL object, args[1] : Port
         # Report hostname and port to background process :
-        injection_results = check_context_for_ssrf(
-            hostname=args[0], port=args[1], operation=op, context=context
-        )
+        injection_results = scan_for_ssrf_in_request(args[0], args[1], op, context)
         error_type = AikidoSSRF
         blocked_request = is_blocking_enabled() and injection_results
         if not blocked_request:
-            get_comms().send_data_to_bg_process("HOSTNAMES_ADD", (args[0], args[1]))
+            hostname = args[0].get("hostname")
+            get_comms().send_data_to_bg_process("HOSTNAMES_ADD", (hostname, args[1]))
     else:
         logger.error("Vulnerability type %s currently has no scans implemented", kind)
 
