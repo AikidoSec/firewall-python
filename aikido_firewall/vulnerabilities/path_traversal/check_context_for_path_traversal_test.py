@@ -50,7 +50,8 @@ class SafeContext:
     remote_address = "127.0.0.1"
 
 
-def test_detects_path_traversal_from_route_parameter():
+def test_detects_path_traversal_from_route_parameter(monkeypatch):
+    monkeypatch.setattr("aikido_firewall.context.get_current_context", lambda: None)
     result = check_context_for_path_traversal("../file/test.txt", "op", UnsafeContext())
     assert result == {
         "operation": "op",
@@ -64,14 +65,18 @@ def test_detects_path_traversal_from_route_parameter():
     }
 
 
-def test_does_not_flag_safe_operation():
+def test_does_not_flag_safe_operation(monkeypatch):
+    monkeypatch.setattr("aikido_firewall.context.get_current_context", lambda: None)
+
     filename = "../../web/spec-extension/cookies"
     operation = "path.normalize"
     result = check_context_for_path_traversal(filename, operation, SafeContext())
     assert len(result) == 0
 
 
-def test_detects_path_traversal_with_buffer():
+def test_detects_path_traversal_with_buffer(monkeypatch):
+    monkeypatch.setattr("aikido_firewall.context.get_current_context", lambda: None)
+
     filename = b"../file/test.txt"
     result = check_context_for_path_traversal(filename, "op", UnsafeContext())
     assert result == {
@@ -86,7 +91,9 @@ def test_detects_path_traversal_with_buffer():
     }
 
 
-def test_detects_path_traversal_with_url():
+def test_detects_path_traversal_with_url(monkeypatch):
+    monkeypatch.setattr("aikido_firewall.context.get_current_context", lambda: None)
+
     filename = "file:///../file/test.txt"
     result = check_context_for_path_traversal(filename, "op", UnsafeContext())
     assert result == {
@@ -101,13 +108,17 @@ def test_detects_path_traversal_with_url():
     }
 
 
-def test_ignores_non_utf8_buffer():
+def test_ignores_non_utf8_buffer(monkeypatch):
+    monkeypatch.setattr("aikido_firewall.context.get_current_context", lambda: None)
+
     filename = bytes([0x80, 0x81, 0x82, 0x83])
     result = check_context_for_path_traversal(filename, "op", UnsafeContext())
     assert len(result) == 0
 
 
-def test_ignores_invalid_filename_type():
+def test_ignores_invalid_filename_type(monkeypatch):
+    monkeypatch.setattr("aikido_firewall.context.get_current_context", lambda: None)
+
     filename = object()
     result = check_context_for_path_traversal(filename, "op", UnsafeContext())
     assert len(result) == 0

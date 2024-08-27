@@ -58,4 +58,4 @@ def protect(mode="daemon"):
     import aikido_firewall.sinks.os_system
     import aikido_firewall.sinks.subprocess
 
-    logger.info("Aikido python firewall started, v%s", PKG_VERSION)
+    logger.info("Aikido python firewall v%s starting.", PKG_VERSION)

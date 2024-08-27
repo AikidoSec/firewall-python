@@ -25,8 +25,9 @@ def start_background_process():
 
     # Remove the socket file if it already exists
     if os.path.exists(IPC_ADDRESS):
-        logger.debug("Unix Domain Socket already exists, removing previous")
+        logger.debug("Unix Domain Socket file already exists, deleting.")
         os.remove(IPC_ADDRESS)
-    logger.debug("Unix Domain Socket on file : %s", IPC_ADDRESS)
+
+    logger.debug("Communication starting on UDS File : %s", IPC_ADDRESS)
     comms = AikidoIPCCommunications(IPC_ADDRESS, secret_key_bytes)
     comms.start_aikido_listener()
