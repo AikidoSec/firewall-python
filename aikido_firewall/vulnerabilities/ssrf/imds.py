@@ -1,6 +1,6 @@
 """
 imds.py file, exports :
-is_imds_ip_address, is_trusted_hostname
+is_imds_ip_address, is_trusted_hostname, resolves_to_imds_ip
 """
 
 
@@ -44,3 +44,14 @@ trusted_hosts = ["metadata.google.internal", "metadata.goog"]
 def is_trusted_hostname(hostname):
     """Checks if this hostname is trusted"""
     return hostname in trusted_hosts
+
+
+def resolves_to_imds_ip(resolved_ip_addresses, hostname):
+    """
+    returns a boolean, true if the IP is an imds ip
+    """
+    #  Allow access to Google Cloud metadata service as you need to set specific headers to access it
+    #  We don't want to block legitimate requests
+    if is_trusted_hostname(hostname):
+        return False
+    return any(is_imds_ip_address(ip) for ip in resolved_ip_addresses)

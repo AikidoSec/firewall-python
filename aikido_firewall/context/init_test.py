@@ -43,6 +43,7 @@ def test_wsgi_context_1():
         "remote_address": "198.51.100.23",
         "parsed_userinput": {},
         "xml": {},
+        "outgoing_req_redirects": [],
         "route_params": {},
     }
 
@@ -81,6 +82,7 @@ def test_wsgi_context_2():
         "remote_address": "198.51.100.23",
         "parsed_userinput": {},
         "xml": {},
+        "outgoing_req_redirects": [],
         "route_params": {},
     }
 
