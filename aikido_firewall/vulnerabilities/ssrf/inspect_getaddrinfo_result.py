@@ -6,7 +6,7 @@ import traceback
 from aikido_firewall.helpers.try_parse_url import try_parse_url
 from aikido_firewall.context import get_current_context
 from aikido_firewall.helpers.logging import logger
-from aikido_firewall.background_process import get_comms
+from aikido_firewall.background_process.comms import dispatch_command
 from aikido_firewall.errors import AikidoSSRF
 from aikido_firewall.helpers.blocking_enabled import is_blocking_enabled
 from aikido_firewall.helpers.get_clean_stacktrace import get_clean_stacktrace
@@ -61,9 +61,7 @@ def inspect_getaddrinfo_result(dns_results, hostname, port):
 
     logger.debug("Sending data to bg process :")
     stack = get_clean_stacktrace()
-    get_comms().send_data_to_bg_process(
-        "ATTACK", (attack, context, should_block, stack)
-    )
+    dispatch_command("ATTACK", (attack, context, should_block, stack))
 
     if should_block:
         raise AikidoSSRF()

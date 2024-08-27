@@ -2,7 +2,7 @@ version: '3'
 services:
   db:
     image: mongo:latest
-    container_name: flask_mongo_db
+    container_name: lambda_mongo_db
     restart: always
     environment:
         MONGO_INITDB_ROOT_USERNAME: admin

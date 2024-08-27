@@ -13,7 +13,7 @@ def mock_get_comms(mocker):
             self.obj = None
             self.receive = False
 
-        def send_data_to_bg_process(self, action, obj, receive):
+        def dispatch_command(self, action, obj, receive):
             self.action = action
             self.obj = obj
             self.receive = receive
@@ -36,7 +36,7 @@ def test_add_wrapped_package_success(mock_get_comms, mocker):
     # Call the function under test
     add_wrapped_package(pkg_name)
 
-    # Assert that the version was retrieved and the send_data_to_bg_process was called
+    # Assert that the version was retrieved and the dispatch_command was called
     assert mock_class.action == "WRAPPED_PACKAGE"
     assert mock_class.obj == {
         "name": pkg_name,
@@ -61,8 +61,8 @@ def test_add_wrapped_package_retry(mock_get_comms, mocker):
         "aikido_firewall.background_process.comms.get_comms", return_value=mock_class
     )
 
-    # Mock the send_data_to_bg_process method to simulate failure
-    mock_class.send_data_to_bg_process = MagicMock(
+    # Mock the dispatch_command method to simulate failure
+    mock_class.dispatch_command = MagicMock(
         return_value={
             "success": False,
             "data": False,
@@ -72,8 +72,8 @@ def test_add_wrapped_package_retry(mock_get_comms, mocker):
     # Call the function under test
     add_wrapped_package(pkg_name)
 
-    # Assert that send_data_to_bg_process was called MAX_REPORT_TRIES times
-    assert mock_class.send_data_to_bg_process.call_count == 5
+    # Assert that dispatch_command was called MAX_REPORT_TRIES times
+    assert mock_class.dispatch_command.call_count == 5
 
 
 def test_add_wrapped_package_partial_success(mock_get_comms, mocker):
@@ -89,8 +89,8 @@ def test_add_wrapped_package_partial_success(mock_get_comms, mocker):
         "aikido_firewall.background_process.comms.get_comms", return_value=mock_class
     )
 
-    # Mock the send_data_to_bg_process method to simulate a failure followed by success
-    mock_class.send_data_to_bg_process = MagicMock(
+    # Mock the dispatch_command method to simulate a failure followed by success
+    mock_class.dispatch_command = MagicMock(
         side_effect=[
             {"success": False, "data": False},  # First attempt fails
             {"success": True, "data": True},  # Second attempt succeeds
@@ -100,5 +100,5 @@ def test_add_wrapped_package_partial_success(mock_get_comms, mocker):
     # Call the function under test
     add_wrapped_package(pkg_name)
 
-    # Assert that send_data_to_bg_process was called twice
-    assert mock_class.send_data_to_bg_process.call_count == 2
+    # Assert that dispatch_command was called twice
+    assert mock_class.dispatch_command.call_count == 2

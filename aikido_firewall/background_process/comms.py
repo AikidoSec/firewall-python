@@ -3,7 +3,6 @@ Holds the globally stored comms object
 Exports the AikidoIPCCommunications class
 """
 
-import os
 import multiprocessing.connection as con
 from multiprocessing import Process
 from threading import Thread
@@ -11,6 +10,8 @@ from aikido_firewall.helpers.logging import logger
 from aikido_firewall.background_process.aikido_background_process import (
     AikidoBackgroundProcess,
 )
+from .cloud_connection_manager.globals import get_global_cloud_connection_manager
+from .commands import process_incoming_command
 
 # pylint: disable=invalid-name # This variable does change
 comms = None
@@ -31,6 +32,24 @@ def reset_comms():
     if comms:
         logger.debug("Resetting communications. (comms = None)")
         comms = None
+
+
+def dispatch_command(action, obj, receive=False):
+    """
+    If a global cloud connection manager is set, we process commands directly,
+    otherwise it runs dispatch_command on the current AikidoIPCCommunications object
+    """
+    try:
+        connection_manager = get_global_cloud_connection_manager()
+        if connection_manager:
+            data = process_incoming_command(
+                connection_manager, (action, obj), conn=None, queue=None
+            )
+            return {"success": True, "data": data}
+        return get_comms().dispatch_command(action, obj, receive)
+    except Exception as e:
+        logger.debug("Exception happened in dispatch_command : %s", e)
+        return {"success": False, "error": "unknown"}
 
 
 class AikidoIPCCommunications:
@@ -67,15 +86,7 @@ class AikidoIPCCommunications:
         )
         self.background_process.start()
 
-    def send_data_to_bg_process(self, action, obj, receive=False):
-        """Try-catched send_data_to_bg_process"""
-        try:
-            return self._send_data_to_bg_process(action, obj, receive)
-        except Exception as e:
-            logger.debug("Exception happened in send_data_to_bg_process : %s", e)
-            return {"success": False, "error": "unknown"}
-
-    def _send_data_to_bg_process(self, action, obj, receive=False):
+    def dispatch_command(self, action, obj, receive=False):
         """
         This creates a new client for comms to the background process
         """

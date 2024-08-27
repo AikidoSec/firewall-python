@@ -12,7 +12,7 @@ from aikido_firewall.errors import (
     AikidoPathTraversal,
     AikidoSSRF,
 )
-from aikido_firewall.background_process import get_comms
+from aikido_firewall.background_process.comms import dispatch_command
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.helpers.get_clean_stacktrace import get_clean_stacktrace
 from aikido_firewall.helpers.blocking_enabled import is_blocking_enabled
@@ -34,19 +34,19 @@ def run_vulnerability_scan(kind, op, args):
     raises error if blocking is enabled, communicates it with connection_manager
     """
     context = get_current_context()
-    comms = get_comms()
-    lifecycle_cache = get_cache()
-    if not context or not comms or not lifecycle_cache:
+    if not context:
         logger.debug("Not running a vulnerability scan due to incomplete data.")
         logger.debug("%s : %s", kind, op)
         return
 
-    if lifecycle_cache.protection_forced_off():
-        #  The client turned protection off for this route, not scanning
-        return
-    if lifecycle_cache.is_bypassed_ip(context.remote_address):
-        #  This IP is on the bypass list, not scanning
-        return
+    lifecycle_cache = get_cache()
+    if lifecycle_cache:
+        if lifecycle_cache.protection_forced_off():
+            #  The client turned protection off for this route, not scanning
+            return
+        if lifecycle_cache.is_bypassed_ip(context.remote_address):
+            #  This IP is on the bypass list, not scanning
+            return
 
     error_type = AikidoException  # Default error
     error_args = tuple()
@@ -81,7 +81,7 @@ def run_vulnerability_scan(kind, op, args):
         error_type = AikidoSSRF
         blocked_request = is_blocking_enabled() and injection_results
         if not blocked_request:
-            get_comms().send_data_to_bg_process("HOSTNAMES_ADD", (args[0], args[1]))
+            dispatch_command("HOSTNAMES_ADD", (args[0], args[1]))
     else:
         logger.error("Vulnerability type %s currently has no scans implemented", kind)
 
@@ -89,8 +89,6 @@ def run_vulnerability_scan(kind, op, args):
         logger.debug("Injection results : %s", json.dumps(injection_results))
         blocked = is_blocking_enabled()
         stack = get_clean_stacktrace()
-        comms.send_data_to_bg_process(
-            "ATTACK", (injection_results, context, blocked, stack)
-        )
+        dispatch_command("ATTACK", (injection_results, context, blocked, stack))
         if blocked:
             raise error_type(*error_args)

@@ -49,6 +49,7 @@ class Context:
         content_type = req.get("CONTENT_TYPE", None)
         self.body = body
         self.route = build_route_from_url(self.url)
+        self.route_params = {}
         self.subdomains = get_subdomains_from_url(self.url)
         self.user = None
         self.remote_address = get_ip_from_request(req["REMOTE_ADDR"], self.headers)
@@ -72,6 +73,7 @@ class Context:
                     "subdomains": self.subdomains,
                     "user": self.user,
                     "xml": self.xml,
+                    "route_params": self.route_params,
                 },
                 None,
                 None,

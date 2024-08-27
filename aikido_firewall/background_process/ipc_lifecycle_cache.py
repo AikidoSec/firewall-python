@@ -3,7 +3,7 @@ Contains the `IPCLifecycleCache` cache for the duration of a single request
 """
 
 import threading
-from .comms import get_comms
+from .comms import dispatch_command
 
 #  cache needs to be per thread, not shared in the entire process
 local = threading.local()
@@ -29,7 +29,7 @@ class IPCLifecycleCache:
     def populate(self, context):
         """Fetches data over IPC"""
         # Fetch bypassed ips:
-        res = get_comms().send_data_to_bg_process(
+        res = dispatch_command(
             action="FETCH_INITIAL_METADATA",
             obj={"route_metadata": context.get_route_metadata()},
             receive=True,

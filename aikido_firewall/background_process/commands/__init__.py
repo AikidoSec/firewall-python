@@ -37,8 +37,11 @@ def process_incoming_command(connection_manager, obj, conn, queue):
     data = obj[1]
     if action in commands_map:
         func, returns_data = commands_map[action]
-        if returns_data:
-            conn.send(func(connection_manager, data, queue))
-        func(connection_manager, data, queue)
+        function_results = func(connection_manager, data, queue)
+
+        if returns_data and conn:
+            conn.send(function_results)
+
+        return function_results
     else:
         logger.debug("Command : `%s` not found, aborting", action)

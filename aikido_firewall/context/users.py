@@ -3,7 +3,7 @@ Users file
 """
 
 from aikido_firewall.helpers.logging import logger
-from aikido_firewall.background_process import get_comms
+from aikido_firewall.background_process.comms import dispatch_command
 from . import get_current_context
 
 
@@ -24,7 +24,7 @@ def set_user(user):
     context.user = validated_user
 
     # Send validated_user object to Agent
-    get_comms().send_data_to_bg_process("USER", validated_user)
+    dispatch_command("USER", validated_user)
 
 
 def validate_user(user):
