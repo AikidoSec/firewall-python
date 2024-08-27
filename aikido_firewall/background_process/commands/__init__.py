@@ -16,16 +16,18 @@ from .fetch_initial_metadata import process_fetch_initial_metadata
 
 commands_map = {
     # This maps to a tuple : (function, returns_data?)
+    # Commands that don't return data :
     "ATTACK": (process_attack, False),
-    "READ_PROPERTY": (process_read_property, True),
     "ROUTE": (process_route, False),
     "USER": (process_user, False),
+    "KILL": (process_kill, False),
+    "STATISTICS": (process_statistics, False),
+    "HOSTNAMES_ADD": (process_hostnames_add, False),
+    # Commands that return data :
+    "READ_PROPERTY": (process_read_property, True),
     "WRAPPED_PACKAGE": (process_wrapped_package, True),
     "SHOULD_RATELIMIT": (process_should_ratelimit, True),
-    "KILL": (process_kill, False),
-    "HOSTNAMES_ADD": (process_hostnames_add, False),
     "SHOULD_BLOCK_USER": (process_should_block_user, True),
-    "STATISTICS": (process_statistics, False),
     "IS_IP_ALLOWED": (process_is_ip_allowed, True),
     "FETCH_INITIAL_METADATA": (process_fetch_initial_metadata, True),
 }
