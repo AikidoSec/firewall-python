@@ -1,6 +1,5 @@
 """Exports is_redirect_to_private_ip"""
 
-from aikido_firewall.helpers.try_parse_url import try_parse_url
 from aikido_firewall.helpers.get_port_from_url import get_port_from_url
 from .contains_private_ip_address import contains_private_ip_address
 from .get_redirect_origin import get_redirect_origin
@@ -19,12 +18,11 @@ def is_redirect_to_private_ip(url, context):
     - The redirect origin, so the user-supplied hostname and port that caused the first redirect,
         is found in the context of the incoming request
     """
-    if context.outgoing_req_redirects and contains_private_ip_address(url["hostname"]):
+    if context.outgoing_req_redirects and contains_private_ip_address(url.hostname):
         redirect_origin = get_redirect_origin(context.outgoing_req_redirects, url)
-        parsed_redirect_origin = try_parse_url(redirect_origin)
-        if parsed_redirect_origin:
-            hostname = getattr(parsed_redirect_origin, "hostname")
-            port = get_port_from_url(redirect_origin)
+        if redirect_origin:
+            hostname = getattr(redirect_origin, "hostname")
+            port = get_port_from_url(redirect_origin.geturl())
             return find_hostname_in_context(hostname, context, port)
 
     return None

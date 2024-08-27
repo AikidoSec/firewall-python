@@ -1,6 +1,40 @@
 """Exports get_redirect_origin function"""
 
 import copy
+from urllib.parse import urlparse, urlunparse
+
+
+def normalize_url(url):
+    """Normalizes the url"""
+    # Parse the URL
+    parsed_url = urlparse(url)
+
+    # Normalize components
+    scheme = parsed_url.scheme.lower()  # Lowercase scheme
+    netloc = parsed_url.netloc.lower()  # Lowercase netloc
+    path = parsed_url.path.rstrip("/")  # Remove trailing slash
+    query = parsed_url.query  # Keep query as is
+    fragment = parsed_url.fragment  # Keep fragment as is
+
+    # Remove default ports (80 for http, 443 for https)
+    if scheme == "http" and parsed_url.port == 80:
+        netloc = netloc.replace(":80", "")
+    elif scheme == "https" and parsed_url.port == 443:
+        netloc = netloc.replace(":443", "")
+
+    # We do not care about the scheme (Isn't extracted) :
+    scheme = "http"
+
+    # Reconstruct the normalized URL
+    normalized_url = urlunparse((scheme, netloc, path, "", query, fragment))
+    return normalized_url
+
+
+def compare_urls(url1, url2):
+    """Compares normalized urls"""
+    normalized_url1 = normalize_url(url1.geturl())
+    normalized_url2 = normalize_url(url2.geturl())
+    return normalized_url1 == normalized_url2
 
 
 def get_redirect_origin(redirects, url):
@@ -22,14 +56,14 @@ def get_redirect_origin(redirects, url):
     current_url = copy.deepcopy(url)
 
     # Follow the redirect chain until we reach the origin or don't find a redirect
+
     while True:
-        redirect = next(
-            # url.href contains the full URL so we can use it for comparison
-            (r for r in redirects if r["destination"]["href"] == current_url["href"]),
-            None,
-        )
+        redirect = None
+        for r in redirects:
+            if compare_urls(r["destination"], current_url):
+                redirect = r
         if not redirect:
             break
         current_url = redirect["source"]
 
-    return current_url["href"] if current_url["href"] != url["href"] else None
+    return current_url if not compare_urls(current_url, url) else None
