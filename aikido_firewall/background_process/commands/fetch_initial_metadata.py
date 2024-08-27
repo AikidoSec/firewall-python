@@ -1,14 +1,14 @@
 """Exports `process_fetch_initial_metadata`"""
 
 
-def process_fetch_initial_metadata(bg_process, data, conn):
+def process_fetch_initial_metadata(connection_manager, data, queue=None):
     """Fetches initial metadata"""
+    if not connection_manager:
+        return {"bypassed_ips": [], "matched_endpoints": []}
     route_metadata = data["route_metadata"]
-    bypassed_ips = bg_process.reporter.conf.bypassed_ips
-    matched_endpoints = bg_process.reporter.conf.get_endpoints(route_metadata)
-    conn.send(
-        {
-            "bypassed_ips": bypassed_ips,
-            "matched_endpoints": matched_endpoints,
-        }
-    )
+    bypassed_ips = connection_manager.conf.bypassed_ips
+    matched_endpoints = connection_manager.conf.get_endpoints(route_metadata)
+    return {
+        "bypassed_ips": bypassed_ips,
+        "matched_endpoints": matched_endpoints,
+    }

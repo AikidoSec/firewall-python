@@ -1,4 +1,4 @@
-""" This file simply exports the Reporter class"""
+""" This file simply exports the CloudConnectionManager class"""
 
 import time
 from aikido_firewall.helpers.token import Token
@@ -15,14 +15,14 @@ from ..statistics import Statistics
 
 # Import functions :
 from .on_detected_attack import on_detected_attack
-from .get_reporter_info import get_reporter_info
+from .get_manager_info import get_manager_info
 from .update_service_config import update_service_config
 from .on_start import on_start
 from .send_heartbeat import send_heartbeat
 
 
-class Reporter:
-    """Reporter class"""
+class CloudConnectionManager:
+    """CloudConnectionManager class"""
 
     timeout_in_sec = 5  # Timeout of API calls to Aikido Server
     heartbeat_secs = 600  # Heartbeat every 10 minutes
@@ -89,9 +89,9 @@ class Reporter:
         """This will send a heartbeat to the server"""
         return send_heartbeat(self)
 
-    def get_reporter_info(self):
-        """This returns info about the reporter"""
-        return get_reporter_info(self)
+    def get_manager_info(self):
+        """This returns info about the connection_manager"""
+        return get_manager_info(self)
 
     def update_service_config(self, res):
         """Update configuration based on the server's response"""

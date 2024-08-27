@@ -9,26 +9,26 @@ import aikido_firewall.background_process.realtime as realtime
 POLL_FOR_CONFIG_CHANGES_INTERVAL = 60  #  Poll for config changes every 60 seconds
 
 
-def start_polling_for_changes(reporter, event_scheduler):
+def start_polling_for_changes(connection_manager, event_scheduler):
     """
     Arguments :
     - on_config_update : A function that will run with the new config if changed
-    - serverless, token : Attributes from the reporter
+    - serverless, token : Attributes from the connection_manager
     - last_updated_at : The last time the config was updated (unixtime in ms)
     This function will check if the config was updated or not
     """
-    if not isinstance(reporter.token, Token):
+    if not isinstance(connection_manager.token, Token):
         logger.info("No token provided, not polling for config updates")
         return
-    if reporter.serverless:
+    if connection_manager.serverless:
         logger.info("Running in serverless environment, not polling for config updates")
         return
 
     # Start the interval by booting the first settimeout
     poll_for_changes(
-        on_config_update=reporter.update_service_config,
-        token=reporter.token,
-        former_last_updated=reporter.conf.last_updated_at,
+        on_config_update=connection_manager.update_service_config,
+        token=connection_manager.token,
+        former_last_updated=connection_manager.conf.last_updated_at,
         event_scheduler=event_scheduler,
     )
 

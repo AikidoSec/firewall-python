@@ -4,84 +4,78 @@ from unittest.mock import MagicMock
 from .attack import process_attack
 
 
-class MockReporter:
+class MockCloudConnectionManager:
     def __init__(self):
         self.statistics = MagicMock()
 
 
-class MockBgProcess:
-    def __init__(self):
-        self.queue = Queue()
-        self.reporter = MockReporter()
-
-
 def test_process_attack_adds_data_to_queue():
-    bg_process = MockBgProcess()
-    data = ("attack_type", "source_ip", True)  # Example data
-    process_attack(bg_process, data, None)
+    queue = Queue()
+    connection_manager = MockCloudConnectionManager()
+    data = ("injection_results", "context", True, "stacktrace")  # Example data
+    process_attack(connection_manager, data, queue)
 
     # Check if the data is added to the queue
-    assert not bg_process.queue.empty()
-    assert bg_process.queue.get() == data
+    assert not queue.empty()
+    assert queue.get() == data
 
 
 def test_process_attack_statistics_called_when_enabled():
-    bg_process = MockBgProcess()
-    data = ("attack_type", "source_ip", True)  # Example data
-    process_attack(bg_process, data, None)
+    queue = Queue()
+    connection_manager = MockCloudConnectionManager()
+    data = ("injection_results", "context", True, "stacktrace")  # Example data
+    process_attack(connection_manager, data, queue)
 
     # Check if on_detected_attack was called
-    bg_process.reporter.statistics.on_detected_attack.assert_called_once_with(
+    connection_manager.statistics.on_detected_attack.assert_called_once_with(
         blocked=True
     )
 
 
 def test_process_attack_statistics_not_called_when_disabled():
-    bg_process = MockBgProcess()
-    bg_process.reporter.statistics = None  # Disable statistics
-    data = ("attack_type", "source_ip", True)  # Example data
-    process_attack(bg_process, data, None)
+    queue = Queue()
+    connection_manager = MockCloudConnectionManager()
+    connection_manager.statistics = None  # Disable statistics
+    data = ("injection_results", "context", True, "stacktrace")  # Example data
+    process_attack(connection_manager, data, queue)
 
     # Check if on_detected_attack was not called
     assert (
-        bg_process.reporter.statistics is None
-        or not bg_process.reporter.statistics.on_detected_attack.called
+        connection_manager.statistics is None
+        or not connection_manager.statistics.on_detected_attack.called
     )
 
 
 def test_process_attack_multiple_calls():
-    bg_process = MockBgProcess()
-    data1 = ("attack_type_1", "source_ip_1", True)
-    data2 = ("attack_type_2", "source_ip_2", False)
+    queue = Queue()
+    connection_manager = MockCloudConnectionManager()
+    data1 = ("injection_results_1", "context_1", True, "stacktrace_1")
+    data2 = ("injection_results_2", "context_2", False, "stacktrace_2")
 
-    process_attack(bg_process, data1, None)
-    process_attack(bg_process, data2, None)
+    process_attack(connection_manager, data1, queue)
+    process_attack(connection_manager, data2, queue)
 
     # Check if both data items are added to the queue
-    assert bg_process.queue.qsize() == 2
-    assert bg_process.queue.get() == data1
-    assert bg_process.queue.get() == data2
+    assert queue.qsize() == 2
+    assert queue.get() == data1
+    assert queue.get() == data2
 
 
 def test_process_attack_with_different_data_formats():
-    bg_process = MockBgProcess()
+    queue = Queue()
+    connection_manager = MockCloudConnectionManager()
 
     # Test with different types of data
-    data1 = ("attack_type", "source_ip", True)
-    data2 = ("attack_type", "source_ip", False)
-    data3 = ("attack_type", "source_ip", None)
+    data1 = ("injection_results", "context", True, "stacktrace")
+    data2 = ("injection_results", "context", False, "stacktrace")
+    data3 = ("injection_results", "context", None, "stacktrace")
 
-    process_attack(bg_process, data1, None)
-    process_attack(bg_process, data2, None)
-    process_attack(bg_process, data3, None)
+    process_attack(connection_manager, data1, queue)
+    process_attack(connection_manager, data2, queue)
+    process_attack(connection_manager, data3, queue)
 
     # Check if all data items are added to the queue
-    assert bg_process.queue.qsize() == 3
-    assert bg_process.queue.get() == data1
-    assert bg_process.queue.get() == data2
-    assert bg_process.queue.get() == data3
-
-
-# Run the tests
-if __name__ == "__main__":
-    pytest.main()
+    assert queue.qsize() == 3
+    assert queue.get() == data1
+    assert queue.get() == data2
+    assert queue.get() == data3
