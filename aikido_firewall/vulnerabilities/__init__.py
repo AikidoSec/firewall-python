@@ -80,8 +80,9 @@ def run_vulnerability_scan(kind, op, args):
         error_type = AikidoSSRF
         blocked_request = is_blocking_enabled() and injection_results
         if not blocked_request:
-            hostname = args[0].get("hostname")
-            get_comms().send_data_to_bg_process("HOSTNAMES_ADD", (hostname, args[1]))
+            get_comms().send_data_to_bg_process(
+                "HOSTNAMES_ADD", (args[0].hostname, args[1])
+            )
     else:
         logger.error("Vulnerability type %s currently has no scans implemented", kind)
 
