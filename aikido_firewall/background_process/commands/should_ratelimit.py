@@ -3,16 +3,17 @@
 import aikido_firewall.ratelimiting as ratelimiting
 
 
-def process_should_ratelimit(bg_process, data, conn):
+def process_should_ratelimit(connection_manager, data, queue=None):
     """
     Called to check if the context passed along as data should be rate limited
     data object should be a dict including route_metadata, remote_address and user
     route_metadata object includes route, url and method
     """
-    should_ratelimit = ratelimiting.should_ratelimit_request(
+    if not connection_manager:
+        return False
+    return ratelimiting.should_ratelimit_request(
         route_metadata=data["route_metadata"],
         remote_address=data["remote_address"],
         user=data["user"],
-        reporter=bg_process.reporter,
+        connection_manager=connection_manager,
     )
-    conn.send(should_ratelimit)

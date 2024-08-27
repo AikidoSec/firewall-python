@@ -22,7 +22,7 @@ def event_scheduler():
 
 def test_no_token(event_scheduler, caplog):
     start_polling_for_changes(
-        reporter=MagicMock(token=None, serverless=None),
+        connection_manager=MagicMock(token=None, serverless=None),
         event_scheduler=event_scheduler,
     )
 
@@ -31,7 +31,7 @@ def test_no_token(event_scheduler, caplog):
 
 def test_serverless_environment(event_scheduler, caplog):
     start_polling_for_changes(
-        reporter=MagicMock(token=Token("123"), serverless=True),
+        connection_manager=MagicMock(token=Token("123"), serverless=True),
         event_scheduler=event_scheduler,
     )
 
@@ -61,7 +61,7 @@ def test_check_for_config_updates(event_scheduler):
 
         config_updates = []
 
-        reporter = MagicMock(
+        connection_manager = MagicMock(
             update_service_config=lambda config: config_updates.append(config),
             token=Token("123"),
             conf=MagicMock(last_updated_at=config_updated_at),
@@ -69,7 +69,7 @@ def test_check_for_config_updates(event_scheduler):
         )
 
         start_polling_for_changes(
-            reporter=reporter,
+            connection_manager=connection_manager,
             event_scheduler=event_scheduler,
         )
 
@@ -80,7 +80,7 @@ def test_check_for_config_updates(event_scheduler):
 
         # Simulate a config update
         config_updated_at = 1
-        reporter.conf.last_updated_at = config_updated_at
+        connection_manager.conf.last_updated_at = config_updated_at
         event_scheduler.run()
 
         assert config_updates == [
@@ -102,7 +102,7 @@ def test_api_error_handling(event_scheduler, caplog):
     ):
         config_updates = []
 
-        reporter = MagicMock(
+        connection_manager = MagicMock(
             update_service_config=lambda config: config_updates.append(config),
             token=Token("123"),
             conf=MagicMock(last_updated_at=0),
@@ -110,7 +110,7 @@ def test_api_error_handling(event_scheduler, caplog):
         )
 
         start_polling_for_changes(
-            reporter=reporter,
+            connection_manager=connection_manager,
             event_scheduler=event_scheduler,
         )
 

@@ -3,17 +3,17 @@
 from aikido_firewall.helpers.logging import logger
 
 
-def process_read_property(bg_process, data, conn):
+def process_read_property(connection_manager, data, queue=None):
     """
-    Takes in one arg : name of property on reporter, tries to read it.
+    Takes in one arg : name of property on connection_manager, tries to read it.
     Meant to get config props
     """
     try:
-        conn.send(bg_process.reporter.__dict__[data])
+        return connection_manager.__dict__[data]
     except KeyError:
         logger.debug(
-            "Reporter has no attribute %s, current reporter: %s",
+            "CloudConnectionManager has no attribute %s, current connection_manager: %s",
             data,
-            bg_process.reporter,
+            connection_manager,
         )
-        conn.send(None)
+        return None

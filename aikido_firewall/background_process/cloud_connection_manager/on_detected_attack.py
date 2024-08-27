@@ -7,11 +7,11 @@ from aikido_firewall.helpers.limit_length_metadata import limit_length_metadata
 from aikido_firewall.helpers.get_ua_from_context import get_ua_from_context
 
 
-def on_detected_attack(reporter, attack, context, blocked, stack):
+def on_detected_attack(connection_manager, attack, context, blocked, stack):
     """
     This will send something to the API when an attack is detected
     """
-    if not reporter.token:
+    if not connection_manager.token:
         return
     # Modify attack so we can send it out :
     try:
@@ -24,7 +24,7 @@ def on_detected_attack(reporter, attack, context, blocked, stack):
         payload = {
             "type": "detected_attack",
             "time": get_unixtime_ms(),
-            "agent": reporter.get_reporter_info(),
+            "agent": connection_manager.get_manager_info(),
             "attack": attack,
             "request": {
                 "method": context.method,
@@ -38,10 +38,10 @@ def on_detected_attack(reporter, attack, context, blocked, stack):
             },
         }
         logger.debug(json.dumps(payload))
-        result = reporter.api.report(
-            reporter.token,
+        result = connection_manager.api.report(
+            connection_manager.token,
             payload,
-            reporter.timeout_in_sec,
+            connection_manager.timeout_in_sec,
         )
         logger.debug("Result : %s", result)
     except Exception as e:

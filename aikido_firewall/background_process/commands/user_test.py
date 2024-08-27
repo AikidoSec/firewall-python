@@ -4,37 +4,27 @@ from .user import process_user
 
 
 @pytest.fixture
-def mock_reporter():
-    """Fixture to create a mock reporter with a users attribute."""
-    reporter = MagicMock()
-    reporter.users = MagicMock()
-    return reporter
+def mock_connection_manager():
+    """Fixture to create a mock connection_manager with a users attribute."""
+    connection_manager = MagicMock()
+    connection_manager.users = MagicMock()
+    return connection_manager
 
 
-@pytest.fixture
-def mock_bg_process(mock_reporter):
-    """Fixture to create a mock background process with a reporter."""
-    bg_process = MagicMock()
-    bg_process.reporter = mock_reporter
-    return bg_process
-
-
-def test_process_user_adds_user(mock_bg_process):
-    """Test that process_user adds a user when reporter is present."""
+def test_process_user_adds_user(mock_connection_manager):
+    """Test that process_user adds a user when connection_manager is present."""
     user_data = {"username": "test_user", "email": "test@example.com"}
 
-    process_user(mock_bg_process, user_data, None)  # conn is not used in this function
+    process_user(
+        mock_connection_manager, user_data
+    )  # conn is not used in this function
 
     # Check that the add_user method was called with the correct arguments
-    mock_bg_process.reporter.users.add_user.assert_called_once_with(user_data)
+    mock_connection_manager.users.add_user.assert_called_once_with(user_data)
 
 
-def test_process_user_no_reporter():
-    """Test that process_user does nothing when reporter is not present."""
-    bg_process = MagicMock()
-    bg_process.reporter = None
+def test_process_user_no_connection_manager():
+    """Test that process_user does nothing when connection_manager is not present."""
     user_data = {"username": "test_user", "email": "test@example.com"}
 
-    process_user(bg_process, user_data, None)  # conn is not used in this function
-
-    # Make sure there were no errors
+    process_user(None, user_data)  # conn is not used in this function

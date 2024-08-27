@@ -1,10 +1,10 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from .get_reporter_info import get_reporter_info
+from .get_manager_info import get_manager_info
 
 
-# Sample reporter object for testing
-class MockReporter:
+# Sample connection_manager object for testing
+class MockCloudConnectionManager:
     def __init__(self, block, packages, serverless):
         self.block = block
         self.packages = packages
@@ -12,8 +12,8 @@ class MockReporter:
 
 
 @pytest.fixture
-def mock_reporter():
-    return MockReporter(
+def mock_connection_manager():
+    return MockCloudConnectionManager(
         block=True,
         packages={
             "package1": {"version": "1.0.0", "supported": True},
@@ -29,32 +29,42 @@ def mock_reporter():
 @patch("platform.release", return_value="5.4.0")
 @patch("aikido_firewall.helpers.get_machine_ip.get_ip", return_value="192.168.1.1")
 @patch("aikido_firewall.config.PKG_VERSION", "PKG_VERSION")
-def test_get_reporter_info(
+def test_get_manager_info(
     mock_get_ip,
     mock_platform_release,
     mock_platform_system,
     mock_gethostname,
-    mock_reporter,
+    mock_connection_manager,
 ):
-    reporter_info = get_reporter_info(mock_reporter)
-    print(reporter_info)
-    assert reporter_info["dryMode"] is False
-    assert reporter_info["hostname"] == "test-hostname"
+    connection_manager_info = get_manager_info(mock_connection_manager)
+    print(connection_manager_info)
+    assert connection_manager_info["dryMode"] is False
+    assert connection_manager_info["hostname"] == "test-hostname"
     assert (
-        reporter_info["version"] == "PKG_VERSION"
+        connection_manager_info["version"] == "PKG_VERSION"
     )  # Replace with actual version if needed
-    assert reporter_info["library"] == "firewall-python"
-    assert reporter_info["ipAddress"] == "192.168.1.1"
-    assert reporter_info["packages"] == {"package1": "1.0.0", "package3": "3.0.0"}
-    assert reporter_info["serverless"] is True
-    assert reporter_info["stack"] == ["package1", "package2", "package3", True]
-    assert reporter_info["os"] == {"name": "Linux", "version": "5.4.0"}
-    assert reporter_info["preventedPrototypePollution"] is False
-    assert reporter_info["nodeEnv"] == ""
+    assert connection_manager_info["library"] == "firewall-python"
+    assert connection_manager_info["ipAddress"] == "192.168.1.1"
+    assert connection_manager_info["packages"] == {
+        "package1": "1.0.0",
+        "package3": "3.0.0",
+    }
+    assert connection_manager_info["serverless"] is True
+    assert connection_manager_info["stack"] == [
+        "package1",
+        "package2",
+        "package3",
+        True,
+    ]
+    assert connection_manager_info["os"] == {"name": "Linux", "version": "5.4.0"}
+    assert connection_manager_info["preventedPrototypePollution"] is False
+    assert connection_manager_info["nodeEnv"] == ""
 
 
-def test_get_reporter_info_with_empty_packages():
-    mock_reporter = MockReporter(block=False, packages={}, serverless=False)
+def test_get_manager_info_with_empty_packages():
+    mock_connection_manager = MockCloudConnectionManager(
+        block=False, packages={}, serverless=False
+    )
 
     with patch("socket.gethostname", return_value="test-hostname"), patch(
         "platform.system", return_value="Linux"
@@ -62,14 +72,14 @@ def test_get_reporter_info_with_empty_packages():
         "aikido_firewall.helpers.get_machine_ip.get_ip", return_value="192.168.1.1"
     ):
 
-        reporter_info = get_reporter_info(mock_reporter)
+        connection_manager_info = get_manager_info(mock_connection_manager)
 
-        assert reporter_info["packages"] == {}
-        assert reporter_info["stack"] == []
+        assert connection_manager_info["packages"] == {}
+        assert connection_manager_info["stack"] == []
 
 
-def test_get_reporter_info_with_unsupported_packages():
-    mock_reporter = MockReporter(
+def test_get_manager_info_with_unsupported_packages():
+    mock_connection_manager = MockCloudConnectionManager(
         block=False,
         packages={
             "package1": {"version": "1.0.0", "supported": True},
@@ -84,14 +94,14 @@ def test_get_reporter_info_with_unsupported_packages():
         "aikido_firewall.helpers.get_machine_ip.get_ip", return_value="192.168.1.1"
     ):
 
-        reporter_info = get_reporter_info(mock_reporter)
+        connection_manager_info = get_manager_info(mock_connection_manager)
 
-        assert reporter_info["packages"] == {"package1": "1.0.0"}
-        assert reporter_info["stack"] == ["package1", "package2"]
+        assert connection_manager_info["packages"] == {"package1": "1.0.0"}
+        assert connection_manager_info["stack"] == ["package1", "package2"]
 
 
-def test_get_reporter_info_with_non_serverless():
-    mock_reporter = MockReporter(
+def test_get_manager_info_with_non_serverless():
+    mock_connection_manager = MockCloudConnectionManager(
         block=False,
         packages={"package1": {"version": "1.0.0", "supported": True}},
         serverless=False,
@@ -103,14 +113,14 @@ def test_get_reporter_info_with_non_serverless():
         "aikido_firewall.helpers.get_machine_ip.get_ip", return_value="192.168.1.1"
     ):
 
-        reporter_info = get_reporter_info(mock_reporter)
+        connection_manager_info = get_manager_info(mock_connection_manager)
 
-        assert reporter_info["serverless"] is False
-        assert reporter_info["stack"] == ["package1"]
+        assert connection_manager_info["serverless"] is False
+        assert connection_manager_info["stack"] == ["package1"]
 
 
-def test_get_reporter_info_with_blocked_reporter():
-    mock_reporter = MockReporter(
+def test_get_manager_info_with_blocked_connection_manager():
+    mock_connection_manager = MockCloudConnectionManager(
         block=True,
         packages={"package1": {"version": "1.0.0", "supported": True}},
         serverless=False,
@@ -122,13 +132,13 @@ def test_get_reporter_info_with_blocked_reporter():
         "aikido_firewall.helpers.get_machine_ip.get_ip", return_value="192.168.1.1"
     ):
 
-        reporter_info = get_reporter_info(mock_reporter)
+        connection_manager_info = get_manager_info(mock_connection_manager)
 
-        assert reporter_info["dryMode"] is False
+        assert connection_manager_info["dryMode"] is False
 
 
-def test_get_reporter_info_with_drymode_reporter():
-    mock_reporter = MockReporter(
+def test_get_manager_info_with_drymode_connection_manager():
+    mock_connection_manager = MockCloudConnectionManager(
         block=False,
         packages={"package1": {"version": "1.0.0", "supported": True}},
         serverless=False,
@@ -140,13 +150,13 @@ def test_get_reporter_info_with_drymode_reporter():
         "aikido_firewall.helpers.get_machine_ip.get_ip", return_value="192.168.1.1"
     ):
 
-        reporter_info = get_reporter_info(mock_reporter)
+        connection_manager_info = get_manager_info(mock_connection_manager)
 
-        assert reporter_info["dryMode"] is True
+        assert connection_manager_info["dryMode"] is True
 
 
-def test_get_reporter_info_with_different_os():
-    mock_reporter = MockReporter(
+def test_get_manager_info_with_different_os():
+    mock_connection_manager = MockCloudConnectionManager(
         block=False,
         packages={"package1": {"version": "1.0.0", "supported": True}},
         serverless=False,
@@ -158,6 +168,6 @@ def test_get_reporter_info_with_different_os():
         "aikido_firewall.helpers.get_machine_ip.get_ip", return_value="192.168.1.1"
     ):
 
-        reporter_info = get_reporter_info(mock_reporter)
+        connection_manager_info = get_manager_info(mock_connection_manager)
 
-        assert reporter_info["os"] == {"name": "Windows", "version": "10"}
+        assert connection_manager_info["os"] == {"name": "Windows", "version": "10"}

@@ -10,7 +10,9 @@ import sys
 from threading import Thread
 from queue import Queue
 from aikido_firewall.helpers.logging import logger
-from aikido_firewall.background_process.reporter import Reporter
+from aikido_firewall.background_process.cloud_connection_manager import (
+    CloudConnectionManager,
+)
 from aikido_firewall.helpers.check_env_for_blocking import check_env_for_blocking
 from aikido_firewall.helpers.token import get_token_from_env
 from aikido_firewall.background_process.api.http_api import ReportingApiHTTP
@@ -23,7 +25,7 @@ class AikidoBackgroundProcess:
     """
     Aikido's background process consists of 2 threads :
     - (main) Listening thread which listens on an IPC socket for incoming data
-    - (spawned) reporting thread which will collect the IPC data and send it to a Reporter
+    - (spawned) reporting thread which will collect the IPC data and send it to a CloudConnectionManager
     """
 
     def __init__(self, address, key):
@@ -36,7 +38,7 @@ class AikidoBackgroundProcess:
             )
             sys.exit(0)
         self.queue = Queue()
-        self.reporter = None
+        self.connection_manager = None
         # Start reporting thread :
         Thread(target=self.reporting_thread).start()
 
@@ -47,7 +49,12 @@ class AikidoBackgroundProcess:
                 try:
                     data = conn.recv()  #  because of this no sleep needed in thread
                     logger.debug("Incoming data : %s", data)
-                    process_incoming_command(bg_process=self, obj=data, conn=conn)
+                    process_incoming_command(
+                        connection_manager=self.connection_manager,
+                        obj=data,
+                        conn=conn,
+                        queue=self.queue,
+                    )
                     conn.close()  # Sort of EOL for Python IPC
                     break
                 except Exception as e:
@@ -61,32 +68,32 @@ class AikidoBackgroundProcess:
         event_scheduler = sched.scheduler(
             time.time, time.sleep
         )  # Create an event scheduler
-        self.send_to_reporter(event_scheduler)
+        self.send_to_connection_manager(event_scheduler)
 
         api = ReportingApiHTTP("https://guard.aikido.dev/")
         # We need to pass along the scheduler so that the heartbeat also gets sent
-        self.reporter = Reporter(
+        self.connection_manager = CloudConnectionManager(
             block=check_env_for_blocking(),
             api=api,
             token=get_token_from_env(),
             serverless=False,
         )
         time.sleep(2)  # Sleep 2 seconds to make sure modules get reported
-        self.reporter.start(event_scheduler)
+        self.connection_manager.start(event_scheduler)
 
         event_scheduler.run()
 
-    def send_to_reporter(self, event_scheduler):
+    def send_to_connection_manager(self, event_scheduler):
         """
         Reports the found data to an Aikido server
         """
         # Add back to event scheduler in EMPTY_QUEUE_INTERVAL secs :
         event_scheduler.enter(
-            EMPTY_QUEUE_INTERVAL, 1, self.send_to_reporter, (event_scheduler,)
+            EMPTY_QUEUE_INTERVAL, 1, self.send_to_connection_manager, (event_scheduler,)
         )
         while not self.queue.empty():
             queue_attack_item = self.queue.get()
-            self.reporter.on_detected_attack(
+            self.connection_manager.on_detected_attack(
                 attack=queue_attack_item[0],
                 context=queue_attack_item[1],
                 blocked=queue_attack_item[2],
