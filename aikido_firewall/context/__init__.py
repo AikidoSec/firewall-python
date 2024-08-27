@@ -25,6 +25,11 @@ def get_current_context():
         return None
 
 
+def reset_context():
+    """Resets the context"""
+    local.current_context = None
+
+
 class Context:
     """
     A context object, it stores everything that is important
