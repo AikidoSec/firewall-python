@@ -6,7 +6,7 @@ from .is_redirect_to_private_ip import is_redirect_to_private_ip
 def test_is_redirect_to_private_ip_success():
     url = {"hostname": "192.168.0.1", "href": "http://192.168.0.1   "}  # Private IP
     context = MagicMock()
-    context.outgoing_req_redirect = [
+    context.outgoing_req_redirects = [
         {
             "source": {
                 "href": "http://example.com",
@@ -40,7 +40,7 @@ def test_is_redirect_to_private_ip_success():
 def test_is_redirect_to_private_ip_no_redirects():
     url = {"hostname": "192.168.0.1", "href": "http://192.168.0.1/"}  # Private IP
     context = MagicMock()
-    context.outgoing_req_redirect = []
+    context.outgoing_req_redirects = []
 
     result = is_redirect_to_private_ip(url, context)
     assert result is None
@@ -52,7 +52,7 @@ def test_is_redirect_to_private_ip_not_private_ip():
         "href": "https://example.com/",
     }  # Not a private IP
     context = MagicMock()
-    context.outgoing_req_redirect = [
+    context.outgoing_req_redirects = [
         {
             "source": {
                 "href": "http://example.com",
@@ -78,7 +78,7 @@ def test_is_redirect_to_private_ip_not_private_ip():
 def test_is_redirect_to_private_ip_redirect_origin_not_found():
     url = {"hostname": "192.168.0.1", "href": "http://192.168.0.1/"}  # Private IP
     context = MagicMock()
-    context.outgoing_req_redirect = [
+    context.outgoing_req_redirects = [
         {
             "source": {
                 "href": "http://example.com",
@@ -111,7 +111,7 @@ def test_is_redirect_to_private_ip_redirect_origin_not_found():
 def test_is_redirect_to_private_ip_hostname_not_found_in_context():
     url = {"hostname": "192.168.0.1", "href": "http://192.168.0.1/"}  # Private IP
     context = MagicMock()
-    context.outgoing_req_redirect = [
+    context.outgoing_req_redirects = [
         {
             "source": {
                 "href": "http://example.com",

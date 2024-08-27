@@ -19,7 +19,7 @@ def is_redirect_to_private_ip(url, context):
     - The redirect origin, so the user-supplied hostname and port that caused the first redirect,
         is found in the context of the incoming request
     """
-    if context.outgoing_req_redirect and contains_private_ip_address(url["hostname"]):
+    if context.outgoing_req_redirects and contains_private_ip_address(url["hostname"]):
         redirect_origin = get_redirect_origin(context.outgoing_req_redirects, url)
         parsed_redirect_origin = try_parse_url(redirect_origin)
         if parsed_redirect_origin:
