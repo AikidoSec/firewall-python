@@ -1,9 +1,8 @@
 """Mainly exports `process_should_block_user`"""
 
 
-def process_should_block_user(reporter, data, queue=None):
+def process_should_block_user(connection_manager, data, conn, queue=None):
     """Checks if the user id should be blocked or not"""
-    if not reporter:
+    if not connection_manager:
         return False
-    should_block = reporter.conf.is_user_blocked(data)
-    return should_block
+    return connection_manager.conf.is_user_blocked(data)

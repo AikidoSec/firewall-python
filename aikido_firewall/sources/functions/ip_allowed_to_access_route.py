@@ -3,7 +3,7 @@
 from aikido_firewall.helpers.is_localhost_ip import is_localhost_ip
 
 
-def ip_allowed_to_access_route(remote_address, route_metadata, reporter):
+def ip_allowed_to_access_route(remote_address, route_metadata, connection_manager):
     """
     Checks if the ip address can access the route, given the service conf
     """
@@ -11,7 +11,7 @@ def ip_allowed_to_access_route(remote_address, route_metadata, reporter):
     if ip and is_localhost_ip(ip):
         return True
 
-    matches = reporter.conf.get_endpoints(route_metadata)
+    matches = connection_manager.conf.get_endpoints(route_metadata)
     if not matches:
         return True
 

@@ -6,14 +6,14 @@ from aikido_firewall.helpers.logging import logger
 from aikido_firewall.helpers.create_interval import create_interval
 
 
-def send_heartbeats_every_x_secs(reporter, interval_in_secs, event_scheduler):
+def send_heartbeats_every_x_secs(connection_manager, interval_in_secs, event_scheduler):
     """
     Start sending out heartbeats every x seconds
     """
-    if reporter.serverless:
+    if connection_manager.serverless:
         logger.debug("Running in serverless environment, not starting heartbeats")
         return
-    if not reporter.token:
+    if not connection_manager.token:
         logger.debug("No token provided, not starting heartbeats")
         return
 
@@ -23,6 +23,6 @@ def send_heartbeats_every_x_secs(reporter, interval_in_secs, event_scheduler):
     create_interval(
         event_scheduler=event_scheduler,
         interval_in_secs=interval_in_secs,
-        function=lambda reporter: reporter.send_heartbeat(),
-        args=(reporter,),
+        function=lambda connection_manager: connection_manager.send_heartbeat(),
+        args=(connection_manager,),
     )
