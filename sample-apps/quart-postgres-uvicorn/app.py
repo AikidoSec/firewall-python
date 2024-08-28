@@ -64,18 +64,16 @@ async def create_dog_many():
     data = await request.form
     dog_name = data.get('dog_name')  # Expecting a list of dog names
 
-    if not dog_names or not isinstance(dog_names, list):
+    if not dog_name:
         return jsonify({"error": "dog_names must be a list and cannot be empty"}), 400
 
     conn = await get_db_connection()
     try:
-        async with conn.transaction():
-            for dog_name in dog_names:
-                await conn.execute("INSERT INTO dogs (dog_name, isAdmin) VALUES ($1, FALSE)", dog_name)
+        await conn.executemany(f"INSERT INTO dogs (dog_name, isAdmin) VALUES ('%s', $1)" % (dog_name), [(False,), (False,), (False,)])
     finally:
         await conn.close()
 
-    return jsonify({"message": f'{len(dog_names)} dogs created successfully'}), 201
+    return jsonify({"message": f'{dog_name} created successfully'}), 201
 
 
 if __name__ == '__main__':
