@@ -21,3 +21,7 @@ Overview :
 - `flask-postres-xml/` is a Flask app using Postgres and XML
   - It runs **multi-threaded**
   - Runs on 8092. Without aikido runs on 8093
+- `quart-postgres-uvicorn/` is a Quart app using Postgres and with Uvicorn
+  - It runs 4 processes, called workers, (**multi-process**) which handles requests **multi-threaded**
+  - This application is **asynchronous**
+  - Runs on 8094. Without aikido runs on 8095
