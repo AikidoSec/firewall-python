@@ -20,7 +20,7 @@ services:
       context: ./../../
       dockerfile: ./sample-apps/quart-postgres-uvicorn/Dockerfile
     container_name: quart_postgres_uvicorn_backend
-    command: sh -c "QUART_APP=app:app quart run --host 0.0.0.0"
+    command: sh -c "uvicorn app:app --host 0.0.0.0 --port 5000 --workers 4"
     restart: always
     volumes:
       - .:/app
