@@ -5,13 +5,17 @@ Provides all the functionality for contexts
 import threading
 from urllib.parse import parse_qs
 
-from .wsgi import set_wsgi_attributes_on_context
 from aikido_firewall.helpers.build_route_from_url import build_route_from_url
 from aikido_firewall.helpers.get_subdomains_from_url import get_subdomains_from_url
 from aikido_firewall.helpers.logging import logger
+from .wsgi import set_wsgi_attributes_on_context
+from .asgi import set_asgi_attributes_on_context
 
 UINPUT_SOURCES = ["body", "cookies", "query", "headers", "xml"]
 local = threading.local()
+
+WSGI_SOURCES = ["django", "flask"]
+ASGI_SOURCES = ["quart"]
 
 
 def get_current_context():
@@ -45,7 +49,10 @@ class Context:
         self.cookies = self.method = self.remote_address = self.query = self.headers = (
             self.url
         ) = None
-        set_wsgi_attributes_on_context(self, req)
+        if source in WSGI_SOURCES:
+            set_wsgi_attributes_on_context(self, req)
+        elif source in ASGI_SOURCES:
+            set_asgi_attributes_on_context(self, req)
 
         # Define variables using parsed request :
         self.route = build_route_from_url(self.url)
