@@ -51,40 +51,44 @@ def run_vulnerability_scan(kind, op, args):
     error_type = AikidoException  # Default error
     error_args = tuple()
     injection_results = {}
-
-    if kind == "sql_injection":
-        injection_results = context_contains_sql_injection(
-            sql=args[0], dialect=args[1], operation=op, context=context
-        )
-        error_type = AikidoSQLInjection
-        error_args = (type(args[1]).__name__,)  # Pass along the dialect
-    elif kind == "nosql_injection":
-        injection_results = check_context_for_nosql_injection(
-            context=context, op=op, _filter=args[0]
-        )
-        error_type = AikidoNoSQLInjection
-    elif kind == "shell_injection":
-        injection_results = check_context_for_shell_injection(
-            command=args[0], operation=op, context=context
-        )
-        error_type = AikidoShellInjection
-    elif kind == "path_traversal":
-        injection_results = check_context_for_path_traversal(
-            filename=args[0], operation=op, context=context
-        )
-        error_type = AikidoPathTraversal
-    elif kind == "ssrf":
-        # args[0] : URL object, args[1] : Port
-        # Report hostname and port to background process :
-        injection_results = scan_for_ssrf_in_request(args[0], args[1], op, context)
-        error_type = AikidoSSRF
-        blocked_request = is_blocking_enabled() and injection_results
-        if not blocked_request:
-            get_comms().send_data_to_bg_process(
-                "HOSTNAMES_ADD", (args[0].hostname, args[1])
+    try:
+        if kind == "sql_injection":
+            injection_results = context_contains_sql_injection(
+                sql=args[0], dialect=args[1], operation=op, context=context
             )
-    else:
-        logger.error("Vulnerability type %s currently has no scans implemented", kind)
+            error_type = AikidoSQLInjection
+            error_args = (type(args[1]).__name__,)  # Pass along the dialect
+        elif kind == "nosql_injection":
+            injection_results = check_context_for_nosql_injection(
+                context=context, op=op, _filter=args[0]
+            )
+            error_type = AikidoNoSQLInjection
+        elif kind == "shell_injection":
+            injection_results = check_context_for_shell_injection(
+                command=args[0], operation=op, context=context
+            )
+            error_type = AikidoShellInjection
+        elif kind == "path_traversal":
+            injection_results = check_context_for_path_traversal(
+                filename=args[0], operation=op, context=context
+            )
+            error_type = AikidoPathTraversal
+        elif kind == "ssrf":
+            # args[0] : URL object, args[1] : Port
+            # Report hostname and port to background process :
+            injection_results = scan_for_ssrf_in_request(args[0], args[1], op, context)
+            error_type = AikidoSSRF
+            blocked_request = is_blocking_enabled() and injection_results
+            if not blocked_request:
+                get_comms().send_data_to_bg_process(
+                    "HOSTNAMES_ADD", (args[0].hostname, args[1])
+                )
+        else:
+            logger.error(
+                "Vulnerability type %s currently has no scans implemented", kind
+            )
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        logger.debug("Exception occured in run_vulnerability_scan : %s", e)
 
     if injection_results:
         logger.debug("Injection results : %s", json.dumps(injection_results))
