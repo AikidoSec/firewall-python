@@ -55,26 +55,12 @@ def inspect_getaddrinfo_result(dns_results, hostname, port):
     if not found:
         return
 
-    should_block = is_blocking_enabled()
-    stack = " ".join(traceback.format_stack())
-    attack = {
+    return {
         "module": "socket",
         "operation": "socket.getaddrinfo",
         "kind": "ssrf",
         "source": found["source"],
-        "blocked": should_block,
-        "stack": stack,
         "path": found["pathToPayload"],
         "metadata": {"hostname": hostname},
         "payload": found["payload"],
     }
-    logger.debug("Attack results : %s", attack)
-
-    logger.debug("Sending data to bg process :")
-    stack = get_clean_stacktrace()
-    get_comms().send_data_to_bg_process(
-        "ATTACK", (attack, context, should_block, stack)
-    )
-
-    if should_block:
-        raise AikidoSSRF()
