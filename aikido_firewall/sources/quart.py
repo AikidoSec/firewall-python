@@ -10,20 +10,20 @@ from aikido_firewall.background_process.packages import add_wrapped_package
 from .functions.request_handler import request_handler
 
 
-async def aikido___call__(quart_app, scope=None, receive=None, send=None):
+async def aikido___call___wrapper(former_call, quart_app, scope, receive, send):
     """Aikido's __call__ wrapper"""
     # We don't want to install werkzeug :
     # pylint: disable=import-outside-toplevel
     try:
         if scope["type"] != "http":
-            return
+            return await former_call(quart_app, scope, receive, send)
         context1 = Context(req=scope, source="quart")
         context1.set_as_current_context()
 
         request_handler(stage="init")
     except Exception as e:
         logger.debug("Exception on aikido __call__ function : %s", e)
-    await quart_app.asgi_app(scope, receive, send)
+    return await former_call(quart_app, scope, receive, send)
 
 
 async def handle_request_wrapper(former_handle_request, quart_app, req):
@@ -84,13 +84,18 @@ def on_quart_import(quart):
     modified_quart = importhook.copy_module(quart)
 
     former_handle_request = copy.deepcopy(quart.Quart.handle_request)
+    former_asgi_app = copy.deepcopy(quart.Quart.asgi_app)
+    former_call = copy.deepcopy(quart.Quart.__call__)
+
+    async def aikido___call__(quart_app, scope, receive=None, send=None):
+        return await aikido___call___wrapper(
+            former_call, quart_app, scope, receive, send
+        )
 
     async def aikido_handle_request(quart_app, request):
         return await handle_request_wrapper(former_handle_request, quart_app, request)
 
-    former_asgi_app = copy.deepcopy(quart.Quart.asgi_app)
-
-    async def aikido_asgi_app(quart_app, scope, receive, send):
+    async def aikido_asgi_app(quart_app, scope, receive=None, send=None):
         if scope["type"] == "http":
             # Run pre_response code :
             pre_response = request_handler(stage="pre_response")
