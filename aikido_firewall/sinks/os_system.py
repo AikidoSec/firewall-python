@@ -20,9 +20,10 @@ def on_os_import(os):
     def aikido_new_system(
         command, *args, former_system_func=former_system_func, **kwargs
     ):
-        vulns.run_vulnerability_scan(
-            kind="shell_injection", op="os.system", args=(command,)
-        )
+        if isinstance(command, str):
+            vulns.run_vulnerability_scan(
+                kind="shell_injection", op="os.system", args=(command,)
+            )
         return former_system_func(command, *args, **kwargs)
 
     setattr(os, "system", aikido_new_system)
