@@ -24,8 +24,8 @@ def get_config(token):
         "Authorization": str(token),
     }
     response = requests.get(url, headers=headers, timeout=3)  # timeout in 3 seconds
-    if response.status_code is not 200:
-        logger.error("Invalid response (%s): %s", response.status_code, response.text)
+    if response.status_code != 200:
+        logger.info("Invalid response from api : %s", response.status_code)
 
     return response.json()  # Parse and return the JSON response
 
@@ -39,7 +39,7 @@ def get_config_last_updated_at(token):
         "Authorization": str(token),
     }
     response = requests.get(url, headers=headers, timeout=0.5)  # timeout in 500ms
-    if response.status_code is not 200:
-        logger.error("Invalid response (%s): %s", response.status_code, response.text)
+    if response.status_code != 200:
+        logger.info("Invalid response from realtime api : %s", response.status_code)
 
     return int(response.json()["configUpdatedAt"])  #  Return configUpdatedAt time

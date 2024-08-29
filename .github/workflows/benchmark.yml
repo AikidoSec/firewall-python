@@ -1,0 +1,21 @@
+name: Benchmark
+on:
+  push: {}
+  workflow_call: {}
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Run Docker Compose
+        working-directory: ./sample-apps/flask-mysql
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
+      - name: Install K6
+        uses: grafana/setup-k6-action@v1
+      - name: Run flask-mysql k6 Benchmark
+        run: |
+          k6 run -q ./benchmarks/flask-mysql-benchmarks.js
+

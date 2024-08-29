@@ -13,26 +13,35 @@ from aikido_firewall.helpers.logging import logger
 # Import background process
 from aikido_firewall.background_process import start_background_process
 
-# Load environment variables
+# Load environment variables and constants
+# Load environment variables and constants
+from aikido_firewall.config import PKG_VERSION
+
 load_dotenv()
 
 
-def protect(module="any", server=True):
+def protect(mode="daemon"):
     """
+    Mode can be set to :
+    - daemon : Default, imports sinks/sources and starts background_process
+    - daemon_only: Only starts background process and doesn't wrap
+    - daemon_disabled : This will import sinks/sources but won't start a background process
     Protect user's application
     """
-    if server:
+    if mode == "daemon" or mode == "daemon_only":
         start_background_process()
-    else:
-        logger.debug("Not starting background process")
-    if module == "background-process-only":
+    if mode == "daemon_only":
+        # Do not import sinks/sources
         return
+    if mode == "daemon_disabled":
+        logger.debug("Not starting the background process, daemon disabled.")
 
     # Import sources
     import aikido_firewall.sources.django
-
-    if not module in ["django", "django-gunicorn"]:
-        import aikido_firewall.sources.flask
+    import aikido_firewall.sources.flask
+    import aikido_firewall.sources.quart
+    import aikido_firewall.sources.xml
+    import aikido_firewall.sources.lxml
 
     import aikido_firewall.sources.gunicorn
     import aikido_firewall.sources.uwsgi
@@ -42,6 +51,7 @@ def protect(module="any", server=True):
     import aikido_firewall.sinks.mysqlclient
     import aikido_firewall.sinks.pymongo
     import aikido_firewall.sinks.psycopg2
+    import aikido_firewall.sinks.asyncpg
     import aikido_firewall.sinks.builtins
     import aikido_firewall.sinks.os
     import aikido_firewall.sinks.http_client
@@ -51,4 +61,4 @@ def protect(module="any", server=True):
     import aikido_firewall.sinks.os_system
     import aikido_firewall.sinks.subprocess
 
-    logger.info("Aikido python firewall started")
+    logger.info("Aikido python firewall v%s starting.", PKG_VERSION)

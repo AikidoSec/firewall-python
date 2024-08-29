@@ -9,7 +9,10 @@ def users():
     return Users(max_entries=2)
 
 
-def test_users(users):
+def test_users(users, monkeypatch):
+    monkeypatch.setattr(
+        "aikido_firewall.helpers.get_current_unixtime_ms.get_unixtime_ms", lambda: 1
+    )
     assert users.as_array() == []
 
     users.add_user({"id": "1", "name": "John", "lastIpAddress": "::1"})
@@ -17,24 +20,19 @@ def test_users(users):
     assert user1["id"] == "1"
     assert user1["name"] == "John"
     assert user1["lastIpAddress"] == "::1"
-    assert user1["lastSeenAt"] >= 0  # lastSeenAt should be initialized
-    assert (
-        user1["lastSeenAt"] == user1["firstSeenAt"]
-    )  # Initially, they should be equal
+    assert user1["lastSeenAt"] == user1["firstSeenAt"] == 1
 
     # Simulate the passage of time
-    time.sleep(0.001)  # Sleep for a short time to simulate ticking the clock
+    monkeypatch.setattr(
+        "aikido_firewall.helpers.get_current_unixtime_ms.get_unixtime_ms", lambda: 2
+    )
     users.add_user({"id": "1", "name": "John Doe", "lastIpAddress": "1.2.3.4"})
     user1_updated = users.as_array()[0]
     assert user1_updated["id"] == "1"
     assert user1_updated["name"] == "John Doe"
     assert user1_updated["lastIpAddress"] == "1.2.3.4"
-    assert (
-        user1_updated["lastSeenAt"] >= user1_updated["firstSeenAt"]
-    )  # lastSeenAt should be >= firstSeenAt
-    assert (
-        user1_updated["lastSeenAt"] == user1_updated["firstSeenAt"] + 1
-    )  # lastSeenAt should be +1
+    assert user1_updated["lastSeenAt"] == 2
+    assert user1_updated["firstSeenAt"] == 1
 
     users.add_user({"id": "2", "name": "Jane", "lastIpAddress": "1.2.3.4"})
     user2 = users.as_array()[1]

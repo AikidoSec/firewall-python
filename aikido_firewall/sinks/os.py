@@ -4,7 +4,6 @@ Sink module for python's `os`
 
 import copy
 import importhook
-from aikido_firewall.helpers.logging import logger
 from aikido_firewall.vulnerabilities import run_vulnerability_scan
 
 # File functions :
@@ -20,18 +19,13 @@ OS_FILE_FUNCTIONS = [
     "rmdir",
     "remove",
     "symlink",
-    "stat",
     "link",
     "makedirs",
     "walk",
 ]
 OS_PATH_FUNCTIONS = [
-    "exists",
     "realpath",
     "getsize",
-    "getmtime",
-    "getatime",
-    "getctime",
 ]
 # os.path.join(path, *paths) is not wrapped
 
@@ -73,5 +67,4 @@ def on_os_import(os):
         # pylint: disable=no-member
         setattr(modified_os.path, op, aikido_new_func)
 
-    logger.debug("Wrapped `os` module")
     return modified_os

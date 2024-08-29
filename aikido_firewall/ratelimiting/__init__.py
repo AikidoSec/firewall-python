@@ -3,11 +3,12 @@ Aikido can rate limit urls, IPs, Users
 """
 
 
-def should_ratelimit_request(context, reporter):
+def should_ratelimit_request(route_metadata, remote_address, user, connection_manager):
     """
     Checks if the request should be ratelimited or not
+    route_metadata object includes route, url and method
     """
-    match = reporter.conf.get_endpoint(context)
+    match = connection_manager.conf.get_endpoint(route_metadata)
     if not match:
         return {"block": False}
     endpoint = match["endpoint"]
@@ -16,21 +17,24 @@ def should_ratelimit_request(context, reporter):
         return {"block": False}
 
     # Production logic, still missing
-    is_allowed_ip = reporter.conf.is_allowed_ip(context.remote_address)
+    is_bypassed_ip = connection_manager.conf.is_bypassed_ip(remote_address)
     max_requests = int(endpoint["rateLimiting"]["maxRequests"])
     windows_size_in_ms = int(endpoint["rateLimiting"]["windowSizeInMS"])
-    if context.remote_address and not is_allowed_ip:
-        allowed = reporter.rate_limiter.is_allowed(
-            f"{context.method}:{route}:ip:{context.remote_address}",
+    if remote_address and not is_bypassed_ip:
+        method = route_metadata["method"]
+        allowed = connection_manager.rate_limiter.is_allowed(
+            f"{method}:{route}:ip:{remote_address}",
             windows_size_in_ms,
             max_requests,
         )
         if not allowed:
             return {"block": True, "trigger": "ip"}
-    if context.user:
-        uid = context.user["id"]
-        allowed = reporter.rate_limiter.is_allowed(
-            f"{context.method}:{route}:user:{uid}",
+    if user:
+        uid = user["id"]
+        method = route_metadata["method"]
+
+        allowed = connection_manager.rate_limiter.is_allowed(
+            f"{method}:{route}:user:{uid}",
             windows_size_in_ms,
             max_requests,
         )

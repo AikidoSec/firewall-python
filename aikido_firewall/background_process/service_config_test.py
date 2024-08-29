@@ -40,7 +40,11 @@ def test_service_config_initialization():
     ]
     last_updated_at = "2023-10-01"
     service_config = ServiceConfig(
-        endpoints, last_updated_at, ["0", "0", "1", "5"], ["5", "1", "2", "1", "5"]
+        endpoints,
+        last_updated_at,
+        ["0", "0", "1", "5"],
+        ["5", "1", "2", "1", "5"],
+        True,
     )
 
     # Check that non-GraphQL endpoints are correctly filtered
@@ -48,7 +52,7 @@ def test_service_config_initialization():
     assert service_config.endpoints[0]["route"] == "/v1"
     assert service_config.endpoints[1]["route"] == "/v3"
     assert service_config.last_updated_at == last_updated_at
-    assert service_config.allowed_ips == set(["1", "2", "5"])
+    assert service_config.bypassed_ips == set(["1", "2", "5"])
     assert service_config.blocked_uids == set(["1", "0", "5"])
 
 
@@ -66,20 +70,16 @@ def service_config():
         endpoints=sample_endpoints,
         last_updated_at="2023-10-01T00:00:00Z",
         blocked_uids=["user1", "user2"],
-        allowed_ips=["192.168.1.1", "10.0.0.1"],
+        bypassed_ips=["192.168.1.1", "10.0.0.1"],
+        received_any_stats=True,
     )
 
 
 def test_initialization(service_config):
     assert len(service_config.endpoints) == 2  # Only non-graphql endpoints
     assert service_config.last_updated_at == "2023-10-01T00:00:00Z"
-    assert service_config.allowed_ips == {"192.168.1.1", "10.0.0.1"}
+    assert service_config.bypassed_ips == {"192.168.1.1", "10.0.0.1"}
     assert service_config.blocked_uids == {"user1", "user2"}
-
-
-def test_is_allowed_ip(service_config):
-    assert service_config.is_allowed_ip("192.168.1.1") is True
-    assert service_config.is_allowed_ip("10.0.0.2") is False
 
 
 def test_is_user_blocked(service_config):

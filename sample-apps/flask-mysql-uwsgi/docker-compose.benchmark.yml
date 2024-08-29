@@ -1,0 +1,21 @@
+version: "3"
+services:
+  backend_firewall_disabled:
+    image: sample_flask_mysql_uwsgi
+    command: sh -c "uwsgi --ini uwsgi.ini"
+    restart: always
+    volumes:
+      - .:/app
+    ports:
+      - "8089:5000"
+    depends_on:
+      - db
+    extra_hosts:
+      - "app.local.aikido.io:host-gateway"
+    environment:
+      - FIREWALL_DISABLED=1
+  backend:
+    environment:
+      - AIKIDO_TOKEN="test_aikido_token""
+      - AIKIDO_BLOCKING=1
+

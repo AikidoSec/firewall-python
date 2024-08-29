@@ -23,7 +23,6 @@ def generate_aikido_function(former_func, op):
     """
 
     def aik_new_func(*args, **kwargs):
-        logger.info("socket.%s() Hostname : `%s`;", op, args[0])
         res = former_func(*args, **kwargs)
         if op is "getaddrinfo":
             inspect_getaddrinfo_result(dns_results=res, hostname=args[0], port=args[1])
@@ -41,7 +40,7 @@ def on_socket_import(socket):
       -  gethostbyname() -- map a hostname to its IP number
       -  gethostbyaddr() -- map an IP number or hostname to DNS info
     https://github.com/python/cpython/blob/8f19be47b6a50059924e1d7b64277ad3cef4dac7/Lib/socket.py#L10
-    Returns : Modified http.client object
+    Returns : Modified socket object
     """
     modified_socket = importhook.copy_module(socket)
     for op in SOCKET_OPERATIONS:
@@ -49,5 +48,4 @@ def on_socket_import(socket):
         setattr(modified_socket, op, generate_aikido_function(former_func, op))
         setattr(socket, op, generate_aikido_function(former_func, op))
 
-    logger.debug("Wrapped `http` module")
     return modified_socket

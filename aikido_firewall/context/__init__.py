@@ -4,16 +4,18 @@ Provides all the functionality for contexts
 
 import threading
 from urllib.parse import parse_qs
-from http.cookies import SimpleCookie
+
 from aikido_firewall.helpers.build_route_from_url import build_route_from_url
 from aikido_firewall.helpers.get_subdomains_from_url import get_subdomains_from_url
 from aikido_firewall.helpers.logging import logger
-from aikido_firewall.helpers.get_ip_from_request import get_ip_from_request
+from .wsgi import set_wsgi_attributes_on_context
+from .asgi import set_asgi_attributes_on_context
 
-SUPPORTED_SOURCES = ["django", "flask", "django-gunicorn"]
-UINPUT_SOURCES = ["body", "cookies", "query", "headers"]
-
+UINPUT_SOURCES = ["body", "cookies", "query", "headers", "xml"]
 local = threading.local()
+
+WSGI_SOURCES = ["django", "flask"]
+ASGI_SOURCES = ["quart"]
 
 
 def get_current_context():
@@ -24,84 +26,37 @@ def get_current_context():
         return None
 
 
-def parse_headers(headers):
-    """Parse EnvironHeaders object into a dict"""
-    if isinstance(headers, dict):
-        return headers
-    if isinstance(headers, list):
-        obj = {}
-        for k, v in headers:
-            obj[k] = v
-        return obj
-    return dict(zip(headers.keys(), headers.values()))
-
-
-def parse_cookies(cookie_str):
-    """Parse cookie string from headers"""
-    cookie_dict = {}
-    cookies = SimpleCookie()
-    cookies.load(cookie_str)
-
-    for key, morsel in cookies.items():
-        cookie_dict[key] = morsel.value
-
-    return cookie_dict
-
-
 class Context:
     """
     A context object, it stores everything that is important
     for vulnerability detection
     """
 
-    def __init__(self, context_obj=None, req=None, source=None):
+    def __init__(self, context_obj=None, body=None, req=None, source=None):
         if context_obj:
+            logger.debug("Creating Context instance based on dict object.")
             self.__dict__.update(context_obj)
             return
-
-        if not source in SUPPORTED_SOURCES:
-            raise ValueError(f"Source {source} not supported")
+        # Define emtpy variables/Properties :
         self.source = source
-        self.method = req.method
-        self.headers = parse_headers(req.headers)
-        if source == "flask":
-            self.set_flask_attrs(req)
-        elif source == "django":
-            self.set_django_attrs(req)
-        elif source == "django-gunicorn":
-            self.set_django_gunicorn_attrs(req)
+        self.user = None
+        self.parsed_userinput = {}
+        self.xml = {}
+        self.outgoing_req_redirects = []
+        self.body = body
+
+        # Parse WSGI/ASGI/... request :
+        self.cookies = self.method = self.remote_address = self.query = self.headers = (
+            self.url
+        ) = None
+        if source in WSGI_SOURCES:
+            set_wsgi_attributes_on_context(self, req)
+        elif source in ASGI_SOURCES:
+            set_asgi_attributes_on_context(self, req)
+
+        # Define variables using parsed request :
         self.route = build_route_from_url(self.url)
         self.subdomains = get_subdomains_from_url(self.url)
-        self.user = None
-        self.remote_address = get_ip_from_request(self.raw_ip, self.headers)
-
-    def set_django_gunicorn_attrs(self, req):
-        """Set properties that are specific to django-gunicorn"""
-        self.raw_ip = req.remote_addr
-        self.url = req.uri
-        self.body = parse_qs(req.body_copy.decode("utf-8"))
-        self.query = parse_qs(req.query)
-        self.cookies = parse_cookies(self.headers["COOKIE"])
-        del self.headers["COOKIE"]
-
-    def set_django_attrs(self, req):
-        """set properties that are specific to django"""
-        self.raw_ip = req.META.get("REMOTE_ADDR")
-        self.url = req.build_absolute_uri()
-        self.body = dict(req.POST)
-        self.query = dict(req.GET)
-        self.cookies = req.COOKIES
-
-    def set_flask_attrs(self, req):
-        """Set properties that are specific to flask"""
-        self.raw_ip = req.remote_addr
-        self.url = req.url
-        if req.is_json:
-            self.body = req.json
-        else:
-            self.body = req.form.to_dict()
-        self.query = req.args.to_dict()
-        self.cookies = req.cookies.to_dict()
 
     def __reduce__(self):
         return (
@@ -119,6 +74,8 @@ class Context:
                     "route": self.route,
                     "subdomains": self.subdomains,
                     "user": self.user,
+                    "xml": self.xml,
+                    "outgoing_req_redirects": self.outgoing_req_redirects,
                 },
                 None,
                 None,
@@ -130,3 +87,11 @@ class Context:
         Set the current context
         """
         local.current_context = self
+
+    def get_route_metadata(self):
+        """Returns a route_metadata object"""
+        return {
+            "method": self.method,
+            "route": self.route,
+            "url": self.url,
+        }

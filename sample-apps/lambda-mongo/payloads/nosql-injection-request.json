@@ -1,0 +1,14 @@
+{
+  "resource": "/",
+  "path": "/",
+  "httpMethod": "POST",
+  "body": "{\"dog_name\":\"Doggo 1\",\"pswd\":{\"$gt\":\"\"}}",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "requestContext": {
+    "identity": {
+      "sourceIp": "1.2.3.4"
+    }
+  }
+}

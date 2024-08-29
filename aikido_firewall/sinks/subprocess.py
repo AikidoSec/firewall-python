@@ -53,5 +53,4 @@ def on_subprocess_import(subprocess):
             generate_aikido_function(op=op, former_func=former_func),
         )
 
-    logger.debug("Wrapped `subprocess` module")
     return modified_subprocess

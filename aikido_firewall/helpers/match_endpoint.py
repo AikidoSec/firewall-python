@@ -6,30 +6,41 @@ import regex as re
 from .try_parse_url_path import try_parse_url_path
 
 
-def match_endpoint(context, endpoints):
+def match_endpoint(route_metadata, endpoints, multi=False):
     """
     Based on the context's url this tries to find a match in the list of endpoints
     """
-    if not context.method:
+    if not route_metadata["method"]:
         return None
 
     possible = [
         endpoint
         for endpoint in endpoints
-        if endpoint["method"] == "*" or endpoint["method"] == context.method
+        if endpoint["method"] == "*" or endpoint["method"] == route_metadata["method"]
     ]
+    results = []
 
-    endpoint = next(
-        (endpoint for endpoint in possible if endpoint["route"] == context.route), None
-    )
+    if not multi:
+        endpoint = next(
+            (
+                endpoint
+                for endpoint in possible
+                if endpoint["route"] == route_metadata["route"]
+            ),
+            None,
+        )
 
-    if endpoint:
-        return {"endpoint": endpoint, "route": endpoint["route"]}
+        if endpoint:
+            return {"endpoint": endpoint, "route": endpoint["route"]}
+    else:
+        for endpoint in possible:
+            if endpoint["route"] == route_metadata["route"]:
+                results.append({"endpoint": endpoint, "route": endpoint["route"]})
 
-    if not context.url:
+    if not route_metadata["url"]:
         return None
 
-    path = try_parse_url_path(context.url)
+    path = try_parse_url_path(route_metadata["url"])
 
     if not path:
         return None
@@ -45,6 +56,9 @@ def match_endpoint(context, endpoints):
         regex = re.compile(f"^{route.replace('*', '(.*)')}\/?$", re.IGNORECASE)
 
         if regex.match(path):
-            return {"endpoint": wildcard, "route": route}
-
+            if not multi:
+                return {"endpoint": wildcard, "route": route}
+            results.append({"endpoint": wildcard, "route": route})
+    if len(results) > 0:
+        return results
     return None

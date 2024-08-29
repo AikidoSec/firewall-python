@@ -12,6 +12,9 @@ Firewall autonomously protects your Python applications against:
 
 * 🛡️ [NoSQL injection attacks](https://www.aikido.dev/blog/web-application-security-vulnerabilities)
 * 🛡️ [SQL injection attacks]([https://www.aikido.dev/blog/web-application-security-vulnerabilities](https://owasp.org/www-community/attacks/SQL_Injection))
+* 🛡️ [Command injection attacks](https://owasp.org/www-community/attacks/Command_Injection)
+* 🛡️ [Path traversal attacks](https://owasp.org/www-community/attacks/Path_Traversal)
+* 🛡️ [Server-side request forgery (SSRF)](./docs/ssrf.md)
 
 Firewall operates autonomously on the same server as your Python app to:
 
@@ -34,6 +37,8 @@ Aikido Firewall for Python 3 is compatible with:
 * ✅ [`mysqlclient`](https://pypi.org/project/mysqlclient/)
 * ✅ [`PyMySQL`](https://pypi.org/project/PyMySQL/)
 * ✅ [`pymongo`](https://pypi.org/project/pymongo/)
+* ✅ [`psycopg2`](https://pypi.org/project/psycopg2)
+* ✅ [`asyncpg`](https://pypi.org/project/asyncpg)
 
 ## Reporting to your Aikido Security dashboard
 
@@ -64,4 +69,16 @@ See [Reporting to Aikido](#reporting-to-your-aikido-security-dashboard) to learn
 
 ## Bug bounty program
 
-Our bug bounty program is public and can be found by all registered Intigriti users at: https://app.intigriti.com/researcher/programs/aikido/aikidoruntime
+Our bug bounty program is public and can be found by all registered Intigriti users [here](https://app.intigriti.com/researcher/programs/aikido/aikidoruntime)
+
+## Contributing
+
+See [CONTRIBUTING.md](.github/CONTRIBUTING.md) for more information.
+
+## Code of Conduct
+
+See [CODE_OF_CONDUCT.md](.github/CODE_OF_CONDUCT.md) for more information.
+
+## Security
+
+See [SECURITY.md](.github/SECURITY.md) for more information.

@@ -1,8 +1,9 @@
 import pytest
 from .check_context_for_shell_injection import check_context_for_shell_injection
+from aikido_firewall.context import Context
 
 
-class Context1:
+class Context1(Context):
     def __init__(self):
         self.cookies = {}
         self.headers = {}
@@ -15,9 +16,10 @@ class Context1:
         }
         self.source = "express"
         self.route = "/"
+        self.parsed_userinput = {}
 
 
-class Context2:
+class Context2(Context):
     def __init__(self):
         self.cookies = {}
         self.headers = {}
@@ -30,13 +32,17 @@ class Context2:
         }
         self.source = "express"
         self.route = "/"
+        self.parsed_userinput = {}
 
 
-def test_detect_shell_injection():
+def test_detect_shell_injection(monkeypatch):
+    monkeypatch.setattr("aikido_firewall.context.get_current_context", lambda: None)
+
+    context = Context1()
     result = check_context_for_shell_injection(
         command="binary --domain www.example`whoami`.com",
         operation="child_process.exec",
-        context=Context1(),
+        context=context,
     )
 
     expected = {
@@ -53,11 +59,14 @@ def test_detect_shell_injection():
     assert result == expected
 
 
-def test_detect_shell_injection_from_route_params():
+def test_detect_shell_injection_from_route_params(monkeypatch):
+    monkeypatch.setattr("aikido_firewall.context.get_current_context", lambda: None)
+
+    context = Context2()
     result = check_context_for_shell_injection(
         command="binary --domain www.example`whoami`.com",
         operation="child_process.exec",
-        context=Context2(),
+        context=context,
     )
 
     expected = {
@@ -72,3 +81,31 @@ def test_detect_shell_injection_from_route_params():
     }
 
     assert result == expected
+
+
+@pytest.mark.parametrize(
+    "invalid_input",
+    [
+        None,
+        123,  # Integer
+        45.67,  # Float
+        [],  # Empty list
+        [1, 2, 3],  # List of integers
+        {},  # Empty dictionary
+        {"key": "value"},  # Dictionary
+        set(),  # Empty set
+        {1, 2, 3},  # Set of integers
+        object(),  # Instance of a generic object
+        lambda x: x,  # Lambda function
+        (1, 2),  # Tuple
+        b"bytes",  # Bytes
+    ],
+)
+def test_doesnt_crash_with_invalid_command(invalid_input):
+    context = Context2()
+    result = check_context_for_shell_injection(
+        command=invalid_input,
+        operation="child_process.exec",
+        context=context,
+    )
+    assert result == {}

@@ -29,7 +29,7 @@ def reset_comms():
     # pylint: disable=global-statement # This needs to be global
     global comms
     if comms:
-        comms.send_data_to_bg_process("KILL", {})
+        logger.debug("Resetting communications. (comms = None)")
         comms = None
 
 
@@ -43,6 +43,11 @@ class AikidoIPCCommunications:
         self.address = address
         self.key = key
         self.background_process = None
+        if self.key == b"None":
+            logger.warning(
+                "You are running without AIKIDO_TOKEN set, not starting background process.."
+            )
+            self.key = None
 
         # Set as global ipc object :
         reset_comms()
@@ -52,6 +57,10 @@ class AikidoIPCCommunications:
 
     def start_aikido_listener(self):
         """This will start the aikido process which listens"""
+        if not self.key:
+            # If the key is not set, there isn't going to be any communication with
+            # the aikido server, so we shouldn't start the background process
+            return
         #  Daemon is set to True so that the process kills itself when the main process dies
         self.background_process = Process(
             target=AikidoBackgroundProcess, args=(self.address, self.key), daemon=True
@@ -59,9 +68,20 @@ class AikidoIPCCommunications:
         self.background_process.start()
 
     def send_data_to_bg_process(self, action, obj, receive=False):
+        """Try-catched send_data_to_bg_process"""
+        try:
+            return self._send_data_to_bg_process(action, obj, receive)
+        except Exception as e:
+            logger.debug("Exception happened in send_data_to_bg_process : %s", e)
+            return {"success": False, "error": "unknown"}
+
+    def _send_data_to_bg_process(self, action, obj, receive=False):
         """
         This creates a new client for comms to the background process
         """
+        if not self.key:
+            # If no key is set, the background process will not start
+            return {"success": False, "error": "invalid_key"}
 
         # We want to make sure that sending out this data affects the process as little as possible
         # So we run it inside a seperate thread with a timeout of 100ms
@@ -90,12 +110,12 @@ class AikidoIPCCommunications:
         t.start()
         t.join(timeout=0.1)
         if not result_obj[0]:
-            logger.info(
-                "Communication returned None between background process and threads"
+            logger.debug(
+                " Failure in communication to background process, %s(%s)", action, obj
             )
             return {"success": False, "error": "timeout"}
 
         if receive:
             return {"success": True, "data": result_obj[1]}
         else:
-            return {"success": True}
+            return {"success": True, "data": None}

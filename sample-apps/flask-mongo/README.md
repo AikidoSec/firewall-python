@@ -7,6 +7,6 @@ Run (with docker-compose installed) :
 docker-compose up --build
 ```
 
-- You'll be able to access the Flask Server at : [localhost:8080](http://localhost:8080)
-- To Create a reference test dog use `http://localhost:8080/create/`
-- To test the nosql injection go to `http://localhost:8080/auth/`
+- You'll be able to access the Flask Server at : [localhost:8094](http://localhost:8094)
+- To Create a reference test dog use `http://localhost:8094/create/`
+- To test the nosql injection go to `http://localhost:8094/auth/`

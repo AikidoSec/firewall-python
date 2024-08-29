@@ -3,34 +3,26 @@ The code to send out a heartbeat is in here
 """
 
 from aikido_firewall.helpers.logging import logger
+from aikido_firewall.helpers.create_interval import create_interval
 
 
-def send_heartbeats_every_x_secs(reporter, interval_in_secs, event_scheduler):
+def send_heartbeats_every_x_secs(connection_manager, interval_in_secs, event_scheduler):
     """
     Start sending out heartbeats every x seconds
     """
-    if reporter.serverless:
+    if connection_manager.serverless:
         logger.debug("Running in serverless environment, not starting heartbeats")
         return
-    if not reporter.token:
+    if not connection_manager.token:
         logger.debug("No token provided, not starting heartbeats")
         return
 
     logger.debug("Starting heartbeats")
 
-    # Start the interval by booting the first settimeout
-    send_heartbeat_wrapper(reporter, interval_in_secs, event_scheduler)
-
-
-def send_heartbeat_wrapper(rep, interval_in_secs, event_scheduler):
-    """
-    Wrapper function for send_heartbeat so we get an interval
-    """
-    event_scheduler.enter(
-        interval_in_secs,
-        1,
-        send_heartbeat_wrapper,
-        (rep, interval_in_secs, event_scheduler),
+    # Create an interval for "interval_in_secs" seconds :
+    create_interval(
+        event_scheduler=event_scheduler,
+        interval_in_secs=interval_in_secs,
+        function=lambda connection_manager: connection_manager.send_heartbeat(),
+        args=(connection_manager,),
     )
-    logger.debug("Heartbeat...")
-    rep.send_heartbeat()

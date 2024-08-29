@@ -1,0 +1,4 @@
+django
+python-decouple
+cryptography
+psycopg2-binary

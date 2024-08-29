@@ -1,0 +1,50 @@
+version: '3'
+services:
+  db:
+    image: postgres:14-alpine
+    container_name: django_postgres_db
+    restart: always
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: 'db'
+      POSTGRES_USER: 'user'
+      POSTGRES_PASSWORD: 'password'
+    ports:
+      - "5432:5432"
+    networks:
+      - default_network
+
+  backend:
+    image: sample_django_postgres
+    build: 
+      context: ./../../
+      dockerfile: ./sample-apps/django-postgres/Dockerfile
+    container_name: django_postgres_backend
+    command: sh -c "python3 manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
+    restart: always
+    volumes:
+      - .:/app
+    ports:
+      - "8094:8000"
+    depends_on:
+      - db
+    networks:
+      - default_network
+    extra_hosts:
+      - "app.local.aikido.io:host-gateway"
+    environment:
+      SECRET_KEY: 'Test key'
+      DB_HOST: 'db'
+      DB_NAME: 'db'
+      DB_USER: 'user'
+      DB_PASSWORD: 'password'
+      FIREWALL_DISABLED: 0
+
+
+volumes:
+  db_data:
+
+networks:
+  default_network:
+    driver: bridge

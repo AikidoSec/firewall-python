@@ -11,9 +11,9 @@ def test_protect_with_django(monkeypatch, caplog):
         globals(), "aikido_firewall.sinks.pymysql", "dummy_pymysql_module"
     )
 
-    protect(module="django")
+    protect()
 
-    assert "Aikido python firewall started" in caplog.text
+    assert "starting" in caplog.text
     assert get_comms() != None
     reset_comms()
     assert get_comms() == None

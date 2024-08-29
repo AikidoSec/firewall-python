@@ -4,7 +4,6 @@ Sink module for `os`, wrapping os.system
 
 import copy
 import importhook
-from aikido_firewall.helpers.logging import logger
 from aikido_firewall.vulnerabilities import run_vulnerability_scan
 
 
@@ -26,5 +25,4 @@ def on_os_import(os):
     setattr(os, "system", aikido_new_system)
     setattr(modified_os, "system", aikido_new_system)
 
-    logger.debug("Wrapped `os` module")
     return modified_os

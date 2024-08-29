@@ -11,12 +11,6 @@ services:
       MYSQL_USER: 'user'
       MYSQL_PASSWORD: 'password'
       MYSQL_ROOT_PASSWORD: 'password'
-    ports:
-      # <Port exposed> : <MySQL Port running inside container>
-      - '3306:3306'
-    expose:
-      # Opens port 3306 on the container
-      - '3306'
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 5s
@@ -24,6 +18,7 @@ services:
       start_period: 10s
 
   backend:
+    image: sample_django_mysql_gunicorn
     build: 
       context: ./../../
       dockerfile: ./sample-apps/django-mysql-gunicorn/Dockerfile
@@ -33,14 +28,19 @@ services:
     volumes:
       - .:/app
     ports:
-      - "8080:8000"
-    env_file:
-      - .env
+      - "8082:8000"
     depends_on:
       db:
         condition: service_healthy
     extra_hosts:
       - "app.local.aikido.io:host-gateway"
+    environment:
+      MYSQL_DATABASE: 'db'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+      SECRET_KEY: 'abc'
+      FIREWALL_DISABLED: 0
 
 volumes:
   db_data:
