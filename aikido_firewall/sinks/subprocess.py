@@ -18,13 +18,13 @@ def generate_aikido_function(op, former_func):
 
     def aikido_new_func(*args, op=op, former_func=former_func, **kwargs):
         logger.debug("Wrapper - `subprocess` on %s() function", op)
-        shell_enabled = kwargs.get('shell')
+        shell_enabled = kwargs.get("shell")
 
         if isinstance(args[0], list):
             command = " ".join(args[0])
         else:
             command = args[0]
-        
+
         # For all operations above: call, run, check_call, Popen, check_output, default value
         # of the shell property is False.
         if shell_enabled is True:
