@@ -13,12 +13,11 @@ def test_subprocess_call():
 
         op = "subprocess.call"
 
-        subprocess.call(["ls", "-la"])
+        subprocess.call(["ls", "-la"], shell=True)
         args = ("ls -la",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
-        with pytest.raises(FileNotFoundError):
-            subprocess.call(["cfsknflks"])
+        subprocess.call(["cfsknflks"], shell=True)
         args = ("cfsknflks",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
@@ -31,12 +30,11 @@ def test_subprocess_run():
 
         op = "subprocess.run"
 
-        subprocess.run(["ls", "-la"])
+        subprocess.run(["ls", "-la"], shell=True)
         args = ("ls -la",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
-        with pytest.raises(FileNotFoundError):
-            subprocess.run(["cfsknflks"])
+        subprocess.run(["cfsknflks"], shell=True)
         args = ("cfsknflks",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
@@ -49,12 +47,12 @@ def test_subprocess_check_call():
 
         op = "subprocess.check_call"
 
-        subprocess.check_call(["ls", "-la"])
+        subprocess.check_call(["ls", "-la"], shell=True)
         args = ("ls -la",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
-        with pytest.raises(FileNotFoundError):
-            subprocess.check_call(["cfsknflks"])
+        with pytest.raises(subprocess.CalledProcessError):
+            subprocess.check_call(["cfsknflks"], shell=True)
         args = ("cfsknflks",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
@@ -67,12 +65,11 @@ def test_subprocess_popen():
 
         op = "subprocess.Popen"
 
-        subprocess.Popen(["ls", "-la"])
+        subprocess.Popen(["ls", "-la"], shell=True)
         args = ("ls -la",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
-        with pytest.raises(FileNotFoundError):
-            subprocess.Popen(["cfsknflks"])
+        subprocess.Popen(["cfsknflks"], shell=True)
         args = ("cfsknflks",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
@@ -85,27 +82,27 @@ def test_subprocess_check_output():
 
         op = "subprocess.check_output"
 
-        subprocess.check_output(["ls", "-la"])
+        subprocess.check_output(["ls", "-la"], shell=True)
         args = ("ls -la",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
-        with pytest.raises(FileNotFoundError):
-            subprocess.check_output(["cfsknflks"])
+        with pytest.raises(subprocess.CalledProcessError):
+            subprocess.check_output(["cfsknflks"], shell=True)
         args = ("cfsknflks",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
-        with pytest.raises(FileNotFoundError):
-            subprocess.check_output(("tuple", "command"))
+        with pytest.raises(subprocess.CalledProcessError):
+            subprocess.check_output(("tuple", "command"), shell=True)
         args = ("tuple command",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
-        with pytest.raises(FileNotFoundError):
-            subprocess.check_output({"key": "value"})
+        with pytest.raises(subprocess.CalledProcessError):
+            subprocess.check_output({"key": "value"}, shell=True)
         args = ("key",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
-        with pytest.raises(FileNotFoundError):
-            subprocess.check_output({"ke": "value", "key2": "value2"})
+        with pytest.raises(subprocess.CalledProcessError):
+            subprocess.check_output({"ke": "value", "key2": "value2"}, shell=True)
         args = ("ke key2",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
@@ -118,23 +115,23 @@ def test_subprocess_invalid_input():
 
         op = "subprocess.call"
         with pytest.raises(TypeError):
-            subprocess.call()
+            subprocess.call(shell=True)
         mock_run_vulnerability_scan.assert_not_called()
 
         with pytest.raises(TypeError):
-            subprocess.call(123456789123456789)
+            subprocess.call(123456789123456789, shell=True)
         mock_run_vulnerability_scan.assert_not_called()  # Ensure it was not called
 
         with pytest.raises(TypeError):
-            subprocess.call(None)
+            subprocess.call(None, shell=True)
         mock_run_vulnerability_scan.assert_not_called()  # Ensure it was not called
 
         # Test float command
         with pytest.raises(TypeError):
-            subprocess.call(3.14)
+            subprocess.call(3.14, shell=True)
         mock_run_vulnerability_scan.assert_not_called()  # Ensure it was not called
 
         # Test boolean command
         with pytest.raises(TypeError):
-            subprocess.call(True)
+            subprocess.call(True, shell=True)
         mock_run_vulnerability_scan.assert_not_called()  # Ensure it was not called
