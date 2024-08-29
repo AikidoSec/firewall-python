@@ -13,6 +13,9 @@ def check_context_for_ssrf(hostname, port, operation, context):
     """
     This will check the context for SSRF
     """
+    if not isinstance(hostname, str) or not isinstance(port, int):
+        # Validate hostname and port input
+        return {}
     for source in SOURCES:
         if hasattr(context, source):
             user_inputs = extract_strings_from_user_input_cached(
