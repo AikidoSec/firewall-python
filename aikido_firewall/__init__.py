@@ -39,6 +39,7 @@ def protect(mode="daemon"):
     # Import sources
     import aikido_firewall.sources.django
     import aikido_firewall.sources.flask
+    import aikido_firewall.sources.quart
     import aikido_firewall.sources.xml
     import aikido_firewall.sources.lxml
 

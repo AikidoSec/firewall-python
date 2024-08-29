@@ -24,4 +24,4 @@ Overview :
 - `quart-postgres-uvicorn/` is a Quart app using Postgres and with Uvicorn
   - It runs 4 processes, called workers, (**multi-process**) which handles requests **multi-threaded**
   - This application is **asynchronous**
-  - Runs on 8094. Without aikido runs on 8095
+  - Runs on 8096. Without aikido runs on 8097
