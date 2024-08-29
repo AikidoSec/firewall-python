@@ -16,12 +16,16 @@ def generate_aikido_function(op, former_func):
     """
 
     def aikido_new_func(*args, op=op, former_func=former_func, **kwargs):
+        shell_enabled = kwargs.get('shell')
         command = None
         if len(args) != 0 and isinstance(args[0], (list | tuple | dict)):
             command = " ".join(args[0])
         elif len(args) != 0 and isinstance(args[0], str):
             command = args[0]
-        if command:
+        
+        # For all operations above: call, run, check_call, Popen, check_output, default value
+        # of the shell property is False.
+        if command and shell_enabled == True:
             vulns.run_vulnerability_scan(
                 kind="shell_injection",
                 op=f"subprocess.{op}",
