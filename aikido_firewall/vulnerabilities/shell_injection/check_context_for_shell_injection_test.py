@@ -81,3 +81,31 @@ def test_detect_shell_injection_from_route_params(monkeypatch):
     }
 
     assert result == expected
+
+
+@pytest.mark.parametrize(
+    "invalid_input",
+    [
+        None,
+        123,  # Integer
+        45.67,  # Float
+        [],  # Empty list
+        [1, 2, 3],  # List of integers
+        {},  # Empty dictionary
+        {"key": "value"},  # Dictionary
+        set(),  # Empty set
+        {1, 2, 3},  # Set of integers
+        object(),  # Instance of a generic object
+        lambda x: x,  # Lambda function
+        (1, 2),  # Tuple
+        b"bytes",  # Bytes
+    ],
+)
+def test_doesnt_crash_with_invalid_command(invalid_input):
+    context = Context2()
+    result = check_context_for_shell_injection(
+        command=invalid_input,
+        operation="child_process.exec",
+        context=context,
+    )
+    assert result == {}

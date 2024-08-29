@@ -39,6 +39,7 @@ def protect(mode="daemon"):
     # Import sources
     import aikido_firewall.sources.django
     import aikido_firewall.sources.flask
+    import aikido_firewall.sources.quart
     import aikido_firewall.sources.xml
     import aikido_firewall.sources.lxml
 
@@ -50,6 +51,7 @@ def protect(mode="daemon"):
     import aikido_firewall.sinks.mysqlclient
     import aikido_firewall.sinks.pymongo
     import aikido_firewall.sinks.psycopg2
+    import aikido_firewall.sinks.asyncpg
     import aikido_firewall.sinks.builtins
     import aikido_firewall.sinks.os
     import aikido_firewall.sinks.http_client
