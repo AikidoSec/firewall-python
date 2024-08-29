@@ -1,0 +1,23 @@
+version: "3"
+services:
+  backend_firewall_disabled:
+    image: sample_quart_postgres_uvicorn
+    command: sh -c "uvicorn app:app --host 0.0.0.0 --port 5000 --workers 4"
+    restart: always
+    volumes:
+      - .:/app
+    ports:
+      - "8095:5000"
+    depends_on:
+      - db
+    networks:
+      - default_network
+    extra_hosts:
+      - "app.local.aikido.io:host-gateway"
+    environment:
+      - FIREWALL_DISABLED=1
+  backend:
+    environment:
+      - AIKIDO_TOKEN="test_aikido_token"
+      - AIKIDO_BLOCKING=1
+
