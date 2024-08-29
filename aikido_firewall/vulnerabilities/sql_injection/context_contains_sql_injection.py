@@ -15,6 +15,9 @@ def context_contains_sql_injection(sql, operation, context, dialect):
     """
     This will check the context of the request for SQL Injections
     """
+    if not isinstance(sql, str):
+        # Only supports SQL queries that are strings, return otherwise.
+        return {}
     for source in SOURCES:
         if hasattr(context, source):
             user_inputs = extract_strings_from_user_input_cached(
