@@ -4,8 +4,7 @@ Sink module for `subprocess`
 
 import copy
 import importhook
-from aikido_firewall.helpers.logging import logger
-from aikido_firewall.vulnerabilities import run_vulnerability_scan
+import aikido_firewall.vulnerabilities as vulns
 
 SUBPROCESS_OPERATIONS = ["call", "run", "check_call", "Popen", "check_output"]
 
@@ -17,16 +16,17 @@ def generate_aikido_function(op, former_func):
     """
 
     def aikido_new_func(*args, op=op, former_func=former_func, **kwargs):
-        logger.debug("Wrapper - `subprocess` on %s() function", op)
-        if isinstance(args[0], list):
+        command = None
+        if len(args) != 0 and isinstance(args[0], (list | tuple | dict)):
             command = " ".join(args[0])
-        else:
+        elif len(args) != 0 and isinstance(args[0], str):
             command = args[0]
-        run_vulnerability_scan(
-            kind="shell_injection",
-            op=f"subprocess.{op}",
-            args=(command,),
-        )
+        if command:
+            vulns.run_vulnerability_scan(
+                kind="shell_injection",
+                op=f"subprocess.{op}",
+                args=(command,),
+            )
         return former_func(*args, **kwargs)
 
     return aikido_new_func
