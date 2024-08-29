@@ -1,8 +1,8 @@
 import pytest
 import requests
 # e2e tests for flask_postgres sample app
-post_url_fw = "http://localhost:8094/create"
-post_url_nofw = "http://localhost:8095/create"
+post_url_fw = "http://localhost:8096/create"
+post_url_nofw = "http://localhost:8097/create"
 
 def test_safe_response_with_firewall():
     dog_name = "Bobby Tables"
