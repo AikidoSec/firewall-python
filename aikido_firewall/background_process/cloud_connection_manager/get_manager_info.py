@@ -27,4 +27,8 @@ def get_manager_info(connection_manager):
         "os": {"name": platform.system(), "version": platform.release()},
         "preventedPrototypePollution": False,  # Get this out of the API maybe?
         "nodeEnv": "",
+        "platform": {
+            "name": platform.python_implementation(),
+            "version": platform.python_version(),
+        },
     }

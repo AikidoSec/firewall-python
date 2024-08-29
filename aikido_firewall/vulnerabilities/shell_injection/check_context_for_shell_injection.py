@@ -14,6 +14,9 @@ def check_context_for_shell_injection(command, operation, context):
     """
     This will check the context of the request for Shell injections
     """
+    if not isinstance(command, str):
+        # Command must be string to run algorithm
+        return {}
     for source in SOURCES:
         if hasattr(context, source):
             user_inputs = extract_strings_from_user_input_cached(

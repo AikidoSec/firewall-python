@@ -171,3 +171,56 @@ def test_get_manager_info_with_different_os():
         connection_manager_info = get_manager_info(mock_connection_manager)
 
         assert connection_manager_info["os"] == {"name": "Windows", "version": "10"}
+
+
+def test_get_manager_info_python_implementation():
+    mock_connection_manager = MockCloudConnectionManager(
+        block=False,
+        packages={"package1": {"version": "1.0.0", "supported": True}},
+        serverless=False,
+    )
+
+    with patch("socket.gethostname", return_value="test-hostname"), patch(
+        "aikido_firewall.helpers.get_machine_ip.get_ip", return_value="192.168.1.1"
+    ), patch("platform.python_implementation", return_value="RandomPython"):
+
+        connection_manager_info = get_manager_info(mock_connection_manager)
+
+        assert connection_manager_info["platform"]["name"] == "RandomPython"
+
+
+def test_get_manager_info_with_different_os():
+    mock_connection_manager = MockCloudConnectionManager(
+        block=False,
+        packages={"package1": {"version": "1.0.0", "supported": True}},
+        serverless=False,
+    )
+
+    with patch("socket.gethostname", return_value="test-hostname"), patch(
+        "aikido_firewall.helpers.get_machine_ip.get_ip", return_value="192.168.1.1"
+    ), patch("platform.python_version", return_value="0.1.2"):
+
+        connection_manager_info = get_manager_info(mock_connection_manager)
+
+        assert connection_manager_info["platform"]["version"] == "0.1.2"
+
+
+def test_get_manager_info_with_different_os():
+    mock_connection_manager = MockCloudConnectionManager(
+        block=False,
+        packages={"package1": {"version": "1.0.0", "supported": True}},
+        serverless=False,
+    )
+
+    with patch("socket.gethostname", return_value="test-hostname"), patch(
+        "aikido_firewall.helpers.get_machine_ip.get_ip", return_value="192.168.1.1"
+    ), patch("platform.python_version", return_value="0.1.2"), patch(
+        "platform.python_implementation", return_value="RandomPython"
+    ):
+
+        connection_manager_info = get_manager_info(mock_connection_manager)
+
+        assert connection_manager_info["platform"] == {
+            "name": "RandomPython",
+            "version": "0.1.2",
+        }
