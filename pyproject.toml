@@ -18,6 +18,7 @@ pylint = "^3.2.5"
 pytest = "^8.2.2"
 pytest-cov = "^5.0.0"
 pytest-mock = "^3.14.0"
+numpy = {version = "^2.1.0", python = "3.12"}
 
 [build-system]
 requires = ["poetry-core"]
