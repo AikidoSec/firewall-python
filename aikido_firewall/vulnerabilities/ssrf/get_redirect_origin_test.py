@@ -17,7 +17,8 @@ def test_get_redirect_origin():
                 "destination": create_url("https://hackers.com"),
             },
         ],
-        create_url("https://hackers.com"),
+        "hackers.com",
+        443,
     ) == create_url("https://example.com")
 
     assert get_redirect_origin(
@@ -31,13 +32,28 @@ def test_get_redirect_origin():
                 "destination": create_url("https://hackers.com/test"),
             },
         ],
-        create_url("https://hackers.com/test"),
+        "hackers.com",
+        443,
     ) == create_url("https://example.com")
 
 
 def test_get_redirect_origin_no_redirects():
-    assert get_redirect_origin([], create_url("https://hackers.com")) is None
-    assert get_redirect_origin(None, create_url("https://hackers.com")) is None
+    assert (
+        get_redirect_origin(
+            [],
+            "hackers.com",
+            443,
+        )
+        is None
+    )
+    assert (
+        get_redirect_origin(
+            None,
+            "hackers.com",
+            443,
+        )
+        is None
+    )
 
 
 def test_get_redirect_origin_not_a_destination():
@@ -49,7 +65,8 @@ def test_get_redirect_origin_not_a_destination():
                     "destination": create_url("https://hackers.com"),
                 },
             ],
-            create_url("https://example.com"),
+            "example.com",
+            443,
         )
         is None
     )
@@ -64,7 +81,8 @@ def test_get_redirect_origin_not_in_redirects():
                     "destination": create_url("https://hackers.com"),
                 },
             ],
-            create_url("https://example.com"),
+            "example.com",
+            443,
         )
         is None
     )
@@ -86,7 +104,8 @@ def test_get_redirect_origin_multiple_redirects():
                 "destination": create_url("https://another.com"),
             },
         ],
-        create_url("https://hackers.com/test"),
+        "hackers.com",
+        443,
     ) == create_url("https://example.com")
 
 
