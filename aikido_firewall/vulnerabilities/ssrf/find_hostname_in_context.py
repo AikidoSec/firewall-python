@@ -11,6 +11,15 @@ from .find_hostname_in_userinput import find_hostname_in_userinput
 
 def find_hostname_in_context(hostname, context, port):
     """Tries to locate the given hostname from context"""
+
+    # Punycode detected in hostname, user input may not be in Punycode and thus we need to convert it back
+    if "xn--" in hostname:
+        try:
+            hostname = hostname.encode('ascii').decode('idna')
+        except:
+            # Seems to be a malformed Punycode sequence, retain original hostname
+            pass
+     
     for source in UINPUT_SOURCES:
         if not hasattr(context, source):
             continue
