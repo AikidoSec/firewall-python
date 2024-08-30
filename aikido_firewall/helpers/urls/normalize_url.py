@@ -22,8 +22,5 @@ def normalize_url(url):
         netloc = netloc.replace(":443", "")
 
     # Reconstruct the normalized URL
-    print("Scheme : ", scheme)
-    print("Netloc : ", netloc)
-    print("Path", path)
     normalized_url = urlunparse((scheme, netloc, path, "", query, fragment))
     return normalized_url
