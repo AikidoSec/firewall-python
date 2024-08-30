@@ -3,8 +3,14 @@ import { check, sleep, fail } from 'k6';
 import exec from 'k6/execution';
 import { Trend } from 'k6/metrics';
 
+// Flask MySQL :
 const BASE_URL_8086 = 'http://localhost:8086';
 const BASE_URL_8087 = 'http://localhost:8087';
+
+// Flask Mongo :
+const BASE_URL_8094 = 'http://localhost:8094';
+const BASE_URL_8095 = 'http://localhost:8095';
+
 
 export const options = {
     vus: 1, // Number of virtual users
@@ -49,6 +55,11 @@ export const options = {
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
+        test_nosql_query: [{
+            threshold: "avg<2000", 
+            abortOnFail: true,
+            delayAbortEval: '10s',
+        }],
         
     },
 };
@@ -73,13 +84,19 @@ function generateLargeJson(sizeInMB) {
     }
 }
 
-function measureRequest(url, method = 'GET', payload, status_code=200, headers=default_headers) {
+function measureRequest(url, method = 'GET', payload, status_code=200, headers=default_headers, json_body=false) {
     let res;
     if (method === 'POST') {
-        res = http.post(url, payload, {
-            headers: headers
+        if (json_body) {
+            res = http.post(url, JSON.stringify(payload), {
+                headers: { 'Content-Type': 'application/json' },
+            })
         }
-        );
+        else {
+            res = http.post(url, payload, {
+                headers: headers
+            })
+        };
     } else {
         res = http.get(url, {
             headers: headers
@@ -91,11 +108,25 @@ function measureRequest(url, method = 'GET', payload, status_code=200, headers=d
     return res.timings.duration; // Return the duration of the request
 }
 
-function route_test(trend, amount, route, method="GET", data=default_payload, status=200) {
+function route_test(trend_avg, amount, route, method="GET", data=default_payload, status=200, trend_percentage=undefined) {
     for (let i = 0; i < amount; i++) {
         let time_with_fw = measureRequest(BASE_URL_8086 + route, method, data, status)
         let time_without_fw = measureRequest(BASE_URL_8087 + route, method, data, status)
-        trend.add(time_with_fw - time_without_fw)
+        trend_avg.add(time_with_fw - time_without_fw)
+        if (trend_percentage) {
+            trend_percentage.add((time_with_fw - time_without_fw)/time_with_fw)
+        }
+    }
+}
+
+function route_test_mongo(trend_avg, amount, route, method="GET", data=default_payload, status=200, trend_percentage=undefined) {
+    for (let i = 0; i < amount; i++) {
+        let time_with_fw = measureRequest(BASE_URL_8094 + route, method, data, status, json_body=true)
+        let time_without_fw = measureRequest(BASE_URL_8095 + route, method, data, status, json_body=true)
+        trend_avg.add(time_with_fw - time_without_fw)
+        if (trend_percentage) {
+            trend_percentage.add((time_with_fw - time_without_fw)/time_with_fw)
+        }
     }
 }
 
@@ -112,19 +143,29 @@ export function handleSummary(data) {
 
 let test_40mb_payload = new Trend('test_40mb_payload')
 let test_multiple_queries = new Trend("test_multiple_queries")
+let test_multiple_queries_p = new Trend("p_test_multiple_queries")
 let test_multiple_queries_with_big_body = new Trend("test_multiple_queries_with_big_body")
 let test_create_with_big_body = new Trend("test_create_with_big_body")
 let test_normal_route = new Trend("test_normal_route")
+let test_normal_route_p = new Trend("p_test_normal_route")
 let test_id_route = new Trend("test_id_route")
 let test_open_file = new Trend("test_open_file")
+let test_open_file_p = new Trend("p_test_open_file")
 let test_execute_shell = new Trend("test_execute_shell")
+let test_nosql_query = new Trend("test_nosql_query")
+let test_nosql_query_p = new Trend("p_test_nosql_query")
 export default function () {
     route_test(test_40mb_payload, 30, "/create", "POST", generateLargeJson(40)) // 40 Megabytes
-    route_test(test_multiple_queries, 50, "/multiple_queries", "POST", {dog_name: "W"})
+    route_test(test_multiple_queries, 50, "/multiple_queries", "POST", {dog_name: "W"}, trend_percentage=test_multiple_queries_p)
     route_test(test_multiple_queries_with_big_body, 50, "/multiple_queries", "POST")
     route_test(test_create_with_big_body, 500, "/create", "POST")
-    route_test(test_normal_route, 500, "/")
+    route_test(test_normal_route, 500, "/", trend_percentage=test_normal_route_p)
     route_test(test_id_route, 500, "/dogpage/1")
-    route_test(test_open_file, 500, "/open_file", 'POST', { filepath: '.env.example' })
+    route_test(test_open_file, 500, "/open_file", 'POST', { filepath: '.env.example' }, trend_percentage=test_open_file_p)
     route_test(test_execute_shell, 500, "/shell", "POST", { command: 'xyzwh'})
+
+    route_test_mongo(test_nosql_query, 500, "/auth", "POST", {
+        "dog_name": "doggo",
+        "pswd": "Pswd123"
+    }, trend_percentage=test_nosql_query_p)
 }
