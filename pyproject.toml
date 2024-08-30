@@ -1,11 +1,11 @@
 [tool.poetry]
 name = "aikido_firewall"
-version = "0.1.17"
+version = "0.1.18"
 description = "Aikido Zen for Python"
 authors = ["Aikido Security <help@aikido.dev>"]
 readme = "README.md"
 license = "AGPL-3.0-or-later"
-include = ["docs/"]
+include = ["docs/*"]
 keywords = [
     "web application firewall",
     "WAF",
@@ -47,7 +47,6 @@ classifiers = [
     "Topic :: Security",
 ]
 homepage = "https://www.aikido.dev/runtime/firewall/"
-repository = "https://github.com/AikidoSec/firewall-python"
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/AikidoSec/firewall-python/issues"
