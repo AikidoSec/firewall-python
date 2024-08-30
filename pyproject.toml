@@ -4,6 +4,7 @@ version = "0.1.16"
 description = "Aikido Zen for Python"
 authors = ["Aikido Security <help@aikido.dev>"]
 readme = "README.md"
+license = "AGPL-3.0-or-later"
 keywords = [
     "web application firewall",
     "WAF",
