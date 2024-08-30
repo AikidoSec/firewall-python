@@ -84,7 +84,7 @@ function generateLargeJson(sizeInMB) {
     }
 }
 
-function measureRequest(url, method = 'GET', payload, status_code=200, headers=default_headers, json_body=false) {
+function measureRequest(url, method = 'GET', payload, status_code=200, json_body=false, headers=default_headers) {
     let res;
     if (method === 'POST') {
         if (json_body) {
@@ -108,64 +108,62 @@ function measureRequest(url, method = 'GET', payload, status_code=200, headers=d
     return res.timings.duration; // Return the duration of the request
 }
 
-function route_test(trend_avg, amount, route, method="GET", data=default_payload, status=200, trend_percentage=undefined) {
+function route_test(trend, amount, route, method="GET", data=default_payload, status=200) {
     for (let i = 0; i < amount; i++) {
         let time_with_fw = measureRequest(BASE_URL_8086 + route, method, data, status)
         let time_without_fw = measureRequest(BASE_URL_8087 + route, method, data, status)
-        trend_avg.add(time_with_fw - time_without_fw)
-        if (trend_percentage) {
-            trend_percentage.add((time_with_fw - time_without_fw)/time_with_fw)
-        }
+        trend[0].add(time_with_fw - time_without_fw)
+        trend[1].add((time_with_fw - time_without_fw)/time_with_fw)
     }
 }
 
-function route_test_mongo(trend_avg, amount, route, method="GET", data=default_payload, status=200, trend_percentage=undefined) {
+function route_test_mongo(trend, amount, route, method="GET", data=default_payload, status=200) {
     for (let i = 0; i < amount; i++) {
-        let time_with_fw = measureRequest(BASE_URL_8094 + route, method, data, status, json_body=true)
-        let time_without_fw = measureRequest(BASE_URL_8095 + route, method, data, status, json_body=true)
-        trend_avg.add(time_with_fw - time_without_fw)
-        if (trend_percentage) {
-            trend_percentage.add((time_with_fw - time_without_fw)/time_with_fw)
-        }
+        let time_with_fw = measureRequest(BASE_URL_8094 + route, method, data, status, true)
+        let time_without_fw = measureRequest(BASE_URL_8095 + route, method, data, status, true)
+        trend[0].add(time_with_fw - time_without_fw)
+        trend[1].add((time_with_fw - time_without_fw)/time_with_fw)
     }
 }
 
 export function handleSummary(data) {
     for (const [metricName, metricValue] of Object.entries(data.metrics)) {
-        if(!metricName.startsWith('test_') || metricValue.values.avg == 0) {
+
+        if((!metricName.startsWith('test_') && !metricName.startsWith("p_")) || metricValue.values.avg == 0) {
             continue
         }
         let values = metricValue.values
-        console.log(`\x1b[35m 🚅 ${metricName}\x1b[0m: ΔAverage is \x1b[4m${values.avg.toFixed(2)}ms\x1b[0m | ΔMedian is \x1b[4m${values.med.toFixed(2)}ms\x1b[0m`);
+        console.log(`\x1b[35m 🚅 ${metricName}\x1b[0m: ΔAverage is \x1b[4m${values.avg.toFixed(2)}\x1b[0m | ΔMedian is \x1b[4m${values.med.toFixed(2)}\x1b[0m`);
     }
     return {stdout: ""};
 }
 
-let test_40mb_payload = new Trend('test_40mb_payload')
-let test_multiple_queries = new Trend("test_multiple_queries")
-let test_multiple_queries_p = new Trend("p_test_multiple_queries")
-let test_multiple_queries_with_big_body = new Trend("test_multiple_queries_with_big_body")
-let test_create_with_big_body = new Trend("test_create_with_big_body")
-let test_normal_route = new Trend("test_normal_route")
-let test_normal_route_p = new Trend("p_test_normal_route")
-let test_id_route = new Trend("test_id_route")
-let test_open_file = new Trend("test_open_file")
-let test_open_file_p = new Trend("p_test_open_file")
-let test_execute_shell = new Trend("test_execute_shell")
-let test_nosql_query = new Trend("test_nosql_query")
-let test_nosql_query_p = new Trend("p_test_nosql_query")
-export default function () {
-    route_test(test_40mb_payload, 30, "/create", "POST", generateLargeJson(40)) // 40 Megabytes
-    route_test(test_multiple_queries, 50, "/multiple_queries", "POST", {dog_name: "W"}, trend_percentage=test_multiple_queries_p)
-    route_test(test_multiple_queries_with_big_body, 50, "/multiple_queries", "POST")
-    route_test(test_create_with_big_body, 500, "/create", "POST")
-    route_test(test_normal_route, 500, "/", trend_percentage=test_normal_route_p)
-    route_test(test_id_route, 500, "/dogpage/1")
-    route_test(test_open_file, 500, "/open_file", 'POST', { filepath: '.env.example' }, trend_percentage=test_open_file_p)
-    route_test(test_execute_shell, 500, "/shell", "POST", { command: 'xyzwh'})
+let test_40mb_payload = [new Trend('test_40mb_payload'), new Trend('p_test_40mb_payload')]
+let test_multiple_queries = [new Trend("test_multiple_queries"), new Trend("p_test_multiple_queries")]
+let test_multiple_queries_with_big_body = [
+    new Trend("test_multiple_queries_with_big_body"),
+    new Trend("p_test_multiple_queries_with_big_body")
+]
+let test_create_with_big_body = [new Trend("test_create_with_big_body"), new Trend("p_test_create_with_big_body")]
+let test_normal_route = [new Trend("test_normal_route"), new Trend("p_test_normal_route")]
+let test_id_route = [new Trend("test_id_route"), new Trend("p_test_id_route")]
+let test_open_file = [new Trend("test_open_file"), new Trend("p_test_open_file")]
+let test_execute_shell = [new Trend("test_execute_shell"), new Trend("p_test_execute_shell")]
+let test_nosql_query = [new Trend("test_nosql_query"), new Trend("p_test_nosql_query")]
 
-    route_test_mongo(test_nosql_query, 500, "/auth", "POST", {
+export default function () {
+    route_test_mongo(test_nosql_query, 5, "/auth_benchmark", "POST", {
         "dog_name": "doggo",
         "pswd": "Pswd123"
-    }, trend_percentage=test_nosql_query_p)
+    })
+    route_test(test_normal_route, 500, "/")
+    /*
+    route_test(test_40mb_payload, 30, "/create", "POST", generateLargeJson(40)) // 40 Megabytes
+    route_test(test_multiple_queries, 50, "/multiple_queries", "POST", {dog_name: "W"})
+    route_test(test_multiple_queries_with_big_body, 50, "/multiple_queries", "POST")
+    route_test(test_create_with_big_body, 500, "/create", "POST")
+    route_test(test_id_route, 500, "/dogpage/1")
+    route_test(test_open_file, 500, "/open_file", 'POST', { filepath: '.env.example' })
+    route_test(test_execute_shell, 500, "/shell", "POST", { command: 'xyzwh'})
+    */
 }
