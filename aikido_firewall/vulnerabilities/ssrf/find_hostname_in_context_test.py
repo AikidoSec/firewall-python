@@ -98,7 +98,7 @@ def test_find_hostname_in_context_no_sources(monkeypatch):
         b"bytes",  # Bytes
     ],
 )
-def test_doesnt_crash_with_invalid_hostname(invalid_input):
+def test_doesnt_crash_with_invalid_hostname(invalid_input, monkeypatch):
     context = MagicMock()  # No attributes
     monkeypatch.setattr("aikido_firewall.context.get_current_context", lambda: None)
     result = find_hostname_in_context(invalid_input, context, 8080)
@@ -123,7 +123,7 @@ def test_doesnt_crash_with_invalid_hostname(invalid_input):
         b"bytes",  # Bytes
     ],
 )
-def test_doesnt_crash_with_invalid_port(invalid_input):
+def test_doesnt_crash_with_invalid_port(invalid_input, monkeypatch):
     context = MagicMock()  # No attributes
     monkeypatch.setattr("aikido_firewall.context.get_current_context", lambda: None)
     result = find_hostname_in_context("https://example.com", context, invalid_input)
