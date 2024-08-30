@@ -10,7 +10,7 @@ jobs:
       uses: actions/checkout@v2
     - name: Start databases
       working-directory:  ./sample-apps/databases
-      run: docker compose up --build
+      run: docker compose up --build -d
     - name: Start django-mysql
       working-directory: ./sample-apps/django-mysql
       run: |
