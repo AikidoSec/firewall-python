@@ -36,11 +36,14 @@ def run_vulnerability_scan(kind, op, args):
     context = get_current_context()
     comms = get_comms()
     lifecycle_cache = get_cache()
-    if not context or not comms or not lifecycle_cache:
-        if kind != "ssrf":  # Make a special exception for SSRF
-            logger.debug("Not running a vulnerability scan due to incomplete data.")
-            logger.debug("%s : %s", kind, op)
-            return
+    if not context and kind != "ssrf":
+        # Make a special exception for SSRF
+        logger.debug("Not running scans due to incomplete data %s : %s", kind, op)
+        return
+
+    if not comms or not lifecycle_cache:
+        logger.debug("Not running scans due to incomplete data %s : %s", kind, op)
+        return
 
     if lifecycle_cache.protection_forced_off():
         #  The client turned protection off for this route, not scanning
