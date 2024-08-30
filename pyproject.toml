@@ -63,10 +63,10 @@ classifiers = [
 ]
 
 [project.urls]
-Bug Tracker = https://github.com/AikidoSec/firewall-python/issues
-Source Code = https://github.com/AikidoSec/firewall-python
-Homepage = https://www.aikido.dev/runtime/firewall
-Bug Bounty = https://app.intigriti.com/programs/aikido
+"Bug Tracker" = "https://github.com/AikidoSec/firewall-python/issues"
+"Source Code" = "https://github.com/AikidoSec/firewall-python"
+"Homepage" = "https://www.aikido.dev/runtime/firewall"
+"Bug Bounty" = "https://app.intigriti.com/programs/aikido"
 
 [tool.poetry.dependencies]
 python = "^3.8"
