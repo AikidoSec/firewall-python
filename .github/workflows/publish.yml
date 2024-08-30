@@ -35,7 +35,9 @@ jobs:
       run: |
         make test
   build:
-    name: Build distribution 📦
+    name: Build distribution 📦 and Publish to PyPI
+    needs:
+      - tests
     runs-on: ubuntu-latest
 
     steps:
@@ -45,37 +47,15 @@ jobs:
     - name: Install dependencies
       run: poetry install
 
-    - name: Build distribution packages
-      run: poetry build
-
-    - name: Store the distribution packages
-      uses: actions/upload-artifact@v3
-      with:
-        name: python-package-distributions
-        path: dist/
-  publish-to-pypi:
-    name: Publish Python 🐍 distribution 📦 to PyPI
-    needs:
-      - build
-      - tests
-    runs-on: ubuntu-latest
-
-    permissions:
-      id-token: write  # IMPORTANT: mandatory for trusted publishing
-
-    steps:
-    - uses: actions/checkout@v4
-    - name: Download all the dists
-      uses: actions/download-artifact@v3
-      with:
-        name: python-package-distributions
-        path: dist/
-    - name: Install poetry
-      run: pip install poetry
     - name: Publish to PyPI
       env:
         POETRY_HTTP_BASIC_PYPI_USERNAME: __token__
         POETRY_HTTP_BASIC_PYPI_PASSWORD: ${{ secrets.PYPI_TOKEN }}
       run: |
         poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
-        poetry publish
+        poetry publish --build
+    - name: Store the distribution packages
+      uses: actions/upload-artifact@v3
+      with:
+        name: python-package-distributions
+        path: dist/
