@@ -41,6 +41,28 @@ def test_find_hostname_in_context_found(monkeypatch):
                 "payload": "example.com",
             }
 
+def test_find_hostname_in_context_punycode_hostname(monkeypatch):
+    hostname = "app.xn--loca-3b5a.aikido.dev"
+    context = MagicMock()
+    context.body = "app.locaḷ.aikido.dev"
+    monkeypatch.setattr("aikido_firewall.context.get_current_context", lambda: None)
+
+    with patch(
+        "aikido_firewall.helpers.extract_strings_from_user_input.extract_strings_from_user_input_cached",
+        side_effect=mock_extract_strings_from_user_input_cached,
+    ):
+        with patch(
+            "aikido_firewall.vulnerabilities.ssrf.find_hostname_in_userinput",
+            side_effect=mock_find_hostname_in_userinput,
+        ): 
+            result = find_hostname_in_context(hostname, context, 80)
+
+            assert result == {
+                "source": "body",
+                "pathToPayload": ".",
+                "payload": "app.locaḷ.aikido.dev",
+            }
+
 
 def test_find_hostname_in_context_not_found(monkeypatch):
     # Arrange
