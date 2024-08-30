@@ -1,0 +1,7 @@
+CREATE DATABASE IF NOT EXISTS db;
+DROP TABLE IF EXISTS db.dogs;
+CREATE TABLE IF NOT EXISTS db.dogs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    dog_name varchar(250) NOT NULL,
+    isAdmin  boolean NOT NULL DEFAULT 0
+);

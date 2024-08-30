@@ -1,0 +1,37 @@
+version: '3'
+services:
+  mysql_database:
+    image: mysql
+    container_name: sample_mysql_db
+    restart: always
+    volumes:
+      - mysql_db_data:/var/lib/mysql
+      - ./mysql_init.sql:/data/application/init.sql
+    environment:
+      MYSQL_DATABASE: 'db'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      - "3306:3306"
+    command: --init-file /data/application/init.sql
+
+  postgres_database:
+    image: postgres:14-alpine
+    container_name: sample_postgres_db
+    restart: always
+    volumes:
+      - postgres_db_data:/var/lib/postgresql/data
+      - ./postgres_init.sql:/docker-entrypoint-initdb.d/init.sql
+
+    environment:
+      POSTGRES_DB: 'db'
+      POSTGRES_USER: 'user'
+      POSTGRES_PASSWORD: 'password'
+    ports:
+      - "5432:5432"
+
+volumes:
+  mysql_db_data:
+  
+  postgres_db_data:
