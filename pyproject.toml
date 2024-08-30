@@ -5,6 +5,69 @@ description = "Aikido Zen for Python"
 authors = ["Aikido"]
 readme = "README.md"
 
+[project]
+name = "aikido_firewall"
+readme = "README.md"
+dynamic = ["version"]
+description = "Aikido Zen for Python"
+requires-python = ">=3.8"
+authors = [
+    {name = "Aikido Security", email = "help@aikido.dev"},
+]
+keywords = [
+    "web application firewall",
+    "WAF",
+    "cybersecurity",
+    "security",
+    "firewall",
+    "web security",
+    "application security",
+    "threat detection",
+    "intrusion prevention",
+    "DDoS protection",
+    "malware protection",
+    "Python",
+    "Python 3",
+    "network security",
+    "data protection",
+    "secure coding",
+    "vulnerability management",
+    "API security",
+    "SSL/TLS",
+    "penetration testing",
+]
+classifiers = [
+    "Environment :: Web Environment",
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Security",
+    "Topic :: Security :: Firewalls",
+    "Topic :: Security :: Cryptography",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+    "Topic :: Internet :: WWW/HTTP :: Site Management",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.urls]
+Bug Tracker = https://github.com/AikidoSec/firewall-python/issues
+Source Code = https://github.com/AikidoSec/firewall-python
+Homepage = https://www.aikido.dev/runtime/firewall
+Bug Bounty = https://app.intigriti.com/programs/aikido
+
 [tool.poetry.dependencies]
 python = "^3.8"
 importhook = "^1.0.9"
