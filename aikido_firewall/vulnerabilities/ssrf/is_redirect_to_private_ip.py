@@ -6,7 +6,7 @@ from .get_redirect_origin import get_redirect_origin
 from .find_hostname_in_context import find_hostname_in_context
 
 
-def is_redirect_to_private_ip(url, context):
+def is_redirect_to_private_ip(hostname, context, port):
     """
     This function is called before an outgoing request is made.
     It's used to prevent requests to private IP addresses after a redirect with
@@ -18,11 +18,13 @@ def is_redirect_to_private_ip(url, context):
     - The redirect origin, so the user-supplied hostname and port that caused the first redirect,
         is found in the context of the incoming request
     """
-    if context.outgoing_req_redirects and contains_private_ip_address(url.hostname):
-        redirect_origin = get_redirect_origin(context.outgoing_req_redirects, url)
+    if context.outgoing_req_redirects and contains_private_ip_address(hostname):
+        redirect_origin = get_redirect_origin(
+            context.outgoing_req_redirects, hostname, port
+        )
         if redirect_origin:
-            hostname = getattr(redirect_origin, "hostname")
-            port = get_port_from_url(redirect_origin.geturl())
-            return find_hostname_in_context(hostname, context, port)
+            origin_hostname = getattr(redirect_origin, "hostname")
+            origin_port = get_port_from_url(redirect_origin, parsed=True)
+            return find_hostname_in_context(origin_hostname, context, origin_port)
 
     return None
