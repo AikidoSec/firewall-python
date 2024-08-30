@@ -14,7 +14,7 @@ app = Quart(__name__)
 
 async def get_db_connection():
     return await asyncpg.connect(
-        host="db",
+        host="host.docker.internal",
         database="db",
         user="user",
         password="password"
