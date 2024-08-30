@@ -2,18 +2,16 @@
 Mainly exports inspect_getaddrinfo_result function
 """
 
-import traceback
 from aikido_firewall.helpers.try_parse_url import try_parse_url
 from aikido_firewall.context import get_current_context
 from aikido_firewall.helpers.logging import logger
-from aikido_firewall.background_process import get_comms
 from aikido_firewall.errors import AikidoSSRF
 from aikido_firewall.helpers.blocking_enabled import is_blocking_enabled
-from aikido_firewall.helpers.get_clean_stacktrace import get_clean_stacktrace
 from .imds import resolves_to_imds_ip
 from .is_private_ip import is_private_ip
 from .find_hostname_in_context import find_hostname_in_context
 from .extract_ip_array_from_results import extract_ip_array_from_results
+from .is_redirect_to_private_ip import is_redirect_to_private_ip
 
 
 def inspect_dns_results(dns_results, hostname):
@@ -46,21 +44,21 @@ def inspect_getaddrinfo_result(dns_results, hostname, port):
 
     if not context:
         return
+    findings = find_hostname_in_context(hostname, context, port)
+    if not findings:
+        # Hostname/port not found in context, checking for redirects
+        logger.debug("Redirects : %s", context.outgoing_req_redirects)
+        findings = is_redirect_to_private_ip(hostname, context, port)
 
-    private_ip = next((ip for ip in ip_addresses if is_private_ip(ip)), None)
-    if not private_ip:
-        return
-
-    found = find_hostname_in_context(hostname, context, port)
-    if not found:
+    if not findings:
         return
 
     return {
         "module": "socket",
         "operation": "socket.getaddrinfo",
         "kind": "ssrf",
-        "source": found["source"],
-        "path": found["pathToPayload"],
+        "source": findings["source"],
+        "path": findings["pathToPayload"],
         "metadata": {"hostname": hostname},
-        "payload": found["payload"],
+        "payload": findings["payload"],
     }
