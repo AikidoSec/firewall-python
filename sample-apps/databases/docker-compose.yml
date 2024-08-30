@@ -31,7 +31,23 @@ services:
     ports:
       - "5432:5432"
 
+  mongo_database:
+    image: mongo:latest
+    container_name: sample_mongo_db
+    restart: always
+    environment:
+        MONGO_INITDB_ROOT_USERNAME: admin
+        MONGO_INITDB_ROOT_PASSWORD: password
+        MONGO_INITDB_DATABASE: my_database
+    volumes:
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - mongo_db_data:/data/db
+    ports:
+      - "27017:27017"
+
 volumes:
   mysql_db_data:
   
   postgres_db_data:
+
+  mongo_db_data:
