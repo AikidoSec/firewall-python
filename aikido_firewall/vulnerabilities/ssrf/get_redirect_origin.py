@@ -2,33 +2,10 @@
 
 import copy
 from urllib.parse import urlparse, urlunparse
+from aikido_firewall.helpers.urls.normalize_url import normalize_url
 
 
-def normalize_url(url):
     """Normalizes the url"""
-    # Parse the URL
-    parsed_url = urlparse(url)
-
-    # Normalize components
-    scheme = parsed_url.scheme.lower()  # Lowercase scheme
-    netloc = parsed_url.netloc.lower()  # Lowercase netloc
-    path = parsed_url.path.rstrip("/")  # Remove trailing slash
-    query = parsed_url.query  # Keep query as is
-    fragment = parsed_url.fragment  # Keep fragment as is
-
-    # Remove default ports (80 for http, 443 for https)
-    if scheme == "http" and parsed_url.port == 80:
-        netloc = netloc.replace(":80", "")
-    elif scheme == "https" and parsed_url.port == 443:
-        netloc = netloc.replace(":443", "")
-
-    # We do not care about the scheme (Isn't extracted) :
-    scheme = "http"
-
-    # Reconstruct the normalized URL
-    normalized_url = urlunparse((scheme, netloc, path, "", query, fragment))
-    return normalized_url
-
 
 def compare_urls(url1, url2):
     """Compares normalized urls"""
