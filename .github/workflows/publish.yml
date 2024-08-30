@@ -64,6 +64,7 @@ jobs:
       id-token: write  # IMPORTANT: mandatory for trusted publishing
 
     steps:
+    - uses: actions/checkout@v4
     - name: Download all the dists
       uses: actions/download-artifact@v3
       with:
@@ -77,4 +78,4 @@ jobs:
         POETRY_HTTP_BASIC_PYPI_PASSWORD: ${{ secrets.PYPI_TOKEN }}
       run: |
         poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
-        poetry publish --build
+        poetry publish
