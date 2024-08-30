@@ -1,4 +1,4 @@
-![Aikido Firewall for Python 3](https://cdn.prod.website-files.com/642adcaf364024552e71df01/642adcaf364024443a71df7a_logo-full-dark.svg)
+![Aikido Firewall for Python 3](https://aikido-production-staticfiles-public.s3.eu-west-1.amazonaws.com/banner-pypi.svg)
 
 # Aikido Firewall for Python 3
 
