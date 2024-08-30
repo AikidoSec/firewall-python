@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aikido_firewall"
-version = "0.1.16"
+version = "0.1.17"
 description = "Aikido Zen for Python"
 authors = ["Aikido Security <help@aikido.dev>"]
 readme = "README.md"
