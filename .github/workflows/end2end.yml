@@ -8,7 +8,9 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
-
+    - name: Start databases
+      working-directory:  ./sample-apps/databases
+      run: docker-compose up --build
     - name: Start django-mysql
       working-directory: ./sample-apps/django-mysql
       run: |
