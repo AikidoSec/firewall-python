@@ -25,6 +25,9 @@ def on_pymysql_import(mysql):
     prev_query_function = copy.deepcopy(mysql.Connection.query)
 
     def aikido_new_query(_self, sql, unbuffered=False):
+        if isinstance(sql, bytearray):
+            # executemany() gives a bytearray, convert to string.
+            sql = sql.decode("utf-8")
         vulns.run_vulnerability_scan(
             kind="sql_injection", op="pymysql.connections.query", args=(sql, MySQL())
         )
