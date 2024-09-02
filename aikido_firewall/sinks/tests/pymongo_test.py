@@ -118,3 +118,51 @@ def test_count_documents(db):
         assert called_with["op"] == "pymongo.collection.Collection.count_documents"
         assert called_with["kind"] == "nosql_injection"
         mock_run_vulnerability_scan.assert_called_once()
+
+
+def test_find_one_and_delete(db):
+    reset_comms()
+    with patch(
+        "aikido_firewall.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        dogs = db["dogs"]
+        _filter = {"dog_name": "test", "pswd": "pswd"}
+        dogs.find_one_and_delete(_filter)
+
+        called_with = mock_run_vulnerability_scan.call_args[1]
+        assert called_with["args"][0] == _filter
+        assert called_with["op"] == "pymongo.collection.Collection.find_one_and_delete"
+        assert called_with["kind"] == "nosql_injection"
+        mock_run_vulnerability_scan.assert_called_once()
+
+
+def test_find_one_and_replace(db):
+    reset_comms()
+    with patch(
+        "aikido_firewall.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        dogs = db["dogs"]
+        _filter = {"dog_name": "test", "pswd": "pswd"}
+        dogs.find_one_and_replace(_filter, {"dog_name": "test2"})
+
+        called_with = mock_run_vulnerability_scan.call_args[1]
+        assert called_with["args"][0] == _filter
+        assert called_with["op"] == "pymongo.collection.Collection.find_one_and_replace"
+        assert called_with["kind"] == "nosql_injection"
+        mock_run_vulnerability_scan.assert_called_once()
+
+
+def test_find_one_and_update(db):
+    reset_comms()
+    with patch(
+        "aikido_firewall.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        dogs = db["dogs"]
+        _filter = {"dog_name": "test", "pswd": "pswd"}
+        dogs.find_one_and_update(_filter, {"$set": {"dog_name": "test2"}})
+
+        called_with = mock_run_vulnerability_scan.call_args[1]
+        assert called_with["args"][0] == _filter
+        assert called_with["op"] == "pymongo.collection.Collection.find_one_and_update"
+        assert called_with["kind"] == "nosql_injection"
+        mock_run_vulnerability_scan.assert_called_once()
