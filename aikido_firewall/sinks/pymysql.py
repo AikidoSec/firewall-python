@@ -7,7 +7,7 @@ import logging
 import importhook
 from aikido_firewall.vulnerabilities.sql_injection.dialects import MySQL
 from aikido_firewall.background_process.packages import add_wrapped_package
-from aikido_firewall.vulnerabilities import run_vulnerability_scan
+import aikido_firewall.vulnerabilities as vulns
 
 logger = logging.getLogger("aikido_firewall")
 
@@ -25,7 +25,7 @@ def on_pymysql_import(mysql):
     prev_query_function = copy.deepcopy(mysql.Connection.query)
 
     def aikido_new_query(_self, sql, unbuffered=False):
-        run_vulnerability_scan(
+        vulns.run_vulnerability_scan(
             kind="sql_injection", op="pymysql.connections.query", args=(sql, MySQL())
         )
 

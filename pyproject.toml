@@ -19,6 +19,7 @@ pytest = "^8.2.2"
 pytest-cov = "^5.0.0"
 pytest-mock = "^3.14.0"
 mysqlclient = "^2.2.4"
+pymysql = "^1.1.1"
 
 [build-system]
 requires = ["poetry-core"]
