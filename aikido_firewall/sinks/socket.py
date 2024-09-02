@@ -24,7 +24,7 @@ def generate_aikido_function(former_func, op):
 
     def aik_new_func(*args, **kwargs):
         res = former_func(*args, **kwargs)
-        if op is "getaddrinfo":
+        if op == "getaddrinfo":
             inspect_getaddrinfo_result(dns_results=res, hostname=args[0], port=args[1])
         logger.debug("Res %s", res)
         return res

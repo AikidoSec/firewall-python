@@ -2,13 +2,12 @@
 Flask source module, intercepts flask import and adds Aikido middleware
 """
 
-import copy
 import importhook
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.context import Context
 from aikido_firewall.background_process.packages import add_wrapped_package
-from .functions.request_handler import request_handler
 from aikido_firewall.context import get_current_context
+from .functions.request_handler import request_handler
 
 
 def generate_aikido_view_func_wrapper(former_view_func):
@@ -17,6 +16,7 @@ def generate_aikido_view_func_wrapper(former_view_func):
     """
 
     def aikido_view_func(*args, **kwargs):
+        # pylint:disable=import-outside-toplevel # We don't want to install this by default
         from werkzeug.exceptions import HTTPException
         from flask.globals import request_ctx
 
@@ -88,6 +88,7 @@ def on_flask_import(flask):
         """
         return generate_aikido_view_func_wrapper(func)
 
+    # pylint:disable=no-member # Pylint has issues with the wrapping
     setattr(modified_flask.Flask, "__call__", aikido___call__)
     setattr(modified_flask.Flask, "ensure_sync", aikido_ensure_sync)
     add_wrapped_package("flask")
