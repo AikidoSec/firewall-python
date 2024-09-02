@@ -72,6 +72,20 @@ def on_pymongo_import(pymongo):
 
         setattr(modified_pymongo.Collection, op, wrapped_op_func)
 
-    # Add aggregate/aggregate_raw_batches (pipeline var.) support :
+    # Add bulk_write support :
+    former_bulk_write = deepcopy(pymongo.Collection.bulk_write)
+
+    def aikido_bulk_write(self, requests, *args, **kwargs):
+        for request in requests:
+            if hasattr(request, "_filter"):
+                # Requested operation has a filter
+                vulns.run_vulnerability_scan(
+                    kind="nosql_injection",
+                    op="pymongo.collection.Collection.bulk_write",
+                    args=(request._filter,),
+                )
+        return former_bulk_write(self, requests, *args, **kwargs)
+
+    setattr(modified_pymongo.Collection, "bulk_write", aikido_bulk_write)
     pkgs.add_wrapped_package("pymongo")
     return modified_pymongo

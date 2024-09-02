@@ -401,3 +401,32 @@ def test_watch_key(db):
         assert called_with["op"] == "pymongo.collection.Collection.watch"
         assert called_with["kind"] == "nosql_injection"
         mock_run_vulnerability_scan.assert_called_once()
+
+
+def test_bulk_write(db):
+    from pymongo import InsertOne, UpdateOne, DeleteOne
+
+    with patch(
+        "aikido_firewall.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        dogs = db["dogs"]
+        requests = [
+            InsertOne({"dog_name": "Buddy2", "age": 3}),
+            InsertOne({"dog_name": "Max3"}),
+            UpdateOne({"dog_name": "Buddy1"}, {"$set": {"age": 0}}),
+            DeleteOne({"dog_name": "Max3"}),
+            InsertOne({"dog_name": "Bella4"}),
+        ]
+        with pytest.raises(mongo_errs.BulkWriteError):
+            dogs.bulk_write(requests)
+        calls = mock_run_vulnerability_scan.call_args_list
+
+        called_with1 = calls[0][1]
+        assert called_with1["args"][0] == {"dog_name": "Buddy1"}
+        assert called_with1["op"] == "pymongo.collection.Collection.bulk_write"
+        assert called_with1["kind"] == "nosql_injection"
+
+        called_with2 = calls[1][1]
+        assert called_with2["args"][0] == {"dog_name": "Max3"}
+        assert called_with2["op"] == "pymongo.collection.Collection.bulk_write"
+        assert called_with2["kind"] == "nosql_injection"
