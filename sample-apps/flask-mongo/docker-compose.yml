@@ -1,21 +1,5 @@
 version: '3'
 services:
-  db:
-    image: mongo:latest
-    container_name: flask_mongo_db
-    restart: always
-    environment:
-        MONGO_INITDB_ROOT_USERNAME: admin
-        MONGO_INITDB_ROOT_PASSWORD: password
-        MONGO_INITDB_DATABASE: my_database
-    volumes:
-      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
-      - db_data:/data/db
-    networks:
-      - default_network
-
-
-
   backend:
     image: sample_flask_mongo
     build: 
@@ -28,18 +12,8 @@ services:
       - .:/app
     ports:
       - "8094:5000"
-    depends_on:
-      - db
-    networks:
-      - default_network
     extra_hosts:
       - "app.local.aikido.io:host-gateway"
+      - "host.docker.internal:host-gateway"
     environment:
       FIREWALL_DISABLED: 0
-
-volumes:
-  db_data:
-
-networks:
-  default_network:
-    driver: bridge

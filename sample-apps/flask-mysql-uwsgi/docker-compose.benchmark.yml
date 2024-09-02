@@ -8,10 +8,9 @@ services:
       - .:/app
     ports:
       - "8089:5000"
-    depends_on:
-      - db
     extra_hosts:
       - "app.local.aikido.io:host-gateway"
+      - "host.docker.internal:host-gateway"
     environment:
       - FIREWALL_DISABLED=1
   backend:
