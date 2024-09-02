@@ -1,22 +1,5 @@
 version: '3'
 services:
-  db:
-    image: mariadb
-    container_name: django_mysql_gunicorn_mariadb
-    restart: always
-    volumes:
-      - db_data:/var/lib/mysql
-    environment:
-      MYSQL_DATABASE: 'db'
-      MYSQL_USER: 'user'
-      MYSQL_PASSWORD: 'password'
-      MYSQL_ROOT_PASSWORD: 'password'
-    healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
-      interval: 5s
-      retries: 5
-      start_period: 10s
-
   backend:
     image: sample_django_mysql_gunicorn
     build: 
@@ -29,11 +12,9 @@ services:
       - .:/app
     ports:
       - "8082:8000"
-    depends_on:
-      db:
-        condition: service_healthy
     extra_hosts:
       - "app.local.aikido.io:host-gateway"
+      - "host.docker.internal:host-gateway"
     environment:
       MYSQL_DATABASE: 'db'
       MYSQL_USER: 'user'
@@ -41,6 +22,7 @@ services:
       MYSQL_ROOT_PASSWORD: 'password'
       SECRET_KEY: 'abc'
       FIREWALL_DISABLED: 0
+
 
 volumes:
   db_data:
