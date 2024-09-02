@@ -1,9 +1,55 @@
 [tool.poetry]
 name = "aikido_firewall"
-version = "0.0.9"
+version = "0.1.19"
 description = "Aikido Zen for Python"
-authors = ["Aikido"]
+authors = ["Aikido Security <help@aikido.dev>"]
 readme = "README.md"
+license = "AGPL-3.0-or-later"
+include = ["docs/*"]
+keywords = [
+    "web application firewall",
+    "WAF",
+    "cybersecurity",
+    "security",
+    "firewall",
+    "web security",
+    "application security",
+    "threat detection",
+    "intrusion prevention",
+    "DDoS protection",
+    "malware protection",
+    "Python",
+    "Python 3",
+    "network security",
+    "data protection",
+    "secure coding",
+    "vulnerability management",
+    "API security",
+    "SSL/TLS",
+    "penetration testing",
+]
+
+classifiers = [
+    "Environment :: Web Environment",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Security",
+]
+homepage = "https://www.aikido.dev/runtime/firewall/"
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/AikidoSec/firewall-python/issues"
+"Source" = "https://github.com/AikidoSec/firewall-python"
+"Homepage" = "https://www.aikido.dev/runtime/firewall"
+"Bug Bounty" = "https://app.intigriti.com/programs/aikido"
 
 [tool.poetry.dependencies]
 python = "^3.8"
@@ -25,7 +71,7 @@ pytest-asyncio = "^0.24.0"
 asyncpg = "^0.29.0"
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.black]
