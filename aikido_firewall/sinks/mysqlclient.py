@@ -6,7 +6,7 @@ import copy
 import importhook
 from aikido_firewall.vulnerabilities.sql_injection.dialects import MySQL
 from aikido_firewall.background_process.packages import add_wrapped_package
-from aikido_firewall.vulnerabilities import run_vulnerability_scan
+import aikido_firewall.vulnerabilities as vulns
 
 
 @importhook.on_import("MySQLdb.connections")
@@ -21,7 +21,7 @@ def on_mysqlclient_import(mysql):
     prev_query_function = copy.deepcopy(mysql.Connection.query)
 
     def aikido_new_query(_self, sql):
-        run_vulnerability_scan(
+        vulns.run_vulnerability_scan(
             kind="sql_injection",
             op="MySQLdb.connections.query",
             args=(sql.decode("utf-8"), MySQL()),

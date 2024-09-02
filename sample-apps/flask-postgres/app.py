@@ -16,7 +16,7 @@ if __name__ == '__main__':
 
 def get_db_connection():
     return psycopg2.connect(
-        host="db",
+        host="host.docker.internal",
         database="db",
         user="user",
         password="password")

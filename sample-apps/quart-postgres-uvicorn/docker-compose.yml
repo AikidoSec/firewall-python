@@ -1,19 +1,5 @@
 version: '3'
 services:
-  db:
-    image: postgres:14-alpine
-    container_name: quart_postgres_uvicorn_db
-    restart: always
-    volumes:
-      - db_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-    environment:
-      POSTGRES_DB: 'db'
-      POSTGRES_USER: 'user'
-      POSTGRES_PASSWORD: 'password'
-    networks:
-      - default_network
-
   backend:
     image: sample_quart_postgres_uvicorn
     build: 
@@ -26,18 +12,8 @@ services:
       - .:/app
     ports:
       - "8096:5000"
-    depends_on:
-      - db
-    networks:
-      - default_network
     extra_hosts:
       - "app.local.aikido.io:host-gateway"
+      - "host.docker.internal:host-gateway"
     environment:
       - FIREWALL_DISABLED=0
-
-volumes:
-  db_data:
-
-networks:
-  default_network:
-    driver: bridge

@@ -8,11 +8,9 @@ services:
       - .:/app
     ports:
       - "8083:8000"
-    depends_on:
-      db:
-        condition: service_healthy
     extra_hosts:
       - "app.local.aikido.io:host-gateway"
+      - "host.docker.internal:host-gateway"
     environment:
       FIREWALL_DISABLED: 1
       SECRET_KEY: 'abc'

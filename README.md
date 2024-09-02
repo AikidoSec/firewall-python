@@ -1,4 +1,4 @@
-![Aikido Firewall for Python 3](./docs/banner.svg)
+![Aikido Firewall for Python 3](https://aikido-production-staticfiles-public.s3.eu-west-1.amazonaws.com/banner-pypi.svg)
 
 # Aikido Firewall for Python 3
 

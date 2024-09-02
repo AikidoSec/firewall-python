@@ -1,20 +1,5 @@
 version: '3'
 services:
-  db:
-    image: postgres:14-alpine
-    container_name: django_postgres_db
-    restart: always
-    volumes:
-      - db_data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: 'db'
-      POSTGRES_USER: 'user'
-      POSTGRES_PASSWORD: 'password'
-    ports:
-      - "5432:5432"
-    networks:
-      - default_network
-
   backend:
     image: sample_django_postgres
     build: 
@@ -27,15 +12,12 @@ services:
       - .:/app
     ports:
       - "8094:8000"
-    depends_on:
-      - db
-    networks:
-      - default_network
     extra_hosts:
       - "app.local.aikido.io:host-gateway"
+      - "host.docker.internal:host-gateway"
     environment:
       SECRET_KEY: 'Test key'
-      DB_HOST: 'db'
+      DB_HOST: 'host.docker.internal'
       DB_NAME: 'db'
       DB_USER: 'user'
       DB_PASSWORD: 'password'
@@ -44,7 +26,3 @@ services:
 
 volumes:
   db_data:
-
-networks:
-  default_network:
-    driver: bridge
