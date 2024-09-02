@@ -18,6 +18,11 @@ pylint = "^3.2.5"
 pytest = "^8.2.2"
 pytest-cov = "^5.0.0"
 pytest-mock = "^3.14.0"
+mysqlclient = "^2.2.4"
+pymysql = "^1.1.1"
+psycopg2-binary = "^2.9.9"
+pytest-asyncio = "^0.24.0"
+asyncpg = "^0.29.0"
 
 [build-system]
 requires = ["poetry-core"]
