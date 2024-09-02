@@ -11,17 +11,21 @@ import aikido_firewall.vulnerabilities as vulns
 # find_one not present in list since find_one calls find function.
 
 OPERATIONS_WITH_FILTER = [
-    "replace_one",
-    "update_one",
-    "update_many",
-    "delete_one",
-    "delete_many",
-    "count_documents",
-    "find_one_and_delete",
-    "find_one_and_replace",
-    "find_one_and_update",
-    "find",
-    "find_raw_batches"
+    ("replace_one", [0, "filter"]),
+    ("update_one", [0, "filter"]),
+    ("update_many", [0, "filter"]),
+    ("delete_one", [0, "filter"]),
+    ("delete_many", [0, "filter"]),
+    ("count_documents", [0, "filter"]),
+    ("find_one_and_delete", [0, "filter"]),
+    ("find_one_and_replace", [0, "filter"]),
+    ("find_one_and_update", [0, "filter"]),
+    ("find", [0, "filter"]),
+    ("find_raw_batches", [0, "filter"]),
+    ("distinct", [1, "filter"]),
+    ("watch", [0, "pipeline"]),
+    ("aggregate", [0, "pipeline"]),
+    ("aggregate_raw_batches", [0, "pipeline"]),
 ]
 
 
@@ -35,31 +39,39 @@ def on_pymongo_import(pymongo):
     Returns : Modified pymongo.collection.Collection object
     """
     modified_pymongo = importhook.copy_module(pymongo)
-    for operation in OPERATIONS_WITH_FILTER:
-        if not hasattr(pymongo.Collection, operation):
-            logger.warning("Operation `%s` not found on Collection object.", operation)
+    for op_data in OPERATIONS_WITH_FILTER:
+        op = op_data[0]
+        if not hasattr(pymongo.Collection, op):
+            logger.warning("Operation `%s` not found on Collection object.", op)
 
-        prev_func = deepcopy(getattr(pymongo.Collection, operation))
+        prev_func = deepcopy(getattr(pymongo.Collection, op))
 
-        def wrapped_operation_function(
+        def wrapped_op_func(
             self,
-            filter=None,
             *args,
             prev_func=prev_func,
-            op=operation,
+            op_data=op_data,
             **kwargs,
         ):
-            if filter:
+            op, spot, key = op_data[0], op_data[1][0], op_data[1][1]
+            data = None
+            print(kwargs, key)
+            if kwargs.get(key, None):
+                # Keyword found, setting data
+                data = kwargs.get(key)
+            elif len(args) > spot and args[spot]:
+                data = args[spot]
+            if data:
                 vulns.run_vulnerability_scan(
                     kind="nosql_injection",
                     op=f"pymongo.collection.Collection.{op}",
-                    args=(filter,),
+                    args=(data,),
                 )
 
-                return prev_func(self, filter, *args, **kwargs)
-            return prev_func(self)  # Function called without a filter
+            return prev_func(self, *args, **kwargs)
 
-        setattr(modified_pymongo.Collection, operation, wrapped_operation_function)
+        setattr(modified_pymongo.Collection, op, wrapped_op_func)
 
+    # Add aggregate/aggregate_raw_batches (pipeline var.) support :
     pkgs.add_wrapped_package("pymongo")
     return modified_pymongo
