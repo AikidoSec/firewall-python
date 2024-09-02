@@ -177,6 +177,7 @@ def test_find_empty(db):
         dogs.find()
         mock_run_vulnerability_scan.assert_not_called()
 
+
 def test_find_not_empty(db):
     reset_comms()
     with patch(
@@ -205,5 +206,198 @@ def test_find_raw_batches(db):
         called_with = mock_run_vulnerability_scan.call_args[1]
         assert called_with["args"][0] == _filter
         assert called_with["op"] == "pymongo.collection.Collection.find_raw_batches"
+        assert called_with["kind"] == "nosql_injection"
+        mock_run_vulnerability_scan.assert_called_once()
+
+
+def test_distinct(db):
+    reset_comms()
+    with patch(
+        "aikido_firewall.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        dogs = db["dogs"]
+        _filter = {"dog_name": "test", "pswd": "pswd"}
+        dogs.distinct("pswd", _filter)
+
+        called_with = mock_run_vulnerability_scan.call_args[1]
+        assert called_with["args"][0] == _filter
+        assert called_with["op"] == "pymongo.collection.Collection.distinct"
+        assert called_with["kind"] == "nosql_injection"
+        mock_run_vulnerability_scan.assert_called_once()
+
+
+def test_distinct_kwargs(db):
+    reset_comms()
+    with patch(
+        "aikido_firewall.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        dogs = db["dogs"]
+        _filter = {"dog_name": "test", "pswd": "pswd"}
+        dogs.distinct(key="pswd", filter=_filter)
+
+        called_with = mock_run_vulnerability_scan.call_args[1]
+        assert called_with["args"][0] == _filter
+        assert called_with["op"] == "pymongo.collection.Collection.distinct"
+        assert called_with["kind"] == "nosql_injection"
+        mock_run_vulnerability_scan.assert_called_once()
+
+
+def test_distinct_empty(db):
+    reset_comms()
+    with patch(
+        "aikido_firewall.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        dogs = db["dogs"]
+        dogs.distinct("pswd")
+
+        mock_run_vulnerability_scan.assert_not_called()
+
+
+def test_aggregate(db):
+    pipeline = [
+        {
+            "$group": {
+                "_id": "$item",
+                "total_quantity": {"$sum": "$quantity"},
+                "average_price": {"$avg": "$price"},
+            }
+        },
+        {"$sort": {"total_quantity": -1}},  # Sort by total_quantity in descending order
+    ]
+    with patch(
+        "aikido_firewall.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        dogs = db["dogs"]
+        dogs.aggregate(pipeline)
+
+        called_with = mock_run_vulnerability_scan.call_args[1]
+        assert called_with["args"][0] == pipeline
+        assert called_with["op"] == "pymongo.collection.Collection.aggregate"
+        assert called_with["kind"] == "nosql_injection"
+        mock_run_vulnerability_scan.assert_called_once()
+
+
+def test_aggregate_key(db):
+    pipeline = [
+        {
+            "$group": {
+                "_id": "$item",
+                "total_quantity": {"$sum": "$quantity"},
+                "average_price": {"$avg": "$price"},
+            }
+        },
+        {"$sort": {"total_quantity": -1}},  # Sort by total_quantity in descending order
+    ]
+    with patch(
+        "aikido_firewall.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        dogs = db["dogs"]
+        dogs.aggregate(pipeline=pipeline)
+
+        called_with = mock_run_vulnerability_scan.call_args[1]
+        assert called_with["args"][0] == pipeline
+        assert called_with["op"] == "pymongo.collection.Collection.aggregate"
+        assert called_with["kind"] == "nosql_injection"
+        mock_run_vulnerability_scan.assert_called_once()
+
+
+def test_aggregate_raw_batches_key(db):
+    pipeline = [
+        {
+            "$group": {
+                "_id": "$item",
+                "total_quantity": {"$sum": "$quantity"},
+                "average_price": {"$avg": "$price"},
+            }
+        },
+        {"$sort": {"total_quantity": -1}},  # Sort by total_quantity in descending order
+    ]
+    with patch(
+        "aikido_firewall.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        dogs = db["dogs"]
+        dogs.aggregate_raw_batches(pipeline=pipeline)
+
+        called_with = mock_run_vulnerability_scan.call_args[1]
+        assert called_with["args"][0] == pipeline
+        assert (
+            called_with["op"] == "pymongo.collection.Collection.aggregate_raw_batches"
+        )
+        assert called_with["kind"] == "nosql_injection"
+        mock_run_vulnerability_scan.assert_called_once()
+
+
+def test_aggregate_raw_batches(db):
+    pipeline = [
+        {
+            "$group": {
+                "_id": "$item",
+                "total_quantity": {"$sum": "$quantity"},
+                "average_price": {"$avg": "$price"},
+            }
+        },
+        {"$sort": {"total_quantity": -1}},  # Sort by total_quantity in descending order
+    ]
+    with patch(
+        "aikido_firewall.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        dogs = db["dogs"]
+        dogs.aggregate_raw_batches(pipeline)
+
+        called_with = mock_run_vulnerability_scan.call_args[1]
+        assert called_with["args"][0] == pipeline
+        assert (
+            called_with["op"] == "pymongo.collection.Collection.aggregate_raw_batches"
+        )
+        assert called_with["kind"] == "nosql_injection"
+        mock_run_vulnerability_scan.assert_called_once()
+
+
+def test_watch(db):
+    pipeline = [
+        {
+            "$group": {
+                "_id": "$item",
+                "total_quantity": {"$sum": "$quantity"},
+                "average_price": {"$avg": "$price"},
+            }
+        },
+        {"$sort": {"total_quantity": -1}},  # Sort by total_quantity in descending order
+    ]
+    with patch(
+        "aikido_firewall.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        dogs = db["dogs"]
+        with pytest.raises(mongo_errs.OperationFailure):
+            dogs.watch(pipeline)
+
+        called_with = mock_run_vulnerability_scan.call_args[1]
+        assert called_with["args"][0] == pipeline
+        assert called_with["op"] == "pymongo.collection.Collection.watch"
+        assert called_with["kind"] == "nosql_injection"
+        mock_run_vulnerability_scan.assert_called_once()
+
+
+def test_watch_key(db):
+    pipeline = [
+        {
+            "$group": {
+                "_id": "$item",
+                "total_quantity": {"$sum": "$quantity"},
+                "average_price": {"$avg": "$price"},
+            }
+        },
+        {"$sort": {"total_quantity": -1}},  # Sort by total_quantity in descending order
+    ]
+    with patch(
+        "aikido_firewall.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        dogs = db["dogs"]
+        with pytest.raises(mongo_errs.OperationFailure):
+            dogs.watch(pipeline=pipeline)
+
+        called_with = mock_run_vulnerability_scan.call_args[1]
+        assert called_with["args"][0] == pipeline
+        assert called_with["op"] == "pymongo.collection.Collection.watch"
         assert called_with["kind"] == "nosql_injection"
         mock_run_vulnerability_scan.assert_called_once()
