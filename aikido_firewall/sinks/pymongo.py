@@ -6,7 +6,7 @@ from copy import deepcopy
 import importhook
 from aikido_firewall.helpers.logging import logger
 import aikido_firewall.background_process.packages as pkgs
-from aikido_firewall.vulnerabilities import run_vulnerability_scan
+import aikido_firewall.vulnerabilities as vulns
 
 OPERATIONS_WITH_FILTER = [
     "replace_one",
@@ -39,14 +39,28 @@ def on_pymongo_import(pymongo):
         prev_func = deepcopy(getattr(pymongo.Collection, operation))
 
         def wrapped_operation_function(
-            _self, _filter, *args, prev_func=prev_func, op=operation, **kwargs
+            self,
+            filter,
+            filter2=None,
+            *args,
+            prev_func=prev_func,
+            op=operation,
+            **kwargs,
         ):
-            run_vulnerability_scan(
+            vulns.run_vulnerability_scan(
                 kind="nosql_injection",
                 op=f"pymongo.collection.Collection.{op}",
-                args=(_filter,),
+                args=(filter,),
             )
-            return prev_func(_self, _filter, *args, **kwargs)
+            if isinstance(filter2, dict):
+                vulns.run_vulnerability_scan(
+                    kind="nosql_injection",
+                    op=f"pymongo.collection.Collection.{op}",
+                    args=(filter2,),
+                )
+            if filter2:
+                return prev_func(self, filter, filter2, *args, **kwargs)
+            return prev_func(self, filter, *args, **kwargs)
 
         setattr(modified_pymongo.Collection, operation, wrapped_operation_function)
 
