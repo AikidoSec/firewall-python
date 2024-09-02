@@ -34,11 +34,11 @@ def on_psycopg_import(psycopg):
         )
         return former_execute_function(self, query, params, *args, **kwargs)
 
-    def aikido_executemany(self, query, params_seq, *args, **kwargs):
+    def aikido_executemany(self, query, params_seq):
         args = (query, Postgres())
         op = "psycopg.Cursor.executemany"
         vulns.run_vulnerability_scan(kind="sql_injection", op=op, args=args)
-        return former_executemany_function(self, query, params_seq, *args, **kwargs)
+        return former_executemany_function(self, query, params_seq)
 
     setattr(psycopg.Cursor, "copy", aikido_copy)  # pylint: disable=no-member
     setattr(psycopg.Cursor, "execute", aikido_execute)  # pylint: disable=no-member
