@@ -41,7 +41,6 @@ def on_pymongo_import(pymongo):
         def wrapped_operation_function(
             self,
             filter,
-            filter2=None,
             *args,
             prev_func=prev_func,
             op=operation,
@@ -52,14 +51,6 @@ def on_pymongo_import(pymongo):
                 op=f"pymongo.collection.Collection.{op}",
                 args=(filter,),
             )
-            if isinstance(filter2, dict):
-                vulns.run_vulnerability_scan(
-                    kind="nosql_injection",
-                    op=f"pymongo.collection.Collection.{op}",
-                    args=(filter2,),
-                )
-            if filter2:
-                return prev_func(self, filter, filter2, *args, **kwargs)
             return prev_func(self, filter, *args, **kwargs)
 
         setattr(modified_pymongo.Collection, operation, wrapped_operation_function)
