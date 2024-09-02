@@ -8,17 +8,20 @@ from aikido_firewall.helpers.logging import logger
 import aikido_firewall.background_process.packages as pkgs
 import aikido_firewall.vulnerabilities as vulns
 
+# find_one not present in list since find_one calls find function.
+
 OPERATIONS_WITH_FILTER = [
     "replace_one",
     "update_one",
     "update_many",
     "delete_one",
     "delete_many",
-    "find_one",
     "count_documents",
     "find_one_and_delete",
     "find_one_and_replace",
     "find_one_and_update",
+    "find",
+    "find_raw_batches"
 ]
 
 
@@ -40,18 +43,21 @@ def on_pymongo_import(pymongo):
 
         def wrapped_operation_function(
             self,
-            filter,
+            filter=None,
             *args,
             prev_func=prev_func,
             op=operation,
             **kwargs,
         ):
-            vulns.run_vulnerability_scan(
-                kind="nosql_injection",
-                op=f"pymongo.collection.Collection.{op}",
-                args=(filter,),
-            )
-            return prev_func(self, filter, *args, **kwargs)
+            if filter:
+                vulns.run_vulnerability_scan(
+                    kind="nosql_injection",
+                    op=f"pymongo.collection.Collection.{op}",
+                    args=(filter,),
+                )
+
+                return prev_func(self, filter, *args, **kwargs)
+            return prev_func(self)  # Function called without a filter
 
         setattr(modified_pymongo.Collection, operation, wrapped_operation_function)
 

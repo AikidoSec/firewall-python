@@ -99,7 +99,7 @@ def test_find_one(db):
 
         called_with = mock_run_vulnerability_scan.call_args[1]
         assert called_with["args"][0] == _filter
-        assert called_with["op"] == "pymongo.collection.Collection.find_one"
+        assert called_with["op"] == "pymongo.collection.Collection.find"
         assert called_with["kind"] == "nosql_injection"
         mock_run_vulnerability_scan.assert_called_once()
 
@@ -143,7 +143,7 @@ def test_find_one_and_replace(db):
     ) as mock_run_vulnerability_scan:
         dogs = db["dogs"]
         _filter = {"dog_name": "test", "pswd": "pswd"}
-        dogs.find_one_and_replace(_filter, {"dog_name": "test2"})
+        dogs.find_one_and_replace(filter=_filter, replacement={"dog_name": "test2"})
 
         called_with = mock_run_vulnerability_scan.call_args[1]
         assert called_with["args"][0] == _filter
@@ -164,5 +164,46 @@ def test_find_one_and_update(db):
         called_with = mock_run_vulnerability_scan.call_args[1]
         assert called_with["args"][0] == _filter
         assert called_with["op"] == "pymongo.collection.Collection.find_one_and_update"
+        assert called_with["kind"] == "nosql_injection"
+        mock_run_vulnerability_scan.assert_called_once()
+
+
+def test_find_empty(db):
+    reset_comms()
+    with patch(
+        "aikido_firewall.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        dogs = db["dogs"]
+        dogs.find()
+        mock_run_vulnerability_scan.assert_not_called()
+
+def test_find_not_empty(db):
+    reset_comms()
+    with patch(
+        "aikido_firewall.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        dogs = db["dogs"]
+        _filter = {"dog_name": "test", "pswd": "pswd"}
+        dogs.find(_filter)
+
+        called_with = mock_run_vulnerability_scan.call_args[1]
+        assert called_with["args"][0] == _filter
+        assert called_with["op"] == "pymongo.collection.Collection.find"
+        assert called_with["kind"] == "nosql_injection"
+        mock_run_vulnerability_scan.assert_called_once()
+
+
+def test_find_raw_batches(db):
+    reset_comms()
+    with patch(
+        "aikido_firewall.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        dogs = db["dogs"]
+        _filter = {"dog_name": "test", "pswd": "pswd"}
+        dogs.find_raw_batches(_filter)
+
+        called_with = mock_run_vulnerability_scan.call_args[1]
+        assert called_with["args"][0] == _filter
+        assert called_with["op"] == "pymongo.collection.Collection.find_raw_batches"
         assert called_with["kind"] == "nosql_injection"
         mock_run_vulnerability_scan.assert_called_once()
