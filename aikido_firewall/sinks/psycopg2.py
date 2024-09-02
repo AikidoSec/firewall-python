@@ -27,12 +27,12 @@ def wrap_cursor_factory(cursor_factory):
 
         def executemany(self, *args, **kwargs):
             """Aikido's wrapped executemany function"""
-            for sql in args[0]:
-                vulns.run_vulnerability_scan(
-                    kind="sql_injection",
-                    op="psycopg2.Connection.Cursor.executemany",
-                    args=(sql, Postgres()),
-                )
+            sql = args[0]  # The data is double, but sql only once.
+            vulns.run_vulnerability_scan(
+                kind="sql_injection",
+                op="psycopg2.Connection.Cursor.executemany",
+                args=(sql, Postgres()),
+            )
             if former_cursor_factory and hasattr(former_cursor_factory, "executemany"):
                 return former_cursor_factory.executemany(self, *args, **kwargs)
             return super().executemany(*args, **kwargs)

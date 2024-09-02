@@ -34,3 +34,48 @@ def test_cursor_execute(database_conn):
         cursor.fetchall()
         database_conn.close()
         mock_run_vulnerability_scan.assert_called_once()
+
+
+def test_cursor_execute_parameterized(database_conn):
+    reset_comms()
+    with patch(
+        "aikido_firewall.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        cursor = database_conn.cursor()
+        query = "INSERT INTO dogs (dog_name, isadmin) VALUES (%s, %s)"
+        cursor.execute(query, ("doggo", True))
+
+        called_with_args = mock_run_vulnerability_scan.call_args[1]["args"]
+        assert called_with_args[0] == query
+        assert isinstance(called_with_args[1], Postgres)
+        mock_run_vulnerability_scan.assert_called_once()
+
+        database_conn.commit()
+        database_conn.close()
+        mock_run_vulnerability_scan.assert_called_once()
+
+
+def test_cursor_executemany(database_conn):
+    reset_comms()
+    with patch(
+        "aikido_firewall.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        cursor = database_conn.cursor()
+        data = [
+            ("Doggy", False),
+            ("Doggy 2", True),
+            ("Dogski", True),
+        ]
+        cursor.executemany("INSERT INTO dogs (dog_name, isadmin) VALUES (%s, %s)", data)
+        called_with_args = mock_run_vulnerability_scan.call_args[1]["args"]
+        assert (
+            called_with_args[0]
+            == "INSERT INTO dogs (dog_name, isadmin) VALUES (%s, %s)"
+        )
+        assert isinstance(called_with_args[1], Postgres)
+        mock_run_vulnerability_scan.assert_called_once()
+
+        database_conn.commit()
+        cursor.close()
+        database_conn.close()
+        mock_run_vulnerability_scan.assert_called_once()
