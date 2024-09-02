@@ -3,6 +3,15 @@ name: Pytest Coverage | Reports to codecov
 on: [pull_request]
 
 jobs:
+  up_databases:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Start databases
+      working-directory:  ./sample-apps/databases
+      run: docker compose up --build -d
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -11,10 +20,6 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
-
-    - name: Start databases
-      working-directory:  ./sample-apps/databases
-      run: docker compose up --build -d
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
