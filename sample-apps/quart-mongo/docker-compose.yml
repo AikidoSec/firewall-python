@@ -1,0 +1,19 @@
+version: '3'
+services:
+  backend:
+    image: sample_quart_mongo
+    build: 
+      context: ./../../
+      dockerfile: ./sample-apps/quart-mongo/Dockerfile
+    container_name: quart_mongo_backend
+    command: sh -c "QUART_APP=app:app quart run --host 0.0.0.0"
+    restart: always
+    volumes:
+      - .:/app
+    ports:
+      - "8098:5000"
+    extra_hosts:
+      - "app.local.aikido.io:host-gateway"
+      - "host.docker.internal:host-gateway"
+    environment:
+      - FIREWALL_DISABLED=0
