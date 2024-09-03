@@ -65,7 +65,7 @@ def test_cursor_execute_parameterized(database_conn):
             called_with_args = mock_run_vulnerability_scan.call_args[1]["args"]
             assert (
                 called_with_args[0]
-                == "INSERT INTO dogs (dog_name, isAdmin) VALUES ('doggo', 0)"
+                == "INSERT INTO dogs (dog_name, isAdmin) VALUES (%s, %s)"
             )
             assert isinstance(called_with_args[1], MySQL)
             mock_run_vulnerability_scan.assert_called_once()
@@ -90,7 +90,7 @@ def test_cursor_executemany(database_conn):
         called_with_args = mock_run_vulnerability_scan.call_args[1]["args"]
         assert (
             called_with_args[0]
-            == "INSERT INTO dogs (dog_name, isAdmin) VALUES ('Doggy', 0),('Doggy 2', 1),('Dogski', 1)"
+            == "INSERT INTO dogs (dog_name, isAdmin) VALUES (%s, %s)"
         )
         assert isinstance(called_with_args[1], MySQL)
         mock_run_vulnerability_scan.assert_called_once()
