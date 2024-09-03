@@ -28,9 +28,8 @@ jobs:
           pip install ./dist/aikido_firewall.tar.gz
       - name: run sql benchmarks
         run: |
-          make dev_install
-          python ./benchmarks/sql_benchmark/sql_benchmark_fw.py
-          python ./benchmarks/sql_benchmark/sql_benchmark_no_fw.py
+          poetry run python ./benchmarks/sql_benchmark/sql_benchmark_fw.py
+          poetry run python ./benchmarks/sql_benchmark/sql_benchmark_no_fw.py
       - name: Run Docker Compose
         working-directory: ./sample-apps/flask-mysql
         run: |
