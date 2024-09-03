@@ -29,7 +29,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          make install
+          make dev_install
       - name: Install aikido_firewall
         run: |
           make build
