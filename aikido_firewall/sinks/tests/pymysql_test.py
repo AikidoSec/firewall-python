@@ -100,3 +100,29 @@ def test_cursor_executemany(database_conn):
         cursor.close()
         database_conn.close()
         mock_run_vulnerability_scan.assert_called_once()
+
+
+def test_cursor_execute_with_fstring(database_conn):
+    reset_comms()
+    with patch(
+        "aikido_firewall.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        cursor = database_conn.cursor()
+        data = ("doggy",)
+        table_name = "dogs"
+        value_2 = "1"
+        cursor.execute(
+            f"INSERT INTO {table_name} (dog_name, isAdmin) VALUES (%s, {value_2})", data
+        )
+        called_with_args = mock_run_vulnerability_scan.call_args[1]["args"]
+        assert (
+            called_with_args[0] == "INSERT INTO dogs (dog_name, isAdmin) VALUES (%s, 1)"
+        )
+        assert isinstance(called_with_args[1], MySQL)
+        mock_run_vulnerability_scan.assert_called_once()
+        database_conn.commit()
+        mock_run_vulnerability_scan.assert_called_once()
+
+        cursor.close()
+        database_conn.close()
+        mock_run_vulnerability_scan.assert_called_once()
