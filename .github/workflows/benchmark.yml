@@ -12,15 +12,6 @@ jobs:
       - name: Start databases
         working-directory:  ./sample-apps/databases
         run: docker compose up --build -d
-      - name: Run Docker Compose
-        working-directory: ./sample-apps/flask-mysql
-        run: |
-          docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
-      - name: Install K6
-        uses: grafana/setup-k6-action@v1
-      - name: Run flask-mysql k6 Benchmark
-        run: |
-          k6 run -q ./benchmarks/flask-mysql-benchmarks.js
       - name: Set up Python 3.9
         uses: actions/setup-python@v2
         with:
@@ -37,5 +28,15 @@ jobs:
           pip install ./dist/aikido_firewall.tar.gz
       - name: run sql benchmarks
         run: |
+          make dev_install
           python ./benchmarks/sql_benchmark/sql_benchmark_fw.py
           python ./benchmarks/sql_benchmark/sql_benchmark_no_fw.py
+      - name: Run Docker Compose
+        working-directory: ./sample-apps/flask-mysql
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
+      - name: Install K6
+        uses: grafana/setup-k6-action@v1
+      - name: Run flask-mysql k6 Benchmark
+        run: |
+          k6 run -q ./benchmarks/flask-mysql-benchmarks.js
