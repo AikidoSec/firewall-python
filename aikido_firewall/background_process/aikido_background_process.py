@@ -15,7 +15,9 @@ from aikido_firewall.background_process.cloud_connection_manager import (
 )
 from aikido_firewall.helpers.check_env_for_blocking import check_env_for_blocking
 from aikido_firewall.helpers.token import get_token_from_env
-from aikido_firewall.background_process.api.http_api import ReportingApiHTTP
+from aikido_firewall.background_process.api.http_api_ratelimited import (
+    ReportingApiHTTPRatelimited,
+)
 from .commands import process_incoming_command
 
 EMPTY_QUEUE_INTERVAL = 5  # 5 seconds
@@ -70,7 +72,11 @@ class AikidoBackgroundProcess:
         )  # Create an event scheduler
         self.send_to_connection_manager(event_scheduler)
 
-        api = ReportingApiHTTP("https://guard.aikido.dev/")
+        api = ReportingApiHTTPRatelimited(
+            "https://guard.aikido.dev/",
+            max_events_per_interval=2,
+            interval_in_ms=15 * 1000,
+        )
         # We need to pass along the scheduler so that the heartbeat also gets sent
         self.connection_manager = CloudConnectionManager(
             block=check_env_for_blocking(),
