@@ -19,7 +19,7 @@ install:
 .PHONY: dev_install
 dev_install:
 	pip install poetry
-	poetry install --with dev
+	poetry install --with=dev
 
 
 .PHONY: test
