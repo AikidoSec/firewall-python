@@ -14,6 +14,17 @@ def find_hostname_in_context(hostname, context, port):
     if not isinstance(hostname, str) or not isinstance(port, int):
         # Validate hostname and port input
         return None
+
+    # Punycode detected in hostname, while user input may not be in Punycode
+    # We need to convert it to ensure we compare the right values
+    if "xn--" in hostname:
+        try:
+            hostname = hostname.encode("ascii").decode("idna")
+        except Exception:
+            # Seems to be a malformed Punycode sequence, retain original
+            # hostname
+            pass
+
     for source in UINPUT_SOURCES:
         if not hasattr(context, source):
             continue

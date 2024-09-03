@@ -1,4 +1,4 @@
-![Aikido Firewall for Python 3](./docs/banner.svg)
+![Aikido Firewall for Python 3](https://aikido-production-staticfiles-public.s3.eu-west-1.amazonaws.com/banner-pypi.svg)
 
 # Aikido Firewall for Python 3
 
@@ -28,6 +28,7 @@ Aikido Firewall for Python 3 is compatible with:
 
 * ✅ [Django](docs/django.md)
 * ✅ [Flask](docs/flask.md)
+* ✅ [Quart](docs/quart.md)
 
 ### WSGI servers
 * ✅ [Gunicorn](docs/gunicorn.md)
@@ -38,6 +39,7 @@ Aikido Firewall for Python 3 is compatible with:
 * ✅ [`PyMySQL`](https://pypi.org/project/PyMySQL/)
 * ✅ [`pymongo`](https://pypi.org/project/pymongo/)
 * ✅ [`psycopg2`](https://pypi.org/project/psycopg2)
+* ✅ [`psycopg`](https://pypi.org/project/psycopg)
 * ✅ [`asyncpg`](https://pypi.org/project/asyncpg)
 
 ## Reporting to your Aikido Security dashboard

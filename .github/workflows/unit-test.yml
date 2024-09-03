@@ -12,6 +12,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    - name: Start databases
+      working-directory:  ./sample-apps/databases
+      run: docker compose up --build -d
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
