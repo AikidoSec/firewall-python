@@ -36,6 +36,32 @@ def test_cursor_execute(database_conn):
         mock_run_vulnerability_scan.assert_called_once()
 
 
+def test_cursor_execute_no_args(database_conn):
+    reset_comms()
+    with patch(
+        "aikido_firewall.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        cursor = database_conn.cursor()
+        dogname = "Doggo"
+        isadmin = "TRUE"
+        query = f'INSERT INTO dogs (dog_name, isAdmin) VALUES ("{dogname}", {isadmin})'
+        cursor.execute(query)
+        called_with_args = mock_run_vulnerability_scan.call_args[1]["args"]
+        assert (
+            called_with_args[0]
+            == 'INSERT INTO dogs (dog_name, isAdmin) VALUES ("Doggo", TRUE)'
+        )
+        assert isinstance(called_with_args[1], MySQL)
+
+        mock_run_vulnerability_scan.assert_called_once()
+        cursor.fetchall()
+        mock_run_vulnerability_scan.assert_called_once()
+
+        cursor.close()
+        database_conn.close()
+        mock_run_vulnerability_scan.assert_called_once()
+
+
 def test_cursor_executemany(database_conn):
     reset_comms()
     with patch(
@@ -51,7 +77,7 @@ def test_cursor_executemany(database_conn):
         called_with_args = mock_run_vulnerability_scan.call_args[1]["args"]
         assert (
             called_with_args[0]
-            == "INSERT INTO dogs (dog_name, isAdmin) VALUES ('Doggy', 0),('Doggy 2', 1),('Dogski', 1)"
+            == "INSERT INTO dogs (dog_name, isAdmin) VALUES (%s, %s)"
         )
         assert isinstance(called_with_args[1], MySQL)
         mock_run_vulnerability_scan.assert_called_once()
@@ -63,34 +89,27 @@ def test_cursor_executemany(database_conn):
         mock_run_vulnerability_scan.assert_called_once()
 
 
-def test_cursor_callproc(database_conn):
+def test_cursor_execute_with_fstring(database_conn):
     reset_comms()
     with patch(
         "aikido_firewall.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
-        import MySQLdb
-
         cursor = database_conn.cursor()
-        with pytest.raises(MySQLdb.OperationalError):
-            cursor.callproc("test_procedure", (5, 10, 2))
-
-        calls = mock_run_vulnerability_scan.call_args_list
-
-        first_call_args = calls[0][1]["args"]
-        assert (
-            first_call_args[0]
-            == "SET @_test_procedure_0=5,@_test_procedure_1=10,@_test_procedure_2=2"
+        data = ("doggy",)
+        table_name = "dogs"
+        value_2 = "1"
+        cursor.execute(
+            f"INSERT INTO {table_name} (dog_name, isAdmin) VALUES (%s, {value_2})", data
         )
-        assert isinstance(first_call_args[1], MySQL)
-
-        second_call_args = calls[1][1]["args"]
+        called_with_args = mock_run_vulnerability_scan.call_args[1]["args"]
         assert (
-            second_call_args[0]
-            == "CALL test_procedure(@_test_procedure_0,@_test_procedure_1,@_test_procedure_2)"
+            called_with_args[0] == "INSERT INTO dogs (dog_name, isAdmin) VALUES (%s, 1)"
         )
-        assert isinstance(second_call_args[1], MySQL)
-        mock_run_vulnerability_scan.assert_called()
-
+        assert isinstance(called_with_args[1], MySQL)
+        mock_run_vulnerability_scan.assert_called_once()
         database_conn.commit()
+        mock_run_vulnerability_scan.assert_called_once()
+
         cursor.close()
         database_conn.close()
+        mock_run_vulnerability_scan.assert_called_once()
