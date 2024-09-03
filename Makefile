@@ -17,7 +17,7 @@ install:
 	poetry install
 
 .PHONY: dev_install
-install:
+dev_install:
 	pip install poetry
 	poetry install --with dev
 
