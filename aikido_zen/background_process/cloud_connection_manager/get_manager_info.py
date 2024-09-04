@@ -14,7 +14,7 @@ def get_manager_info(connection_manager):
         "dryMode": not connection_manager.block,
         "hostname": socket.gethostname(),
         "version": config.PKG_VERSION,
-        "library": "firewall-python",
+        "library": "python-zen",
         "ipAddress": h.get_ip(),
         "packages": {
             pkg: details["version"]

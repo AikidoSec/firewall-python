@@ -43,7 +43,7 @@ def test_get_manager_info(
     assert (
         connection_manager_info["version"] == "PKG_VERSION"
     )  # Replace with actual version if needed
-    assert connection_manager_info["library"] == "firewall-python"
+    assert connection_manager_info["library"] == "python-zen"
     assert connection_manager_info["ipAddress"] == "192.168.1.1"
     assert connection_manager_info["packages"] == {
         "package1": "1.0.0",

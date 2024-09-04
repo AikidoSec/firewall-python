@@ -46,8 +46,8 @@ classifiers = [
 homepage = "https://www.aikido.dev/runtime/firewall/"
 
 [tool.poetry.urls]
-"Bug Tracker" = "https://github.com/AikidoSec/firewall-python/issues"
-"Source" = "https://github.com/AikidoSec/firewall-python"
+"Bug Tracker" = "https://github.com/AikidoSec/python-zen/issues"
+"Source" = "https://github.com/AikidoSec/python-zen"
 "Homepage" = "https://www.aikido.dev/runtime/firewall"
 "Bug Bounty" = "https://app.intigriti.com/programs/aikido"
 
