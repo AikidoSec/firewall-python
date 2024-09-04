@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 import os
+import json
 load_dotenv()
 firewall_disabled = os.getenv("FIREWALL_DISABLED")
 if firewall_disabled is not None:
@@ -61,6 +62,18 @@ def create_dog_many():
     conn = get_db_connection()
     cursor =  conn.cursor()
     cursor.executemany([f"INSERT INTO dogs (dog_name, isAdmin) VALUES ('%s', FALSE)" % (dog_name)], [])
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return f'Dog {dog_name} created successfully'
+
+@app.route("/create_with_cookie", methods=['GET'])
+def create_dog_with_cookie():
+    dog_name = request.cookies.get('dog_name')
+
+    conn = get_db_connection()
+    cursor =  conn.cursor()
+    cursor.execute(f"INSERT INTO dogs (dog_name, isAdmin) VALUES ('%s', FALSE)" % (dog_name))
     conn.commit()
     cursor.close()
     conn.close()

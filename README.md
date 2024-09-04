@@ -41,6 +41,7 @@ Aikido Firewall for Python 3 is compatible with:
 * ✅ [`psycopg2`](https://pypi.org/project/psycopg2)
 * ✅ [`psycopg`](https://pypi.org/project/psycopg)
 * ✅ [`asyncpg`](https://pypi.org/project/asyncpg)
+* ✅ [`motor`](https://pypi.org/project/motor/)
 
 ## Reporting to your Aikido Security dashboard
 
@@ -68,6 +69,14 @@ To block requests, set the `AIKIDO_BLOCKING` environment variable to `true`.
 
 See [Reporting to Aikido](#reporting-to-your-aikido-security-dashboard) to learn how to send events to Aikido.
 
+## Benchmarks 
+The following table summarizes the performance of both a typical SQL Query and a typical NoSQL Query with and without the firewall, measured in milliseconds :
+| Operation | Avg. time w/o firewall | Avg. time w/ firewall | Delta | Delta in % |
+| --------- | ---------------------- | --------------------- | ----- | ---------- |
+| SQL Query | 1.222 ms | 1.257 ms | +0.035 ms | +3% |
+| NoSQL Query | 1.090 ms | 1.110 ms | +0.020 ms | +2% |
+
+See [benchmarks](benchmarks/) folder for more.
 
 ## Bug bounty program
 

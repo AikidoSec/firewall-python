@@ -2,7 +2,7 @@
 Provides all the functionality for contexts
 """
 
-import threading
+import contextvars
 from urllib.parse import parse_qs
 
 from aikido_firewall.helpers.build_route_from_url import build_route_from_url
@@ -12,7 +12,7 @@ from .wsgi import set_wsgi_attributes_on_context
 from .asgi import set_asgi_attributes_on_context
 
 UINPUT_SOURCES = ["body", "cookies", "query", "headers", "xml"]
-local = threading.local()
+current_context = contextvars.ContextVar("current_context", default=None)
 
 WSGI_SOURCES = ["django", "flask"]
 ASGI_SOURCES = ["quart"]
@@ -21,8 +21,8 @@ ASGI_SOURCES = ["quart"]
 def get_current_context():
     """Returns the current context"""
     try:
-        return local.current_context
-    except AttributeError:
+        return current_context.get()
+    except Exception:
         return None
 
 
@@ -86,7 +86,7 @@ class Context:
         """
         Set the current context
         """
-        local.current_context = self
+        current_context.set(self)
 
     def get_route_metadata(self):
         """Returns a route_metadata object"""
