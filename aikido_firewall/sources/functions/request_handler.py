@@ -17,11 +17,12 @@ def request_handler(stage, status_code=0):
 
         # Create a lifecycle cache
         IPCLifecycleCache(get_current_context())
-
-    elif stage == "pre_response":
+        return None
+    if stage == "pre_response":
         return pre_response()
-    elif stage == "post_response":
+    if stage == "post_response":
         return post_response(status_code)
+    return None
 
 
 def pre_response():
@@ -73,7 +74,7 @@ def pre_response():
     if ratelimit_res["success"] and ratelimit_res["data"]["block"]:
 
         message = "You are rate limited by Aikido firewall"
-        if ratelimit_res["data"]["trigger"] is "ip":
+        if ratelimit_res["data"]["trigger"] == "ip":
             message += f" (Your IP: {context.remote_address})"
         return (message, 429)
 

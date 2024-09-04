@@ -2,8 +2,9 @@
 Contains the `IPCLifecycleCache` cache for the duration of a single request
 """
 
+import threading
 import contextvars
-from .comms import get_comms
+import aikido_firewall.background_process.comms as comms
 
 #  cache needs to be per thread, not shared in the entire process
 ipc_lifecycle_cache = contextvars.ContextVar("ipc_lifecycle_cache", default=None)
@@ -29,9 +30,9 @@ class IPCLifecycleCache:
     def populate(self, context):
         """Fetches data over IPC"""
         # Fetch bypassed ips:
-        if not get_comms():
+        if not comms.get_comms():
             return
-        res = get_comms().send_data_to_bg_process(
+        res = comms.get_comms().send_data_to_bg_process(
             action="FETCH_INITIAL_METADATA",
             obj={"route_metadata": context.get_route_metadata()},
             receive=True,

@@ -4,4 +4,4 @@ disable = unused-argument
 ignore-patterns=(.)*_test\.py,test_(.)*\.py
 
 [MESSAGES CONTROL]
-disable=too-few-public-methods
+disable=too-few-public-methods,broad-exception-caught

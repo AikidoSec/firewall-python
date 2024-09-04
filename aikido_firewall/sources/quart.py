@@ -49,6 +49,7 @@ async def handle_request_wrapper(former_handle_request, quart_app, req):
         logger.debug("Exception in handle_request : %s", e)
 
     # Fetch response and run post_response handler :
+    # pylint:disable=import-outside-toplevel # We don't want to install this by default
     from werkzeug.exceptions import HTTPException
 
     try:
@@ -107,6 +108,7 @@ def on_quart_import(quart):
                 return await send_status_code_and_text(send, pre_response)
         return await former_asgi_app(quart_app, scope, receive, send)
 
+    # pylint:disable=no-member # Pylint has issues with the wrapping
     setattr(modified_quart.Quart, "__call__", aikido___call__)
     setattr(modified_quart.Quart, "handle_request", aikido_handle_request)
     setattr(modified_quart.Quart, "asgi_app", aikido_asgi_app)

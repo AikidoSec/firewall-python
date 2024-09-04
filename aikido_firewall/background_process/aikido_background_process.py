@@ -27,7 +27,7 @@ class AikidoBackgroundProcess:
     """
     Aikido's background process consists of 2 threads :
     - (main) Listening thread which listens on an IPC socket for incoming data
-    - (spawned) reporting thread which will collect the IPC data and send it to a CloudConnectionManager
+    - (spawned) reporting thread which collects IPC data and send it to a CloudConnectionManager
     """
 
     def __init__(self, address, key):
