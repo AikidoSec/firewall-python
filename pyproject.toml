@@ -43,12 +43,12 @@ classifiers = [
     "Programming Language :: Python :: 3 :: Only",
     "Topic :: Security",
 ]
-homepage = "https://www.aikido.dev/runtime/firewall/"
+homepage = "https://www.aikido.dev/zen/"
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/AikidoSec/python-zen/issues"
 "Source" = "https://github.com/AikidoSec/python-zen"
-"Homepage" = "https://www.aikido.dev/runtime/firewall"
+"Homepage" = "https://www.aikido.dev/zen"
 "Bug Bounty" = "https://app.intigriti.com/programs/aikido"
 
 [tool.poetry.dependencies]

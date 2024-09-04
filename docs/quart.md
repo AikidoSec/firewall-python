@@ -39,7 +39,7 @@ Since this removes all other middleware.
 
 ## Blocking mode
 
-By default, the firewall will run in non-blocking mode. When it detects an attack, the attack will be reported to Aikido and continue executing the call.
+By default, Zen will run in non-blocking mode. When it detects an attack, the attack will be reported to Aikido and continue executing the call.
 
 You can enable blocking mode by setting the environment variable `AIKIDO_BLOCKING` to `true`:
 
@@ -51,7 +51,7 @@ It's recommended to enable this on your staging environment for a considerable a
 
 ## Debug mode
 
-If you need to debug the firewall, you can run your code with the environment variable `AIKIDO_DEBUG` set to `true`:
+If you need to debug Zen, you can run your code with the environment variable `AIKIDO_DEBUG` set to `true`:
 
 ```sh
 AIKIDO_DEBUG=true

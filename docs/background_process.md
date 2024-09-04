@@ -1,6 +1,6 @@
-# How the Python Firewall Handles Communication
+# How Aikido Zen for Python Handles Communication
 
-The Python firewall utilizes Inter-Process Communication (IPC) to facilitate communication between threads and processes.
+Aikido Zen for Python utilizes Inter-Process Communication (IPC) to facilitate communication between threads and processes.
 ## Explainer on IPC
 
 Inter-Process Communication (IPC) is a mechanism that enables processes to exchange data and synchronize their actions. In Python, IPC is crucial for coordinating tasks in multi-process applications, where processes do not share memory.

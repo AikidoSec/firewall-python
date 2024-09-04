@@ -1,14 +1,14 @@
-![Aikido Firewall for Python 3](https://aikido-production-staticfiles-public.s3.eu-west-1.amazonaws.com/banner-pypi.svg)
+![Aikido Zen for Python 3](https://aikido-production-staticfiles-public.s3.eu-west-1.amazonaws.com/banner-pypi.svg)
 
-# Aikido Firewall for Python 3
+# Aikido Zen for Python 3
 
-Aikido Firewall is an embedded Web Application Firewall that autonomously protects your Python apps against common and critical attacks.
+Aikido Zen is an embedded Web Application Firewall that autonomously protects your Python apps against common and critical attacks.
 
 It protects your Python apps by preventing user input containing dangerous strings, which allow SQL injections. It runs on the same server as your python app for simple [installation](#installation) and zero maintenance.
 
 ## Features
 
-Firewall autonomously protects your Python applications against:
+Zen autonomously protects your Python applications against:
 
 * 🛡️ [NoSQL injection attacks](https://www.aikido.dev/blog/web-application-security-vulnerabilities)
 * 🛡️ [SQL injection attacks]([https://www.aikido.dev/blog/web-application-security-vulnerabilities](https://owasp.org/www-community/attacks/SQL_Injection))
@@ -16,13 +16,13 @@ Firewall autonomously protects your Python applications against:
 * 🛡️ [Path traversal attacks](https://owasp.org/www-community/attacks/Path_Traversal)
 * 🛡️ [Server-side request forgery (SSRF)](./docs/ssrf.md)
 
-Firewall operates autonomously on the same server as your Python app to:
+Zen operates autonomously on the same server as your Python app to:
 
 * ✅ Secure your app like a classic web application firewall (WAF), but with none of the infrastructure or cost.
 
 ## Supported libraries and frameworks
 
-Aikido Firewall for Python 3 is compatible with:
+Aikido Zen for Python 3 is compatible with:
 
 ### Web frameworks
 
@@ -46,13 +46,13 @@ Aikido Firewall for Python 3 is compatible with:
 
 > Aikido Security is a developer-first software security platform. We scan your source code & cloud to show you which vulnerabilities are actually important.
 
-You can use some of Firewalls's features without Aikido, but you will get the most value by reporting your data to Aikido.
+You can use some of Zen's features without Aikido, but you will get the most value by reporting your data to Aikido.
 
 You will need an Aikido account and a token to report events to Aikido. If you don't have an account, you can [sign up for free](https://app.aikido.dev/login).
 
 Here's how:
 * [Log in to your Aikido account](https://app.aikido.dev/login).
-* Go to [Firewall](https://app.aikido.dev/runtime/services).
+* Go to [Zen](https://app.aikido.dev/runtime/services).
 * Go to apps.
 * Click on **Add app**.
 * Choose a name for your app.
@@ -62,7 +62,7 @@ Here's how:
 
 ## Running in production (blocking) mode
 
-By default, Firewall will only detect and report attacks to Aikido.
+By default, Zen will only detect and report attacks to Aikido.
 
 To block requests, set the `AIKIDO_BLOCKING` environment variable to `true`.
 

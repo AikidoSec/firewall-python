@@ -1,4 +1,4 @@
-# Contributing to Aikido Security's firewall for Python
+# Contributing to Aikido Zen for Python 3
 
 First off, thanks for taking the time to contribute! ❤️
 
@@ -12,7 +12,7 @@ All types of contributions are encouraged and valued. See the [Table of Contents
 
 ## Table of Contents
 
-- [Contributing to Aikido Security's firewall for Python](#contributing-to-aikido-securitys-firewall-for-python)
+- [Contributing to Aikido Zen for Python 3](#contributing-to-aikido-zen-for-python-3)
   - [Table of Contents](#table-of-contents)
   - [I Have a Question](#i-have-a-question)
   - [I Want To Contribute](#i-want-to-contribute)
@@ -82,7 +82,7 @@ Once it's filed:
 
 ### Suggesting Enhancements
 
-This section guides you through submitting an enhancement suggestion for firewall, **including completely new features and minor improvements to existing functionality**. Following these guidelines will help maintainers and the community to understand your suggestion and find related suggestions.
+This section guides you through submitting an enhancement suggestion for Zen, **including completely new features and minor improvements to existing functionality**. Following these guidelines will help maintainers and the community to understand your suggestion and find related suggestions.
 
 #### Before Submitting an Enhancement
 
@@ -98,7 +98,7 @@ Enhancement suggestions are tracked as [GitHub issues](https://github.com/Aikido
 - Use a **clear and descriptive title** for the issue to identify the suggestion.
 - Provide a **step-by-step description of the suggested enhancement** in as many details as possible.
 - **Describe the current behavior** and **explain which behavior you expected to see instead** and why. At this point you can also tell which alternatives do not work for you.
-- **Explain why this enhancement would be useful** to most firewall users. You may also want to point out the other projects that solved it better and which could serve as inspiration.
+- **Explain why this enhancement would be useful** to most Zen users. You may also want to point out the other projects that solved it better and which could serve as inspiration.
 
 ### Your First Code Contribution
 
