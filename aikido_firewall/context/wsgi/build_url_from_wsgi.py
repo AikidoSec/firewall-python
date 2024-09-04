@@ -1,6 +1,5 @@
 """Exports `build_url_from_wsgi`"""
 
-from aikido_firewall.helpers.logging import logger
 
 def build_url_from_wsgi(request):
     """Builds a URL from the different parts in a WSGI request"""
