@@ -25,3 +25,6 @@ Overview :
   - It runs 4 processes, called workers, (**multi-process**) which handles requests **multi-threaded**
   - This application is **asynchronous**
   - Runs on 8096. Without aikido runs on 8097
+- `quart-mongo/` is a Quart app using Mongo (Motor)
+  - This application is **asynchronous**
+  - Runs on 8098. Without aikido runs on 8099
