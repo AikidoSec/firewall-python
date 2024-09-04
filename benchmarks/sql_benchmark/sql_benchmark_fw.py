@@ -33,10 +33,8 @@ def run_sql_fw(sql):
     import aikido_firewall.sinks.pymysql
     conn = database_conn()
     cursor = conn.cursor()
-    query = "SELECT * FROM dogs"
-
     t_start = time.time()
-    cursor.execute(query)
+    cursor.execute(sql)
     t_end = time.time()
 
     return t_end - t_start # Delta
