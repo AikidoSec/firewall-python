@@ -70,7 +70,7 @@ See [Reporting to Aikido](#reporting-to-your-aikido-security-dashboard) to learn
 
 ## Benchmarks 
 The following table summarizes the performance of both a typical SQL Query and a typical NoSQL Query with and without the firewall, measured in milliseconds :
-| Algorithm | Avg. time w/o firewall | Avg. time w/ firewall | Delta | Delta in % |
+| Operation | Avg. time w/o firewall | Avg. time w/ firewall | Delta | Delta in % |
 | --------- | ---------------------- | --------------------- | ----- | ---------- |
 | SQL Query | 1.222 ms | 1.257 ms | +0.035 ms | +3% |
 | NoSQL Query | 1.090 ms | 1.110 ms | +0.020 ms | +2% |
