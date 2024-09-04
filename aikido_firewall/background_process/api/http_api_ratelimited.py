@@ -2,11 +2,11 @@
 Exports ReportingApiHTTPRatelimited
 """
 
-from aikido_firewall.background_process.api.http_api import ReportingApiHTTP
+import aikido_firewall.background_process.api.http_api as http_api
 import aikido_firewall.helpers.get_current_unixtime_ms as t
 
 
-class ReportingApiHTTPRatelimited(ReportingApiHTTP):
+class ReportingApiHTTPRatelimited(http_api.ReportingApiHTTP):
     """HTTP Reporting API that has ratelimiting support"""
 
     def __init__(self, reporting_url, max_events_per_interval, interval_in_ms):
