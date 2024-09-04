@@ -41,6 +41,7 @@ Aikido Firewall for Python 3 is compatible with:
 * ✅ [`psycopg2`](https://pypi.org/project/psycopg2)
 * ✅ [`psycopg`](https://pypi.org/project/psycopg)
 * ✅ [`asyncpg`](https://pypi.org/project/asyncpg)
+* ✅ [`motor`](https://pypi.org/project/motor/)
 
 ## Reporting to your Aikido Security dashboard
 
