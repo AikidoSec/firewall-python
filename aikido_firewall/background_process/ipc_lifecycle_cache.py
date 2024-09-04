@@ -2,18 +2,18 @@
 Contains the `IPCLifecycleCache` cache for the duration of a single request
 """
 
-import threading
+import contextvars
 from .comms import get_comms
 
 #  cache needs to be per thread, not shared in the entire process
-local = threading.local()
+ipc_lifecycle_cache = contextvars.ContextVar("ipc_lifecycle_cache", default=None)
 
 
 def get_cache():
     """Returns the current cache"""
     try:
-        return local.ipc_lifecycle_cache
-    except AttributeError:
+        return ipc_lifecycle_cache.get()
+    except Exception:
         return None
 
 
@@ -54,4 +54,4 @@ class IPCLifecycleCache:
 
     def save(self):
         """Save the current cache"""
-        local.ipc_lifecycle_cache = self
+        ipc_lifecycle_cache.set(self)

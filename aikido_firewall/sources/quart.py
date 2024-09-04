@@ -37,7 +37,7 @@ async def handle_request_wrapper(former_handle_request, quart_app, req):
         context = get_current_context()
         if context:
             if req.is_json:
-                context.body = req.get_json()
+                context.body = await req.get_json()
             elif req.form:
                 context.body = await req.form
             else:
