@@ -20,8 +20,11 @@ def generate_aikido_function(op, former_func):
 
         command = None
         if len(args) != 0 and hasattr(args[0], "__iter__"):
+            # Check if the argument is an iterable i.e. list, dict, tuple
+            # If it is we join it with spaces to run the shell_injection algorithm.
             command = " ".join(args[0])
         elif len(args) != 0 and isinstance(args[0], str):
+            # Check if the argument is a regular string, run that through shell_injection algo.
             command = args[0]
 
         # For all operations above: call, run, check_call, Popen, check_output, default value
