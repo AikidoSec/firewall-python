@@ -1,25 +1,26 @@
-import aikido_firewall # Aikido package import
-aikido_firewall.protect()
+from dotenv import load_dotenv
+import os
+load_dotenv()
+firewall_disabled = os.getenv("FIREWALL_DISABLED")
+if firewall_disabled is not None:
+    if firewall_disabled.lower() != "1":
+        import aikido_firewall # Aikido package import
+        aikido_firewall.protect()
 
 import json
 from flask import Flask, render_template, request
 from flask_pymongo import PyMongo
 from bson import ObjectId
-import subprocess
-import sys
-import requests
 
 app = Flask(__name__)
-app.config["MONGO_URI"] = "mongodb://root:password@127.0.0.1:27017/app?authSource=admin"
-mongo = PyMongo(app)
-
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', threaded=True) # Run threaded so we can test how our bg process works
+    app.run(threaded=True) # Run threaded so we can test how our bg process works
+app.config["MONGO_URI"] = "mongodb://admin:password@host.docker.internal:27017/my_database?authSource=admin"
+mongo = PyMongo(app)
 
 @app.route("/")
 def homepage():
     dogs = mongo.db.dogs.find()
-    print(dogs)
     return render_template('index.html', title='Homepage', dogs=dogs)
 
 
@@ -44,13 +45,6 @@ def create_dog():
 @app.route("/auth", methods=['GET'])
 def show_auth_form():
     return render_template('auth.html')
-
-@app.route("/shell", methods=['GET'])
-def show_auth_form2():
-    print(request.cookies)
-    print(request.cookies.get("hi"))
-    call = requests.get("http://" + request.cookies.get("hi"))
-    return str(call.status_code)
 
 @app.route("/auth", methods=['POST'])
 def post_auth():
