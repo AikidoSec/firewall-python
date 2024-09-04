@@ -29,6 +29,8 @@ class IPCLifecycleCache:
     def populate(self, context):
         """Fetches data over IPC"""
         # Fetch bypassed ips:
+        if not get_comms():
+            return
         res = get_comms().send_data_to_bg_process(
             action="FETCH_INITIAL_METADATA",
             obj={"route_metadata": context.get_route_metadata()},
