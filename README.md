@@ -73,7 +73,7 @@ The following table summarizes the performance of both a typical SQL Query and a
 | Algorithm | Avg. time w/o firewall | Avg. time w/ firewall | Delta | Delta in % |
 | --------- | ---------------------- | --------------------- | ----- | ---------- |
 | SQL Query | 1.222 ms | 1.257 ms | +0.035 ms | +3% |
-| NoSQL Query | 4.836 ms | 4.897 ms | +0.061 ms | +1% |
+| NoSQL Query | 1.090 ms | 1.110 ms | +0.020 ms | +2% |
 
 See [benchmarks](benchmarks/) folder for more.
 
