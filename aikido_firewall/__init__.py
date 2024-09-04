@@ -37,29 +37,32 @@ def protect(mode="daemon"):
         logger.debug("Not starting the background process, daemon disabled.")
 
     # Import sources
-    import aikido_firewall.sources.django
-    import aikido_firewall.sources.flask
-    import aikido_firewall.sources.quart
-    import aikido_firewall.sources.xml
-    import aikido_firewall.sources.lxml
+    try:
+        import aikido_firewall.sources.django
+        import aikido_firewall.sources.flask
+        import aikido_firewall.sources.quart
+        import aikido_firewall.sources.xml
+        import aikido_firewall.sources.lxml
 
-    import aikido_firewall.sources.gunicorn
-    import aikido_firewall.sources.uwsgi
+        import aikido_firewall.sources.gunicorn
+        import aikido_firewall.sources.uwsgi
 
-    # Import DB Sinks
-    import aikido_firewall.sinks.pymysql
-    import aikido_firewall.sinks.mysqlclient
-    import aikido_firewall.sinks.pymongo
-    import aikido_firewall.sinks.psycopg2
-    import aikido_firewall.sinks.psycopg
-    import aikido_firewall.sinks.asyncpg
-    import aikido_firewall.sinks.builtins
-    import aikido_firewall.sinks.os
-    import aikido_firewall.sinks.http_client
-    import aikido_firewall.sinks.socket
+        # Import DB Sinks
+        import aikido_firewall.sinks.pymysql
+        import aikido_firewall.sinks.mysqlclient
+        import aikido_firewall.sinks.pymongo
+        import aikido_firewall.sinks.psycopg2
+        import aikido_firewall.sinks.psycopg
+        import aikido_firewall.sinks.asyncpg
+        import aikido_firewall.sinks.builtins
+        import aikido_firewall.sinks.os
+        import aikido_firewall.sinks.http_client
+        import aikido_firewall.sinks.socket
 
-    # Import shell sinks
-    import aikido_firewall.sinks.os_system
-    import aikido_firewall.sinks.subprocess
+        # Import shell sinks
+        import aikido_firewall.sinks.os_system
+        import aikido_firewall.sinks.subprocess
+    except Exception as e:
+        logger.debug("Exception occured trying to wrap 'n hook : %s", e)
 
     logger.info("Aikido python firewall v%s starting.", PKG_VERSION)
