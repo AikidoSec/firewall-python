@@ -69,12 +69,10 @@ To block requests, set the `AIKIDO_BLOCKING` environment variable to `true`.
 See [Reporting to Aikido](#reporting-to-your-aikido-security-dashboard) to learn how to send events to Aikido.
 
 ## Benchmarks 
-The following table summarizes the performance of a SQL algorithm with and without a firewall, measured in milliseconds (See [sql_benchmark](benchmarks/sql_benchmark) folder) :
+The following table summarizes the performance of a typical SQL algorithm with and without the firewall, measured in milliseconds (See [sql_benchmark](benchmarks/sql_benchmark) folder) :
 | Algorithm | Avg. time w/o firewall | Avg. time w/ firewall | Delta | Delta in % |
 | --------- | ---------------------- | --------------------- | ----- | ---------- |
 | SQL Query | 1.165 ms | 1.195 ms | +0.030 ms | +3% |
-
-> Note : This algorithm was run locally and we added a simulated delay of 1ms to each query in order to make it more realistic and closer to a cloud environment.
 
 See [benchmarks](benchmarks/) folder for more benchmarks
 
