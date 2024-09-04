@@ -69,26 +69,15 @@ To block requests, set the `AIKIDO_BLOCKING` environment variable to `true`.
 See [Reporting to Aikido](#reporting-to-your-aikido-security-dashboard) to learn how to send events to Aikido.
 
 ## Benchmarks 
-The following table summarizes the performance of a SQL algorithm with and without a firewall, measured in microseconds (See [sql_benchmark](benchmarks/sql_benchmark) folder) :
+The following table summarizes the performance of a SQL algorithm with and without a firewall, measured in milliseconds (See [sql_benchmark](benchmarks/sql_benchmark) folder) :
 | Algorithm | Avg. time w/o firewall | Avg. time w/ firewall | Delta | Delta in % |
 | --------- | ---------------------- | --------------------- | ----- | ---------- |
-| SQL Algorithm | 1165.79 µs | 1195.22 µs | +29.21 µs | +3% |
+| SQL Query | 1.165 ms | 1.195 ms | +0.030 ms | +3% |
 
 > Note : This algorithm was run locally and we added a simulated delay of 1ms to each query in order to make it more realistic and closer to a cloud environment.
-> 
-The following table presents the average delay introduced by the firewall for various routes in a Flask-MySQL application. The delays are measured in milliseconds (See [benchmark](benchmarks/flask-mysql-benchmarks.js) file) :
-| Route | Avg. delay due to firewall |
-| ----- | -------------------------- |
-| 🚅 test_id_route | 4.93 ms |
-| 🚅 test_40mb_payload | 31.80 ms |
-| 🚅 test_open_file | 4.19 ms |
-| 🚅 test_execute_shell | 4.52 ms |
-| 🚅 test_create_with_big_body | 5.05 ms |
-| 🚅 test_normal_route | 5.01 ms |
-| 🚅 test_multiple_queries | 4.76 ms |
-| 🚅 test_multiple_queries_with_big_body | 5.13 ms |
 
-The test_multiple_queries route, which executes **20 MySQL queries**, has an average added delay of 4.76 ms.
+See [benchmarks](benchmarks/) folder for more benchmarks
+
 ## Bug bounty program
 
 Our bug bounty program is public and can be found by all registered Intigriti users [here](https://app.intigriti.com/researcher/programs/aikido/aikidoruntime)
