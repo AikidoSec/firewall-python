@@ -70,10 +70,12 @@ See [Reporting to Aikido](#reporting-to-your-aikido-security-dashboard) to learn
 
 ## Benchmarks 
 The following table summarizes the performance of a SQL algorithm with and without a firewall, measured in microseconds (See [sql_benchmark](benchmarks/sql_benchmark) folder) :
-| Algorithm | Avg. time w/o firewall | Avg. time w/ firewall | Delta |
-| --------- | ---------------------- | --------------------- | ----- |
-| SQL Algorithm | 165.79 µs | 195.22 µs | +29.21 µs |
+| Algorithm | Avg. time w/o firewall | Avg. time w/ firewall | Delta | Delta in % |
+| --------- | ---------------------- | --------------------- | ----- | ---------- |
+| SQL Algorithm | 1165.79 µs | 1195.22 µs | +29.21 µs | +3% |
 
+> Note : This algorithm was run locally and we added a simulated delay of 1ms to each query in order to make it more realistic and closer to a cloud environment.
+> 
 The following table presents the average delay introduced by the firewall for various routes in a Flask-MySQL application. The delays are measured in milliseconds (See [benchmark](benchmarks/flask-mysql-benchmarks.js) file) :
 | Route | Avg. delay due to firewall |
 | ----- | -------------------------- |
