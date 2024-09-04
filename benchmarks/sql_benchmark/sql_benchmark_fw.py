@@ -35,6 +35,7 @@ def run_sql_fw(sql):
     cursor = conn.cursor()
     t_start = time.time()
     cursor.execute(sql)
+    time.sleep(1/1000) # 1ms simulated cloud delay
     t_end = time.time()
 
     return t_end - t_start # Delta

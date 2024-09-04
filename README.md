@@ -72,7 +72,7 @@ See [Reporting to Aikido](#reporting-to-your-aikido-security-dashboard) to learn
 The following table summarizes the performance of a typical SQL algorithm with and without the firewall, measured in milliseconds (See [sql_benchmark](benchmarks/sql_benchmark) folder) :
 | Algorithm | Avg. time w/o firewall | Avg. time w/ firewall | Delta | Delta in % |
 | --------- | ---------------------- | --------------------- | ----- | ---------- |
-| SQL Query | 1.165 ms | 1.195 ms | +0.030 ms | +3% |
+| SQL Query | 1.222 ms | 1.257 ms | +0.035 ms | +3% |
 
 See [benchmarks](benchmarks/) folder for more benchmarks
 
