@@ -74,8 +74,8 @@ class AikidoBackgroundProcess:
 
         api = ReportingApiHTTPRatelimited(
             "https://guard.aikido.dev/",
-            max_events_per_interval=2,
-            interval_in_ms=15 * 1000,
+            max_events_per_interval=100,
+            interval_in_ms=60 * 60 * 1000,
         )
         # We need to pass along the scheduler so that the heartbeat also gets sent
         self.connection_manager = CloudConnectionManager(
