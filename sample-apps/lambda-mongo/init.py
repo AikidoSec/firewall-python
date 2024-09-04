@@ -1,7 +1,7 @@
 import json
 import os
 from pymongo import MongoClient
-from aikido_firewall.aws_lambda import protect
+from aikido_zen.aws_lambda import protect
 
 class Dog:
     def __init__(self, dog_name, pswd):

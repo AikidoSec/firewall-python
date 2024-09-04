@@ -8,8 +8,8 @@ clean:
 
 .PHONY: lint
 lint:
-	poetry run black aikido_firewall/
-	poetry run pylint aikido_firewall/
+	poetry run black aikido_zen/
+	poetry run pylint aikido_zen/
 
 .PHONY: install
 install:
@@ -18,7 +18,7 @@ install:
 
 .PHONY: test
 test:
-	poetry run pytest aikido_firewall/
+	poetry run pytest aikido_zen/
 
 .PHONY: end2end
 end2end:
@@ -26,7 +26,7 @@ end2end:
 
 .PHONY: cov
 cov:
-	poetry run pytest aikido_firewall/ --cov=aikido_firewall --cov-report=xml
+	poetry run pytest aikido_zen/ --cov=aikido_zen --cov-report=xml
 
 .PHONY: benchmark
 benchmark:
