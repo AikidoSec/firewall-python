@@ -16,6 +16,7 @@ from aikido_firewall.background_process import get_comms
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.helpers.get_clean_stacktrace import get_clean_stacktrace
 from aikido_firewall.helpers.blocking_enabled import is_blocking_enabled
+from aikido_firewall.background_process.ipc_lifecycle_cache import get_cache
 from .sql_injection.context_contains_sql_injection import context_contains_sql_injection
 from .nosql_injection.check_context import check_context_for_nosql_injection
 from .ssrf import scan_for_ssrf_in_request
@@ -25,7 +26,6 @@ from .shell_injection.check_context_for_shell_injection import (
 from .path_traversal.check_context_for_path_traversal import (
     check_context_for_path_traversal,
 )
-from aikido_firewall.background_process.ipc_lifecycle_cache import get_cache
 
 
 def run_vulnerability_scan(kind, op, args):

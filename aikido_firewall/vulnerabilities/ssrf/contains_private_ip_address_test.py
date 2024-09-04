@@ -147,6 +147,7 @@ private_ips = [
     "fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff",
     "fd00:ec2::254",
     "169.254.169.254",
+    "localhost",
 ]
 
 invalid_ips = [

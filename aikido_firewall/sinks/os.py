@@ -4,7 +4,7 @@ Sink module for python's `os`
 
 import copy
 import importhook
-from aikido_firewall.vulnerabilities import run_vulnerability_scan
+import aikido_firewall.vulnerabilities as vulns
 
 # File functions :
 OS_FILE_FUNCTIONS = [
@@ -20,7 +20,7 @@ OS_FILE_FUNCTIONS = [
     "remove",
     "symlink",
     "link",
-    "makedirs",
+    #    "makedirs", # Makedirs uses mkdir
     "walk",
 ]
 OS_PATH_FUNCTIONS = [
@@ -37,8 +37,14 @@ def generate_aikido_function(op, former_func):
     """
 
     def aikido_new_func(*args, op=op, former_func=former_func, **kwargs):
-        #  args[0] : filename
-        run_vulnerability_scan(kind="path_traversal", op=f"os.{op}", args=(args[0],))
+        if len(args) > 0 and isinstance(args[0], str):  #  args[0] : filename
+            vulns.run_vulnerability_scan(
+                kind="path_traversal", op=f"os.{op}", args=(args[0],)
+            )
+        if len(args) > 1 and isinstance(args[1], str):  # args[1] : Could be dst folder
+            vulns.run_vulnerability_scan(
+                kind="path_traversal", op=f"os.{op}", args=(args[1],)
+            )
         return former_func(*args, **kwargs)
 
     return aikido_new_func
