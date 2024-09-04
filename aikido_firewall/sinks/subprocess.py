@@ -4,8 +4,7 @@ Sink module for `subprocess`
 
 import copy
 import importhook
-from aikido_firewall.helpers.logging import logger
-from aikido_firewall.vulnerabilities import run_vulnerability_scan
+import aikido_firewall.vulnerabilities as vulns
 
 SUBPROCESS_OPERATIONS = ["call", "run", "check_call", "Popen", "check_output"]
 
@@ -17,18 +16,21 @@ def generate_aikido_function(op, former_func):
     """
 
     def aikido_new_func(*args, op=op, former_func=former_func, **kwargs):
-        logger.debug("Wrapper - `subprocess` on %s() function", op)
         shell_enabled = kwargs.get("shell")
 
-        if isinstance(args[0], list):
+        command = None
+        if len(args) != 0 and hasattr(args[0], "__iter__"):
+            # Check if the argument is an iterable i.e. list, dict, tuple
+            # If it is we join it with spaces to run the shell_injection algorithm.
             command = " ".join(args[0])
-        else:
+        elif len(args) != 0 and isinstance(args[0], str):
+            # Check if the argument is a regular string, run that through shell_injection algo.
             command = args[0]
 
         # For all operations above: call, run, check_call, Popen, check_output, default value
         # of the shell property is False.
-        if shell_enabled is True:
-            run_vulnerability_scan(
+        if command and shell_enabled == True:
+            vulns.run_vulnerability_scan(
                 kind="shell_injection",
                 op=f"subprocess.{op}",
                 args=(command,),

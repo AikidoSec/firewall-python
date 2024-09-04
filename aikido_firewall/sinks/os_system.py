@@ -4,7 +4,7 @@ Sink module for `os`, wrapping os.system
 
 import copy
 import importhook
-from aikido_firewall.vulnerabilities import run_vulnerability_scan
+import aikido_firewall.vulnerabilities as vulns
 
 
 @importhook.on_import("os")
@@ -17,10 +17,14 @@ def on_os_import(os):
 
     former_system_func = copy.deepcopy(os.system)
 
-    def aikido_new_system(*args, former_system_func=former_system_func, **kwargs):
-        #  args[0]: Command
-        run_vulnerability_scan(kind="shell_injection", op="os.system", args=(args[0],))
-        return former_system_func(*args, **kwargs)
+    def aikido_new_system(
+        command, *args, former_system_func=former_system_func, **kwargs
+    ):
+        if isinstance(command, str):
+            vulns.run_vulnerability_scan(
+                kind="shell_injection", op="os.system", args=(command,)
+            )
+        return former_system_func(command, *args, **kwargs)
 
     setattr(os, "system", aikido_new_system)
     setattr(modified_os, "system", aikido_new_system)
