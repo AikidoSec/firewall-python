@@ -33,16 +33,20 @@ async def handle_request_wrapper(former_handle_request, quart_app, req):
     """
     # At this stage no middleware is called yet, running pre_response is
     # not what we need to do now, but we can store the body inside context :
-    context = get_current_context()
-    if context:
-        if req.is_json:
-            context.body = req.get_json()
-        elif req.form:
-            context.body = await req.form
-        else:
-            data = await req.data
-            context.body = data.decode("utf-8")
-        context.set_as_current_context()
+    try:
+        context = get_current_context()
+        if context:
+            if req.is_json:
+                context.body = await req.get_json()
+            elif req.form:
+                context.body = await req.form
+            else:
+                data = await req.data
+                context.body = data.decode("utf-8")
+            context.cookies = req.cookies.to_dict()
+            context.set_as_current_context()
+    except Exception as e:
+        logger.debug("Exception in handle_request : %s", e)
 
     # Fetch response and run post_response handler :
     from werkzeug.exceptions import HTTPException

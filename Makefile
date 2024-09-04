@@ -16,6 +16,12 @@ install:
 	pip install poetry
 	poetry install
 
+.PHONY: dev_install
+dev_install:
+	pip install poetry
+	poetry install --with=dev
+
+
 .PHONY: test
 test:
 	poetry run pytest aikido_firewall/
