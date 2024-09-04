@@ -171,9 +171,7 @@ def test_extract_strings_from_user_input_cached_no_context(mock_context):
 def test_extract_strings_from_user_input_cached_with_context_no_cache(mock_context):
     # Arrange
     obj = "some input object"
-    with patch(
-        "aikido_zen.context.get_current_context", return_value=mock_context
-    ):
+    with patch("aikido_zen.context.get_current_context", return_value=mock_context):
         with patch(
             "aikido_zen.helpers.extract_strings_from_user_input.extract_strings_from_user_input",
             side_effect=mock_extract_strings_from_user_input,
@@ -193,9 +191,7 @@ def test_extract_strings_from_user_input_cached_with_context_cache_hit(mock_cont
         "input1": "cached_value1",
         "input2": "cached_value2",
     }
-    with patch(
-        "aikido_zen.context.get_current_context", return_value=mock_context
-    ):
+    with patch("aikido_zen.context.get_current_context", return_value=mock_context):
         # Act
         result = extract_strings_from_user_input_cached(obj, "source1")
 
@@ -213,9 +209,7 @@ def test_extract_strings_from_user_input_cached_with_context_cache_update(mock_c
     # Arrange
     obj = "some input object"
     mock_context.parsed_userinput["source1"] = {}
-    with patch(
-        "aikido_zen.context.get_current_context", return_value=mock_context
-    ):
+    with patch("aikido_zen.context.get_current_context", return_value=mock_context):
         with patch(
             "aikido_zen.helpers.extract_strings_from_user_input.extract_strings_from_user_input",
             side_effect=mock_extract_strings_from_user_input,
@@ -231,9 +225,7 @@ def test_extract_strings_from_user_input_cached_with_context_cache_update(mock_c
 def test_extract_strings_from_user_input_cached_multiple_sources(mock_context):
     # Arrange
     obj = "some input object"
-    with patch(
-        "aikido_zen.context.get_current_context", return_value=mock_context
-    ):
+    with patch("aikido_zen.context.get_current_context", return_value=mock_context):
         with patch(
             "aikido_zen.helpers.extract_strings_from_user_input.extract_strings_from_user_input",
             side_effect=mock_extract_strings_from_user_input,
