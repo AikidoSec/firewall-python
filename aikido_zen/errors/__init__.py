@@ -7,7 +7,7 @@ from aikido_zen.helpers.attack_human_name import attack_human_name
 
 def generate_default_message(kind):
     """Generates a default message based on kind of attack"""
-    return "Aikido firewall has blocked " + attack_human_name(kind)
+    return "Aikido Zen has blocked " + attack_human_name(kind)
 
 
 class AikidoException(Exception):
@@ -40,7 +40,7 @@ class AikidoNoSQLInjection(AikidoException):
 class AikidoRateLimiting(AikidoException):
     """Exception caused when a page was rate limited"""
 
-    def __init__(self, message="You are rate limited by Aikido firewall."):
+    def __init__(self, message="You are rate limited by Aikido Zen."):
         super().__init__(message)
         self.message = message
 

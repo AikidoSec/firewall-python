@@ -58,7 +58,7 @@ def pre_response():
             action="SHOULD_BLOCK_USER", obj=context.user["id"], receive=True
         )
         if blocked_res["success"] and blocked_res["data"]:
-            return ("You are blocked by Aikido Firewall.", 403)
+            return ("You are blocked by Aikido Zen.", 403)
 
     # Ratelimiting :
     ratelimit_res = comms.send_data_to_bg_process(
@@ -72,7 +72,7 @@ def pre_response():
     )
     if ratelimit_res["success"] and ratelimit_res["data"]["block"]:
 
-        message = "You are rate limited by Aikido firewall"
+        message = "You are rate limited by Aikido Zen"
         if ratelimit_res["data"]["trigger"] is "ip":
             message += f" (Your IP: {context.remote_address})"
         return (message, 429)
