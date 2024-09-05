@@ -5,7 +5,7 @@ import hashlib
 
 
 def hash_aikido_token():
-    """Create's a hash of AIKIDO_TOKEN"""
+    """Creates a hash of AIKIDO_TOKEN"""
     token = os.getenv("AIKIDO_TOKEN")
 
     if isinstance(token, str):
