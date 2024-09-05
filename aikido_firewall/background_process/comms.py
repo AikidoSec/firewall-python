@@ -3,14 +3,9 @@ Holds the globally stored comms object
 Exports the AikidoIPCCommunications class
 """
 
-import os
 import multiprocessing.connection as con
-from multiprocessing import Process
 from threading import Thread
 from aikido_firewall.helpers.logging import logger
-from aikido_firewall.background_process.aikido_background_process import (
-    AikidoBackgroundProcess,
-)
 
 # pylint: disable=invalid-name # This variable does change
 comms = None
@@ -42,30 +37,12 @@ class AikidoIPCCommunications:
         # The key needs to be in byte form
         self.address = address
         self.key = key
-        self.background_process = None
-        if self.key == b"None":
-            logger.warning(
-                "You are running without AIKIDO_TOKEN set, not starting background process.."
-            )
-            self.key = None
 
         # Set as global ipc object :
         reset_comms()
         # pylint: disable=global-statement # This needs to be global
         global comms
         comms = self
-
-    def start_aikido_listener(self):
-        """This will start the aikido process which listens"""
-        if not self.key:
-            # If the key is not set, there isn't going to be any communication with
-            # the aikido server, so we shouldn't start the background process
-            return
-        #  Daemon is set to True so that the process kills itself when the main process dies
-        self.background_process = Process(
-            target=AikidoBackgroundProcess, args=(self.address, self.key), daemon=True
-        )
-        self.background_process.start()
 
     def send_data_to_bg_process(self, action, obj, receive=False):
         """Try-catched send_data_to_bg_process"""
