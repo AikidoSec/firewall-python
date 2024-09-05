@@ -1,4 +1,5 @@
 import pytest
+import socket
 from unittest.mock import MagicMock, patch
 from .get_manager_info import get_manager_info
 
@@ -24,6 +25,12 @@ def mock_connection_manager():
     )
 
 
+# Fixture to patch socket.gethostname
+@pytest.fixture(autouse=True)
+def patch_gethostname(monkeypatch):
+    monkeypatch.setattr(socket, "gethostname", lambda: "test-hostname")
+
+
 @patch("platform.system", return_value="Linux")
 @patch("platform.release", return_value="5.4.0")
 @patch("aikido_firewall.helpers.get_machine_ip.get_ip", return_value="192.168.1.1")
@@ -32,11 +39,9 @@ def test_get_manager_info(
     mock_get_ip,
     mock_platform_release,
     mock_platform_system,
-    mock_gethostname,
     mock_connection_manager,
     monkeypatch,
 ):
-    monkeypatch.setattr("socket.gethostname", lambda: "test-hostname")
     connection_manager_info = get_manager_info(mock_connection_manager)
     print(connection_manager_info)
     assert connection_manager_info["dryMode"] is False
@@ -66,10 +71,9 @@ def test_get_manager_info_with_empty_packages():
     mock_connection_manager = MockCloudConnectionManager(
         block=False, packages={}, serverless=False
     )
-
-    with patch("socket.gethostname", return_value="test-hostname"), patch(
-        "platform.system", return_value="Linux"
-    ), patch("platform.release", return_value="5.4.0"), patch(
+    with patch("platform.system", return_value="Linux"), patch(
+        "platform.release", return_value="5.4.0"
+    ), patch(
         "aikido_firewall.helpers.get_machine_ip.get_ip", return_value="192.168.1.1"
     ):
 
@@ -89,9 +93,9 @@ def test_get_manager_info_with_unsupported_packages():
         serverless=False,
     )
 
-    with patch("socket.gethostname", return_value="test-hostname"), patch(
-        "platform.system", return_value="Linux"
-    ), patch("platform.release", return_value="5.4.0"), patch(
+    with patch("platform.system", return_value="Linux"), patch(
+        "platform.release", return_value="5.4.0"
+    ), patch(
         "aikido_firewall.helpers.get_machine_ip.get_ip", return_value="192.168.1.1"
     ):
 
@@ -108,9 +112,9 @@ def test_get_manager_info_with_non_serverless():
         serverless=False,
     )
 
-    with patch("socket.gethostname", return_value="test-hostname"), patch(
-        "platform.system", return_value="Linux"
-    ), patch("platform.release", return_value="5.4.0"), patch(
+    with patch("platform.system", return_value="Linux"), patch(
+        "platform.release", return_value="5.4.0"
+    ), patch(
         "aikido_firewall.helpers.get_machine_ip.get_ip", return_value="192.168.1.1"
     ):
 
@@ -127,9 +131,9 @@ def test_get_manager_info_with_blocked_connection_manager():
         serverless=False,
     )
 
-    with patch("socket.gethostname", return_value="test-hostname"), patch(
-        "platform.system", return_value="Linux"
-    ), patch("platform.release", return_value="5.4.0"), patch(
+    with patch("platform.system", return_value="Linux"), patch(
+        "platform.release", return_value="5.4.0"
+    ), patch(
         "aikido_firewall.helpers.get_machine_ip.get_ip", return_value="192.168.1.1"
     ):
 
@@ -145,9 +149,9 @@ def test_get_manager_info_with_drymode_connection_manager():
         serverless=False,
     )
 
-    with patch("socket.gethostname", return_value="test-hostname"), patch(
-        "platform.system", return_value="Linux"
-    ), patch("platform.release", return_value="5.4.0"), patch(
+    with patch("platform.system", return_value="Linux"), patch(
+        "platform.release", return_value="5.4.0"
+    ), patch(
         "aikido_firewall.helpers.get_machine_ip.get_ip", return_value="192.168.1.1"
     ):
 
@@ -163,9 +167,9 @@ def test_get_manager_info_with_different_os():
         serverless=False,
     )
 
-    with patch("socket.gethostname", return_value="test-hostname"), patch(
-        "platform.system", return_value="Windows"
-    ), patch("platform.release", return_value="10"), patch(
+    with patch("platform.system", return_value="Windows"), patch(
+        "platform.release", return_value="10"
+    ), patch(
         "aikido_firewall.helpers.get_machine_ip.get_ip", return_value="192.168.1.1"
     ):
 
@@ -181,7 +185,7 @@ def test_get_manager_info_python_implementation():
         serverless=False,
     )
 
-    with patch("socket.gethostname", return_value="test-hostname"), patch(
+    with patch(
         "aikido_firewall.helpers.get_machine_ip.get_ip", return_value="192.168.1.1"
     ), patch("platform.python_implementation", return_value="RandomPython"):
 
@@ -197,7 +201,7 @@ def test_get_manager_info_with_different_os():
         serverless=False,
     )
 
-    with patch("socket.gethostname", return_value="test-hostname"), patch(
+    with patch(
         "aikido_firewall.helpers.get_machine_ip.get_ip", return_value="192.168.1.1"
     ), patch("platform.python_version", return_value="0.1.2"):
 
@@ -213,7 +217,7 @@ def test_get_manager_info_with_different_os():
         serverless=False,
     )
 
-    with patch("socket.gethostname", return_value="test-hostname"), patch(
+    with patch(
         "aikido_firewall.helpers.get_machine_ip.get_ip", return_value="192.168.1.1"
     ), patch("platform.python_version", return_value="0.1.2"), patch(
         "platform.python_implementation", return_value="RandomPython"
