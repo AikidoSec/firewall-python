@@ -88,8 +88,6 @@ class AikidoBackgroundProcess:
         )
         time.sleep(2)  # Sleep 2 seconds to make sure modules get reported
         self.connection_manager.start(event_scheduler)
-
-        self.socket_file_exists_check(event_scheduler)
         event_scheduler.run()
 
     def send_to_connection_manager(self, event_scheduler):
@@ -108,12 +106,3 @@ class AikidoBackgroundProcess:
                 blocked=queue_attack_item[2],
                 stack=queue_attack_item[3],
             )
-
-    def socket_file_exists_check(self, event_scheduler):
-        """Makes sure the socket file still exists"""
-        # Every 60 seconds check if the socket file still exists
-        event_scheduler.enter(60, 1, self.socket_file_exists_check, (event_scheduler,))
-        if not os.path.exists(self.address):
-            # Start termination process
-            logger.info("Terminating a background process")
-            os.kill()
