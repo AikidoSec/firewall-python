@@ -37,7 +37,8 @@ def run_vulnerability_scan(kind, op, args):
     comms = get_comms()
     lifecycle_cache = get_cache()
     if not context and kind != "ssrf":
-        # Make a special exception for SSRF
+        # Make a special exception for SSRF, which checks itself if context is set.
+        # This is because some scans/tests for SSRF do not require a context to be set.
         logger.debug("Not running scans due to incomplete data %s : %s", kind, op)
         return
 
