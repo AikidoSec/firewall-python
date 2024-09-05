@@ -4,7 +4,7 @@ Sink module for `builtins`, python's built-in function
 
 import copy
 import importhook
-from aikido_firewall.vulnerabilities import run_vulnerability_scan
+import aikido_firewall.vulnerabilities as vulns
 
 
 @importhook.on_import("builtins")
@@ -20,9 +20,10 @@ def on_builtins_import(builtins):
 
     def aikido_new_open(*args, **kwargs):
         #  args[0] is the filename
-        run_vulnerability_scan(
-            kind="path_traversal", op="builtins.open", args=(args[0],)
-        )
+        if len(args) > 0 and isinstance(args[0], str):
+            vulns.run_vulnerability_scan(
+                kind="path_traversal", op="builtins.open", args=(args[0],)
+            )
         return former_open(*args, **kwargs)
 
     # pylint: disable=no-member

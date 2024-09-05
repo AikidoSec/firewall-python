@@ -2,13 +2,12 @@
 Flask source module, intercepts flask import and adds Aikido middleware
 """
 
-import copy
 import importhook
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.context import Context
 from aikido_firewall.background_process.packages import add_wrapped_package
-from .functions.request_handler import request_handler
 from aikido_firewall.context import get_current_context
+from .functions.request_handler import request_handler
 
 
 def generate_aikido_view_func_wrapper(former_view_func):
@@ -17,22 +16,27 @@ def generate_aikido_view_func_wrapper(former_view_func):
     """
 
     def aikido_view_func(*args, **kwargs):
+        # pylint:disable=import-outside-toplevel # We don't want to install this by default
         from werkzeug.exceptions import HTTPException
         from flask.globals import request_ctx
 
         req = request_ctx.request
         # Set body :
-        context = get_current_context()
-        if context:
-            if req.is_json:
-                context.body = req.get_json()
-            elif req.form:
-                context.body = req.form
-            else:
-                context.body = req.data.decode("utf-8")
-            context.set_as_current_context()
+        try:
+            context = get_current_context()
+            if context:
+                if req.is_json:
+                    context.body = req.get_json()
+                elif req.form:
+                    context.body = req.form
+                else:
+                    context.body = req.data.decode("utf-8")
+                context.cookies = req.cookies.to_dict()
+                context.set_as_current_context()
 
-        pre_response = request_handler(stage="pre_response")
+            pre_response = request_handler(stage="pre_response")
+        except Exception as e:
+            logger.debug("Exception in aikido's view function : %s", e)
         if pre_response:
             return pre_response[0], pre_response[1]
         try:
@@ -88,6 +92,7 @@ def on_flask_import(flask):
         """
         return generate_aikido_view_func_wrapper(func)
 
+    # pylint:disable=no-member # Pylint has issues with the wrapping
     setattr(modified_flask.Flask, "__call__", aikido___call__)
     setattr(modified_flask.Flask, "ensure_sync", aikido_ensure_sync)
     add_wrapped_package("flask")

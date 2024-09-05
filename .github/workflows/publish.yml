@@ -10,6 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - name: Start databases
+      working-directory:  ./sample-apps/databases
+      run: docker compose up --build -d
     - name: Install poetry
       run: pip install poetry
     - name: Install dependencies

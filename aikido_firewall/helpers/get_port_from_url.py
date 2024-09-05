@@ -21,5 +21,5 @@ def get_port_from_url(url, parsed=False):
     # Determine the default port based on the protocol
     if parsed_url.scheme == "https":
         return 443
-    elif parsed_url.scheme == "http":
+    if parsed_url.scheme == "http":
         return 80
