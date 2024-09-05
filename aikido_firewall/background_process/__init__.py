@@ -38,15 +38,13 @@ def start_background_process():
         # Send out a PING to check if the daemon running is still active :
         res = comms.send_data_to_bg_process(action="PING", obj=tuple(), receive=True)
         if res["success"] and res["data"] == "Received":
-            # Ping is active, reset comms and return
+            # Ping is active, return.
             logger.debug("UDS file exists and is live, returning.")
-            reset_comms()
             return
         # Ping must have failed, remove the existing file to ensure ther eis no corruption.
         os.remove(uds_filename)
 
-    logger.debug("Communication starting on UDS File : %s", uds_filename)
-    comms = AikidoIPCCommunications(uds_filename, secret_key_bytes)
+    logger.debug("Background process starting on UDS File : %s", uds_filename)
     #  Daemon is set to True so that the process kills itself when the main process dies
     background_process = Process(
         target=AikidoBackgroundProcess, args=(comms.address, comms.key), daemon=True
