@@ -11,54 +11,49 @@ from aikido_firewall.context import get_current_context
 from .functions.request_handler import request_handler
 
 
-def generate_aikido_view_func_wrapper(former_view_func):
+def aik_full_dispatch_request(*args, former_full_dispatch_request=None, **kwargs):
     """
-    Generates our own wrapper for the function in self.view_functions[]
+    Creates a new full_dispatch_request function :
+    https://github.com/pallets/flask/blob/2fec0b206c6e83ea813ab26597e15c96fab08be7/src/flask/app.py#L884
+    This function gets called in the wsgi_app. So this function onlygets called after all the
+    middleware. This is important since we want to be able to access users. This also means the
+    request in request_ctx is available and we can extract data from it This function also
+    returns a response, so we can send status codes and error messages.
     """
-    if not hasattr(former_view_func, "__name__"):
-        # Unsupported
-        return former_view_func
-
-    def aikido_view_func(*args, **kwargs):
-        # pylint:disable=import-outside-toplevel # We don't want to install this by default
-        from werkzeug.exceptions import HTTPException
+    # pylint:disable=import-outside-toplevel # We don't want to install this by default
+    try:
         from flask.globals import request_ctx
+        from flask import Response
+    except ImportError:
+        logger.info("Flask not properly installed.")
+        return former_full_dispatch_request(*args, **kwargs)
 
-        req = request_ctx.request
-        # Set body :
-        try:
-            context = get_current_context()
-            if context:
-                if req.is_json:
-                    context.body = req.get_json()
-                elif req.form:
-                    context.body = req.form
-                else:
-                    context.body = req.data.decode("utf-8")
-                context.cookies = req.cookies.to_dict()
-                context.set_as_current_context()
+    req = request_ctx.request
+    extract_and_save_data_from_flask_request(req)
+    pre_response = request_handler(stage="pre_response")
+    if pre_response:
+        # This happens when a route is rate limited, a user blocked, etc...
+        return Response(pre_response[0], status=pre_response[1], mimetype="text/plain")
+    res = former_full_dispatch_request(*args, **kwargs)
+    request_handler(stage="post_response", status_code=res.status_code)
+    return res
 
-            pre_response = request_handler(stage="pre_response")
-        except Exception as e:
-            logger.debug("Exception in aikido's view function : %s", e)
-        if pre_response:
-            return pre_response[0], pre_response[1]
-        try:
-            res = former_view_func(*args, **kwargs)
-            status_code = 200
-            if isinstance(res, tuple):
-                status_code = res[1]
-            elif hasattr(res, "status_code"):
-                status_code = res.status_code
-            request_handler(stage="post_response", status_code=status_code)
-            return res
-        except HTTPException as e:
-            request_handler(stage="post_response", status_code=e.code)
-            raise e
 
-    # Make sure that Flask uses the original function's name
-    aikido_view_func.__name__ = former_view_func.__name__
-    return aikido_view_func
+def extract_and_save_data_from_flask_request(req):
+    """Extract form, json, data, ... from flask request"""
+    try:
+        context = get_current_context()
+        if context:
+            if req.is_json:
+                context.body = req.get_json()
+            elif req.form:
+                context.body = req.form
+            else:
+                context.body = req.data.decode("utf-8")
+            context.cookies = req.cookies.to_dict()
+            context.set_as_current_context()
+    except Exception as e:
+        logger.debug("Exception occured whilst extracting flask body data: %s", e)
 
 
 def aikido___call__(flask_app, environ, start_response):
@@ -78,28 +73,20 @@ def aikido___call__(flask_app, environ, start_response):
 @importhook.on_import("flask.app")
 def on_flask_import(flask):
     """
-    Hook 'n wrap on `flask.app`
-    Our goal is to wrap the __init__ function of the "Flask" class,
-    so we can insert our middleware. Returns : Modified flask.app object
-
-    Flask class |-> App class |-> Scaffold class
-    @app.route is implemented in Scaffold and calls `add_url_rule` in App class
-    We wrap this function and then, if a view function is present, overwrite it with our own.
-    https://github.com/pallets/flask/blob/2fec0b206c6e83ea813ab26597e15c96fab08be7/src/flask/sansio/scaffold.py#L368
+    Hook 'n wrap on `flask.app`. Flask class |-> App class |-> Scaffold class
+    @app.route |-> `add_url_rule` |-> self.view_functions. these get called via
+    full_dispatch_request, which we wrap. We also wrap __call__ to run our middleware.
     """
     modified_flask = importhook.copy_module(flask)
-    former_add_url_rule = copy.deepcopy(flask.Flask.add_url_rule)
+    former_fdr = copy.deepcopy(flask.Flask.full_dispatch_request)
 
-    def aik_add_url_rule(self, rule, endpoint=None, view_func=None, *args, **kwargs):
-        if not view_func:
-            return former_add_url_rule(self, rule, endpoint, view_func, *args, **kwargs)
-        wrapped_view_func = generate_aikido_view_func_wrapper(view_func)
-        return former_add_url_rule(
-            self, rule, endpoint, view_func=wrapped_view_func, *args, **kwargs
+    def aikido_wrapper_fdr(*args, **kwargs):
+        return aik_full_dispatch_request(
+            *args, former_full_dispatch_request=former_fdr, **kwargs
         )
 
     # pylint:disable=no-member # Pylint has issues with the wrapping
     setattr(modified_flask.Flask, "__call__", aikido___call__)
-    setattr(modified_flask.Flask, "add_url_rule", aik_add_url_rule)
+    setattr(modified_flask.Flask, "full_dispatch_request", aikido_wrapper_fdr)
     add_wrapped_package("flask")
     return modified_flask

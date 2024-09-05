@@ -56,6 +56,7 @@ def create_dog():
     conn.close()
     return f'Dog {dog_name} created successfully'
 
+@app.route("/create/:id", methods=["GET"])
 @app.route("/create_many", methods=['POST'])
 def create_dog_many():
     dog_name = request.form['dog_name']
