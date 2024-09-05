@@ -2,6 +2,7 @@
 Flask source module, intercepts flask import and adds Aikido middleware
 """
 
+import copy
 import importhook
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.context import Context
@@ -52,6 +53,8 @@ def generate_aikido_view_func_wrapper(former_view_func):
             request_handler(stage="post_response", status_code=e.code)
             raise e
 
+    # Make sure that Flask uses the original function's name
+    aikido_view_func.__name__ = former_view_func.__name__
     return aikido_view_func
 
 
@@ -78,22 +81,22 @@ def on_flask_import(flask):
 
     Flask class |-> App class |-> Scaffold class
     @app.route is implemented in Scaffold and calls `add_url_rule` in App class
-    This function writes to self.view_functions[endpoint] = view_func
-    The only other reference where view_functions is called is on this line:
-    https://github.com/pallets/flask/blob/8a6cdf1e2a5efa81c30f6166602064ceefb0a35b/src/flask/app.py#L882
-    So we would have to wrap the `ensure_sync` function of the app object
+    We wrap this function and then, if a view function is present, overwrite it with our own.
+    https://github.com/pallets/flask/blob/2fec0b206c6e83ea813ab26597e15c96fab08be7/src/flask/sansio/scaffold.py#L368
     """
     modified_flask = importhook.copy_module(flask)
+    former_add_url_rule = copy.deepcopy(flask.Flask.add_url_rule)
 
-    def aikido_ensure_sync(_self, func):
-        """
-        We're wrapping this function, so we can wrap the passed along function `func`
-        https://github.com/pallets/flask/blob/8a6cdf1e2a5efa81c30f6166602064ceefb0a35b/src/flask/app.py#L946
-        """
-        return generate_aikido_view_func_wrapper(func)
+    def aik_add_url_rule(self, rule, endpoint=None, view_func=None, *args, **kwargs):
+        if not view_func:
+            return former_add_url_rule(self, rule, endpoint, view_func, *args, **kwargs)
+        wrapped_view_func = generate_aikido_view_func_wrapper(view_func)
+        return former_add_url_rule(
+            self, rule, endpoint, view_func=wrapped_view_func, *args, **kwargs
+        )
 
     # pylint:disable=no-member # Pylint has issues with the wrapping
     setattr(modified_flask.Flask, "__call__", aikido___call__)
-    setattr(modified_flask.Flask, "ensure_sync", aikido_ensure_sync)
+    setattr(modified_flask.Flask, "add_url_rule", aik_add_url_rule)
     add_wrapped_package("flask")
     return modified_flask
