@@ -87,16 +87,19 @@ class AikidoIPCCommunications:
         # So we run it inside a seperate thread with a timeout of 100ms
         # If something goes wrong, it will also be encapsulated in the thread i.e. no crashes
         def target(address, key, receive, data, result_obj):
-            # Create a connection, this can get stuck :
-            conn = con.Client(address, authkey=key)
+            try:
+                # Create a connection, this can get stuck :
+                conn = con.Client(address, authkey=key)
 
-            # Send/Receive data :
-            conn.send(data)
-            if receive:
-                result_obj[1] = conn.recv()
-            # Close the connection :
-            conn.close()
-            result_obj[0] = True  #  Connection ended gracefully
+                # Send/Receive data :
+                conn.send(data)
+                if receive:
+                    result_obj[1] = conn.recv()
+                # Close the connection :
+                conn.close()
+                result_obj[0] = True  #  Connection ended gracefully
+            except Exception as e:
+                logger.debug("Exception occured in thread : %s", e)
 
         # Create a shared result object between the thread and this process :
         result_obj = [False, None]  # Needs to be an array so we can make a ref.
