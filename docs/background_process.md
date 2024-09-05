@@ -15,6 +15,3 @@ Upon starting the application, a background process is initiated that listens on
 
 ## What is AIKIDO_TMP_DIR?
 The `AIKIDO_TMP_DIR` environment variable specifies the directory used for temporary files related to the Aikido application. By default, this variable is set to /tmp. However, users can customize it to point to a directory of their choice. The Unix domain socket file, aikido.sock, is stored in this directory to facilitate Inter-Process Communication (IPC) between processes.
-> **Note** : When running multiple different python applications on the same system, make sure to specify different 
-> AIKIDO_TMP_DIR's, since there is a cleanup process which will kill the other remaining background processes if they are 
-> listening in the same directory.
