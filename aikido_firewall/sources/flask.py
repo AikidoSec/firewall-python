@@ -32,6 +32,7 @@ def aik_full_dispatch_request(*args, former_full_dispatch_request=None, **kwargs
     extract_and_save_data_from_flask_request(req)
     pre_response = request_handler(stage="pre_response")
     if pre_response:
+        # This happens when a route is rate limited, a user blocked, etc...
         return Response(pre_response[0], status=pre_response[1], mimetype="text/plain")
     res = former_full_dispatch_request(*args, **kwargs)
     request_handler(stage="post_response", status_code=res.status_code)
