@@ -13,7 +13,13 @@ from aikido_firewall.background_process.comms import (
     reset_comms,
 )
 
-IPC_ADDRESS = get_temp_dir() + "/aikido_python_socket.sock"
+
+def ipc_address_with_counter(counter):
+    """Generates a random UDS file"""
+    temp_dir = get_temp_dir()
+    prefix = "aikido_python"
+    index = str(counter)
+    return f"{temp_dir}/{prefix}_{index}.sock"
 
 
 def start_background_process():
@@ -25,10 +31,19 @@ def start_background_process():
     secret_key_bytes = str.encode(str(get_token_from_env()))
 
     # Remove the socket file if it already exists
-    if os.path.exists(IPC_ADDRESS):
-        logger.debug("Unix Domain Socket file already exists, deleting.")
-        os.remove(IPC_ADDRESS)
+    i = 1
+    ipc_address = ipc_address_with_counter(i)
+    while os.path.exists(ipc_address):
+        # Removing this UDS File will result in that bg process terminating. See
+        # aikido_background_process.py > socket_file_exists_check()
+        logger.debug(
+            "Unix Domain Socket file %s already exists, deleting.", ipc_address
+        )
+        os.remove(ipc_address)
 
-    logger.debug("Communication starting on UDS File : %s", IPC_ADDRESS)
-    comms = AikidoIPCCommunications(IPC_ADDRESS, secret_key_bytes)
+        i += 1
+        ipc_address = ipc_address_with_counter(i)
+
+    logger.debug("Communication starting on UDS File : %s", ipc_address)
+    comms = AikidoIPCCommunications(ipc_address, secret_key_bytes)
     comms.start_aikido_listener()
