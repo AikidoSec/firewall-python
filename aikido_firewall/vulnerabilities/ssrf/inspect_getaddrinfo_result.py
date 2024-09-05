@@ -28,24 +28,24 @@ def inspect_getaddrinfo_result(dns_results, hostname, port):
 
     if not context:
         return
-    findings = find_hostname_in_context(hostname, context, port)
-    if not findings:
+
+    # attack_findings is an object containing source, pathToPayload and payload.
+    attack_findings = find_hostname_in_context(hostname, context, port)
+    if not attack_findings:
         # Hostname/port not found in context, checking for redirects
         logger.debug("Redirects : %s", context.outgoing_req_redirects)
-        findings = is_redirect_to_private_ip(hostname, context, port)
+        attack_findings = is_redirect_to_private_ip(hostname, context, port)
 
-    if not findings:
-        return
-
-    return {
-        "module": "socket",
-        "operation": "socket.getaddrinfo",
-        "kind": "ssrf",
-        "source": findings["source"],
-        "path": findings["pathToPayload"],
-        "metadata": {"hostname": hostname},
-        "payload": findings["payload"],
-    }
+    if attack_findings:
+        return {
+            "module": "socket",
+            "operation": "socket.getaddrinfo",
+            "kind": "ssrf",
+            "source": attack_findings["source"],
+            "path": attack_findings["pathToPayload"],
+            "metadata": {"hostname": hostname},
+            "payload": attack_findings["payload"],
+        }
 
 
 def inspect_dns_results(dns_results, hostname):
