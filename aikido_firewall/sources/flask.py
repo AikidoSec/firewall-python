@@ -10,6 +10,10 @@ from aikido_firewall.background_process.packages import add_wrapped_package
 from aikido_firewall.context import get_current_context
 from .functions.request_handler import request_handler
 
+VIEW_FUNC_MAPPING_ERR_MSG = (
+    "View function mapping is overwriting an existing endpoint function"
+)
+
 
 def generate_aikido_view_func_wrapper(former_view_func):
     """
@@ -94,9 +98,16 @@ def on_flask_import(flask):
         if not view_func:
             return former_add_url_rule(self, rule, endpoint, view_func, *args, **kwargs)
         wrapped_view_func = generate_aikido_view_func_wrapper(view_func)
-        return former_add_url_rule(
-            self, rule, endpoint, view_func=wrapped_view_func, *args, **kwargs
-        )
+        try:
+            return former_add_url_rule(
+                self, rule, endpoint, view_func=wrapped_view_func, *args, **kwargs
+            )
+        except AssertionError as e:
+            # We want to catch an AssertionError that triggers if comparison between new and
+            # saved functions goes wrong, this happens if we wrap the funcs.
+            if VIEW_FUNC_MAPPING_ERR_MSG not in str(e):
+                # This is another AssertionError and should be thrown.
+                raise e
 
     # pylint:disable=no-member # Pylint has issues with the wrapping
     setattr(modified_flask.Flask, "__call__", aikido___call__)
