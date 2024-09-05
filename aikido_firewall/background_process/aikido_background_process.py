@@ -33,7 +33,6 @@ class AikidoBackgroundProcess:
 
     def __init__(self, address, key):
         logger.debug("Background process started")
-        self.address = address
         try:
             listener = con.Listener(address, authkey=key)
         except OSError:
