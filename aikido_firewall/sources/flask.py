@@ -15,6 +15,9 @@ def generate_aikido_view_func_wrapper(former_view_func):
     """
     Generates our own wrapper for the function in self.view_functions[]
     """
+    if not hasattr(former_view_func, "__name__"):
+        # Unsupported
+        return former_view_func
 
     def aikido_view_func(*args, **kwargs):
         # pylint:disable=import-outside-toplevel # We don't want to install this by default
