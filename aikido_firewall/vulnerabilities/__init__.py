@@ -19,7 +19,7 @@ from aikido_firewall.helpers.blocking_enabled import is_blocking_enabled
 from aikido_firewall.background_process.ipc_lifecycle_cache import get_cache
 from .sql_injection.context_contains_sql_injection import context_contains_sql_injection
 from .nosql_injection.check_context import check_context_for_nosql_injection
-from .ssrf import scan_for_ssrf_in_request
+from .ssrf.inspect_getaddrinfo_result import inspect_getaddrinfo_result
 from .shell_injection.check_context_for_shell_injection import (
     check_context_for_shell_injection,
 )
@@ -36,9 +36,14 @@ def run_vulnerability_scan(kind, op, args):
     context = get_current_context()
     comms = get_comms()
     lifecycle_cache = get_cache()
-    if not context or not lifecycle_cache:
-        logger.debug("Not running a vulnerability scan due to incomplete data.")
-        logger.debug("%s : %s", kind, op)
+    if not context and kind != "ssrf":
+        # Make a special exception for SSRF, which checks itself if context is set.
+        # This is because some scans/tests for SSRF do not require a context to be set.
+        logger.debug("Not running scans due to incomplete data %s : %s", kind, op)
+        return
+
+    if not lifecycle_cache:
+        logger.debug("Not running scans due to incomplete data %s : %s", kind, op)
         return
 
     if lifecycle_cache.protection_forced_off():
@@ -74,9 +79,10 @@ def run_vulnerability_scan(kind, op, args):
             )
             error_type = AikidoPathTraversal
         elif kind == "ssrf":
-            # args[0] : URL object, args[1] : Port
-            # Report hostname and port to background process :
-            injection_results = scan_for_ssrf_in_request(args[0], args[1], op, context)
+            # args[0] : DNS Results, args[1] : Hostname, args[2] : Port
+            injection_results = inspect_getaddrinfo_result(
+                dns_results=args[0], hostname=args[1], port=args[2]
+            )
             error_type = AikidoSSRF
             blocked_request = is_blocking_enabled() and injection_results
             if not blocked_request:

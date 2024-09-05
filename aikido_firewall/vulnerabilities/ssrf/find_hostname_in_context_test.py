@@ -101,3 +101,53 @@ def test_find_hostname_in_context_no_sources(monkeypatch):
 
 
 # To run the tests, use the command: pytest <filename>.py
+
+
+@pytest.mark.parametrize(
+    "invalid_input",
+    [
+        None,
+        123456789,  # Integer
+        45.67,  # Float
+        [],  # Empty list
+        [1, 2, 3],  # List of integers
+        {},  # Empty dictionary
+        {"key": "value"},  # Dictionary
+        set(),  # Empty set
+        {1, 2, 3},  # Set of integers
+        object(),  # Instance of a generic object
+        lambda x: x,  # Lambda function
+        (1, 2),  # Tuple
+        b"bytes",  # Bytes
+    ],
+)
+def test_doesnt_crash_with_invalid_hostname(invalid_input, monkeypatch):
+    context = MagicMock()  # No attributes
+    monkeypatch.setattr("aikido_firewall.context.get_current_context", lambda: None)
+    result = find_hostname_in_context(invalid_input, context, 8080)
+    assert result == None
+
+
+@pytest.mark.parametrize(
+    "invalid_input",
+    [
+        None,
+        "test",  # String
+        45.67,  # Float
+        [],  # Empty list
+        [1, 2, 3],  # List of integers
+        {},  # Empty dictionary
+        {"key": "value"},  # Dictionary
+        set(),  # Empty set
+        {1, 2, 3},  # Set of integers
+        object(),  # Instance of a generic object
+        lambda x: x,  # Lambda function
+        (1, 2),  # Tuple
+        b"bytes",  # Bytes
+    ],
+)
+def test_doesnt_crash_with_invalid_port(invalid_input, monkeypatch):
+    context = MagicMock()  # No attributes
+    monkeypatch.setattr("aikido_firewall.context.get_current_context", lambda: None)
+    result = find_hostname_in_context("https://example.com", context, invalid_input)
+    assert result == None
