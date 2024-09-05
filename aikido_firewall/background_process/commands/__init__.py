@@ -13,6 +13,7 @@ from .should_block_user import process_should_block_user
 from .statistics import process_statistics
 from .is_ip_allowed import process_is_ip_allowed
 from .fetch_initial_metadata import process_fetch_initial_metadata
+from .ping import process_ping
 
 commands_map = {
     # This maps to a tuple : (function, returns_data?)
@@ -30,6 +31,7 @@ commands_map = {
     "SHOULD_BLOCK_USER": (process_should_block_user, True),
     "IS_IP_ALLOWED": (process_is_ip_allowed, True),
     "FETCH_INITIAL_METADATA": (process_fetch_initial_metadata, True),
+    "PING": (process_ping, True),
 }
 
 

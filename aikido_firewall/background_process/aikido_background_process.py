@@ -4,6 +4,7 @@ Simply exports the aikido background process
 
 import multiprocessing.connection as con
 import time
+import os
 import sched
 import traceback
 import sys
@@ -86,7 +87,6 @@ class AikidoBackgroundProcess:
         )
         time.sleep(2)  # Sleep 2 seconds to make sure modules get reported
         self.connection_manager.start(event_scheduler)
-
         event_scheduler.run()
 
     def send_to_connection_manager(self, event_scheduler):
