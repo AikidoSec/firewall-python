@@ -24,7 +24,6 @@ def mock_connection_manager():
     )
 
 
-@patch("socket.gethostname", return_value="test-hostname")
 @patch("platform.system", return_value="Linux")
 @patch("platform.release", return_value="5.4.0")
 @patch("aikido_firewall.helpers.get_machine_ip.get_ip", return_value="192.168.1.1")
@@ -35,7 +34,9 @@ def test_get_manager_info(
     mock_platform_system,
     mock_gethostname,
     mock_connection_manager,
+    monkeypatch,
 ):
+    monkeypatch.setattr("socket.gethostname", lambda: "test-hostname")
     connection_manager_info = get_manager_info(mock_connection_manager)
     print(connection_manager_info)
     assert connection_manager_info["dryMode"] is False
