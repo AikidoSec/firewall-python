@@ -1,11 +1,12 @@
 import os
 import pytest
-import requests
 from aikido_firewall.context import Context
 from aikido_firewall.background_process.ipc_lifecycle_cache import IPCLifecycleCache
 from aikido_firewall.errors import AikidoSSRF
+from aikido_firewall.background_process.comms import reset_comms
 import aikido_firewall.sinks.socket
 import aikido_firewall.sinks.http_client
+import requests
 
 SSRF_TEST = "http://firewallssrfredirects-env-2.eba-7ifve22q.eu-north-1.elasticbeanstalk.com/ssrf-test"
 SSRF_TEST_DOMAIN = "http://firewallssrfredirects-env-2.eba-7ifve22q.eu-north-1.elasticbeanstalk.com/ssrf-test-domain"
@@ -44,8 +45,10 @@ def set_context_and_lifecycle(url):
 
 
 def test_srrf_test(monkeypatch):
+    reset_comms()
     set_context_and_lifecycle(SSRF_TEST)
     monkeypatch.setenv("AIKIDO_BLOCKING", "1")
+
     with pytest.raises(AikidoSSRF):
         requests.get(SSRF_TEST)
 
