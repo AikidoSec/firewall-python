@@ -36,10 +36,11 @@ async def handle_request_wrapper(former_handle_request, quart_app, req):
     try:
         context = get_current_context()
         if context:
+            form = await req.form
             if req.is_json:
                 context.body = await req.get_json()
-            elif req.form:
-                context.body = await req.form
+            elif form:
+                context.body = form
             else:
                 data = await req.data
                 context.body = data.decode("utf-8")
