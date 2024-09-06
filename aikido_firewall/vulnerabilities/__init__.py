@@ -49,7 +49,7 @@ def run_vulnerability_scan(kind, op, args):
     if lifecycle_cache.protection_forced_off():
         #  The client turned protection off for this route, not scanning
         return
-    if lifecycle_cache.is_bypassed_ip(context.remote_address):
+    if context and lifecycle_cache.is_bypassed_ip(context.remote_address):
         #  This IP is on the bypass list, not scanning
         return
 
