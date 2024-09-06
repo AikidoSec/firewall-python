@@ -3,12 +3,13 @@ Holds the globally stored comms object
 Exports the AikidoIPCCommunications class
 """
 
+import contextvars
 import multiprocessing.connection as con
 from threading import Thread
 from aikido_firewall.helpers.logging import logger
 
 # pylint: disable=invalid-name # This variable does change
-comms = None
+comms = contextvars.ContextVar("comms", default=None)
 
 
 def get_comms():
@@ -16,16 +17,14 @@ def get_comms():
     Returns the globally stored IPC object, which you need
     to communicate to our background process.
     """
-    return comms
+    return comms.get()
 
 
 def reset_comms():
     """This will reset communications"""
-    # pylint: disable=global-statement # This needs to be global
-    global comms
-    if comms:
+    if comms.get():
         logger.debug("Resetting communications. (comms = None)")
-        comms = None
+        comms.set(None)
 
 
 class AikidoIPCCommunications:
@@ -39,10 +38,7 @@ class AikidoIPCCommunications:
         self.key = key
 
         # Set as global ipc object :
-        reset_comms()
-        # pylint: disable=global-statement # This needs to be global
-        global comms
-        comms = self
+        comms.set(self)
 
     def send_data_to_bg_process(self, action, obj, receive=False):
         """Try-catched send_data_to_bg_process"""
