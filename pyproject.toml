@@ -53,7 +53,6 @@ homepage = "https://www.aikido.dev/runtime/firewall/"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-importhook = "^1.0.9"
 python-dotenv = "^1.0.1"
 regex = "^2024.5.15"
 requests = "^2.32.3"

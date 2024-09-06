@@ -5,7 +5,7 @@
 # pylint:disable=protected-access
 import json
 import copy
-import importhook
+import aikido_firewall.importhook as importhook
 from aikido_firewall.context import Context
 from aikido_firewall.background_process.packages import add_wrapped_package
 from .functions.request_handler import request_handler

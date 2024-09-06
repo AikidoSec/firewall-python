@@ -3,7 +3,7 @@ Sink module for `mysqlclient`
 """
 
 import copy
-import importhook
+import aikido_firewall.importhook as importhook
 from aikido_firewall.vulnerabilities.sql_injection.dialects import MySQL
 from aikido_firewall.background_process.packages import add_wrapped_package
 from aikido_firewall.helpers.logging import logger

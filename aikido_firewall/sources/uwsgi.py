@@ -1,6 +1,6 @@
 """UWSGI Module, report if module was found"""
 
-import importhook
+import aikido_firewall.importhook as importhook
 from aikido_firewall.background_process.packages import add_wrapped_package
 
 

@@ -3,7 +3,7 @@ Sink module for `os`, wrapping os.system
 """
 
 import copy
-import importhook
+import aikido_firewall.importhook as importhook
 import aikido_firewall.vulnerabilities as vulns
 
 

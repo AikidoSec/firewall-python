@@ -3,7 +3,7 @@ Sink module for `subprocess`
 """
 
 import copy
-import importhook
+import aikido_firewall.importhook as importhook
 import aikido_firewall.vulnerabilities as vulns
 
 SUBPROCESS_OPERATIONS = ["call", "run", "check_call", "Popen", "check_output"]
