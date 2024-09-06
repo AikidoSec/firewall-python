@@ -39,23 +39,6 @@ def aik_full_dispatch_request(*args, former_full_dispatch_request=None, **kwargs
     return res
 
 
-def extract_and_save_data_from_flask_request(req):
-    """Extract form, json, data, ... from flask request"""
-    try:
-        context = get_current_context()
-        if context:
-            if req.is_json:
-                context.body = req.get_json()
-            elif req.form:
-                context.body = req.form
-            else:
-                context.body = req.data.decode("utf-8")
-            context.cookies = req.cookies.to_dict()
-            context.set_as_current_context()
-    except Exception as e:
-        logger.debug("Exception occured whilst extracting flask body data: %s", e)
-
-
 def aikido___call__(flask_app, environ, start_response):
     """Aikido's __call__ wrapper"""
     # We don't want to install werkzeug :
@@ -90,3 +73,22 @@ def on_flask_import(flask):
     setattr(modified_flask.Flask, "full_dispatch_request", aikido_wrapper_fdr)
     add_wrapped_package("flask")
     return modified_flask
+
+
+def extract_and_save_data_from_flask_request(req):
+    """Extract form, json, data, ... from flask request"""
+    try:
+        context = get_current_context()
+        if context:
+            if req.is_json:
+                context.body = req.get_json()
+            elif req.form:
+                context.body = req.form
+            else:
+                context.body = req.data.decode("utf-8")
+            context.cookies = req.cookies.to_dict()
+            context.headers = dict(req.headers)
+            context.query = req.args.to_dict()
+            context.set_as_current_context()
+    except Exception as e:
+        logger.debug("Exception occured whilst extracting flask body data: %s", e)
