@@ -44,6 +44,8 @@ async def handle_request_wrapper(former_handle_request, quart_app, req):
                 data = await req.data
                 context.body = data.decode("utf-8")
             context.cookies = req.cookies.to_dict()
+            context.headers = dict(req.headers)
+            context.query = req.args.to_dict()
             context.set_as_current_context()
     except Exception as e:
         logger.debug("Exception in handle_request : %s", e)
