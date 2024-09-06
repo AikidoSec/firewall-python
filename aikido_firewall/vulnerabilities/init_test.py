@@ -134,3 +134,25 @@ def test_sql_injection_with_comms(caplog, get_context, monkeypatch):
             call_args[1][0]["metadata"]["sql"]
             == "INSERT * INTO VALUES ('doggoss2', TRUE);"
         )
+
+
+def test_ssrf_with_comms_hostnames_add(caplog, get_context, monkeypatch):
+    from aikido_firewall.vulnerabilities.sql_injection.dialects import MySQL
+
+    get_context.set_as_current_context()
+    cache = IPCLifecycleCache(get_context)
+    assert not cache.protection_forced_off()
+    monkeypatch.setenv("AIKIDO_BLOCKING", "1")
+    with patch("aikido_firewall.background_process.comms.get_comms") as mock_get_comms:
+        # Create a mock comms object
+        mock_comms = MagicMock()
+        mock_get_comms.return_value = mock_comms  # Set the return value of get_comms
+        run_vulnerability_scan(
+            kind="ssrf",
+            op="test_op",
+            args=([], "test-hostname", 8097),
+        )
+        mock_comms.send_data_to_bg_process.assert_called_once()
+        call_args = mock_comms.send_data_to_bg_process.call_args[0]
+        assert call_args[0] == "HOSTNAMES_ADD"
+        assert call_args[1] == ("test-hostname", 8097)
