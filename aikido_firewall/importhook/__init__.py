@@ -22,7 +22,6 @@ import importlib
 import sys
 import types
 
-from .logger import logger
 from .meta_paths import HookMetaPaths
 from .registry import registry
 from .utils import get_module_name
@@ -31,7 +30,6 @@ __all__ = [
     "ANY_MODULE",
     "copy_module",
     "get_module_name",
-    "logger",
     "on_import",
     "registry",
     "reload_module",
