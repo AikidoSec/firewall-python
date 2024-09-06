@@ -47,13 +47,13 @@ def run_vulnerability_scan(kind, op, args):
         # This is because some scans/tests for SSRF do not require a lifecycle cache to be set.
         logger.debug("Not running scans, Lifecycle cache not found; %s : %s", kind, op)
         return
-
-    if lifecycle_cache.protection_forced_off():
-        #  The client turned protection off for this route, not scanning
-        return
-    if context and lifecycle_cache.is_bypassed_ip(context.remote_address):
-        #  This IP is on the bypass list, not scanning
-        return
+    if lifecycle_cache:
+        if lifecycle_cache.protection_forced_off():
+            #  The client turned protection off for this route, not scanning
+            return
+        if context and lifecycle_cache.is_bypassed_ip(context.remote_address):
+            #  This IP is on the bypass list, not scanning
+            return
 
     error_type = AikidoException  # Default error
     error_args = tuple()
