@@ -3,7 +3,7 @@ Sink module for `builtins`, python's built-in function
 """
 
 import copy
-import importhook
+import aikido_firewall.importhook as importhook
 import aikido_firewall.vulnerabilities as vulns
 
 

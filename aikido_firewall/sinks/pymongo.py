@@ -3,7 +3,7 @@ Sink module for `pymongo`
 """
 
 from copy import deepcopy
-import importhook
+import aikido_firewall.importhook as importhook
 from aikido_firewall.helpers.logging import logger
 import aikido_firewall.background_process.packages as pkgs
 import aikido_firewall.vulnerabilities as vulns
