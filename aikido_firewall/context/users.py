@@ -23,8 +23,9 @@ def set_user(user):
     validated_user["lastIpAddress"] = context.remote_address
     context.user = validated_user
 
-    # Send validated_user object to Agent
-    get_comms().send_data_to_bg_process("USER", validated_user)
+    # Send validated_user object to background process :
+    if get_comms():
+        get_comms().send_data_to_bg_process("USER", validated_user)
 
 
 def validate_user(user):
