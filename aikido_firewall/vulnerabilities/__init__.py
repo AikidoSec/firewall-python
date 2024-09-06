@@ -12,7 +12,7 @@ from aikido_firewall.errors import (
     AikidoPathTraversal,
     AikidoSSRF,
 )
-from aikido_firewall.background_process import get_comms
+import aikido_firewall.background_process.comms as comm
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.helpers.get_clean_stacktrace import get_clean_stacktrace
 from aikido_firewall.helpers.blocking_enabled import is_blocking_enabled
@@ -34,16 +34,16 @@ def run_vulnerability_scan(kind, op, args):
     raises error if blocking is enabled, communicates it with connection_manager
     """
     context = get_current_context()
-    comms = get_comms()
+    comms = comm.get_comms()
     lifecycle_cache = get_cache()
     if not context and kind != "ssrf":
         # Make a special exception for SSRF, which checks itself if context is set.
         # This is because some scans/tests for SSRF do not require a context to be set.
-        logger.debug("Not running scans due to incomplete data %s : %s", kind, op)
+        logger.debug("Not running scans, context not found; %s : %s", kind, op)
         return
 
     if not lifecycle_cache:
-        logger.debug("Not running scans due to incomplete data %s : %s", kind, op)
+        logger.debug("Not running scans, Lifecycle cache not found; %s : %s", kind, op)
         return
 
     if lifecycle_cache.protection_forced_off():
