@@ -11,6 +11,10 @@ import json
 from flask import Flask, render_template, request
 from flask_pymongo import PyMongo
 from bson import ObjectId
+import requests
+import urllib3
+
+import logging
 
 app = Flask(__name__)
 if __name__ == '__main__':
@@ -19,10 +23,17 @@ app.config["MONGO_URI"] = "mongodb://admin:password@host.docker.internal:27017/m
 mongo = PyMongo(app)
 
 @app.route("/")
-def homepage():
+def homepage2():
     dogs = mongo.db.dogs.find()
     return render_template('index.html', title='Homepage', dogs=dogs)
 
+@app.route("/ssrf/test")
+def homepage():
+    
+    app.logger.log(request.cookies.get("hi"))
+    a = urllib3.request("GET", request.cookies.get("hi"))
+
+    return request.cookies.get("hi")
 
 @app.route('/dogpage/<dog_id>')
 def get_dogpage(dog_id):

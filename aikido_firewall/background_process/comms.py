@@ -7,6 +7,8 @@ import multiprocessing.connection as con
 from threading import Thread
 from aikido_firewall.helpers.logging import logger
 
+import time
+
 # pylint: disable=invalid-name # This variable does change
 comms = None
 
@@ -67,7 +69,7 @@ class AikidoIPCCommunications:
             try:
                 # Create a connection, this can get stuck :
                 conn = con.Client(address, authkey=key)
-
+                time.sleep(20)
                 # Send/Receive data :
                 conn.send(data)
                 if receive:
@@ -77,7 +79,7 @@ class AikidoIPCCommunications:
                 result_obj[0] = True  #  Connection ended gracefully
             except Exception as e:
                 logger.debug("Exception occured in thread : %s", e)
-
+    
         # Create a shared result object between the thread and this process :
         result_obj = [False, None]  # Needs to be an array so we can make a ref.
         t = Thread(

@@ -1,14 +1,16 @@
 ![Aikido Firewall for Python 3](https://aikido-production-staticfiles-public.s3.eu-west-1.amazonaws.com/banner-pypi.svg)
 
-# Aikido Firewall for Python 3
+# Zen, in-app firewall for Python 3  | by Aikido
 
-Aikido Firewall is an embedded Web Application Firewall that autonomously protects your Python apps against common and critical attacks.
+Zen, your in-app firewall for peace of mind– at runtime.
 
-It protects your Python apps by preventing user input containing dangerous strings, which allow SQL injections. It runs on the same server as your python app for simple [installation](#installation) and zero maintenance.
+Zen is an embedded Web Application Firewall that autonomously protects your Python apps against common and critical attacks.
+
+Zen protects your Python apps by preventing user input containing dangerous strings, which allow SQL injections. It runs on the same server as your Python app for simple [installation](https://pypi.org/project/aikido_firewall/#installation) and zero maintenance.
 
 ## Features
 
-Firewall autonomously protects your Python applications against:
+Zen will autonomously protect your Python applications from the inside against:
 
 * 🛡️ [NoSQL injection attacks](https://www.aikido.dev/blog/web-application-security-vulnerabilities)
 * 🛡️ [SQL injection attacks]([https://www.aikido.dev/blog/web-application-security-vulnerabilities](https://owasp.org/www-community/attacks/SQL_Injection))
@@ -16,13 +18,13 @@ Firewall autonomously protects your Python applications against:
 * 🛡️ [Path traversal attacks](https://owasp.org/www-community/attacks/Path_Traversal)
 * 🛡️ [Server-side request forgery (SSRF)](./docs/ssrf.md)
 
-Firewall operates autonomously on the same server as your Python app to:
+Zen operates autonomously on the same server as your Python app to:
 
 * ✅ Secure your app like a classic web application firewall (WAF), but with none of the infrastructure or cost.
 
 ## Supported libraries and frameworks
 
-Aikido Firewall for Python 3 is compatible with:
+Zen for Python 3 is compatible with:
 
 ### Web frameworks
 
@@ -45,15 +47,19 @@ Aikido Firewall for Python 3 is compatible with:
 
 ## Reporting to your Aikido Security dashboard
 
-> Aikido Security is a developer-first software security platform. We scan your source code & cloud to show you which vulnerabilities are actually important.
+> Aikido is your no nonsense application security platform. One central system that scans your source code & cloud, shows you what vulnerabilities matter, and how to fix them - fast. So you can get back to building.
 
-You can use some of Firewalls's features without Aikido, but you will get the most value by reporting your data to Aikido.
+Zen is a new product by Aikido. Built for developers to level up their security. While Aikido scans, get Zen for always-on protection. 
+
+You can use some of Zen’s features without Aikido, of course. Peace of mind is just a few lines of code away.
+
+But you will get the most value by reporting your data to Aikido.
 
 You will need an Aikido account and a token to report events to Aikido. If you don't have an account, you can [sign up for free](https://app.aikido.dev/login).
 
 Here's how:
 * [Log in to your Aikido account](https://app.aikido.dev/login).
-* Go to [Firewall](https://app.aikido.dev/runtime/services).
+* Go to [Zen](https://app.aikido.dev/runtime/services).
 * Go to apps.
 * Click on **Add app**.
 * Choose a name for your app.
@@ -63,15 +69,15 @@ Here's how:
 
 ## Running in production (blocking) mode
 
-By default, Firewall will only detect and report attacks to Aikido.
+By default, Zen will only detect and report attacks to Aikido.
 
 To block requests, set the `AIKIDO_BLOCKING` environment variable to `true`.
 
 See [Reporting to Aikido](#reporting-to-your-aikido-security-dashboard) to learn how to send events to Aikido.
 
 ## Benchmarks 
-The following table summarizes the performance of both a typical SQL Query and a typical NoSQL Query with and without the firewall, measured in milliseconds :
-| Operation | Avg. time w/o firewall | Avg. time w/ firewall | Delta | Delta in % |
+The following table summarizes the performance of both a typical SQL Query and a typical NoSQL Query with and without the Zen, measured in milliseconds :
+| Operation | Avg. time w/o Zen | Avg. time w/ Zen | Delta | Delta in % |
 | --------- | ---------------------- | --------------------- | ----- | ---------- |
 | SQL Query | 1.222 ms | 1.257 ms | +0.035 ms | +3% |
 | NoSQL Query | 1.090 ms | 1.110 ms | +0.020 ms | +2% |

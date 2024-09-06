@@ -7,7 +7,7 @@ from aikido_firewall.helpers.extract_strings_from_user_input import (
     extract_strings_from_user_input_cached,
 )
 from .find_hostname_in_userinput import find_hostname_in_userinput
-
+from aikido_firewall.helpers.logging import logger
 
 def find_hostname_in_context(hostname, context, port):
     """Tries to locate the given hostname from context"""
@@ -33,7 +33,9 @@ def find_hostname_in_context(hostname, context, port):
         )
         if not user_inputs:
             continue
+        logger.debug(user_inputs)
         for user_input, path in user_inputs.items():
+            logger.debug(user_input)
             found = find_hostname_in_userinput(user_input, hostname, port)
             if found:
                 return {
