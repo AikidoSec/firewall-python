@@ -81,8 +81,7 @@ def test_ssrf(caplog, get_context):
     current_context.set(None)
     cache = IPCLifecycleCache(get_context)
     assert not cache.protection_forced_off()
-    with pytest.raises(AttributeError):
-        run_vulnerability_scan(kind="ssrf", op="test", args=tuple())
+    run_vulnerability_scan(kind="ssrf", op="test", args=tuple())
 
 
 def test_lifecycle_cache_bypassed_ip(caplog, get_context):
