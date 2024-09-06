@@ -42,7 +42,9 @@ def run_vulnerability_scan(kind, op, args):
         logger.debug("Not running scans, context not found; %s : %s", kind, op)
         return
 
-    if not lifecycle_cache:
+    if not lifecycle_cache and kind != "ssrf":
+        # Make a special exception for SSRF, which checks itself if lifecycle cache is set.
+        # This is because some scans/tests for SSRF do not require a lifecycle cache to be set.
         logger.debug("Not running scans, Lifecycle cache not found; %s : %s", kind, op)
         return
 
