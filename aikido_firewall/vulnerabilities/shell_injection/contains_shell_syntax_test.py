@@ -59,3 +59,11 @@ def test_treats_colon_as_command():
         contains_shell_syntax("https://www.google.com", "https://www.google.com")
         is False
     )
+
+
+def test_detects_commands_with_separators():
+    assert contains_shell_syntax("rm>arg", "rm") is True
+
+
+def test_detects_commands_with_separators():
+    assert contains_shell_syntax("rm<arg", "rm") is True

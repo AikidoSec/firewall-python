@@ -92,7 +92,7 @@ path_prefixes = [
     "/usr/local/sbin/",
 ]
 
-separators = [" ", "\t", "\n", ";", "&", "|", "(", ")"]
+separators = [" ", "\t", "\n", ";", "&", "|", "(", ")", "<", ">"]
 
 
 # Function to sort commands by length (longer commands first)
