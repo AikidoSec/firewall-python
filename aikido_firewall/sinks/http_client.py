@@ -3,7 +3,7 @@ Sink module for `http`
 """
 
 import copy
-import importhook
+import aikido_firewall.importhook as importhook
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.vulnerabilities import run_vulnerability_scan
 from aikido_firewall.vulnerabilities.ssrf.handle_http_response import (

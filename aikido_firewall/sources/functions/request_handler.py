@@ -13,7 +13,8 @@ def request_handler(stage, status_code=0):
     """This will check for rate limiting, Allowed IP's, useful routes, etc."""
     if stage == "init":
         #  This gets executed the first time a request get's intercepted
-        get_comms().send_data_to_bg_process("STATISTICS", {"action": "request"})
+        if get_comms():
+            get_comms().send_data_to_bg_process("STATISTICS", {"action": "request"})
 
         # Create a lifecycle cache
         IPCLifecycleCache(get_current_context())

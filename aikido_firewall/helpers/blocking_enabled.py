@@ -8,9 +8,11 @@ def is_blocking_enabled():
     """
     Checks with the background process if blocking is enabled
     """
-    should_block_res = get_comms().send_data_to_bg_process(
-        action="READ_PROPERTY", obj="block", receive=True
-    )
-    if should_block_res["success"]:
-        return should_block_res["data"]
+    if get_comms():
+        # Only check if comms are defined
+        should_block_res = get_comms().send_data_to_bg_process(
+            action="READ_PROPERTY", obj="block", receive=True
+        )
+        if should_block_res["success"]:
+            return should_block_res["data"]
     return check_env_for_blocking()

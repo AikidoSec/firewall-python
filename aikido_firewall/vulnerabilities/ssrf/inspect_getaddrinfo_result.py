@@ -7,6 +7,7 @@ from aikido_firewall.context import get_current_context
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.errors import AikidoSSRF
 from aikido_firewall.helpers.blocking_enabled import is_blocking_enabled
+from aikido_firewall.background_process.ipc_lifecycle_cache import get_cache
 from .imds import resolves_to_imds_ip
 from .is_private_ip import is_private_ip
 from .find_hostname_in_context import find_hostname_in_context
@@ -26,7 +27,12 @@ def inspect_getaddrinfo_result(dns_results, hostname, port):
     if not inspect_dns_results(dns_results, hostname):
         return
 
-    if not context:
+    if not context or not get_cache():
+        # Context and lifecycle cache should be set for the following code
+        return
+    if get_cache().is_bypassed_ip(context.remote_address):
+        # We check for bypassed ip's here since it is not checked for us
+        # in run_vulnerability_scan due to the exception for SSRF (see above code)
         return
 
     # attack_findings is an object containing source, pathToPayload and payload.

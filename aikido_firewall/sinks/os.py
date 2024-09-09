@@ -3,7 +3,7 @@ Sink module for python's `os`
 """
 
 import copy
-import importhook
+import aikido_firewall.importhook as importhook
 import aikido_firewall.vulnerabilities as vulns
 
 # File functions :
@@ -22,6 +22,7 @@ OS_FILE_FUNCTIONS = [
     "link",
     #    "makedirs", # Makedirs uses mkdir
     "walk",
+    "open",
 ]
 OS_PATH_FUNCTIONS = [
     "realpath",

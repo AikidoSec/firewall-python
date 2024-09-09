@@ -108,6 +108,12 @@ def test_os_commands():
         args = ("qlfjwqqfqelfknef_kwlkgrlkbwkalwd",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
+        with pytest.raises(FileNotFoundError):
+            os.open("gmlwgewlnqlfnawglkwnfleknlew", os.O_RDONLY)
+        op = "os.open"
+        args = ("gmlwgewlnqlfnawglkwnfleknlew",)
+        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
 
 # Test that it can Handle all sorts of data :
 def test_os_invalid_input():

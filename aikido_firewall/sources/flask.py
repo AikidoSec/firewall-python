@@ -3,7 +3,7 @@ Flask source module, intercepts flask import and adds Aikido middleware
 """
 
 import copy
-import importhook
+import aikido_firewall.importhook as importhook
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.context import Context
 from aikido_firewall.background_process.packages import add_wrapped_package

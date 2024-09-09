@@ -3,7 +3,7 @@ Sink module for `xml`, python's built-in function
 """
 
 import copy
-import importhook
+import aikido_firewall.importhook as importhook
 from aikido_firewall.helpers.logging import logger
 from aikido_firewall.helpers.extract_data_from_xml_body import (
     extract_data_from_xml_body,

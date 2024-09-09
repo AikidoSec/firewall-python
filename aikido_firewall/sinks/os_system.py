@@ -3,7 +3,7 @@ Sink module for `os`, wrapping os.system
 """
 
 import copy
-import importhook
+import aikido_firewall.importhook as importhook
 import aikido_firewall.vulnerabilities as vulns
 
 
@@ -12,6 +12,8 @@ def on_os_import(os):
     """
     Hook 'n wrap on `os.system()` function
     Returns : Modified os object
+    We don't wrap os.popen() since this command uses subprocess.Popen, which we
+    already wrap and protect in the subprocess.py sink.
     """
     modified_os = importhook.copy_module(os)
 
