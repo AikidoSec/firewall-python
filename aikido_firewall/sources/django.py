@@ -30,8 +30,13 @@ def gen_aikido_middleware_function(former__middleware_chain):
                 # E.g. XML Data
                 body = request.body
 
-            context = Context(req=request.META, body=body, source="django")
+            context = None
+            if hasattr(request, "scope"):  # This request is an ASGI request
+                context = Context(req=request.scope, body=body, source="django_async")
+            else:  # WSGI request
+                context = Context(req=request.META, body=body, source="django")
             context.set_as_current_context()
+
             request_handler(stage="init")
         except Exception as e:
             logger.debug("Error occured in django middleware func : %s", e)
