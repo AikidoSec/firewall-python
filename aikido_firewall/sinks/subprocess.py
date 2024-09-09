@@ -15,17 +15,15 @@ def generate_aikido_function(op, former_func):
     an operation and a former function
     """
 
-    def aikido_new_func(*args, op=op, former_func=former_func, **kwargs):
+    def aikido_new_func(args, *arguments, op=op, former_func=former_func, **kwargs):
         shell_enabled = kwargs.get("shell")
-
         command = None
-        if len(args) != 0 and hasattr(args[0], "__iter__"):
-            # Check if the argument is an iterable i.e. list, dict, tuple
+        if isinstance(args, str):
+            command = args
+        elif hasattr(args, "__iter__"):
+            # Check if args is an iterable i.e. list, dict, tuple
             # If it is we join it with spaces to run the shell_injection algorithm.
-            command = " ".join(args[0])
-        elif len(args) != 0 and isinstance(args[0], str):
-            # Check if the argument is a regular string, run that through shell_injection algo.
-            command = args[0]
+            command = " ".join(args)
 
         # For all operations above: call, run, check_call, Popen, check_output, default value
         # of the shell property is False.
@@ -35,7 +33,7 @@ def generate_aikido_function(op, former_func):
                 op=f"subprocess.{op}",
                 args=(command,),
             )
-        return former_func(*args, **kwargs)
+        return former_func(args, *arguments, **kwargs)
 
     return aikido_new_func
 

@@ -21,6 +21,10 @@ def test_subprocess_call():
         args = ("cfsknflks",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
+        subprocess.call("ls -la", shell=True)
+        args = ("ls -la",)
+        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
 
 def test_subprocess_run():
     with patch(
@@ -71,6 +75,14 @@ def test_subprocess_popen():
 
         subprocess.Popen(["cfsknflks"], shell=True)
         args = ("cfsknflks",)
+        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
+        subprocess.Popen("ls -la", shell=True)
+        args = ("ls -la",)
+        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
+        subprocess.Popen(args="ls -la", shell=True)
+        args = ("ls -la",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
 
