@@ -19,7 +19,7 @@ def index(request):
 
 def dog_page(request, dog_id):
     dog = get_object_or_404(Dogs, pk=dog_id)
-    return HttpResponse("Your dog, %s, is lovely. Boss name is : %s" % (dog.dog_name, dog.dog_boss))
+    return HttpResponse("Your dog, %s, is lovely. Is admin? %s" % (dog.dog_name, dog.is_admin))
 
 @csrf_exempt
 def create_dogpage(request):
@@ -29,7 +29,8 @@ def create_dogpage(request):
         dog_name = request.POST.get('dog_name')
         # Using custom sql to create a dog :
         with connection.cursor() as cursor:
-            query = f"INSERT INTO dogs (dog_name, isAdmin) VALUES ('%s', FALSE)" % (dog_name)
+            query = f"INSERT INTO sample_app_Dogs (dog_name, is_admin) VALUES ('%s', FALSE)" % (dog_name)
             print("QUERY : ", query)
             cursor.execute(query)
+
         return HttpResponse("Dog page created")
