@@ -3,7 +3,7 @@
 ## Testing : 
 Start the Mongo database with `docker-compose up`
 
-Install packages (including aikido_firewall):
+Install packages (including aikido_zen):
 ```bash
 make install
 ```

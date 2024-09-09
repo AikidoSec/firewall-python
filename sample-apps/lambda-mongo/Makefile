@@ -5,8 +5,8 @@ install:
 	rm -rf ../../dist
 
 	cd ../../ && $(MAKE) build
-	mv ../../dist/aikido_firewall-*.tar.gz ../../dist/aikido_firewall.tar.gz
-	pip install ../../dist/aikido_firewall.tar.gz
+	mv ../../dist/aikido_zen-*.tar.gz ../../dist/aikido_zen.tar.gz
+	pip install ../../dist/aikido_zen.tar.gz
 
 .PHONY: run_unsafe
 run_unsafe:
