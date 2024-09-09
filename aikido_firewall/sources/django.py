@@ -7,6 +7,7 @@ import json
 import copy
 import aikido_firewall.importhook as importhook
 from aikido_firewall.context import Context
+from aikido_firewall.helpers.logging import logger
 from aikido_firewall.background_process.packages import add_wrapped_package
 from .functions.request_handler import request_handler
 
@@ -18,20 +19,22 @@ def gen_aikido_middleware_function(former__middleware_chain):
 
     def aikido_middleware_function(request):
         # Get a parsed body from Django :
-        body = request.POST.dict()
-        if len(body) == 0 and request.content_type == "application/json":
-            try:
-                body = json.loads(request.body)
-            except Exception:
-                pass
-        if len(body) == 0:
-            # E.g. XML Data
-            body = request.body
+        try:
+            body = request.POST.dict()
+            if len(body) == 0 and request.content_type == "application/json":
+                try:
+                    body = json.loads(request.body)
+                except Exception:
+                    pass
+            if len(body) == 0:
+                # E.g. XML Data
+                body = request.body
 
-        context = Context(req=request.META, body=body, source="django")
-        context.set_as_current_context()
-        request_handler(stage="init")
-
+            context = Context(req=request.META, body=body, source="django")
+            context.set_as_current_context()
+            request_handler(stage="init")
+        except Exception as e:
+            logger.debug("Error occured in django middleware func : %s", e)
         res = former__middleware_chain(request)
         request_handler(stage="post_response", status_code=res.status_code)
         return res
