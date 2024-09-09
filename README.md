@@ -1,4 +1,4 @@
-![Aikido Firewall for Python 3](https://aikido-production-staticfiles-public.s3.eu-west-1.amazonaws.com/banner-pypi.svg)
+![Aikido Zen for Python 3](https://raw.githubusercontent.com/AikidoSec/firewall-python/main/docs/banner.svg)
 
 # Zen, in-app firewall for Python 3  | by Aikido
 
