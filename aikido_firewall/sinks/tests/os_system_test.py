@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import patch
 import aikido_firewall.sinks.os_system
+import aikido_firewall.sinks.subprocess
 
 kind = "shell_injection"
 op = "os.system"
@@ -66,3 +67,23 @@ def test_osdotsystem_invalid_input():
         with pytest.raises(TypeError):
             os.system(("tuple", "command"))
         mock_run_vulnerability_scan.assert_not_called()  # Ensure it was not called
+
+
+def test_osdotpopen_commands():
+    with patch(
+        "aikido_firewall.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        import os
+
+        os.popen("Test command")
+
+        args = ("Test command",)
+        mock_run_vulnerability_scan.assert_called_with(
+            kind=kind, op="subprocess.Popen", args=args
+        )
+
+        os.popen("ls -la | grep 'test'")
+        args = ("ls -la | grep 'test'",)
+        mock_run_vulnerability_scan.assert_called_with(
+            kind=kind, op="subprocess.Popen", args=args
+        )
