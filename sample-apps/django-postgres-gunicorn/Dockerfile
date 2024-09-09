@@ -8,7 +8,7 @@ COPY ./ /tmp
 WORKDIR /app
 
 # Install dependencies
-RUN mv /tmp/sample-apps/django-postgres/requirements.txt ./
+RUN mv /tmp/sample-apps/django-postgres-gunicorn/requirements.txt ./
 RUN pip install -r requirements.txt
 
 # Build and install aikido_firewall from source

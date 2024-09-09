@@ -1,5 +1,5 @@
 """
-ASGI config for sample-django-postgres-app project.
+ASGI config for sample-django-postgres-gunicorn-app project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.asgi import get_asgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'sample-django-postgres-app.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'sample-django-postgres-gunicorn-app.settings')
 
 application = get_asgi_application()

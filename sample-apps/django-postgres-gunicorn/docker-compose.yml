@@ -1,12 +1,12 @@
 version: '3'
 services:
   backend:
-    image: sample_django_postgres
+    image: sample_django_postgres_gunicorn
     build: 
       context: ./../../
-      dockerfile: ./sample-apps/django-postgres/Dockerfile
-    container_name: django_postgres_backend
-    command: sh -c "python3 manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
+      dockerfile: ./sample-apps/django-postgres-gunicorn/Dockerfile
+    container_name: django_postgres_gunicorn_backend
+    command: sh -c "python manage.py makemigrations && python manage.py migrate && gunicorn -c gunicorn_config.py --workers 4 --threads 2 --log-level debug --access-logfile '-' --error-logfile '-' --bind 0.0.0.0:8000 sample-django-postgres-gunicorn-app.wsgi"
     restart: always
     volumes:
       - .:/app
