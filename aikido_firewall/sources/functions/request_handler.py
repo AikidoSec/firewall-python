@@ -11,18 +11,21 @@ from aikido_firewall.background_process.ipc_lifecycle_cache import (
 
 def request_handler(stage, status_code=0):
     """This will check for rate limiting, Allowed IP's, useful routes, etc."""
-    if stage == "init":
-        #  This gets executed the first time a request get's intercepted
-        if get_comms():
-            get_comms().send_data_to_bg_process("STATISTICS", {"action": "request"})
+    try:
+        if stage == "init":
+            #  This gets executed the first time a request get's intercepted
+            if get_comms():
+                get_comms().send_data_to_bg_process("STATISTICS", {"action": "request"})
 
-        # Create a lifecycle cache
-        IPCLifecycleCache(get_current_context())
-        return None
-    if stage == "pre_response":
-        return pre_response()
-    if stage == "post_response":
-        return post_response(status_code)
+            # Create a lifecycle cache
+            IPCLifecycleCache(get_current_context())
+            return None
+        if stage == "pre_response":
+            return pre_response()
+        if stage == "post_response":
+            return post_response(status_code)
+    except Exception as e:
+        logger.debug("Exception occured in request_handler : %s", e)
     return None
 
 
