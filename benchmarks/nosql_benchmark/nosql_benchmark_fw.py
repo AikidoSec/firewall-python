@@ -43,14 +43,14 @@ def run_nosql_find(query, MongoClient):
     return t_end - t_start # Delta
 
 def set_context(context_json):
-    from aikido_firewall.context import Context
-    from aikido_firewall.background_process.ipc_lifecycle_cache import IPCLifecycleCache
+    from aikido_zen.context import Context
+    from aikido_zen.background_process.ipc_lifecycle_cache import IPCLifecycleCache
     context = Context(context_obj=context_json)
     context.set_as_current_context()
     IPCLifecycleCache(context)
 
 def benchmark():
-    import aikido_firewall.sinks.pymongo
+    import aikido_zen.sinks.pymongo
     from pymongo import MongoClient
     nosql_with_fw_data = []
     set_context(normal_context_json)

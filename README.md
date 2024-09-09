@@ -6,7 +6,7 @@ Zen, your in-app firewall for peace of mind– at runtime.
 
 Zen is an embedded Web Application Firewall that autonomously protects your Python apps against common and critical attacks.
 
-Zen protects your Python apps by preventing user input containing dangerous strings, which allow SQL injections. It runs on the same server as your Python app for simple [installation](https://pypi.org/project/aikido_firewall/#installation) and zero maintenance.
+Zen protects your Python apps by preventing user input containing dangerous strings, which allow SQL injections. It runs on the same server as your Python app for simple [installation](https://pypi.org/project/aikido_zen/#installation) and zero maintenance.
 
 ## Features
 
