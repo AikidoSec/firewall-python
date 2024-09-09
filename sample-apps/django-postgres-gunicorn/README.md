@@ -1,5 +1,5 @@
-# Sample Django/Postgres App
-It runs **multi-threaded**
+# Sample Django/Postgres App with gunicorn
+It runs **multi-threaded** and with **multiple cores**
 
 ## Getting started
 With docker-compose installed run

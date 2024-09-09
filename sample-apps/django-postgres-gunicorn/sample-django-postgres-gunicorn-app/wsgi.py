@@ -1,5 +1,5 @@
 """
-WSGI config for sample-django-postgres-app project.
+WSGI config for sample-django-postgres-gunicorn-app project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'sample-django-postgres-app.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'sample-django-postgres-gunicorn-app.settings')
 
 application = get_wsgi_application()
