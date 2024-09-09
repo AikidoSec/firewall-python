@@ -22,6 +22,7 @@ OS_FILE_FUNCTIONS = [
     "link",
     #    "makedirs", # Makedirs uses mkdir
     "walk",
+    "open",
 ]
 OS_PATH_FUNCTIONS = [
     "realpath",
