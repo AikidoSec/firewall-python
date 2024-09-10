@@ -73,6 +73,15 @@ def test_it_finds_ip_address_with_strange_notation_inside_url():
     assert find_hostname_in_userinput("http://127.0.1", "127.0.1") is True
 
 
+def test_it_works_with_invalid_ports():
+    assert (
+        find_hostname_in_userinput(
+            "http://localhost:1337\\u0000asd.php", "localhost", 1337
+        )
+        is True
+    )
+
+
 def test_it_works_with_ports():
     assert find_hostname_in_userinput("http://localhost", "localhost", 8080) is False
     assert (

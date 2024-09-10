@@ -25,6 +25,27 @@ def test_open():
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
 
+def test_open_with_builtins_import():
+    with patch(
+        "aikido_zen.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        import builtins
+
+        with pytest.raises(FileNotFoundError):
+            builtins.open("test_file")
+        args = ("test_file",)
+        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+        with pytest.raises(FileNotFoundError):
+            builtins.open("")
+        args = ("",)
+        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
+        with pytest.raises(FileNotFoundError):
+            builtins.open("ltlwtjl_tlnekt.py")
+        args = ("ltlwtjl_tlnekt.py",)
+        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
+
 def test_open_invalid_input():
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"

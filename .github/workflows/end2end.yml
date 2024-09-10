@@ -19,6 +19,10 @@ jobs:
       working-directory: ./sample-apps/django-mysql-gunicorn
       run: |
         docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
+    - name: Start django-postgres-gunicorn
+      working-directory: ./sample-apps/django-postgres-gunicorn
+      run: |
+        docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
     - name: Start flask-mongo
       working-directory: ./sample-apps/flask-mongo
       run: |
