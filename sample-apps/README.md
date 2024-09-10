@@ -28,3 +28,10 @@ Overview :
 - `quart-mongo/` is a Quart app using Mongo (Motor)
   - This application is **asynchronous**
   - Runs on 8098. Without aikido runs on 8099
+- `django-postgres-gunicorn/` is a Django app using Postgres and running with a Gunicorn backend.
+  - it runs 4 processes, called workers, (**multi-process**) which handle requests using 2 threads (**multi-threaded**)
+  - Runs on 8100. Without Aikido runs on 8101
+- `starlette-postgres-uvicorn/` is a Starlette app using Postgres and with Uvicorn
+  - It runs 4 processes, called workers, (**multi-process**) which handles requests **multi-threaded**
+  - This application is **asynchronous**
+  - Runs on 8102. Without aikido runs on 8103
