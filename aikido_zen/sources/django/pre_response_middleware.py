@@ -1,9 +1,9 @@
-"""Exports ratelimiting_middleware function"""
+"""Exports pre_response_middleware function"""
 
 from ..functions.request_handler import request_handler
 
 
-def ratelimiting_middleware(request, *args, **kwargs):
+def pre_response_middleware(request, *args, **kwargs):
     """Aikido middleware that handles ratelimiting"""
     response = request_handler(stage="pre_response")
     if response:

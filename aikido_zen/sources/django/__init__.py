@@ -6,7 +6,7 @@ from aikido_zen.helpers.logging import logger
 from aikido_zen.background_process.packages import add_wrapped_package
 from ..functions.request_handler import request_handler
 from .run_init_stage import run_init_stage
-from .ratelimiting_middleware import ratelimiting_middleware
+from .pre_response_middleware import pre_response_middleware
 
 
 @importhook.on_import("django.core.handlers.base")
@@ -24,9 +24,9 @@ def on_django_gunicorn_import(django):
     def aikido__get_response(self, request):  # Synchronous (WSGI)
         run_init_stage(request)  # We do some initial request handling
 
-        if ratelimiting_middleware not in self._view_middleware:
+        if pre_response_middleware not in self._view_middleware:
             # The rate limiting middleware needs to be last in the chain.
-            self._view_middleware += [ratelimiting_middleware]
+            self._view_middleware += [pre_response_middleware]
 
         res = former__get_response(self, request)
         if hasattr(res, "status_code"):
