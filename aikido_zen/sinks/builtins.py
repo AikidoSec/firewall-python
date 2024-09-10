@@ -28,4 +28,5 @@ def on_builtins_import(builtins):
 
     # pylint: disable=no-member
     setattr(builtins, "open", aikido_new_open)
+    setattr(modified_builtins, "open", aikido_new_open)
     return modified_builtins
