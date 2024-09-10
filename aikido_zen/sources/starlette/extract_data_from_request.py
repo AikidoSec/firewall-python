@@ -10,5 +10,14 @@ async def extract_data_from_request(request):
         return
 
     # Parse data
+    try:
+        context.body = await request.json()
+    except ValueError:
+        # Throws error if the body is not json
+        pass
+    if not context.body:
+        context.body = await request.form()
+    if not context.body:
+        context.body = await request.body()
 
     context.set_as_current_context()
