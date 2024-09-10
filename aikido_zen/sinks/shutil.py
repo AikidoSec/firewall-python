@@ -33,7 +33,7 @@ def generate_aikido_function(op, former_func):
             vulns.run_vulnerability_scan(kind, op, args=(src,))
         if dst:
             vulns.run_vulnerability_scan(kind, op, args=(dst,))
-        return former_func(*args, **kwargs)
+        return former_func(src, dst, *args, **kwargs)
 
     return aikido_new_func
 
