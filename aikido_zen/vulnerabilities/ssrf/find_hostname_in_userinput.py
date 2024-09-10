@@ -25,6 +25,7 @@ def find_hostname_in_userinput(user_input, hostname, port=None):
             
             # We were unable to retrieve the port from the URL, likely because it contains an invalid port.
             # Let's assume we have found the hostname in the user input, even though it doesn't match on port.
+            # See: https://github.com/AikidoSec/firewall-python/pull/180.
             if user_port is None:
                 return True
 
