@@ -1,8 +1,8 @@
 """Exports run_init_stage function"""
 
 import json
-from aikido_firewall.context import Context
-from aikido_firewall.helpers.logging import logger
+from aikido_zen.context import Context
+from aikido_zen.helpers.logging import logger
 from ..functions.request_handler import request_handler
 
 

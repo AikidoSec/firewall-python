@@ -1,9 +1,9 @@
 """`Django` source module"""
 
 import copy
-import aikido_firewall.importhook as importhook
-from aikido_firewall.helpers.logging import logger
-from aikido_firewall.background_process.packages import add_wrapped_package
+import aikido_zen.importhook as importhook
+from aikido_zen.helpers.logging import logger
+from aikido_zen.background_process.packages import add_wrapped_package
 from ..functions.request_handler import request_handler
 from .run_init_stage import run_init_stage
 from .ratelimiting_middleware import ratelimiting_middleware
