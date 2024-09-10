@@ -11,11 +11,11 @@ SHUTIL_SRC_DST_FUNCTIONS = [
     "copyfile",
     "copymode",
     "copystat",
-    "copy",
-    "copy2",
     "copytree",
     "move",
 ]
+# shutil.copy(src, dst, *, **) => copyfile/copymode
+# shutil.copy2(src, dst, *, **) => copyfile/copystat
 
 
 def generate_aikido_function(op, former_func):
