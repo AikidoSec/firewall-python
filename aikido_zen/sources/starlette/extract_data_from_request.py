@@ -16,7 +16,10 @@ async def extract_data_from_request(request):
         # Throws error if the body is not json
         pass
     if not context.body:
-        context.body = await request.form()
+        form_data = await request.form()
+        if form_data:
+            # Convert to dict object :
+            context.body = {key: value for key, value in form_data.items()}
     if not context.body:
         context.body = await request.body()
 
