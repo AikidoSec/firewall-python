@@ -30,7 +30,7 @@ def database_conn():
     return pymysql.connect(host="127.0.0.1", user="user", passwd="password", db="db")
 
 def run_sql_fw(sql):
-    import aikido_firewall.sinks.pymysql
+    import aikido_zen.sinks.pymysql
     conn = database_conn()
     cursor = conn.cursor()
     t_start = time.time()
@@ -41,8 +41,8 @@ def run_sql_fw(sql):
     return t_end - t_start # Delta
 
 def set_context(context_json):
-    from aikido_firewall.context import Context
-    from aikido_firewall.background_process.ipc_lifecycle_cache import IPCLifecycleCache
+    from aikido_zen.context import Context
+    from aikido_zen.background_process.ipc_lifecycle_cache import IPCLifecycleCache
     context = Context(context_obj=context_json)
     context.set_as_current_context()
     IPCLifecycleCache(context)

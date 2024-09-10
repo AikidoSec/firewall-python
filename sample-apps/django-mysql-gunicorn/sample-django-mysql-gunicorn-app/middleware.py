@@ -1,5 +1,5 @@
 
-from aikido_firewall import set_user
+from aikido_zen import set_user
 class SimpleAuthMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response

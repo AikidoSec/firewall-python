@@ -567,17 +567,6 @@ files = [
 ]
 
 [[package]]
-name = "importhook"
-version = "1.0.9"
-description = "Execute code when certain modules are imported"
-optional = false
-python-versions = ">3.3"
-files = [
-    {file = "importhook-1.0.9-py3-none-any.whl", hash = "sha256:64500997b59abf054ddd5037c5133879a4b3ee2091370b46af30befd0be331c1"},
-    {file = "importhook-1.0.9.tar.gz", hash = "sha256:635ad367225fa022221025545c167b09d09ada671821b6e587df0d5ae4bf0aab"},
-]
-
-[[package]]
 name = "iniconfig"
 version = "2.0.0"
 description = "brain-dead simple config-ini parsing"
@@ -1214,4 +1203,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "833d1ab5bc838d11c28135cee93302777d6e2df9a6dc585e3bf62b4fda28d8df"
+content-hash = "6f70d1b8432611742e52063315bb14faf140e9ed1c8bb586ea33cf538b6b2739"

@@ -1,0 +1,28 @@
+version: '3'
+services:
+  backend:
+    image: sample_django_postgres_gunicorn
+    build: 
+      context: ./../../
+      dockerfile: ./sample-apps/django-postgres-gunicorn/Dockerfile
+    container_name: django_postgres_gunicorn_backend
+    command: sh -c "python manage.py migrate && gunicorn -c gunicorn_config.py --workers 4 --threads 2 --log-level debug --access-logfile '-' --error-logfile '-' --bind 0.0.0.0:8000 sample-django-postgres-gunicorn-app.wsgi"
+    restart: always
+    volumes:
+      - .:/app
+    ports:
+      - "8094:8000"
+    extra_hosts:
+      - "app.local.aikido.io:host-gateway"
+      - "host.docker.internal:host-gateway"
+    environment:
+      SECRET_KEY: 'Test key'
+      DB_HOST: 'host.docker.internal'
+      DB_NAME: 'db'
+      DB_USER: 'user'
+      DB_PASSWORD: 'password'
+      FIREWALL_DISABLED: 0
+
+
+volumes:
+  db_data:

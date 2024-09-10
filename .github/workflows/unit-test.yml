@@ -15,7 +15,9 @@ jobs:
     - name: Start databases
       working-directory:  ./sample-apps/databases
       run: docker compose up --build -d
-
+    - name: Add local.aikido.io to /etc/hosts
+      run: |
+          sudo echo "127.0.0.1 local.aikido.io" | sudo tee -a /etc/hosts
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
