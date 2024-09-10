@@ -26,6 +26,22 @@ def test_subprocess_call():
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
 
+def test_subprocess_call_not_called():
+    with patch(
+        "aikido_zen.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        import subprocess
+
+        subprocess.call(["ls", "-la"])
+        mock_run_vulnerability_scan.assert_not_called()
+
+        subprocess.call(["pwd"], shell=False)
+        mock_run_vulnerability_scan.assert_not_called()
+
+        subprocess.call("ls")
+        mock_run_vulnerability_scan.assert_not_called()
+
+
 def test_subprocess_run():
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
@@ -41,6 +57,19 @@ def test_subprocess_run():
         subprocess.run(["cfsknflks"], shell=True)
         args = ("cfsknflks",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
+
+def test_subprocess_run_not_called():
+    with patch(
+        "aikido_zen.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        import subprocess
+
+        subprocess.run(["ls", "-la"])
+        mock_run_vulnerability_scan.assert_not_called()
+
+        subprocess.run(["pwd"], shell=False)
+        mock_run_vulnerability_scan.assert_not_called()
 
 
 def test_subprocess_check_call():
@@ -59,6 +88,19 @@ def test_subprocess_check_call():
             subprocess.check_call(["cfsknflks"], shell=True)
         args = ("cfsknflks",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
+
+def test_subprocess_check_call_not_called():
+    with patch(
+        "aikido_zen.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        import subprocess
+
+        subprocess.check_call(["ls", "-la"], shell=False)
+        mock_run_vulnerability_scan.assert_not_called()
+
+        subprocess.check_call(["whoami"])
+        mock_run_vulnerability_scan.assert_not_called()
 
 
 def test_subprocess_popen():
@@ -84,6 +126,28 @@ def test_subprocess_popen():
         subprocess.Popen(args="ls -la", shell=True)
         args = ("ls -la",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
+
+def test_subprocess_popen_not_called():
+    with patch(
+        "aikido_zen.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        import subprocess
+
+        subprocess.Popen(["ls", "-la"])
+        mock_run_vulnerability_scan.assert_not_called()
+
+        subprocess.Popen(["whoami"], shell=False)
+        mock_run_vulnerability_scan.assert_not_called()
+
+        subprocess.Popen("pwd", shell=False)
+        mock_run_vulnerability_scan.assert_not_called()
+
+        subprocess.Popen(args="pwd", shell=False)
+        mock_run_vulnerability_scan.assert_not_called()
+
+        subprocess.Popen(args="pwd")
+        mock_run_vulnerability_scan.assert_not_called()
 
 
 def test_subprocess_check_output():
@@ -117,6 +181,32 @@ def test_subprocess_check_output():
             subprocess.check_output({"ke": "value", "key2": "value2"}, shell=True)
         args = ("ke key2",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
+
+def test_subprocess_check_output():
+    with patch(
+        "aikido_zen.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        import subprocess
+
+        subprocess.check_output(["ls", "-la"], shell=False)
+        mock_run_vulnerability_scan.assert_not_called()
+
+        with pytest.raises(FileNotFoundError):
+            subprocess.check_output(["cfsknflks"])
+        mock_run_vulnerability_scan.assert_not_called()
+
+        with pytest.raises(FileNotFoundError):
+            subprocess.check_output(("tuple", "command"), shell=False)
+        mock_run_vulnerability_scan.assert_not_called()
+
+        with pytest.raises(FileNotFoundError):
+            subprocess.check_output({"key": "value"})
+        mock_run_vulnerability_scan.assert_not_called()
+
+        with pytest.raises(FileNotFoundError):
+            subprocess.check_output({"ke": "value", "key2": "value2"}, shell=False)
+        mock_run_vulnerability_scan.assert_not_called()
 
 
 def test_subprocess_invalid_input():
