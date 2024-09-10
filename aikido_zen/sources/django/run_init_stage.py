@@ -9,7 +9,6 @@ from ..functions.request_handler import request_handler
 def run_init_stage(request):
     """Parse request and body, run "init" stage with request_handler"""
     try:
-        request_handler(stage="init")
         body = request.POST.dict()
         if len(body) == 0 and request.content_type == "application/json":
             try:
@@ -26,5 +25,8 @@ def run_init_stage(request):
         elif hasattr(request, "META"):  # WSGI request
             context = Context(req=request.META, body=body, source="django")
         context.set_as_current_context()
+
+        # Init stage needs to be run with context already set :
+        request_handler(stage="init")
     except Exception as e:
         logger.debug("Error occured in run_init_stage function (Django) : %s", e)
