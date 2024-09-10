@@ -23,7 +23,7 @@ def run_init_stage(request):
         context = None
         if hasattr(request, "scope"):  # This request is an ASGI request
             context = Context(req=request.scope, body=body, source="django_async")
-        else:  # WSGI request
+        elif hasattr(request, "META"):  # WSGI request
             context = Context(req=request.META, body=body, source="django")
         context.set_as_current_context()
     except Exception as e:
