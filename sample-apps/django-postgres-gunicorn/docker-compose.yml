@@ -11,7 +11,7 @@ services:
     volumes:
       - .:/app
     ports:
-      - "8094:8000"
+      - "8100:8000"
     extra_hosts:
       - "app.local.aikido.io:host-gateway"
       - "host.docker.internal:host-gateway"
