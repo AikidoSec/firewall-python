@@ -6,7 +6,7 @@ import copy
 import aikido_zen.importhook as importhook
 import aikido_zen.vulnerabilities as vulns
 
-# File functions :
+# os.func(...) functions, can have a filename and destination.
 OS_FILE_FUNCTIONS = [
     "access",
     "chmod",
@@ -20,15 +20,19 @@ OS_FILE_FUNCTIONS = [
     "remove",
     "symlink",
     "link",
-    #    "makedirs", # Makedirs uses mkdir
     "walk",
     "open",
 ]
+
+# os.path.func(...) functions, can have a filename and destination.
 OS_PATH_FUNCTIONS = [
     "realpath",
     "getsize",
 ]
 # os.path.join(path, *paths) is not wrapped
+# os.makedirs() is not wrapped since it uses os.mkdir() which we wrap
+# os.path.exists() and functions alike are not wrapped for performance reasons.
+# We also don't wrap the stat library : https://docs.python.org/3/library/stat.html
 
 
 def generate_aikido_function(op, former_func):
@@ -54,8 +58,7 @@ def generate_aikido_function(op, former_func):
 @importhook.on_import("os")
 def on_os_import(os):
     """
-    Hook 'n wrap on `os`, python's built-in functions
-    Our goal is to wrap the open() function, which you use when opening files
+    Hook 'n wrap on `os` module, wrapping os.func(...) and os.path.func(...)
     Returns : Modified os object
     """
     modified_os = importhook.copy_module(os)
