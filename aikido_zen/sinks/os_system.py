@@ -14,6 +14,8 @@ def on_os_import(os):
     Returns : Modified os object
     We don't wrap os.popen() since this command uses subprocess.Popen, which we
     already wrap and protect in the subprocess.py sink.
+    We also don't wrap os.execl, os.execle, os.execlp, ... because these should only be vulnerable
+    to argument injection, which we currently don't protect against.
     """
     modified_os = importhook.copy_module(os)
 
