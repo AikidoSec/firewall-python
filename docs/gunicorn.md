@@ -1,13 +1,13 @@
 # Gunicorn
 ## Installation/Setup
-1. Install `aikido_firewall` package with pip :
+1. Install `aikido_zen` package with pip :
 ```sh
-pip install aikido_firewall
+pip install aikido_zen
 ```
 
 2. Use the following template for your `gunicorn_config.py` file :
 ```python
-import aikido_firewall.decorators.gunicorn as aik
+import aikido_zen.decorators.gunicorn as aik
 
 @aik.post_fork
 def post_fork(server, worker):

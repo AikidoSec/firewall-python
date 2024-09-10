@@ -21,11 +21,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           make dev_install
-      - name: Install aikido_firewall
+      - name: Install aikido_zen
         run: |
           make build
-          mv ./dist/aikido_firewall-*.tar.gz ./dist/aikido_firewall.tar.gz
-          pip install ./dist/aikido_firewall.tar.gz
+          mv ./dist/aikido_zen-*.tar.gz ./dist/aikido_zen.tar.gz
+          pip install ./dist/aikido_zen.tar.gz
       - name: run sql benchmarks
         run: |
           poetry run python ./benchmarks/sql_benchmark/sql_benchmark_fw.py

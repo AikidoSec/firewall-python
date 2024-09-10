@@ -1,14 +1,14 @@
 # Django
 ## Installation
-1. Install `aikido_firewall` package with pip :
+1. Install `aikido_zen` package with pip :
 ```sh
-pip install aikido_firewall
+pip install aikido_zen
 ```
 
 2. Add the following snippet to the top of your `manage.py` file :
 ```python
-import aikido_firewall
-aikido_firewall.protect()
+import aikido_zen
+aikido_zen.protect()
 ```
 Make sure this is above any other import, including above builtin package imports.
 

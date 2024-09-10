@@ -11,13 +11,13 @@ WORKDIR /app
 RUN mv /tmp/sample-apps/quart-postgres-uvicorn/requirements.txt ./
 RUN pip install -r requirements.txt
 
-# Build and install aikido_firewall from source
+# Build and install aikido_zen from source
 WORKDIR /tmp
 RUN pip install poetry
 RUN rm -rf ./dist
 RUN make build
-RUN mv ./dist/aikido_firewall-*.tar.gz ./dist/aikido_firewall.tar.gz
-RUN pip install ./dist/aikido_firewall.tar.gz
+RUN mv ./dist/aikido_zen-*.tar.gz ./dist/aikido_zen.tar.gz
+RUN pip install ./dist/aikido_zen.tar.gz
 RUN pip list
 
 WORKDIR /app
