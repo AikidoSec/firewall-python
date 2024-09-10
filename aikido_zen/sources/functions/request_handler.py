@@ -17,9 +17,8 @@ def request_handler(stage, status_code=0):
             if get_comms():
                 get_comms().send_data_to_bg_process("STATISTICS", {"action": "request"})
 
-            # Create a lifecycle cache
-            IPCLifecycleCache(get_current_context())
-            return None
+            if get_current_context():  # Create a lifecycle cache
+                IPCLifecycleCache(get_current_context())
         if stage == "pre_response":
             return pre_response()
         if stage == "post_response":
