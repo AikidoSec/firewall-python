@@ -21,5 +21,5 @@ def test_get_port_from_parsed_url():
     )
     assert get_port_from_url(urlparse("https://localhost"), True) == 443
     assert get_port_from_url(urlparse("ftp://localhost"), True) is None
-    assert get_port_from_url(urlparse("http://localhost:1337\\u0000asd.php")) is None
-    assert get_port_from_url(urlparse("http://localhost:123123/asd.php")) is None
+    assert get_port_from_url(urlparse("http://localhost:1337\\u0000asd.php"), True) is None
+    assert get_port_from_url(urlparse("http://localhost:123123/asd.php"), True) is None
