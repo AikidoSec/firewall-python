@@ -57,6 +57,7 @@ def protect(mode="daemon"):
     import aikido_zen.sinks.asyncpg
     import aikido_zen.sinks.builtins
     import aikido_zen.sinks.os
+    import aikido_zen.sinks.shutil
     import aikido_zen.sinks.io
     import aikido_zen.sinks.http_client
     import aikido_zen.sinks.socket
