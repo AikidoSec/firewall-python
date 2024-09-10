@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "aikido_firewall"
+name = "aikido_zen"
 version = "0.1.19"
 description = "Aikido Zen for Python"
 authors = ["Aikido Security <help@aikido.dev>"]
