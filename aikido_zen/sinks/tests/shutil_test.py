@@ -1,6 +1,8 @@
 import pytest
 from unittest.mock import patch
+import aikido_zen.sinks.builtins
 import aikido_zen.sinks.shutil
+
 
 kind = "path_traversal"
 
@@ -12,33 +14,35 @@ def test_shutil_copyfile():
         import shutil
 
         shutil.copyfile("Makefile", "test2")
-        op = "shutil.copyfile"
+        op = "builtins.open"
         args1 = ("Makefile",)
         args2 = ("test2",)
         assert len(mock_run_vulnerability_scan.call_args_list) == 2
         call_1 = mock_run_vulnerability_scan.call_args_list[0]
         call_2 = mock_run_vulnerability_scan.call_args_list[1]
 
-        assert call_1.args == call_2.args == (kind, op)
+        assert call_1.kwargs["op"] == call_2.kwargs["op"] == op
+        assert call_1.kwargs["kind"] == call_2.kwargs["kind"] == kind
         assert call_1.kwargs["args"] == args1
         assert call_2.kwargs["args"] == args2
 
 
-def test_shutil_copyfile_args():
+def test_shutil_copyfile():
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
         import shutil
 
-        shutil.copyfile(dst="Makefile", src="test2")
-        op = "shutil.copyfile"
-        args1 = ("test2",)
-        args2 = ("Makefile",)
+        shutil.copyfile(src="Makefile", dst="test2")
+        op = "builtins.open"
+        args1 = ("Makefile",)
+        args2 = ("test2",)
         assert len(mock_run_vulnerability_scan.call_args_list) == 2
         call_1 = mock_run_vulnerability_scan.call_args_list[0]
         call_2 = mock_run_vulnerability_scan.call_args_list[1]
 
-        assert call_1.args == call_2.args == (kind, op)
+        assert call_1.kwargs["op"] == call_2.kwargs["op"] == op
+        assert call_1.kwargs["kind"] == call_2.kwargs["kind"] == kind
         assert call_1.kwargs["args"] == args1
         assert call_2.kwargs["args"] == args2
 
@@ -127,14 +131,15 @@ def test_shutil_copy():
         import shutil
 
         shutil.copy("Makefile", "test2")
-        op = "shutil.copyfile"
+        op = "builtins.open"
         args1 = ("Makefile",)
         args2 = ("test2",)
         assert len(mock_run_vulnerability_scan.call_args_list) == 4
         call_1 = mock_run_vulnerability_scan.call_args_list[0]
         call_2 = mock_run_vulnerability_scan.call_args_list[1]
 
-        assert call_1.args == call_2.args == (kind, op)
+        assert call_1.kwargs["op"] == call_2.kwargs["op"] == op
+        assert call_1.kwargs["kind"] == call_2.kwargs["kind"] == kind
         assert call_1.kwargs["args"] == args1
         assert call_2.kwargs["args"] == args2
 
@@ -146,14 +151,15 @@ def test_shutil_copy2():
         import shutil
 
         shutil.copy2("Makefile", "test2")
-        op = "shutil.copyfile"
+        op = "builtins.open"
         args1 = ("Makefile",)
         args2 = ("test2",)
         assert len(mock_run_vulnerability_scan.call_args_list) == 4
         call_1 = mock_run_vulnerability_scan.call_args_list[0]
         call_2 = mock_run_vulnerability_scan.call_args_list[1]
 
-        assert call_1.args == call_2.args == (kind, op)
+        assert call_1.kwargs["op"] == call_2.kwargs["op"] == op
+        assert call_1.kwargs["kind"] == call_2.kwargs["kind"] == kind
         assert call_1.kwargs["args"] == args1
         assert call_2.kwargs["args"] == args2
 

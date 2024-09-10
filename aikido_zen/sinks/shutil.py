@@ -8,14 +8,14 @@ import aikido_zen.vulnerabilities as vulns
 
 # File functions func(src, dst, *, **)
 SHUTIL_SRC_DST_FUNCTIONS = [
-    "copyfile",
     "copymode",
     "copystat",
     "copytree",
     "move",
 ]
-# shutil.copy(src, dst, *, **) => copyfile/copymode
-# shutil.copy2(src, dst, *, **) => copyfile/copystat
+# shutil.copyfile(src, dst, *, **) => builtins.open
+# shutil.copy(src, dst, *, **) => builtins.open
+# shutil.copy2(src, dst, *, **) => builtins.open
 
 
 def generate_aikido_function(op, former_func):
