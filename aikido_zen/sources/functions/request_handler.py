@@ -16,9 +16,9 @@ def request_handler(stage, status_code=0):
             #  This gets executed the first time a request get's intercepted
             if get_comms():
                 get_comms().send_data_to_bg_process("STATISTICS", {"action": "request"})
-
-            if get_current_context():  # Create a lifecycle cache
-                IPCLifecycleCache(get_current_context())
+            context = get_current_context()
+            if context:  # Create a lifecycle cache
+                IPCLifecycleCache(context)
         if stage == "pre_response":
             return pre_response()
         if stage == "post_response":
