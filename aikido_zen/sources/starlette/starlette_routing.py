@@ -47,6 +47,8 @@ def aik_route_func_wrapper(func):
                     return response
         except Exception as e:
             logger.debug("Exception occured in pre_response stage starlette : %s", e)
+
+        # Calling the function, check if it's async or not (same checks as in codebase starlette)
         try:
             import functools
             from starlette.concurrency import run_in_threadpool
@@ -57,7 +59,7 @@ def aik_route_func_wrapper(func):
         res = None
         if is_async_callable(func):
             res = await func(*args, **kwargs)
-        else:
+        else:  # Convert to async function and await
             res = await functools.partial(run_in_threadpool, func)(*args, **kwargs)
 
         # Code after response (post_response stage)
