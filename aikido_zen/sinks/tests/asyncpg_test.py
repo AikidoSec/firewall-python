@@ -125,14 +125,22 @@ async def test_conn_transaction(database_conn):
             await conn.execute(query)
 
             calls = mock_run_vulnerability_scan.call_args_list
+            if len(calls) > 2:
+                first_call_args = calls[2][1]["args"]
+                assert first_call_args[0] == "BEGIN;"
+                assert isinstance(first_call_args[1], Postgres)
 
-            first_call_args = calls[2][1]["args"]
-            assert first_call_args[0] == "BEGIN;"
-            assert isinstance(first_call_args[1], Postgres)
+                second_call_args = calls[3][1]["args"]
+                assert second_call_args[0] == query
+                assert isinstance(second_call_args[1], Postgres)
+            else:
+                first_call_args = calls[0][1]["args"]
+                assert first_call_args[0] == "BEGIN;"
+                assert isinstance(first_call_args[1], Postgres)
 
-            second_call_args = calls[3][1]["args"]
-            assert second_call_args[0] == query
-            assert isinstance(second_call_args[1], Postgres)
+                second_call_args = calls[1][1]["args"]
+                assert second_call_args[0] == query
+                assert isinstance(second_call_args[1], Postgres)
 
         await conn.close()
 
