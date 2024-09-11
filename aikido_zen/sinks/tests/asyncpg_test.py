@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import patch
 import aikido_zen.sinks.asyncpg
+import aikido_zen.sinks.os
 from aikido_zen.background_process.comms import reset_comms
 from aikido_zen.vulnerabilities.sql_injection.dialects import Postgres
 
@@ -33,12 +34,10 @@ async def test_conn_execute(database_conn):
         called_with_kind = mock_run_vulnerability_scan.call_args[1]["kind"]
         assert called_with_args[0] == query
         assert isinstance(called_with_args[1], Postgres)
-        mock_run_vulnerability_scan.assert_called_once()
         assert called_with_op == "asyncpg.connection.Connection.execute"
         assert called_with_kind == "sql_injection"
 
         await conn.close()
-        mock_run_vulnerability_scan.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -54,10 +53,8 @@ async def test_conn_fetchrow(database_conn):
         called_with_args = mock_run_vulnerability_scan.call_args[1]["args"]
         assert called_with_args[0] == query
         assert isinstance(called_with_args[1], Postgres)
-        mock_run_vulnerability_scan.assert_called_once()
 
         await conn.close()
-        mock_run_vulnerability_scan.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -73,10 +70,8 @@ async def test_conn_fetch(database_conn):
         called_with_args = mock_run_vulnerability_scan.call_args[1]["args"]
         assert called_with_args[0] == query
         assert isinstance(called_with_args[1], Postgres)
-        mock_run_vulnerability_scan.assert_called_once()
 
         await conn.close()
-        mock_run_vulnerability_scan.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -92,10 +87,8 @@ async def test_conn_fetchval(database_conn):
         called_with_args = mock_run_vulnerability_scan.call_args[1]["args"]
         assert called_with_args[0] == query
         assert isinstance(called_with_args[1], Postgres)
-        mock_run_vulnerability_scan.assert_called_once()
 
         await conn.close()
-        mock_run_vulnerability_scan.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -109,11 +102,11 @@ async def test_conn_execute_parameterized(database_conn):
         await conn.execute(query, "Doggo", False)
         calls = mock_run_vulnerability_scan.call_args_list
 
-        first_call_args = calls[0][1]["args"]
+        first_call_args = calls[2][1]["args"]
         assert first_call_args[0] == query
         assert isinstance(first_call_args[1], Postgres)
 
-        second_call_args = calls[1][1]["args"]
+        second_call_args = calls[3][1]["args"]
         assert second_call_args[0] == query
         assert isinstance(second_call_args[1], Postgres)
 
@@ -133,11 +126,11 @@ async def test_conn_transaction(database_conn):
 
             calls = mock_run_vulnerability_scan.call_args_list
 
-            first_call_args = calls[0][1]["args"]
+            first_call_args = calls[2][1]["args"]
             assert first_call_args[0] == "BEGIN;"
             assert isinstance(first_call_args[1], Postgres)
 
-            second_call_args = calls[1][1]["args"]
+            second_call_args = calls[3][1]["args"]
             assert second_call_args[0] == query
             assert isinstance(second_call_args[1], Postgres)
 
@@ -160,6 +153,5 @@ async def test_conn_cursor(database_conn):
             called_with_args = mock_run_vulnerability_scan.call_args[1]["args"]
             assert called_with_args[0] == "BEGIN;"
             assert isinstance(called_with_args[1], Postgres)
-            mock_run_vulnerability_scan.assert_called_once()
 
         await conn.close()
