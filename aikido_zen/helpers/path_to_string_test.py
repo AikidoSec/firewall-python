@@ -1,3 +1,4 @@
+from pathlib import Path, PurePath
 import pytest
 from .path_to_string import path_to_string
 
@@ -30,3 +31,19 @@ def test_path_to_string_with_other_types():
     assert path_to_string(123) is None  # Integer input
     assert path_to_string([]) is None  # List input
     assert path_to_string({}) is None  # Dictionary input
+
+
+def test_path_to_string_with_pure_path():
+    assert path_to_string(PurePath("./", "/folder", "/test.py")) == "/test.py"
+    assert path_to_string(PurePath("./", "/folder", "test2.py")) == "/folder/test2.py"
+    assert path_to_string(PurePath(".", ".", ".")) == "."
+    assert path_to_string(PurePath()) == "."
+    assert path_to_string(PurePath("test1", "test2", "test3")) == "test1/test2/test3"
+
+
+def test_path_to_string_with_path():
+    assert path_to_string(Path("./", "/folder", "/test.py")) == "/test.py"
+    assert path_to_string(Path("./", "/folder", "test2.py")) == "/folder/test2.py"
+    assert path_to_string(Path(".", ".", ".")) == "."
+    assert path_to_string(Path()) == "."
+    assert path_to_string(Path("test1", "test2", "test3")) == "test1/test2/test3"
