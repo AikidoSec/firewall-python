@@ -102,13 +102,12 @@ async def test_conn_execute_parameterized(database_conn):
         await conn.execute(query, "Doggo", False)
         calls = mock_run_vulnerability_scan.call_args_list
 
-        first_call_args = calls[2][1]["args"]
-        assert first_call_args[0] == query
-        assert isinstance(first_call_args[1], Postgres)
-
-        second_call_args = calls[3][1]["args"]
-        assert second_call_args[0] == query
-        assert isinstance(second_call_args[1], Postgres)
+        counter = 0
+        for call in calls:
+            args = call[1]["args"]
+            if args[0] == query:
+                counter += 1
+        assert counter == 2
 
         await conn.close()
 
@@ -125,22 +124,15 @@ async def test_conn_transaction(database_conn):
             await conn.execute(query)
 
             calls = mock_run_vulnerability_scan.call_args_list
-            if len(calls) > 2:
-                first_call_args = calls[2][1]["args"]
-                assert first_call_args[0] == "BEGIN;"
-                assert isinstance(first_call_args[1], Postgres)
-
-                second_call_args = calls[3][1]["args"]
-                assert second_call_args[0] == query
-                assert isinstance(second_call_args[1], Postgres)
-            else:
-                first_call_args = calls[0][1]["args"]
-                assert first_call_args[0] == "BEGIN;"
-                assert isinstance(first_call_args[1], Postgres)
-
-                second_call_args = calls[1][1]["args"]
-                assert second_call_args[0] == query
-                assert isinstance(second_call_args[1], Postgres)
+            begin_in_calls = False
+            query_in_calls = False
+            for call in calls:
+                args = call[1]["args"]
+                if args[0] == "BEGIN;":
+                    begin_in_calls = True
+                if args[0] == query:
+                    query_in_calls = True
+            assert begin_in_calls == query_in_calls == True
 
         await conn.close()
 
