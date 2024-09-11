@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import patch
 import aikido_zen.sinks.builtins
+from pathlib import Path, PurePath
 
 kind = "path_traversal"
 op = "builtins.open"
@@ -24,6 +25,23 @@ def test_open():
         args = ("ltlwtjl_tlnekt.py",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
+        with pytest.raises(FileNotFoundError):
+            open(b"afljqlqfefjq.py")
+        args = (b"afljqlqfefjq.py",)
+        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
+        path = Path("./test", "/test.py")
+        with pytest.raises(FileNotFoundError):
+            open(path)
+        args = (path,)
+        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
+        path2 = PurePath("./test", "/test.py")
+        with pytest.raises(FileNotFoundError):
+            open(path2)
+        args = (path2,)
+        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
 
 def test_open_with_builtins_import():
     with patch(
@@ -43,6 +61,11 @@ def test_open_with_builtins_import():
         with pytest.raises(FileNotFoundError):
             builtins.open("ltlwtjl_tlnekt.py")
         args = ("ltlwtjl_tlnekt.py",)
+        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
+        with pytest.raises(FileNotFoundError):
+            builtins.open(b"shleklelkwge.py")
+        args = (b"shleklelkwge.py",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
 
