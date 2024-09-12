@@ -7,7 +7,9 @@ import aikido_zen.importhook as importhook
 from aikido_zen.helpers.extract_data_from_xml_body import (
     extract_data_from_xml_body,
 )
-from aikido_zen.background_process.packages import add_wrapped_package
+from aikido_zen.background_process.packages import pkg_compat_check
+
+REQUIRED_LXML_VERSION = "0.0.0"
 
 
 @importhook.on_import("lxml.etree")
@@ -18,6 +20,8 @@ def on_lxml_import(eltree):
     - Wrap on
     Returns : Modified `lxml.etree` object
     """
+    if not pkg_compat_check("lxml", REQUIRED_LXML_VERSION):
+        return eltree
     modified_eltree = importhook.copy_module(eltree)
 
     former_fromstring = copy.deepcopy(eltree.fromstring)
@@ -42,5 +46,4 @@ def on_lxml_import(eltree):
     # pylint: disable=no-member
     setattr(eltree, "fromstringlist", aikido_fromstringlist)
     setattr(modified_eltree, "fromstringlist", aikido_fromstringlist)
-    add_wrapped_package("lxml")
     return modified_eltree
