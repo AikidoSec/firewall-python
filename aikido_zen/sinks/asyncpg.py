@@ -9,6 +9,8 @@ from aikido_zen.background_process.packages import add_wrapped_package
 import aikido_zen.vulnerabilities as vulns
 from aikido_zen.helpers.logging import logger
 
+REQUIRED_ASYNCPG_VERSION = "0.0.0"
+
 
 @importhook.on_import("asyncpg.connection")
 def on_asyncpg_import(asyncpg):
@@ -21,6 +23,8 @@ def on_asyncpg_import(asyncpg):
     https://github.com/MagicStack/asyncpg/blob/85d7eed40637e7cad73a44ed2439ffeb2a8dc1c2/asyncpg/connection.py#L43
     Returns : Modified asyncpg.connection object
     """
+    if not add_wrapped_package("asyncpg", REQUIRED_ASYNCPG_VERSION):
+        return asyncpg
     modified_asyncpg = importhook.copy_module(asyncpg)
 
     # pylint: disable=protected-access # We need to wrap this function
@@ -59,5 +63,4 @@ def on_asyncpg_import(asyncpg):
     setattr(asyncpg.Connection, "executemany", aikido_new_executemany)
     setattr(asyncpg.Connection, "execute", aikido_new_execute)
 
-    add_wrapped_package("asyncpg")
     return modified_asyncpg
