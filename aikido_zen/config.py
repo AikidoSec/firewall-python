@@ -1,3 +1,3 @@
 """Contains package versions"""
 
-PKG_VERSION = "0.1.19"
+PKG_VERSION = "1.0.6"
