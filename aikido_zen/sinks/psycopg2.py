@@ -5,7 +5,7 @@ Sink module for `psycopg2`
 import copy
 import aikido_zen.importhook as importhook
 from aikido_zen.vulnerabilities.sql_injection.dialects import Postgres
-from aikido_zen.background_process.packages import add_wrapped_package
+from aikido_zen.background_process.packages import pkg_compat_check
 import aikido_zen.vulnerabilities as vulns
 
 
@@ -57,6 +57,6 @@ def on_psycopg2_import(psycopg2):
     # pylint: disable=no-member
     setattr(psycopg2, "connect", aikido_connect)
     setattr(modified_psycopg2, "connect", aikido_connect)
-    add_wrapped_package("psycopg2")
-    add_wrapped_package("psycopg2-binary")
+    pkg_compat_check("psycopg2")
+    pkg_compat_check("psycopg2-binary")
     return modified_psycopg2

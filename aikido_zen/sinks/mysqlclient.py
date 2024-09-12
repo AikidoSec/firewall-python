@@ -5,7 +5,7 @@ Sink module for `mysqlclient`
 import copy
 import aikido_zen.importhook as importhook
 from aikido_zen.vulnerabilities.sql_injection.dialects import MySQL
-from aikido_zen.background_process.packages import add_wrapped_package
+from aikido_zen.background_process.packages import pkg_compat_check
 from aikido_zen.helpers.logging import logger
 import aikido_zen.vulnerabilities as vulns
 
@@ -20,7 +20,7 @@ def on_mysqlclient_import(mysql):
     https://github.com/PyMySQL/mysqlclient/blob/9fd238b9e3105dcbed2b009a916828a38d1f0904/src/MySQLdb/connections.py#L257
     Returns : Modified MySQLdb.connections object
     """
-    if not add_wrapped_package("mysqlclient", REQUIRED_MYSQLCLIENT_VERSION):
+    if not pkg_compat_check("mysqlclient", REQUIRED_MYSQLCLIENT_VERSION):
         return mysql
     modified_mysql = importhook.copy_module(mysql)
     prev_execute_func = copy.deepcopy(mysql.Cursor.execute)

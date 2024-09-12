@@ -86,5 +86,5 @@ def on_pymongo_import(pymongo):
         return former_bulk_write(self, requests, *args, **kwargs)
 
     setattr(modified_pymongo.Collection, "bulk_write", aikido_bulk_write)
-    pkgs.add_wrapped_package("pymongo")
+    pkgs.pkg_compat_check("pymongo")
     return modified_pymongo
