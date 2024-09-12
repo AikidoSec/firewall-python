@@ -59,7 +59,10 @@ def aik_route_func_wrapper(func):
         res = None
         if is_async_callable(func):
             res = await func(*args, **kwargs)
-        else:  # Convert to async function and await
+        else:
+            # `func` provided by the end-user is allowed to be both synchronous and asynchronous
+            # Here we convert sync functions in the same way the starlette codebase does to ensure
+            # there are no compatibility issues and the behaviour remains unchanged.
             res = await functools.partial(run_in_threadpool, func)(*args, **kwargs)
 
         # Code after response (post_response stage)
