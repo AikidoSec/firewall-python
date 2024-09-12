@@ -82,11 +82,33 @@ def test_os_commands():
         args = ("test_path.pathy",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
-        os.rename("qlkgkjbnlzheioe_kjbfkjeiLJ", b"lkflkenlnlgksnk_aknflkenfk")
+        with pytest.raises(FileNotFoundError):
+            os.unlink(b"wjlewjrlke")
+        op = "os.unlink"
+        args = (b"wjlewjrlke",)
+        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
+        os.rename("qlkgkjbnlzheioe_kjbfkjeiLJ", "lkflkenlnlgksnk_aknflkenfk")
         op = "os.rename"
         args = ("qlkgkjbnlzheioe_kjbfkjeiLJ",)
         mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
-        args = (b"lkflkenlnlgksnk_aknflkenfk",)
+        args = ("lkflkenlnlgksnk_aknflkenfk",)
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
+
+        with pytest.raises(FileNotFoundError):
+            os.rename(b"akflaflkqkajlqjoiq", b"kfjlfehfkakj")
+        op = "os.rename"
+        args = (b"akflaflkqkajlqjoiq",)
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
+        args = (b"kfjlfehfkakj",)
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
+
+        with pytest.raises(FileNotFoundError):
+            os.rename("akflaflkqkajlqjoiq", b"aflkkelwwgw")
+        op = "os.rename"
+        args = ("akflaflkqkajlqjoiq",)
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
+        args = (b"aflkkelwwgw",)
         mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
 
         os.rmdir("lkflkenlnlgksnk_aknflkenfk")
@@ -100,9 +122,9 @@ def test_os_commands():
         args = ("qlkgkjbnlzheioe_kjbfkjeiLJ",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
-        os.symlink(b"fqppnfqdbsklclfkn_lqbfjqbkwnd", "aqwfkjqkjqwfhoie_kjfhejlwqk")
+        os.symlink("fqppnfqdbsklclfkn_lqbfjqbkwnd", "aqwfkjqkjqwfhoie_kjfhejlwqk")
         op = "os.symlink"
-        args = (b"fqppnfqdbsklclfkn_lqbfjqbkwnd",)
+        args = ("fqppnfqdbsklclfkn_lqbfjqbkwnd",)
         mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
         args = ("aqwfkjqkjqwfhoie_kjfhejlwqk",)
         mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
