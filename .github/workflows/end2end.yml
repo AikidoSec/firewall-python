@@ -47,7 +47,10 @@ jobs:
       working-directory: ./sample-apps/quart-postgres-uvicorn
       run: |
         docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
-
+    - name: Start starlette-postgres-uvicorn
+      working-directory: ./sample-apps/starlette-postgres-uvicorn
+      run: |
+        docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
