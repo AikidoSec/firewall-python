@@ -1,7 +1,9 @@
 """Helper function file, see function docstring"""
+
 import os
 
 ENV_PREFIX = "AIKIDO_FEATURE_"
+
 
 def is_feature_enabled(feature):
     """Checks if `feature` is enabled by checking ENV variables"""
