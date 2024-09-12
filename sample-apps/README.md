@@ -35,3 +35,6 @@ Overview :
   - It runs 4 processes, called workers, (**multi-process**) which handles requests **multi-threaded**
   - This application is **asynchronous**
   - Runs on 8102. Without aikido runs on 8103
+- `flask-mssql/` is a Flask app using MSSQL.
+  - It runs **single-threaded**
+  - Runs on 8104. Without Aikido runs on 8105
