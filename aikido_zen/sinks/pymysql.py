@@ -6,10 +6,12 @@ import copy
 import logging
 import aikido_zen.importhook as importhook
 from aikido_zen.vulnerabilities.sql_injection.dialects import MySQL
-from aikido_zen.background_process.packages import add_wrapped_package
+from aikido_zen.background_process.packages import pkg_compat_check
 import aikido_zen.vulnerabilities as vulns
 
 logger = logging.getLogger("aikido_zen")
+
+REQUIRED_PYMYSQL_VERSION = "0.0.0"
 
 
 @importhook.on_import("pymysql.cursors")
@@ -20,6 +22,8 @@ def on_pymysql_import(mysql):
     https://github.com/PyMySQL/PyMySQL/blob/95635f587ba9076e71a223b113efb08ac34a361d/pymysql/cursors.py#L133
     Returns : Modified pymysql.cursors object
     """
+    if not pkg_compat_check("pymysql", REQUIRED_PYMYSQL_VERSION):
+        return mysql
     modified_mysql = importhook.copy_module(mysql)
 
     prev_execute_func = copy.deepcopy(mysql.Cursor.execute)
@@ -42,5 +46,4 @@ def on_pymysql_import(mysql):
     setattr(mysql.Cursor, "execute", aikido_new_execute)
     setattr(mysql.Cursor, "executemany", aikido_new_executemany)
 
-    add_wrapped_package("pymysql")
     return modified_mysql
