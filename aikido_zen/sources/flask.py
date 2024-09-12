@@ -6,7 +6,7 @@ import copy
 import aikido_zen.importhook as importhook
 from aikido_zen.helpers.logging import logger
 from aikido_zen.context import Context
-from aikido_zen.background_process.packages import add_wrapped_package
+from aikido_zen.background_process.packages import pkg_compat_check
 from aikido_zen.context import get_current_context
 from .functions.request_handler import request_handler
 
@@ -70,6 +70,9 @@ def aikido___call__(flask_app, environ, start_response):
     return res
 
 
+REQUIRED_FLASK_VERSION = "0.0.0"
+
+
 @importhook.on_import("flask.app")
 def on_flask_import(flask):
     """
@@ -77,6 +80,8 @@ def on_flask_import(flask):
     @app.route |-> `add_url_rule` |-> self.view_functions. these get called via
     full_dispatch_request, which we wrap. We also wrap __call__ to run our middleware.
     """
+    if not pkg_compat_check("flask", REQUIRED_FLASK_VERSION):
+        return flask
     modified_flask = importhook.copy_module(flask)
     former_fdr = copy.deepcopy(flask.Flask.full_dispatch_request)
 
@@ -88,5 +93,4 @@ def on_flask_import(flask):
     # pylint:disable=no-member # Pylint has issues with the wrapping
     setattr(modified_flask.Flask, "__call__", aikido___call__)
     setattr(modified_flask.Flask, "full_dispatch_request", aikido_wrapper_fdr)
-    add_wrapped_package("flask")
     return modified_flask
