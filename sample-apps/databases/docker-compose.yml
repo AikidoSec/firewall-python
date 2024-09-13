@@ -44,10 +44,19 @@ services:
       - mongo_db_data:/data/db
     ports:
       - "27017:27017"
-
+  mssql_database:
+    build: ./mssql_database
+    container_name: sample_mssql_db
+    restart: always
+    environment:
+      SA_PASSWORD: 'Strong!Passw0rd'
+      ACCEPT_EULA: 'Y'
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_db_data:/var/opt/mssql
 volumes:
   mysql_db_data:
-  
   postgres_db_data:
-
   mongo_db_data:
+  mssql_db_data:

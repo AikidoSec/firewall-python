@@ -1,4 +1,4 @@
-# Flask
+# Starlette
 
 1. Install `aikido_zen` package with pip :
 ```sh
@@ -17,9 +17,6 @@ Make sure to set your token in order to communicate with Aikido's servers
 ```env
 AIKIDO_TOKEN="AIK_RUNTIME_YOUR_TOKEN_HERE"
 ```
-
-## Using gUnicorn
-If you're using gunicorn, please check our docs on that first : [Click Here](./gunicorn.md)
 
 ## Blocking mode
 
