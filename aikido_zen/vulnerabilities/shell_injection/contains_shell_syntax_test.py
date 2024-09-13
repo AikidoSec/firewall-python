@@ -25,6 +25,7 @@ def test_detects_shell_syntax():
     assert contains_shell_syntax("/usr/bin/env", "/usr/bin/env") is True
     assert contains_shell_syntax("/bin/ps", "/bin/ps") is True
     assert contains_shell_syntax("/usr/bin/W", "/usr/bin/W") is True
+    assert contains_shell_syntax("lsattr", "lsattr") is True
 
 
 def test_detects_commands_surrounded_by_separators():
