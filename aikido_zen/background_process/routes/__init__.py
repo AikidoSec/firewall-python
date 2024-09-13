@@ -2,6 +2,9 @@
 Exports class Routes
 """
 
+from aikido_zen.api_discovery.update_body_info import update_body_info
+from aikido_zen.api_discovery.get_body_info import get_body_info
+
 
 class Routes:
     """
@@ -12,19 +15,27 @@ class Routes:
         self.max_size = max_size
         self.routes = {}
 
-    def add_route(self, method, path):
+    def add_route(self, context):
         """
         Adds your route
         """
+        method, path = context.method, context.path
         key = route_to_key(method, path)
 
         if self.routes.get(key):
             # Route already exists, add a hit
-            self.routes.get(key)["hits"] += 1
+            route = self.routes.get(key)
+            route["hits"] += 1
+            route["body"] = update_body_info(context, route["body"])
         else:
             self.manage_routes_size()
             # Add an empty route :
-            self.routes[key] = {"method": method, "path": path, "hits": 1}
+            self.routes[key] = {
+                "method": method,
+                "path": path,
+                "hits": 1,
+                "body": get_body_info(context),
+            }
 
     def clear(self):
         """Deletes all routes"""
