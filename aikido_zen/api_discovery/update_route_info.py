@@ -1,7 +1,19 @@
-"""Exports update_body_info function"""
+"""Exports update_route_info function"""
 
 from .get_body_info import get_body_info
 from .merge_data_schemas import merge_data_schemas
+
+ANALYSIS_ON_FIRST_X_ROUTES = 20
+
+
+def update_route_info(context, route):
+    """
+    Checks if a route still needs to be updated (only analyzes first x routes),
+    and if so, updates route using update_body_info
+    """
+    if route["hits"] <= ANALYSIS_ON_FIRST_X_ROUTES:
+        # Only analyze the first x routes for api discovery
+        route["body"] = update_body_info(context, route["body"])
 
 
 def update_body_info(context, existing_body_info=None):

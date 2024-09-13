@@ -2,10 +2,8 @@
 Exports class Routes
 """
 
-from aikido_zen.api_discovery.update_body_info import update_body_info
+from aikido_zen.api_discovery.update_route_info import update_route_info
 from aikido_zen.api_discovery.get_body_info import get_body_info
-
-ANALYSIS_ON_FIRST_X_ROUTES = 20
 
 
 class Routes:
@@ -28,9 +26,7 @@ class Routes:
             # Route already exists, add a hit
             route = self.routes.get(key)
             route["hits"] += 1
-            if route["hits"] <= ANALYSIS_ON_FIRST_X_ROUTES:
-                # Only analyze the first x routes for api discovery
-                route["body"] = update_body_info(context, route["body"])
+            update_route_info(context, route)  # API Discovery
         else:
             self.manage_routes_size()
             # Add an empty route :
