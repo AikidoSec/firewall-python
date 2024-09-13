@@ -10,6 +10,7 @@ MAX_REPORT_TRIES = 5
 
 def pkg_compat_check(pkg_name, required_version="0.0.0"):
     """Reports a newly wrapped package to the bg process"""
+    # Fetch package version :
     try:
         pkg_version = metadata.version(pkg_name)
     except metadata.PackageNotFoundError:
@@ -18,9 +19,16 @@ def pkg_compat_check(pkg_name, required_version="0.0.0"):
             pkg_name,
         )
         return False  # We don't support it since we are not sure what it is.
-    logger.info("Successfully wrapped package `%s` version (%s)", pkg_name, pkg_version)
+
+    # Check if the package version is supported :
+    version_supported = is_version_supported(pkg_version, required_version)
+    if version_supported:
+        logger.info("Wrapped pkg `%s` version (%s)", pkg_name, pkg_version)
+    else:
+        logger.info("pkg `%s` version %s is not supported.", pkg_name, pkg_version)
+
+    # Try reporting the wrapping of the package 5 times :
     attempts = 0
-    version_support = is_version_supported(pkg_version, required_version)
     while attempts < MAX_REPORT_TRIES:
         if not comms.get_comms():
             break  # Communications have not been set up.
@@ -30,7 +38,7 @@ def pkg_compat_check(pkg_name, required_version="0.0.0"):
                 "name": pkg_name,
                 "details": {
                     "version": pkg_version,
-                    "supported": version_support,
+                    "supported": version_supported,
                 },
             },
             True,
@@ -38,7 +46,8 @@ def pkg_compat_check(pkg_name, required_version="0.0.0"):
         if res["success"] and res["data"] is True:
             break
         attempts += 1
-    return version_support
+
+    return version_supported
 
 
 def is_version_supported(pkg_verion, required_version):
