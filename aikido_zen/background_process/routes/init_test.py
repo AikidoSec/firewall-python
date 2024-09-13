@@ -1,6 +1,13 @@
 from aikido_zen.background_process.routes import route_to_key, Routes
 
 
+class Context:
+    def __init__(self, method, path):
+        self.method = method
+        self.path = path
+        self.body = {}
+
+
 # route_to_key tests :
 def test_route_to_key_get():
     assert route_to_key("GET", "/api/resource") == "GET:/api/resource"
@@ -38,31 +45,40 @@ def test_initialization():
 
 def test_add_route_new():
     routes = Routes(max_size=3)
-    routes.add_route("GET", "/api/resource")
+    context1 = Context("GET", "/api/resource")
+    routes.add_route(context1)
     assert len(routes.routes) == 1
     assert routes.routes["GET:/api/resource"]["hits"] == 1
 
 
 def test_add_route_existing():
     routes = Routes(max_size=3)
-    routes.add_route("GET", "/api/resource")
-    routes.add_route("GET", "/api/resource")
+    context1 = Context("GET", "/api/resource")
+
+    routes.add_route(context1)
+    routes.add_route(context1)
     assert len(routes.routes) == 1
     assert routes.routes["GET:/api/resource"]["hits"] == 2
 
 
 def test_clear_routes():
     routes = Routes(max_size=3)
-    routes.add_route("GET", "/api/resource")
+    context1 = Context("GET", "/api/resource")
+    routes.add_route(context1)
     routes.clear()
     assert len(routes.routes) == 0
 
 
 def test_manage_routes_size_eviction():
     routes = Routes(max_size=2)
-    routes.add_route("GET", "/api/resource1")
-    routes.add_route("GET", "/api/resource2")
-    routes.add_route("GET", "/api/resource3")  # This should evict the least used route
+    context1 = Context("GET", "/api/resource1")
+    context2 = Context("GET", "/api/resource2")
+    context3 = Context("GET", "/api/resource3")
+
+    routes.add_route(context1)
+    routes.add_route(context2)
+    routes.add_route(context3)  # This should evict the least used route
+
     assert len(routes.routes) == 2
     assert (
         "GET:/api/resource1" not in routes.routes
@@ -71,20 +87,44 @@ def test_manage_routes_size_eviction():
 
 def test_iterable():
     routes = Routes(max_size=3)
-    routes.add_route("GET", "/api/resource1")
-    routes.add_route("POST", "/api/resource2")
-    routes.add_route("PUT", "/api/resource3")
+    context1 = Context("GET", "/api/resource1")
+    context2 = Context("POST", "/api/resource2")
+    context3 = Context("PUT", "/api/resource3")
+
+    routes.add_route(context1)
+    routes.add_route(context2)
+    routes.add_route(context3)
+
     routes_list = list(routes)
     assert len(routes_list) == 3
-    assert {"method": "GET", "path": "/api/resource1", "hits": 1} in routes_list
-    assert {"method": "POST", "path": "/api/resource2", "hits": 1} in routes_list
-    assert {"method": "PUT", "path": "/api/resource3", "hits": 1} in routes_list
+    assert {
+        "method": "GET",
+        "path": "/api/resource1",
+        "hits": 1,
+        "body": None,
+    } in routes_list
+    assert {
+        "method": "POST",
+        "path": "/api/resource2",
+        "hits": 1,
+        "body": None,
+    } in routes_list
+    assert {
+        "method": "PUT",
+        "path": "/api/resource3",
+        "hits": 1,
+        "body": None,
+    } in routes_list
 
 
 def test_len():
     routes = Routes(max_size=3)
     assert len(routes) == 0
-    routes.add_route("GET", "/api/resource")
+
+    context = Context("GET", "/api/resource")
+    routes.add_route(context)
     assert len(routes) == 1
-    routes.add_route("POST", "/api/resource2")
+
+    context2 = Context("POST", "/api/resource2")
+    routes.add_route(context2)
     assert len(routes) == 2
