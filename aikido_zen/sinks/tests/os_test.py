@@ -1,4 +1,5 @@
 import pytest
+from pathlib import Path, PurePath
 from unittest.mock import patch
 import aikido_zen.sinks.os
 
@@ -21,6 +22,18 @@ def test_ospath_commands():
             op = "os.path.getsize"
             args = ("aqkqjefbkqlleq_qkvfjksaicuaviel",)
             mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
+        os.path.realpath(b"te2st/test2")
+        op = "os.path.realpath"
+        args = (b"te2st/test2",)
+        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
+        path1 = Path("./test", "test2", "test3")
+        os.path.realpath(path1)
+
+        op = "os.path.realpath"
+        args = (path1,)
+        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
 
 def test_os_commands():
@@ -69,11 +82,33 @@ def test_os_commands():
         args = ("test_path.pathy",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
+        with pytest.raises(FileNotFoundError):
+            os.unlink(b"wjlewjrlke")
+        op = "os.unlink"
+        args = (b"wjlewjrlke",)
+        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
         os.rename("qlkgkjbnlzheioe_kjbfkjeiLJ", "lkflkenlnlgksnk_aknflkenfk")
         op = "os.rename"
         args = ("qlkgkjbnlzheioe_kjbfkjeiLJ",)
         mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
         args = ("lkflkenlnlgksnk_aknflkenfk",)
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
+
+        with pytest.raises(FileNotFoundError):
+            os.rename(b"akflaflkqkajlqjoiq", b"kfjlfehfkakj")
+        op = "os.rename"
+        args = (b"akflaflkqkajlqjoiq",)
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
+        args = (b"kfjlfehfkakj",)
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
+
+        with pytest.raises(FileNotFoundError):
+            os.rename("akflaflkqkajlqjoiq", b"aflkkelwwgw")
+        op = "os.rename"
+        args = ("akflaflkqkajlqjoiq",)
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
+        args = (b"aflkkelwwgw",)
         mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
 
         os.rmdir("lkflkenlnlgksnk_aknflkenfk")
@@ -95,12 +130,13 @@ def test_os_commands():
         mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
         os.remove("aqwfkjqkjqwfhoie_kjfhejlwqk")
 
+        path1 = PurePath("kkjehrqlknl_qk3rqlrjgna")
         with pytest.raises(FileNotFoundError):
-            os.link("qkfhwifqqlejfke_qlfjboqvdbshjw", "kkjehrqlknl_qk3rqlrjgna")
+            os.link("qkfhwifqqlejfke_qlfjboqvdbshjw", path1)
         op = "os.link"
         args = ("qkfhwifqqlejfke_qlfjboqvdbshjw",)
         mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
-        args = ("kkjehrqlknl_qk3rqlrjgna",)
+        args = (path1,)
         mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
 
         os.walk("qlfjwqqfqelfknef_kwlkgrlkbwkalwd")

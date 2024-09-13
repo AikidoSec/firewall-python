@@ -2,6 +2,7 @@
 Sink module for `builtins`, python's built-in function
 """
 
+from pathlib import PurePath
 import copy
 import aikido_zen.importhook as importhook
 import aikido_zen.vulnerabilities as vulns
@@ -20,7 +21,7 @@ def on_builtins_import(builtins):
 
     def aikido_new_open(*args, **kwargs):
         #  args[0] is the filename
-        if len(args) > 0 and isinstance(args[0], str):
+        if len(args) > 0 and isinstance(args[0], (str, bytes, PurePath)):
             vulns.run_vulnerability_scan(
                 kind="path_traversal", op="builtins.open", args=(args[0],)
             )

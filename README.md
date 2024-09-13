@@ -31,6 +31,8 @@ Zen for Python 3 is compatible with:
 * ✅ [Django](docs/django.md)
 * ✅ [Flask](docs/flask.md)
 * ✅ [Quart](docs/quart.md)
+* ✅ [Starlette](docs/starlette.md)
+
 
 ### WSGI servers
 * ✅ [Gunicorn](docs/gunicorn.md)
