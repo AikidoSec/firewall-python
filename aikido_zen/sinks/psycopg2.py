@@ -5,7 +5,7 @@ Sink module for `psycopg2`
 import copy
 import aikido_zen.importhook as importhook
 from aikido_zen.vulnerabilities.sql_injection.dialects import Postgres
-from aikido_zen.background_process.packages import add_wrapped_package
+from aikido_zen.background_process.packages import pkg_compat_check
 import aikido_zen.vulnerabilities as vulns
 
 
@@ -46,6 +46,9 @@ def on_psycopg2_import(psycopg2):
     Hook 'n wrap on `psycopg2.connect` function, we modify the cursor_factory
     of the result of this connect function.
     """
+    if not pkg_compat_check("psycopg2") and not pkg_compat_check("psycopg2-binary"):
+        # Both pyscopg2 and psycopg2-binary are not supported, abort wrapping
+        return psycopg2
     modified_psycopg2 = importhook.copy_module(psycopg2)
     former_connect_function = copy.deepcopy(psycopg2.connect)
 
@@ -57,6 +60,4 @@ def on_psycopg2_import(psycopg2):
     # pylint: disable=no-member
     setattr(psycopg2, "connect", aikido_connect)
     setattr(modified_psycopg2, "connect", aikido_connect)
-    add_wrapped_package("psycopg2")
-    add_wrapped_package("psycopg2-binary")
     return modified_psycopg2

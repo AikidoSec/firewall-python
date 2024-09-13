@@ -11,5 +11,20 @@ Folder also includes helper functions :
     e.g. body, json, form. This also saves it inside the current context.
 """
 
-import aikido_zen.sources.starlette.starlette_applications
-import aikido_zen.sources.starlette.starlette_routing
+import aikido_zen.importhook as importhook
+from aikido_zen.background_process.packages import pkg_compat_check
+
+REQUIRED_STARLETTE_VERSION = "0.0.0"
+
+
+@importhook.on_import("starlette")
+def on_starlette_import(starlette):
+    """
+    This checks for the package version of starlette so you don't have to do it twice,
+    once in starlette_applications and once in starlette_applications.
+    """
+    if not pkg_compat_check("starlette", REQUIRED_STARLETTE_VERSION):
+        return starlette
+    # Package is compatible, start wrapping :
+    import aikido_zen.sources.starlette.starlette_applications
+    import aikido_zen.sources.starlette.starlette_routing

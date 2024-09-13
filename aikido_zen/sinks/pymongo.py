@@ -28,6 +28,8 @@ OPERATIONS_WITH_FILTER = [
     ("aggregate_raw_batches", [0, "pipeline"]),
 ]
 
+REQUIRED_PYMONGO_VERSION = "0.0.0"
+
 
 # Synchronous :
 @importhook.on_import("pymongo.collection")
@@ -38,6 +40,8 @@ def on_pymongo_import(pymongo):
     https://github.com/mongodb/mongo-python-driver/blob/98658cfd1fea42680a178373333bf27f41153759/pymongo/synchronous/collection.py#L136
     Returns : Modified pymongo.collection.Collection object
     """
+    if not pkgs.pkg_compat_check("pymongo", REQUIRED_PYMONGO_VERSION):
+        return pymongo
     modified_pymongo = importhook.copy_module(pymongo)
     for op_data in OPERATIONS_WITH_FILTER:
         op = op_data[0]
@@ -86,5 +90,4 @@ def on_pymongo_import(pymongo):
         return former_bulk_write(self, requests, *args, **kwargs)
 
     setattr(modified_pymongo.Collection, "bulk_write", aikido_bulk_write)
-    pkgs.add_wrapped_package("pymongo")
     return modified_pymongo

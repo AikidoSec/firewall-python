@@ -1,11 +1,11 @@
 """Gunicorn Module, report if module was found"""
 
 import aikido_zen.importhook as importhook
-from aikido_zen.background_process.packages import add_wrapped_package
+from aikido_zen.background_process.packages import pkg_compat_check
 
 
 @importhook.on_import("gunicorn")
 def on_gunicorn_import(gunicorn):
     """Report to the core when gunicorn gets imported"""
-    add_wrapped_package("gunicorn")
+    pkg_compat_check("gunicorn")
     return gunicorn
