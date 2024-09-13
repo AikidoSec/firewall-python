@@ -2,10 +2,19 @@ from aikido_zen.background_process.routes import route_to_key, Routes
 
 
 class Context:
-    def __init__(self, method, path):
+    def __init__(
+        self,
+        method,
+        path,
+        body={},
+        xml={},
+        content_type="application/x-www-form-urlencoded",
+    ):
         self.method = method
         self.path = path
-        self.body = {}
+        self.body = body
+        self.xml = xml
+        self.headers = {"CONTENT_TYPE": content_type}
 
 
 # route_to_key tests :
@@ -128,3 +137,157 @@ def test_len():
     context2 = Context("POST", "/api/resource2")
     routes.add_route(context2)
     assert len(routes) == 2
+
+
+def test_api_discovery_for_new_routes(monkeypatch):
+    routes = Routes(max_size=3)
+    monkeypatch.setenv("AIKIDO_FEATURE_COLLECT_API_SCHEMA", "1")
+
+    context1 = Context(
+        "GET",
+        "/api/resource1",
+        body={
+            "user": {
+                "name": "John Doe",
+                "email": "john.doe@example.com",
+                "phone": 12345678,
+            },
+        },
+    )
+    routes.add_route(context1)
+
+    routes_list = list(routes)
+    assert len(routes_list) == 1
+    assert {
+        "method": "GET",
+        "path": "/api/resource1",
+        "hits": 1,
+        "body": {
+            "schema": {
+                "properties": {
+                    "user": {
+                        "properties": {
+                            "email": {
+                                "type": "string",
+                            },
+                            "name": {
+                                "type": "string",
+                            },
+                            "phone": {"type": "number"},
+                        },
+                        "type": "object",
+                    },
+                },
+                "type": "object",
+            },
+            "type": "form-urlencoded",
+        },
+    } in routes_list
+
+
+def test_api_discovery_existing_route_empty(monkeypatch):
+    routes = Routes(max_size=3)
+    monkeypatch.setenv("AIKIDO_FEATURE_COLLECT_API_SCHEMA", "1")
+    context1 = Context("GET", "/api/resource1")
+    routes.add_route(context1)
+    routes_list = list(routes)
+
+    assert {
+        "method": "GET",
+        "path": "/api/resource1",
+        "hits": 1,
+        "body": None,
+    } in routes_list
+    context2 = Context(
+        "GET",
+        "/api/resource1",
+        body={
+            "user": {
+                "name": "John Doe",
+                "email": "john.doe@example.com",
+                "phone": 12345678,
+            },
+        },
+    )
+    routes.add_route(context2)
+
+    routes_list = list(routes)
+    assert len(routes_list) == 1
+    assert {
+        "method": "GET",
+        "path": "/api/resource1",
+        "hits": 2,
+        "body": {
+            "schema": {
+                "properties": {
+                    "user": {
+                        "properties": {
+                            "email": {
+                                "type": "string",
+                            },
+                            "name": {
+                                "type": "string",
+                            },
+                            "phone": {"type": "number"},
+                        },
+                        "type": "object",
+                    },
+                },
+                "type": "object",
+            },
+            "type": "form-urlencoded",
+        },
+    } in routes_list
+
+
+def test_api_discovery_merge_routes(monkeypatch):
+    routes = Routes(max_size=3)
+    monkeypatch.setenv("AIKIDO_FEATURE_COLLECT_API_SCHEMA", "1")
+    context1 = Context(
+        "GET",
+        "/api/resource1",
+        body={"user": {"name": "John Doe", "email": "john.doe@example.com", "age": 20}},
+    )
+    context2 = Context(
+        "GET",
+        "/api/resource1",
+        body={
+            "user": {
+                "name": "John Doe",
+                "email": "john.doe@example.com",
+                "phone": 12345678,
+            },
+        },
+        content_type="application/json",
+    )
+    routes.add_route(context1)
+    routes.add_route(context2)
+
+    routes_list = list(routes)
+    assert len(routes_list) == 1
+    assert {
+        "method": "GET",
+        "path": "/api/resource1",
+        "hits": 2,
+        "body": {
+            "schema": {
+                "properties": {
+                    "user": {
+                        "properties": {
+                            "email": {
+                                "type": "string",
+                            },
+                            "name": {
+                                "type": "string",
+                            },
+                            "phone": {"type": "number", "optional": True},
+                            "age": {"type": "number", "optional": True},
+                        },
+                        "type": "object",
+                    },
+                },
+                "type": "object",
+            },
+            "type": "json",
+        },
+    } in routes_list
