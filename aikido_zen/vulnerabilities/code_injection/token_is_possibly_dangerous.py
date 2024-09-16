@@ -25,6 +25,8 @@ SAFE_OPERATIONS = [
     ">>",
     # Regarded as safe language tokens :
     ",",
+    "True",
+    "False",
 ]
 
 

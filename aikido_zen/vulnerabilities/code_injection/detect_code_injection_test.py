@@ -31,3 +31,11 @@ def test_newline_and_indent_not_dangerous():
     is_not_injection("              ")
     is_not_injection("  ")
     is_not_injection("  \r\n    \n      \n  \t")
+
+
+def test_booleans_and_numbers():
+    is_not_injection("True")
+    is_not_injection("False")
+    is_not_injection("0123456")
+    is_not_injection("01234567.18234")
+    is_not_injection("False True 012345.6789")
