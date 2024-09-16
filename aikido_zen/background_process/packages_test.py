@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock
-from .packages import pkg_compat_check
+from .packages import pkg_compat_check, ANY_VERSION
 
 
 @pytest.fixture
@@ -34,7 +34,7 @@ def test_pkg_compat_check_success(mock_get_comms, mocker):
     )
 
     # Call the function under test
-    pkg_compat_check(pkg_name)
+    pkg_compat_check(pkg_name, ANY_VERSION)
 
     # Assert that the version was retrieved and the send_data_to_bg_process was called
     assert mock_class.action == "WRAPPED_PACKAGE"
@@ -70,7 +70,7 @@ def test_pkg_compat_check_retry(mock_get_comms, mocker):
     )
 
     # Call the function under test
-    pkg_compat_check(pkg_name)
+    pkg_compat_check(pkg_name, ANY_VERSION)
 
     # Assert that send_data_to_bg_process was called MAX_REPORT_TRIES times
     assert mock_class.send_data_to_bg_process.call_count == 5
@@ -98,7 +98,7 @@ def test_pkg_compat_check_partial_success(mock_get_comms, mocker):
     )
 
     # Call the function under test
-    pkg_compat_check(pkg_name)
+    pkg_compat_check(pkg_name, ANY_VERSION)
 
     # Assert that send_data_to_bg_process was called twice
     assert mock_class.send_data_to_bg_process.call_count == 2

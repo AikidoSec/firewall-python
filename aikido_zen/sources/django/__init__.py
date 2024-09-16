@@ -3,12 +3,10 @@
 import copy
 import aikido_zen.importhook as importhook
 from aikido_zen.helpers.logging import logger
-from aikido_zen.background_process.packages import pkg_compat_check
+from aikido_zen.background_process.packages import pkg_compat_check, ANY_VERSION
 from ..functions.request_handler import request_handler
 from .run_init_stage import run_init_stage
 from .pre_response_middleware import pre_response_middleware
-
-REQUIRED_DJANGO_VERSION = "0.0.0"
 
 
 @importhook.on_import("django.core.handlers.base")
@@ -19,7 +17,7 @@ def on_django_gunicorn_import(django):
     # https://github.com/django/django/blob/5865ff5adcf64da03d306dc32b36e87ae6927c85/django/core/handlers/base.py#L174
     Returns : Modified django.core.handlers.base object
     """
-    if not pkg_compat_check("django", REQUIRED_DJANGO_VERSION):
+    if not pkg_compat_check("django", required_version=ANY_VERSION):
         return django
     modified_django = importhook.copy_module(django)
 

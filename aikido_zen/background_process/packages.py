@@ -7,8 +7,11 @@ import aikido_zen.background_process.comms as comms
 
 MAX_REPORT_TRIES = 5
 
+# If any version is supported, this constant can be used
+ANY_VERSION = "0.0.0"
 
-def pkg_compat_check(pkg_name, required_version="0.0.0"):
+
+def pkg_compat_check(pkg_name, required_version):
     """Reports a newly wrapped package to the bg process"""
     # Fetch package version :
     try:

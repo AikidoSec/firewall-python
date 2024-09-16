@@ -6,7 +6,7 @@ import copy
 import aikido_zen.importhook as importhook
 from aikido_zen.helpers.logging import logger
 from aikido_zen.context import Context, get_current_context
-from aikido_zen.background_process.packages import pkg_compat_check
+from aikido_zen.background_process.packages import pkg_compat_check, ANY_VERSION
 from .functions.request_handler import request_handler
 
 
@@ -81,16 +81,13 @@ async def send_status_code_and_text(send, pre_response):
     )
 
 
-REQUIRED_QUART_VERSION = "0.0.0"
-
-
 @importhook.on_import("quart.app")
 def on_quart_import(quart):
     """
     Hook 'n wrap on `quart.app`
     Our goal is to wrap the __call__, handle_request, asgi_app functios of the "Quart" class
     """
-    if not pkg_compat_check("quart", REQUIRED_QUART_VERSION):
+    if not pkg_compat_check("quart", required_version=ANY_VERSION):
         return quart
     modified_quart = importhook.copy_module(quart)
 
