@@ -93,4 +93,4 @@ def post_response(status_code):
         context.method,
     )
     if is_curr_route_useful:
-        get_comms().send_data_to_bg_process("ROUTE", (context.method, context.route))
+        get_comms().send_data_to_bg_process("ROUTE", context)

@@ -80,6 +80,12 @@ commands = [
     "passwd",
     "arch",
     "printenv",
+    "logname",
+    "pstree",
+    "hostnamectl",
+    "set",
+    "lsattr",
+    "killall5",
     ":",  # Colon is a null command
 ]
 
