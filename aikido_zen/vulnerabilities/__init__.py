@@ -11,6 +11,7 @@ from aikido_zen.errors import (
     AikidoShellInjection,
     AikidoPathTraversal,
     AikidoSSRF,
+    AikidoCodeInjection,
 )
 import aikido_zen.background_process.comms as comm
 from aikido_zen.helpers.logging import logger
@@ -25,6 +26,9 @@ from .shell_injection.check_context_for_shell_injection import (
 )
 from .path_traversal.check_context_for_path_traversal import (
     check_context_for_path_traversal,
+)
+from .code_injection.check_context_for_code_injection import (
+    check_context_for_code_injection,
 )
 
 
@@ -90,6 +94,14 @@ def run_vulnerability_scan(kind, op, args):
             if not blocked_request:
                 if comms:
                     comms.send_data_to_bg_process("HOSTNAMES_ADD", (args[1], args[2]))
+        elif kind == "code_injection":
+            # args is the statement executed by e.g. eval() function
+            injection_results = check_context_for_code_injection(
+                statement=args[0],
+                operation=op,
+                context=context,
+            )
+            error_type = AikidoCodeInjection
         else:
             logger.error(
                 "Vulnerability type %s currently has no scans implemented", kind
