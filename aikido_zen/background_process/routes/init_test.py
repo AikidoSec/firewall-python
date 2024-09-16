@@ -11,7 +11,7 @@ class Context:
         content_type="application/x-www-form-urlencoded",
     ):
         self.method = method
-        self.path = path
+        self.route = path
         self.body = body
         self.xml = xml
         self.headers = {"CONTENT_TYPE": content_type}
