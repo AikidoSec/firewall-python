@@ -2,6 +2,7 @@
 Exports class Routes
 """
 
+from aikido_zen.helpers.logging import logger
 from aikido_zen.api_discovery.update_route_info import update_route_info
 from aikido_zen.api_discovery.get_body_info import get_body_info
 
@@ -19,7 +20,7 @@ class Routes:
         """
         Adds your route
         """
-        method, path = context.method, context.path
+        method, path = context.method, context.route
         key = route_to_key(method, path)
 
         if self.routes.get(key):
