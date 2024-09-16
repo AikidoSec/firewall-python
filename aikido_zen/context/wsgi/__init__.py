@@ -26,3 +26,7 @@ def set_wsgi_attributes_on_context(context, environ):
     context.remote_address = get_ip_from_request(
         environ["REMOTE_ADDR"], context.headers
     )
+
+    # Content type is generally not included as a header, do include this as a header to simplify :
+    if "CONTENT_TYPE" in environ:
+        context.headers["CONTENT_TYPE"] = environ["CONTENT_TYPE"]

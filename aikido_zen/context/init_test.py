@@ -32,6 +32,7 @@ def test_wsgi_context_1():
             "HEADER_2": "Header 2 value",
             "COOKIE": "sessionId=abc123xyz456;",
             "HOST": "example.com",
+            "CONTENT_TYPE": "application/x-www-form-urlencoded",
         },
         "cookies": {"sessionId": "abc123xyz456"},
         "url": "https://example.com/hello",
@@ -70,6 +71,7 @@ def test_wsgi_context_2():
             "HEADER_2": "Header 2 value",
             "COOKIE": "sessionId=abc123xyz456;",
             "HOST": "localhost:8080",
+            "CONTENT_TYPE": "application/json",
         },
         "cookies": {"sessionId": "abc123xyz456"},
         "url": "http://localhost:8080/hello",
@@ -152,6 +154,7 @@ def test_context_is_picklable(mocker):
         "HEADER_2": "Header 2 value",
         "COOKIE": "sessionId=abc123xyz456;",
         "HOST": "localhost:8080",
+        "CONTENT_TYPE": "application/json",
     }
     assert unpickled_obj.query == {"user": ["JohnDoe"], "age": ["30", "35"]}
     assert unpickled_obj.cookies == {"sessionId": "abc123xyz456"}
