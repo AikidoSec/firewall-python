@@ -39,13 +39,13 @@ Zen for Python 3 is compatible with:
 * ✅ [uWSGI](docs/uwsgi.md)
 
 ### Database drivers
-* ✅ [`mysqlclient`](https://pypi.org/project/mysqlclient/)
-* ✅ [`PyMySQL`](https://pypi.org/project/PyMySQL/)
-* ✅ [`pymongo`](https://pypi.org/project/pymongo/)
-* ✅ [`psycopg2`](https://pypi.org/project/psycopg2)
-* ✅ [`psycopg`](https://pypi.org/project/psycopg)
-* ✅ [`asyncpg`](https://pypi.org/project/asyncpg)
-* ✅ [`motor`](https://pypi.org/project/motor/)
+* ✅ [`mysqlclient`](https://pypi.org/project/mysqlclient/) ^1.5
+* ✅ [`PyMySQL`](https://pypi.org/project/PyMySQL/) ^0.9
+* ✅ [`pymongo`](https://pypi.org/project/pymongo/) ^3.10
+* ✅ [`psycopg2`](https://pypi.org/project/psycopg2) ^2.9.2
+* ✅ [`psycopg`](https://pypi.org/project/psycopg) ^3.1
+* ✅ [`asyncpg`](https://pypi.org/project/asyncpg) ^0.27
+* ✅ [`motor`](https://pypi.org/project/motor/) (See `pymongo` version)
 
 ## Reporting to your Aikido Security dashboard
 
