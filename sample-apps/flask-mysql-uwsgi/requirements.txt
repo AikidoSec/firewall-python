@@ -2,3 +2,4 @@ flask==2.3.3
 flask-mysql
 cryptography
 uwsgi
+pymysql==0.9.0

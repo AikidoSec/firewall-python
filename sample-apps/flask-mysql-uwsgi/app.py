@@ -48,3 +48,22 @@ def create_dog():
     cursor.execute(f'INSERT INTO dogs (dog_name, isAdmin) VALUES ("%s", 0)' % (dog_name))
     connection.commit()
     return f'Dog {dog_name} created successfully'
+
+@app.route("/create_with_json", methods=['GET'])
+def show_auth_form():
+    return render_template('create_json.html')
+
+@app.route("/create_with_json", methods=['POST'])
+def post_auth():
+    data = request.get_json()
+    connection = mysql.get_db()
+    print(data)
+    print(dict(data))
+    escaped_data = connection.escape(dict(data))
+    print(escaped_data)
+
+    cursor = connection.cursor()
+    cursor.execute(f'INSERT INTO dogs (dog_name, isAdmin) VALUES ("%s", 0)' % (escaped_data))
+    connection.commit()
+    return 'Dog created successfully'
+

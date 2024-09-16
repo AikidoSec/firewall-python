@@ -94,4 +94,4 @@ def uinput_occ_safely_encapsulated(query, user_input):
         if "\\" in without_escape_sequences:
             return False
 
-    return True
+    return False # Disable safe encapsulation
