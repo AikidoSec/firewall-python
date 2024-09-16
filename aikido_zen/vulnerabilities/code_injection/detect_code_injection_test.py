@@ -1,0 +1,2 @@
+import pytest
+from .detect_code_injection import detect_code_injection
