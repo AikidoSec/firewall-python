@@ -48,6 +48,8 @@ def on_psycopg2_import(psycopg2):
     Hook 'n wrap on `psycopg2.connect` function, we modify the cursor_factory
     of the result of this connect function.
     """
+    # Users can install either psycopg2 or psycopg2-binary, we need to check if at least
+    # one is installed and if they meet version requirements :
     if not pkg_compat_check(
         "psycopg2", PSYCOPG2_REQUIRED_VERSION
     ) and not pkg_compat_check("psycopg2-binary", PSYCOPG2_REQUIRED_VERSION):
