@@ -39,3 +39,20 @@ def test_booleans_and_numbers():
     is_not_injection("0123456")
     is_not_injection("01234567.18234")
     is_not_injection("False True 012345.6789")
+
+
+def test_maths_not_injection():
+    is_not_injection("1 + 2 + 3 + 4 + 5")
+    is_not_injection("1 + 2 + 3 + 4", "1 + 2 + 3")
+
+
+def test_small_not_injection():
+    is_not_injection("a.b")
+    is_not_injection("abc")
+    is_not_injection("abcdefghijklmnopabc", "abc")
+    is_not_injection("def test_injection();", "();")
+
+
+def test_not_in_userinput_not_injection():
+    is_not_injection("def test_function(a=True, b=False):    pass", "test_function_not")
+    is_not_injection("def test_injection();", "injection_none")
