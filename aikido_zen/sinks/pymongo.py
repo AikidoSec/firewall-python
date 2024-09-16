@@ -28,7 +28,7 @@ OPERATIONS_WITH_FILTER = [
     ("aggregate_raw_batches", [0, "pipeline"]),
 ]
 
-REQUIRED_PYMONGO_VERSION = "0.0.0"
+REQUIRED_PYMONGO_VERSION = "3.10.0"
 
 
 # Synchronous :

@@ -8,6 +8,8 @@ from aikido_zen.vulnerabilities.sql_injection.dialects import Postgres
 from aikido_zen.background_process.packages import pkg_compat_check
 import aikido_zen.vulnerabilities as vulns
 
+PSYCOPG2_REQUIRED_VERSION = "2.9.2"
+
 
 def wrap_cursor_factory(cursor_factory):
     former_cursor_factory = copy.deepcopy(cursor_factory)
@@ -46,7 +48,9 @@ def on_psycopg2_import(psycopg2):
     Hook 'n wrap on `psycopg2.connect` function, we modify the cursor_factory
     of the result of this connect function.
     """
-    if not pkg_compat_check("psycopg2") and not pkg_compat_check("psycopg2-binary"):
+    if not pkg_compat_check(
+        "psycopg2", PSYCOPG2_REQUIRED_VERSION
+    ) and not pkg_compat_check("psycopg2-binary", PSYCOPG2_REQUIRED_VERSION):
         # Both pyscopg2 and psycopg2-binary are not supported, abort wrapping
         return psycopg2
     modified_psycopg2 = importhook.copy_module(psycopg2)

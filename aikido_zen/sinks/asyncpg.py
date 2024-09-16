@@ -9,7 +9,7 @@ from aikido_zen.background_process.packages import pkg_compat_check
 import aikido_zen.vulnerabilities as vulns
 from aikido_zen.helpers.logging import logger
 
-REQUIRED_ASYNCPG_VERSION = "0.0.0"
+REQUIRED_ASYNCPG_VERSION = "0.27.0"
 
 
 @importhook.on_import("asyncpg.connection")

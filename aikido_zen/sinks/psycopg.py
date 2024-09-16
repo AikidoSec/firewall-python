@@ -8,7 +8,7 @@ from aikido_zen.vulnerabilities.sql_injection.dialects import Postgres
 from aikido_zen.background_process.packages import pkg_compat_check
 import aikido_zen.vulnerabilities as vulns
 
-REQUIRED_PSYCOPG_VERSION = "0.0.0"
+REQUIRED_PSYCOPG_VERSION = "3.1.0"
 
 
 @importhook.on_import("psycopg.cursor")

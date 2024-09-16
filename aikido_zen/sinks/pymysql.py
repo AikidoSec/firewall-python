@@ -11,7 +11,7 @@ import aikido_zen.vulnerabilities as vulns
 
 logger = logging.getLogger("aikido_zen")
 
-REQUIRED_PYMYSQL_VERSION = "0.0.0"
+REQUIRED_PYMYSQL_VERSION = "0.9.0"
 
 
 @importhook.on_import("pymysql.cursors")

@@ -9,7 +9,7 @@ from aikido_zen.background_process.packages import pkg_compat_check
 from aikido_zen.helpers.logging import logger
 import aikido_zen.vulnerabilities as vulns
 
-REQUIRED_MYSQLCLIENT_VERSION = "0.0.0"
+REQUIRED_MYSQLCLIENT_VERSION = "1.5.0"
 
 
 @importhook.on_import("MySQLdb.cursors")
