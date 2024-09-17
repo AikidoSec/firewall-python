@@ -1,4 +1,4 @@
-name: Pytest Coverage | Reports to codecov
+name: Unit Tests
 
 on: [pull_request]
 
