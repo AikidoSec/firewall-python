@@ -24,7 +24,7 @@ class LRUCache:
         if key in self.cache:
             # Check if the item is still valid based on TTL
             if (
-                get_unixtime_ms() - self.cache[key]["startTime"]
+                get_unixtime_ms(monotonic=True) - self.cache[key]["startTime"]
                 < self.time_to_live_in_ms
             ):
                 return self.cache[key]["value"]  # Return the actual value
@@ -41,7 +41,7 @@ class LRUCache:
             self.cache.popitem(last=False)  # Remove the oldest item
         self.cache[key] = {
             "value": value,
-            "startTime": get_unixtime_ms(),
+            "startTime": get_unixtime_ms(monotonic=True),
         }  # Store value and timestamp
 
     def clear(self):
