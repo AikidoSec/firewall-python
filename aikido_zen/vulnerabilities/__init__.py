@@ -97,7 +97,7 @@ def run_vulnerability_scan(kind, op, args):
         elif kind == "code_injection":
             # args is the statement executed by e.g. eval() function
             injection_results = check_context_for_code_injection(
-                statement=args[0],
+                statement=args,
                 operation=op,
                 context=context,
             )
