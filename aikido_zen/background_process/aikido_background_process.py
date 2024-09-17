@@ -69,7 +69,7 @@ class AikidoBackgroundProcess:
         """Reporting thread"""
         logger.debug("Started reporting thread")
         event_scheduler = sched.scheduler(
-            time.time, time.sleep
+            time.monotonic, time.sleep
         )  # Create an event scheduler
         self.send_to_connection_manager(event_scheduler)
 
