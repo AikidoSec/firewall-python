@@ -62,3 +62,39 @@ def test_not_in_userinput_not_injection():
 
 def test_injection_with_maths():
     is_injection("1 + 2 + (3 // 4)", "(3 // 4)")
+
+
+def test_simple_injections():
+    is_injection("os.system('ls')", "os.system('ls')")
+    is_injection("exec('print(1)')", "exec('print(1)')")
+    is_injection("eval('2 + 2')", "eval('2 + 2')")
+    is_injection(
+        "__import__('os').system('rm -rf /')", "__import__('os').system('rm -rf /')"
+    )
+
+
+def test_string_injections():
+    is_injection("print('Hello, World!')")
+    is_injection("input('Enter your name: ')")
+    is_injection("os.system('rm -rf /');")
+
+
+def test_nested_injections():
+    is_injection("eval('print(1)')")
+    is_injection("eval('os.system('ls')')")
+    is_injection("exec('print(2)')")
+    is_injection("exec('os.system('ls')')")
+
+
+def test_edge_cases():
+    is_injection("a = 1; b = 2")
+    is_injection("b = 2; os.system('ls')")
+    is_injection("def f(): pass")
+    is_injection("f(); os.system('ls')")
+
+
+def test_injection_with_special_characters():
+    is_injection("print('Hello!')")
+    is_injection("rm -rf /; #")
+    is_injection("print('Goodbye!')")
+    is_injection("echo 'Hacked!'; #")
