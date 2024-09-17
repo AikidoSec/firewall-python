@@ -11,7 +11,8 @@ import aikido_zen.decorators.gunicorn as aik
 
 @aik.post_fork
 def post_fork(server, worker):
-    pass # You can put your code here
+    # If you already have a config file, replace pass with your own code.
+    pass
 ```
 And make sure to include this config when starting gunicorn by adding the `-c gunicorn_config.py` flag.
 ```sh
