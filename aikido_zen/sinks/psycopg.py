@@ -5,8 +5,10 @@ Sink module for `psycopg`
 import copy
 import aikido_zen.importhook as importhook
 from aikido_zen.vulnerabilities.sql_injection.dialects import Postgres
-from aikido_zen.background_process.packages import add_wrapped_package
+from aikido_zen.background_process.packages import pkg_compat_check
 import aikido_zen.vulnerabilities as vulns
+
+REQUIRED_PSYCOPG_VERSION = "3.1.0"
 
 
 @importhook.on_import("psycopg.cursor")
@@ -15,6 +17,8 @@ def on_psycopg_import(psycopg):
     Hook 'n wrap on `psycopg.connect` function, we modify the cursor_factory
     of the result of this connect function.
     """
+    if not pkg_compat_check("psycopg", REQUIRED_PSYCOPG_VERSION):
+        return psycopg
     modified_psycopg = importhook.copy_module(psycopg)
     former_copy_funtcion = copy.deepcopy(psycopg.Cursor.copy)
     former_execute_function = copy.deepcopy(psycopg.Cursor.execute)
@@ -45,5 +49,4 @@ def on_psycopg_import(psycopg):
     # pylint: disable=no-member
     setattr(psycopg.Cursor, "executemany", aikido_executemany)
 
-    add_wrapped_package("psycopg")
     return modified_psycopg

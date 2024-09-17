@@ -4,7 +4,6 @@ import copy
 import aikido_zen.importhook as importhook
 from aikido_zen.helpers.logging import logger
 from aikido_zen.context import Context
-from aikido_zen.background_process.packages import add_wrapped_package
 from ..functions.request_handler import request_handler
 
 
@@ -21,7 +20,6 @@ def on_starlette_import(starlette):
         return await aik_call_wrapper(former_call, app, scope, receive, send)
 
     setattr(modified_starlette.Starlette, "__call__", aikido___call__)
-    add_wrapped_package("starlette")
     return modified_starlette
 
 
