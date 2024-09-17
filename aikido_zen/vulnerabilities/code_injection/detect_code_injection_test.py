@@ -44,6 +44,8 @@ def test_booleans_and_numbers():
 def test_maths_not_injection():
     is_not_injection("1 + 2 + 3 + 4 + 5")
     is_not_injection("1 + 2 + 3 + 4", "1 + 2 + 3")
+    is_not_injection("1 - 2 + 3+4+5//20*200")
+    is_not_injection("1 + 2 + (3 // 4)", "3 // 4")
 
 
 def test_small_not_injection():
@@ -56,3 +58,7 @@ def test_small_not_injection():
 def test_not_in_userinput_not_injection():
     is_not_injection("def test_function(a=True, b=False):    pass", "test_function_not")
     is_not_injection("def test_injection();", "injection_none")
+
+
+def test_injection_with_maths():
+    is_injection("1 + 2 + (3 // 4)", "(3 // 4)")
