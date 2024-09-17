@@ -41,7 +41,7 @@ def on_builtins_import(builtins):
     def aikido_new_exec(object, *args, **kwargs):
         if object and isinstance(object, str):
             vulns.run_vulnerability_scan(
-                kind="code_injection", op="builtins.eval", args=object
+                kind="code_injection", op="builtins.exec", args=object
             )
         return former_exec(object, *args, **kwargs)
 
