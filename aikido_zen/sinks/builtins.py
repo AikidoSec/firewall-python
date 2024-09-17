@@ -20,6 +20,7 @@ def on_builtins_import(builtins):
     former_open = copy.deepcopy(builtins.open)
     former_eval = copy.deepcopy(builtins.eval)
     former_exec = copy.deepcopy(builtins.exec)
+    former_compile = copy.deepcopy(builtins.compile)
 
     # Path Traversal :
     def aikido_new_open(*args, **kwargs):
@@ -45,6 +46,16 @@ def on_builtins_import(builtins):
             )
         return former_exec(object, *args, **kwargs)
 
+    def aikido_new_compile(source, *args, **kwargs):
+        code = source
+        if isinstance(source, bytes):
+            code = source.decode("utf-8")
+        if code and isinstance(code, str):
+            vulns.run_vulnerability_scan(
+                kind="code_injection", op="builtins.compile", args=code
+            )
+        return former_compile(source, *args, **kwargs)
+
     # pylint: disable=no-member
     setattr(builtins, "open", aikido_new_open)
     setattr(modified_builtins, "open", aikido_new_open)
@@ -52,4 +63,6 @@ def on_builtins_import(builtins):
     setattr(modified_builtins, "eval", aikido_new_eval)
     setattr(builtins, "exec", aikido_new_exec)
     setattr(modified_builtins, "exec", aikido_new_exec)
+    setattr(builtins, "compile", aikido_new_compile)
+    setattr(modified_builtins, "compile", aikido_new_compile)
     return modified_builtins
