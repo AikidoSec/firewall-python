@@ -35,10 +35,10 @@ def run_nosql_find(query, MongoClient):
     db = database_conn(MongoClient)
     dogs = db["dogs"]
 
-    t_start = time.time()
+    t_start = time.monotonic()
     dogs.find(query)
     time.sleep(1/1000)
-    t_end = time.time()
+    t_end = time.monotonic()
 
     return t_end - t_start # Delta
 

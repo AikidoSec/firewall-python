@@ -11,10 +11,10 @@ def run_sql_no_fw(sql):
 
     conn = database_conn()
     cursor = conn.cursor()
-    t_start = time.time()
+    t_start = time.monotonic()
     cursor.execute(sql)
     time.sleep(1/1000) # 1ms simulated cloud delay
-    t_end = time.time()
+    t_end = time.monotonic()
 
     return t_end - t_start # Delta
 
