@@ -7,21 +7,27 @@ from .get_data_schema import get_data_schema
 
 
 def get_api_info(context):
-    """Gives you an object with type and schema"""
-    # Check if feature flag COLLECT_API_SCHEMA is enabled
-    if not is_feature_enabled("COLLECT_API_SCHEMA"):
+    """Generates an apispec based on the context passed along"""
+    try:
+        # Check if feature flag COLLECT_API_SCHEMA is enabled
+        if not is_feature_enabled("COLLECT_API_SCHEMA"):
+            return None
+        body_info = get_body_info(context)
+        return {
+            "body": body_info
+        }
+    except Exception as e:
+        logger.debug("Exception occured whilst generating apispec: %s", e)
         return None
-    data = context.body
+
+def get_body_info(context):
+    """Returns type, schema dict with body info for the given context"""
+    data = context.body 
     if not data or not isinstance(data, dict):
         data = context.xml
     if not data or not isinstance(data, dict):
         return None
-
-    try:
-        return {
-            "type": get_body_data_type(context.headers),
-            "schema": get_data_schema(data),
-        }
-    except Exception as e:
-        logger.debug("Exception occured whilst getting body data : %s", e)
-        return None
+    return {
+        "type": get_body_data_type(context.headers),
+        "schema": get_data_schema(data),
+    }
