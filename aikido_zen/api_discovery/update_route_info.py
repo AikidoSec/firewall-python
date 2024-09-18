@@ -26,10 +26,9 @@ def update_api_info(context, existing_apispec=None):
     """
     try:
         new_apispec = get_api_info(context)
-
-        if new_apispec == {}:
+        if not new_apispec:
             return existing_apispec
-        if existing_apispec == {}:
+        if not existing_apispec:
             return new_apispec
 
         # Body :
