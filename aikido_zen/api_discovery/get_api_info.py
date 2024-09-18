@@ -1,4 +1,4 @@
-"""Exports get_body_info function"""
+"""Exports get_api_info function"""
 
 from aikido_zen.helpers.logging import logger
 from aikido_zen.helpers.env_vars.feature_flags import is_feature_enabled
@@ -6,7 +6,7 @@ from .get_body_data_type import get_body_data_type
 from .get_data_schema import get_data_schema
 
 
-def get_body_info(context):
+def get_api_info(context):
     """Gives you an object with type and schema"""
     # Check if feature flag COLLECT_API_SCHEMA is enabled
     if not is_feature_enabled("COLLECT_API_SCHEMA"):

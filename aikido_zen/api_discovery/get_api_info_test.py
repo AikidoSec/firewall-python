@@ -1,5 +1,5 @@
 import pytest
-from .get_body_info import get_body_info
+from .get_api_info import get_api_info
 
 
 class Context:
@@ -18,7 +18,7 @@ class Context:
         self.headers = {"CONTENT_TYPE": content_type}
 
 
-def test_get_body_info_with_form_encoded_context(monkeypatch):
+def test_get_api_info_with_form_encoded_context(monkeypatch):
     monkeypatch.setenv("AIKIDO_FEATURE_COLLECT_API_SCHEMA", "1")
     context1 = Context(
         "GET",
@@ -32,8 +32,8 @@ def test_get_body_info_with_form_encoded_context(monkeypatch):
             "user": {"name": "John Doe", "email": "john.doe@example.com"},
         },
     )
-    body_info = get_body_info(context1)
-    assert body_info == {
+    api_info = get_api_info(context1)
+    assert api_info == {
         "schema": {
             "properties": {
                 "data1": {
@@ -80,7 +80,7 @@ def test_get_body_info_with_form_encoded_context(monkeypatch):
     }
 
 
-def test_get_body_info_with_json(monkeypatch):
+def test_get_api_info_with_json(monkeypatch):
     monkeypatch.setenv("AIKIDO_FEATURE_COLLECT_API_SCHEMA", "1")
     context1 = Context(
         "GET",
@@ -90,8 +90,8 @@ def test_get_body_info_with_json(monkeypatch):
         },
         content_type="application/json",
     )
-    body_info = get_body_info(context1)
-    assert body_info == {
+    api_info = get_api_info(context1)
+    assert api_info == {
         "schema": {
             "properties": {
                 "user": {

@@ -4,7 +4,7 @@ Exports class Routes
 
 from aikido_zen.helpers.logging import logger
 from aikido_zen.api_discovery.update_route_info import update_route_info
-from aikido_zen.api_discovery.get_body_info import get_body_info
+from aikido_zen.api_discovery.get_api_info import get_api_info
 
 
 class Routes:
@@ -35,7 +35,7 @@ class Routes:
                 "method": method,
                 "path": path,
                 "hits": 1,
-                "apispec": get_body_info(context),
+                "apispec": get_api_info(context),
             }
 
     def clear(self):
