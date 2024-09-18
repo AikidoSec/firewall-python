@@ -35,7 +35,7 @@ class Routes:
                 "method": method,
                 "path": path,
                 "hits": 1,
-                "body": get_body_info(context),
+                "apispec": get_body_info(context),
             }
 
     def clear(self):

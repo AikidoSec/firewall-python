@@ -6,13 +6,13 @@ class Context:
         self,
         method,
         path,
-        body={},
+        apispec={},
         xml={},
         content_type="application/x-www-form-urlencoded",
     ):
         self.method = method
         self.route = path
-        self.body = body
+        self.apispec = apispec
         self.xml = xml
         self.headers = {"CONTENT_TYPE": content_type}
 
@@ -110,19 +110,19 @@ def test_iterable():
         "method": "GET",
         "path": "/api/resource1",
         "hits": 1,
-        "body": None,
+        "apispec": {},
     } in routes_list
     assert {
         "method": "POST",
         "path": "/api/resource2",
         "hits": 1,
-        "body": None,
+        "apispec": {},
     } in routes_list
     assert {
         "method": "PUT",
         "path": "/api/resource3",
         "hits": 1,
-        "body": None,
+        "apispec": {},
     } in routes_list
 
 
@@ -146,12 +146,14 @@ def test_api_discovery_for_new_routes(monkeypatch):
     context1 = Context(
         "GET",
         "/api/resource1",
-        body={
-            "user": {
-                "name": "John Doe",
-                "email": "john.doe@example.com",
-                "phone": 12345678,
-            },
+        apispec={
+            "body": {
+                "user": {
+                    "name": "John Doe",
+                    "email": "john.doe@example.com",
+                    "phone": 12345678,
+                },
+            }
         },
     )
     routes.add_route(context1)
@@ -162,25 +164,27 @@ def test_api_discovery_for_new_routes(monkeypatch):
         "method": "GET",
         "path": "/api/resource1",
         "hits": 1,
-        "body": {
-            "schema": {
-                "properties": {
-                    "user": {
-                        "properties": {
-                            "email": {
-                                "type": "string",
+        "apispec": {
+            "body": {
+                "schema": {
+                    "properties": {
+                        "user": {
+                            "properties": {
+                                "email": {
+                                    "type": "string",
+                                },
+                                "name": {
+                                    "type": "string",
+                                },
+                                "phone": {"type": "number"},
                             },
-                            "name": {
-                                "type": "string",
-                            },
-                            "phone": {"type": "number"},
+                            "type": "object",
                         },
-                        "type": "object",
                     },
+                    "type": "object",
                 },
-                "type": "object",
-            },
-            "type": "form-urlencoded",
+                "type": "form-urlencoded",
+            }
         },
     } in routes_list
 
@@ -196,16 +200,18 @@ def test_api_discovery_existing_route_empty(monkeypatch):
         "method": "GET",
         "path": "/api/resource1",
         "hits": 1,
-        "body": None,
+        "apispec": {},
     } in routes_list
     context2 = Context(
         "GET",
         "/api/resource1",
-        body={
-            "user": {
-                "name": "John Doe",
-                "email": "john.doe@example.com",
-                "phone": 12345678,
+        apispec={
+            "body": {
+                "user": {
+                    "name": "John Doe",
+                    "email": "john.doe@example.com",
+                    "phone": 12345678,
+                },
             },
         },
     )
@@ -217,25 +223,27 @@ def test_api_discovery_existing_route_empty(monkeypatch):
         "method": "GET",
         "path": "/api/resource1",
         "hits": 2,
-        "body": {
-            "schema": {
-                "properties": {
-                    "user": {
-                        "properties": {
-                            "email": {
-                                "type": "string",
+        "apispec": {
+            "body": {
+                "schema": {
+                    "properties": {
+                        "user": {
+                            "properties": {
+                                "email": {
+                                    "type": "string",
+                                },
+                                "name": {
+                                    "type": "string",
+                                },
+                                "phone": {"type": "number"},
                             },
-                            "name": {
-                                "type": "string",
-                            },
-                            "phone": {"type": "number"},
+                            "type": "object",
                         },
-                        "type": "object",
                     },
+                    "type": "object",
                 },
-                "type": "object",
-            },
-            "type": "form-urlencoded",
+                "type": "form-urlencoded",
+            }
         },
     } in routes_list
 
@@ -246,16 +254,22 @@ def test_api_discovery_merge_routes(monkeypatch):
     context1 = Context(
         "GET",
         "/api/resource1",
-        body={"user": {"name": "John Doe", "email": "john.doe@example.com", "age": 20}},
+        apispec={
+            "body": {
+                "user": {"name": "John Doe", "email": "john.doe@example.com", "age": 20}
+            },
+        },
     )
     context2 = Context(
         "GET",
         "/api/resource1",
-        body={
-            "user": {
-                "name": "John Doe",
-                "email": "john.doe@example.com",
-                "phone": 12345678,
+        apispec={
+            "body": {
+                "user": {
+                    "name": "John Doe",
+                    "email": "john.doe@example.com",
+                    "phone": 12345678,
+                },
             },
         },
         content_type="application/json",
@@ -269,25 +283,27 @@ def test_api_discovery_merge_routes(monkeypatch):
         "method": "GET",
         "path": "/api/resource1",
         "hits": 2,
-        "body": {
-            "schema": {
-                "properties": {
-                    "user": {
-                        "properties": {
-                            "email": {
-                                "type": "string",
+        "apispec": {
+            "body": {
+                "schema": {
+                    "properties": {
+                        "user": {
+                            "properties": {
+                                "email": {
+                                    "type": "string",
+                                },
+                                "name": {
+                                    "type": "string",
+                                },
+                                "phone": {"type": "number", "optional": True},
+                                "age": {"type": "number", "optional": True},
                             },
-                            "name": {
-                                "type": "string",
-                            },
-                            "phone": {"type": "number", "optional": True},
-                            "age": {"type": "number", "optional": True},
+                            "type": "object",
                         },
-                        "type": "object",
                     },
+                    "type": "object",
                 },
-                "type": "object",
+                "type": "json",
             },
-            "type": "json",
         },
     } in routes_list
