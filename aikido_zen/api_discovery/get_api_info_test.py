@@ -9,6 +9,7 @@ class Context:
         path,
         body={},
         xml={},
+        query={},
         content_type="application/x-www-form-urlencoded",
     ):
         self.method = method
@@ -16,6 +17,8 @@ class Context:
         self.body = body
         self.xml = xml
         self.headers = {"CONTENT_TYPE": content_type}
+        self.query = query
+        self.cookies = {}
 
 
 def test_get_api_info_with_form_encoded_context(monkeypatch):
@@ -79,6 +82,8 @@ def test_get_api_info_with_form_encoded_context(monkeypatch):
             },
             "type": "form-urlencoded",
         },
+        "auth": None,
+        "query": None,
     }
 
 
@@ -89,6 +94,9 @@ def test_get_api_info_with_json(monkeypatch):
         "/api/resource1",
         body={
             "user": {"name": "John Doe", "email": "john.doe@example.com"},
+        },
+        query={
+            "user2": {"nickname": "John Doe", "mail": "john.doe@example.com"},
         },
         content_type="application/json",
     )
@@ -113,4 +121,76 @@ def test_get_api_info_with_json(monkeypatch):
             },
             "type": "json",
         },
+        "query": {
+            "properties": {
+                "user2": {
+                    "properties": {
+                        "mail": {
+                            "type": "string",
+                        },
+                        "nickname": {
+                            "type": "string",
+                        },
+                    },
+                    "type": "object",
+                },
+            },
+            "type": "object",
+        },
+        "auth": None,
+    }
+
+
+def test_auth_get_api_info(monkeypatch):
+    monkeypatch.setenv("AIKIDO_FEATURE_COLLECT_API_SCHEMA", "1")
+    context1 = Context(
+        "GET",
+        "/api/resource1",
+        body={
+            "user": {"name": "John Doe", "email": "john.doe@example.com"},
+        },
+        query={
+            "user2": {"nickname": "John Doe", "mail": "john.doe@example.com"},
+        },
+        content_type="application/json",
+    )
+    context1.headers["AUTHORIZATION"] = "Bearer token"
+    api_info = get_api_info(context1)
+    assert api_info == {
+        "body": {
+            "schema": {
+                "properties": {
+                    "user": {
+                        "properties": {
+                            "email": {
+                                "type": "string",
+                            },
+                            "name": {
+                                "type": "string",
+                            },
+                        },
+                        "type": "object",
+                    },
+                },
+                "type": "object",
+            },
+            "type": "json",
+        },
+        "query": {
+            "properties": {
+                "user2": {
+                    "properties": {
+                        "mail": {
+                            "type": "string",
+                        },
+                        "nickname": {
+                            "type": "string",
+                        },
+                    },
+                    "type": "object",
+                },
+            },
+            "type": "object",
+        },
+        "auth": [{"scheme": "bearer", "type": "http"}],
     }
