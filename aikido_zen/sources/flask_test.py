@@ -55,6 +55,7 @@ def test_flask_all_3_func():
             "HEADER_1": "header 1 value",
             "HEADER_2": "Header 2 value",
             "HOST": "example.com",
+            "CONTENT_TYPE": "application/x-www-form-urlencoded",
         }
         calls = mock_request_handler.call_args_list
         assert len(calls) == 3
