@@ -61,6 +61,10 @@ def extract_strings_from_user_input(obj, path_to_payload=None):
             for k, v in extract_strings_from_user_input(
                 jwt[1], path_to_payload + [{"type": "jwt"}]
             ).items():
+                if k == "iss" or v.endswith("<jwt>.iss"):
+                    # Do not add the issuer of the JWT as a string because it can contain a
+                    # domain / url and produce false positives
+                    continue
                 results[k] = v
 
     return results
