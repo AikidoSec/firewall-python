@@ -24,16 +24,19 @@ def update_api_info(context, existing_apispec=None):
     """
     new_apispec = get_api_info(context)
 
-    if new_apispec is None:
+    if new_apispec == {}:
         return existing_apispec
 
-    if existing_apispec is None:
+    if existing_apispec == {}:
         return new_apispec
-    if existing_apispec["body"] and new_apispec["body"]:
+
+    if existing_apispec.get("body", None) and new_apispec.get("body", None):
         existing_schema = existing_apispec["body"].get("schema", None)
         new_schema = new_apispec["body"].get("schema", None)
         existing_apispec["body"] = {
             "type": new_apispec["body"]["type"],
             "schema": merge_data_schemas(existing_schema, new_schema),
         }
+    elif new_apispec.get("body", None):
+        existing_apispec["body"] = new_apispec["body"]
     return existing_apispec
