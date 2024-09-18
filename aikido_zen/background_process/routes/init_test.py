@@ -6,13 +6,13 @@ class Context:
         self,
         method,
         path,
-        apispec={},
+        body={},
         xml={},
         content_type="application/x-www-form-urlencoded",
     ):
         self.method = method
         self.route = path
-        self.apispec = apispec
+        self.body = body
         self.xml = xml
         self.headers = {"CONTENT_TYPE": content_type}
 
@@ -146,14 +146,12 @@ def test_api_discovery_for_new_routes(monkeypatch):
     context1 = Context(
         "GET",
         "/api/resource1",
-        apispec={
-            "body": {
-                "user": {
-                    "name": "John Doe",
-                    "email": "john.doe@example.com",
-                    "phone": 12345678,
-                },
-            }
+        body={
+            "user": {
+                "name": "John Doe",
+                "email": "john.doe@example.com",
+                "phone": 12345678,
+            },
         },
     )
     routes.add_route(context1)
@@ -205,13 +203,11 @@ def test_api_discovery_existing_route_empty(monkeypatch):
     context2 = Context(
         "GET",
         "/api/resource1",
-        apispec={
-            "body": {
-                "user": {
-                    "name": "John Doe",
-                    "email": "john.doe@example.com",
-                    "phone": 12345678,
-                },
+        body={
+            "user": {
+                "name": "John Doe",
+                "email": "john.doe@example.com",
+                "phone": 12345678,
             },
         },
     )
@@ -254,22 +250,16 @@ def test_api_discovery_merge_routes(monkeypatch):
     context1 = Context(
         "GET",
         "/api/resource1",
-        apispec={
-            "body": {
-                "user": {"name": "John Doe", "email": "john.doe@example.com", "age": 20}
-            },
-        },
+        body={"user": {"name": "John Doe", "email": "john.doe@example.com", "age": 20}},
     )
     context2 = Context(
         "GET",
         "/api/resource1",
-        apispec={
-            "body": {
-                "user": {
-                    "name": "John Doe",
-                    "email": "john.doe@example.com",
-                    "phone": 12345678,
-                },
+        body={
+            "user": {
+                "name": "John Doe",
+                "email": "john.doe@example.com",
+                "phone": 12345678,
             },
         },
         content_type="application/json",
