@@ -1,5 +1,5 @@
 import pytest
-from .get_auth_type import get_auth_type
+from .get_auth_types import get_auth_types
 
 
 class Context:
@@ -10,13 +10,13 @@ class Context:
 
 def test_detects_authorization_header():
     context1 = Context(headers={"AUTHORIZATION": "Bearer token"})
-    assert get_auth_type(context1) == [{"type": "http", "scheme": "bearer"}]
+    assert get_auth_types(context1) == [{"type": "http", "scheme": "bearer"}]
 
     context2 = Context(headers={"AUTHORIZATION": "Basic base64"})
-    assert get_auth_type(context2) == [{"type": "http", "scheme": "basic"}]
+    assert get_auth_types(context2) == [{"type": "http", "scheme": "basic"}]
 
     context3 = Context(headers={"AUTHORIZATION": "custom"})
-    assert get_auth_type(context3) == [
+    assert get_auth_types(context3) == [
         {
             "type": "apiKey",
             "in": "header",
@@ -27,24 +27,24 @@ def test_detects_authorization_header():
 
 def test_detects_api_keys():
     context1 = Context(headers={"x-api-key": "token"})
-    assert get_auth_type(context1) == [
+    assert get_auth_types(context1) == [
         {"type": "apiKey", "in": "header", "name": "x-api-key"}
     ]
 
     context2 = Context(headers={"api-key": "token"})
-    assert get_auth_type(context2) == [
+    assert get_auth_types(context2) == [
         {"type": "apiKey", "in": "header", "name": "api-key"}
     ]
 
 
 def test_detects_auth_cookies():
     context1 = Context(cookies={"api-key": "token"})
-    assert get_auth_type(context1) == [
+    assert get_auth_types(context1) == [
         {"type": "apiKey", "in": "cookie", "name": "api-key"}
     ]
 
     context2 = Context(cookies={"session": "test"})
-    assert get_auth_type(context2) == [
+    assert get_auth_types(context2) == [
         {
             "type": "apiKey",
             "in": "cookie",
@@ -54,7 +54,7 @@ def test_detects_auth_cookies():
 
 
 def test_no_auth():
-    assert get_auth_type(Context()) is None
-    assert get_auth_type(Context(headers={})) is None
-    assert get_auth_type(Context(headers={"authorization": ""})) is None
-    assert get_auth_type(Context(headers={"authorization": None})) is None
+    assert get_auth_types(Context()) is None
+    assert get_auth_types(Context(headers={})) is None
+    assert get_auth_types(Context(headers={"authorization": ""})) is None
+    assert get_auth_types(Context(headers={"authorization": None})) is None
