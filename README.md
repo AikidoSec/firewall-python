@@ -1,6 +1,11 @@
 ![Aikido Zen for Python 3](https://raw.githubusercontent.com/AikidoSec/firewall-python/main/docs/banner.svg)
 
 # Zen, in-app firewall for Python 3  | by Aikido
+[![Codecov](https://img.shields.io/codecov/c/github/AikidoSec/firewall-python?style=flat-square&token=AJK9LU35GY)](https://app.codecov.io/gh/aikidosec/firewall-python) 
+[![PyPI Package](https://img.shields.io/pypi/v/aikido_zen?style=flat-square)](https://pypi.org/project/aikido_zen/)
+![Code Style : Black](https://img.shields.io/badge/code%20style-black-black?style=flat-square)
+[![Unit tests](https://github.com/AikidoSec/firewall-python/actions/workflows/unit-test.yml/badge.svg)](https://github.com/AikidoSec/firewall-python/actions/workflows/unit-test.yml) 
+[![End to end tests](https://github.com/AikidoSec/firewall-python/actions/workflows/end2end.yml/badge.svg)](https://github.com/AikidoSec/firewall-python/actions/workflows/end2end.yml)
 
 Zen, your in-app firewall for peace of mind– at runtime.
 
@@ -39,13 +44,13 @@ Zen for Python 3 is compatible with:
 * ✅ [uWSGI](docs/uwsgi.md)
 
 ### Database drivers
-* ✅ [`mysqlclient`](https://pypi.org/project/mysqlclient/)
-* ✅ [`PyMySQL`](https://pypi.org/project/PyMySQL/)
-* ✅ [`pymongo`](https://pypi.org/project/pymongo/)
-* ✅ [`psycopg2`](https://pypi.org/project/psycopg2)
-* ✅ [`psycopg`](https://pypi.org/project/psycopg)
-* ✅ [`asyncpg`](https://pypi.org/project/asyncpg)
-* ✅ [`motor`](https://pypi.org/project/motor/)
+* ✅ [`mysqlclient`](https://pypi.org/project/mysqlclient/) ^1.5
+* ✅ [`PyMySQL`](https://pypi.org/project/PyMySQL/) ^0.9
+* ✅ [`pymongo`](https://pypi.org/project/pymongo/) ^3.10
+* ✅ [`psycopg2`](https://pypi.org/project/psycopg2) ^2.9.2
+* ✅ [`psycopg`](https://pypi.org/project/psycopg) ^3.1
+* ✅ [`asyncpg`](https://pypi.org/project/asyncpg) ^0.27
+* ✅ [`motor`](https://pypi.org/project/motor/) (See `pymongo` version)
 
 ## Reporting to your Aikido Security dashboard
 
