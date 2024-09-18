@@ -34,49 +34,51 @@ def test_get_api_info_with_form_encoded_context(monkeypatch):
     )
     api_info = get_api_info(context1)
     assert api_info == {
-        "schema": {
-            "properties": {
-                "data1": {
-                    "properties": {
-                        "active": {
-                            "type": "boolean",
-                        },
-                        "data2": {
-                            "items": {
-                                "properties": {
-                                    "Help": {
-                                        "type": "boolean",
-                                    },
-                                    "location": {
-                                        "optional": True,
-                                        "type": "string",
-                                    },
-                                },
-                                "type": "object",
+        "body": {
+            "schema": {
+                "properties": {
+                    "data1": {
+                        "properties": {
+                            "active": {
+                                "type": "boolean",
                             },
-                            "type": "array",
+                            "data2": {
+                                "items": {
+                                    "properties": {
+                                        "Help": {
+                                            "type": "boolean",
+                                        },
+                                        "location": {
+                                            "optional": True,
+                                            "type": "string",
+                                        },
+                                    },
+                                    "type": "object",
+                                },
+                                "type": "array",
+                            },
+                            "identifier": {
+                                "type": "string",
+                            },
                         },
-                        "identifier": {
-                            "type": "string",
-                        },
+                        "type": "object",
                     },
-                    "type": "object",
-                },
-                "user": {
-                    "properties": {
-                        "email": {
-                            "type": "string",
+                    "user": {
+                        "properties": {
+                            "email": {
+                                "type": "string",
+                            },
+                            "name": {
+                                "type": "string",
+                            },
                         },
-                        "name": {
-                            "type": "string",
-                        },
+                        "type": "object",
                     },
-                    "type": "object",
                 },
+                "type": "object",
             },
-            "type": "object",
+            "type": "form-urlencoded",
         },
-        "type": "form-urlencoded",
     }
 
 
@@ -92,21 +94,23 @@ def test_get_api_info_with_json(monkeypatch):
     )
     api_info = get_api_info(context1)
     assert api_info == {
-        "schema": {
-            "properties": {
-                "user": {
-                    "properties": {
-                        "email": {
-                            "type": "string",
+        "body": {
+            "schema": {
+                "properties": {
+                    "user": {
+                        "properties": {
+                            "email": {
+                                "type": "string",
+                            },
+                            "name": {
+                                "type": "string",
+                            },
                         },
-                        "name": {
-                            "type": "string",
-                        },
+                        "type": "object",
                     },
-                    "type": "object",
                 },
+                "type": "object",
             },
-            "type": "object",
+            "type": "json",
         },
-        "type": "json",
     }
