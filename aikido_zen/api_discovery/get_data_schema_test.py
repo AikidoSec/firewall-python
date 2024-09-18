@@ -152,6 +152,13 @@ def generate_test_object_with_depth(depth):
     }
 
 
+def generate_object_with_properties(count):
+    obj = {}
+    for i in range(count):
+        obj[f"props{i}"] = i
+    return obj
+
+
 def test_max_depth():
     obj = generate_test_object_with_depth(10)
     schema = get_data_schema(obj)
@@ -164,3 +171,17 @@ def test_max_depth():
     obj3 = generate_test_object_with_depth(21)
     schema3 = get_data_schema(obj3)
     assert "'type': 'string'" not in str(schema3)
+
+
+def test_max_properties():
+    obj = generate_object_with_properties(80)
+    schema = get_data_schema(obj)
+    assert len(schema["properties"]) == 80
+
+    obj2 = generate_object_with_properties(100)
+    schema2 = get_data_schema(obj2)
+    assert len(schema2["properties"]) == 100
+
+    obj3 = generate_object_with_properties(120)
+    schema3 = get_data_schema(obj3)
+    assert len(schema3["properties"]) == 100
