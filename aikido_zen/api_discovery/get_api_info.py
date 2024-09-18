@@ -11,12 +11,14 @@ def get_api_info(context):
     try:
         # Check if feature flag COLLECT_API_SCHEMA is enabled
         if not is_feature_enabled("COLLECT_API_SCHEMA"):
-            return None
+            return {}
         body_info = get_body_info(context)
-        return {"body": body_info}
+        if body_info:
+            return {"body": body_info}
     except Exception as e:
         logger.debug("Exception occured whilst generating apispec: %s", e)
-        return None
+
+    return {}
 
 
 def get_body_info(context):
