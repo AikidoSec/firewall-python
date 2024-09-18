@@ -6,6 +6,8 @@ from .merge_data_schemas import merge_data_schemas
 MAX_TRAVERSAL_DEPTH = 20
 # Maximum amount of array members to merge into one
 MAX_ARRAY_DEPTH = 10
+# Maximum number of properties per level
+MAX_PROPS = 100
 
 
 def get_data_schema(data, depth=0):
@@ -37,8 +39,13 @@ def get_data_schema(data, depth=0):
 
     # If the depth is less than the maximum depth, get the schema for each property
     if depth < MAX_TRAVERSAL_DEPTH:
+        prop_count = 0
         for key, value in data.items():
+            if prop_count >= MAX_PROPS:
+                # We cannot allow more properties than MAX_PROPS, breaking for loop.
+                break
             schema["properties"][key] = get_data_schema(value, depth + 1)
+            prop_count += 1
 
     return schema
 
