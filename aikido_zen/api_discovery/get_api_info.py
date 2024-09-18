@@ -13,16 +13,15 @@ def get_api_info(context):
         if not is_feature_enabled("COLLECT_API_SCHEMA"):
             return None
         body_info = get_body_info(context)
-        return {
-            "body": body_info
-        }
+        return {"body": body_info}
     except Exception as e:
         logger.debug("Exception occured whilst generating apispec: %s", e)
         return None
 
+
 def get_body_info(context):
     """Returns type, schema dict with body info for the given context"""
-    data = context.body 
+    data = context.body
     if not data or not isinstance(data, dict):
         data = context.xml
     if not data or not isinstance(data, dict):
