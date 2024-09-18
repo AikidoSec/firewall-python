@@ -64,7 +64,7 @@ def find_api_keys(context):
     result = []
 
     for header in common_api_key_header_names:
-        if header in context.headers:
+        if normalize_header_key(header) in context.headers:
             result.append({"type": "apiKey", "in": "header", "name": header})
 
     if isinstance(context.cookies, dict):
@@ -77,3 +77,8 @@ def find_api_keys(context):
             result.append({"type": "apiKey", "in": "cookie", "name": cookie})
 
     return result
+
+
+def normalize_header_key(header_key):
+    """Normalizes the header keys"""
+    return header_key.replace("-", "_").upper()
