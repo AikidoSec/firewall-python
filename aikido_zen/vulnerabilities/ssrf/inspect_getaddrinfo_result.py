@@ -49,9 +49,16 @@ def inspect_getaddrinfo_result(dns_results, hostname, port):
             "kind": "ssrf",
             "source": attack_findings["source"],
             "path": attack_findings["pathToPayload"],
-            "metadata": {"hostname": hostname},
+            "metadata": get_metadata_for_ssrf_attack(hostname, port),
             "payload": attack_findings["payload"],
         }
+
+
+def get_metadata_for_ssrf_attack(hostname, port):
+    """Returns metadata either with a port if it exists or just hostname"""
+    if port:
+        return {"hostname": hostname, "port": str(port)}
+    return {"hostname": hostname}
 
 
 def inspect_dns_results(dns_results, hostname):
