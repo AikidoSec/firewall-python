@@ -1,5 +1,7 @@
 """Exports get_stats function"""
 
+import aikido_zen.helpers.get_current_unixtime_ms as t
+
 
 def get_stats(statistics_object):
     """This will return the stats as a dict, from a Statistics class"""
@@ -19,5 +21,6 @@ def get_stats(statistics_object):
     return {
         "sinks": sinks,
         "startedAt": statistics_object.started_at,
+        "endedAt": t.get_unixtime_ms(),
         "requests": statistics_object.requests,
     }
