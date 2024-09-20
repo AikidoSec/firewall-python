@@ -70,6 +70,9 @@ def aikido___call__(flask_app, environ, start_response):
     return res
 
 
+FLASK_REQUIRED_VERSION = "2.3.0"
+
+
 @importhook.on_import("flask.app")
 def on_flask_import(flask):
     """
@@ -77,7 +80,7 @@ def on_flask_import(flask):
     @app.route |-> `add_url_rule` |-> self.view_functions. these get called via
     full_dispatch_request, which we wrap. We also wrap __call__ to run our middleware.
     """
-    if not pkg_compat_check("flask", required_version=ANY_VERSION):
+    if not pkg_compat_check("flask", required_version=FLASK_REQUIRED_VERSION):
         return flask
     modified_flask = importhook.copy_module(flask)
     former_fdr = copy.deepcopy(flask.Flask.full_dispatch_request)
