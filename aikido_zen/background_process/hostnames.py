@@ -10,20 +10,33 @@ class Hostnames:
 
     def add(self, hostname, port):
         """Add a hostname and port to the map"""
-        if hostname in self.map:
-            return
-
-        if len(self.map) >= self.max_entries:
+        if self.length >= self.max_entries:
             # Remove the first added hostname
             first_added = next(iter(self.map))
-            del self.map[first_added]
+            ports = self.map[
+                first_added
+            ]  # Get the Ports object associated with the first key
 
-        self.map[hostname] = port
+            if len(ports) > 1:
+                first_port = next(iter(ports))
+                ports.remove(first_port)
+            else:
+                del self.map[first_added]
+        if not self.map.get(hostname):
+            self.map[hostname] = set()
+        self.map[hostname].add(port)
+
+    @property
+    def length(self):
+        """Gives length with ports as seperate entities"""
+        return sum(len(ports) for ports in self.map.values())
 
     def as_array(self):
         """Exports the contents as an array"""
         return [
-            {"hostname": hostname, "port": port} for hostname, port in self.map.items()
+            {"hostname": hostname, "port": port}
+            for hostname, ports in self.map.items()
+            for port in ports
         ]
 
     def clear(self):
