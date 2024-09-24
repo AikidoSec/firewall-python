@@ -8,6 +8,7 @@ from aikido_zen.helpers.build_path_to_payload import build_path_to_payload
 from aikido_zen.helpers.try_decode_as_jwt import try_decode_as_jwt
 from aikido_zen.context import UINPUT_SOURCES
 
+
 def match_filter_part_in_user(user_input, filter_part, path_to_payload=None):
     """
     This tries to match a filter part to a part in user input
