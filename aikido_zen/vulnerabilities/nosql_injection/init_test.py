@@ -276,6 +276,18 @@ def test_using_gt_in_query_parameter(create_context):
     }
 
 
+def test_using_filter_as_body(create_context):
+    assert detect_nosql_injection(
+        create_context(body={"$gt": "21", "pswd": "Test"}),
+        {"$gt": "21", "pswd": "Test"},
+    ) == {
+        "injection": True,
+        "source": "body",
+        "pathToPayload": ".",
+        "payload": {"$gt": "21"},
+    }
+
+
 def test_using_gt_and_lt_in_query_parameter(create_context):
     assert detect_nosql_injection(
         create_context(body={"age": {"$gt": "21", "$lt": "100"}}),
