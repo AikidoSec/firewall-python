@@ -27,12 +27,12 @@ def detect_sql_injection(query, user_input, dialect):
 def should_return_early(query, user_input):
     """
     Returns true if the detect_sql_injection algo should return early :
-    - user_input smaller than 3 chars or user input larger than query
+    - user_input is <= 1 char or user input larger than query
     - user_input not in query
     - user_input is alphanumerical
     - user_input is an array of integers
     """
-    if len(user_input) <= 3 or len(query) < len(user_input):
+    if len(user_input) <= 1 or len(query) < len(user_input):
         # User input too small or larger than query, returning
         return True
 
