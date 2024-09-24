@@ -7,12 +7,14 @@ from aikido_zen.helpers.is_plain_object import is_plain_object
 from aikido_zen.helpers.build_path_to_payload import build_path_to_payload
 from aikido_zen.helpers.try_decode_as_jwt import try_decode_as_jwt
 from aikido_zen.context import UINPUT_SOURCES
+from aikido_zen.helpers.logging import logger
 
 
 def match_filter_part_in_user(user_input, filter_part, path_to_payload=None):
     """
     This tries to match a filter part to a part in user input
     """
+    logger.critical("1 : %s, 2 : %s", user_input, filter_part)
     if not path_to_payload:
         path_to_payload = []
     if isinstance(user_input, str):
@@ -21,10 +23,14 @@ def match_filter_part_in_user(user_input, filter_part, path_to_payload=None):
             return match_filter_part_in_user(
                 jwt[1], filter_part, path_to_payload + [{"type": "jwt"}]
             )
-    if user_input == filter_part:
-        return {"match": True, "pathToPayload": build_path_to_payload(path_to_payload)}
 
     if is_plain_object(user_input):
+        filtered_input = remove_keys_that_dont_start_with_dollar_sign(user_input)
+        if filtered_input == filter_part:
+            return {
+                "match": True,
+                "pathToPayload": build_path_to_payload(path_to_payload),
+            }
         for key in user_input:
             match = match_filter_part_in_user(
                 user_input[key],
