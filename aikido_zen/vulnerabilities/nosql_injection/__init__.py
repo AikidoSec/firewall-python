@@ -14,7 +14,6 @@ def match_filter_part_in_user(user_input, filter_part, path_to_payload=None):
     """
     This tries to match a filter part to a part in user input
     """
-    logger.critical("1 : %s, 2 : %s", user_input, filter_part)
     if not path_to_payload:
         path_to_payload = []
     if isinstance(user_input, str):
