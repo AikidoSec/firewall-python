@@ -2,6 +2,7 @@
 SQL Injection algorithm
 """
 
+import re
 import ctypes
 from aikido_zen.helpers.logging import logger
 
@@ -48,9 +49,9 @@ def should_return_early(query, user_input):
         return True
 
     cleaned_input_for_list = user_input_l.replace(" ", "").replace(",", "")
-    try:
-        int(cleaned_input_for_list)
-        # Should return early since this is a comma seperated list
+    is_valid_comma_seperated_number_list = re.match(r"^\d+$", cleaned_input_for_list)
+    if is_valid_comma_seperated_number_list:
+        # E.g. 1, 24028, 828, 4, 1
         return True
-    except ValueError:
-        return False
+
+    return False
