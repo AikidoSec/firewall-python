@@ -7,8 +7,6 @@ from aikido_zen.helpers.is_plain_object import is_plain_object
 from aikido_zen.helpers.build_path_to_payload import build_path_to_payload
 from aikido_zen.helpers.try_decode_as_jwt import try_decode_as_jwt
 from aikido_zen.context import UINPUT_SOURCES
-from aikido_zen.helpers.logging import logger
-
 
 def match_filter_part_in_user(user_input, filter_part, path_to_payload=None):
     """
