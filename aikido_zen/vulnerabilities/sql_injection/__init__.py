@@ -5,6 +5,7 @@ SQL Injection algorithm
 import re
 import ctypes
 from aikido_zen.helpers.logging import logger
+from .map_dialect_to_rust_int import map_dialect_to_rust_int
 
 zen_vulns_lib = ctypes.CDLL("zen_vulns_lib/libzen_rustlib.so")
 
@@ -18,7 +19,7 @@ def detect_sql_injection(query, user_input, dialect):
 
     query_bytes = query.lower().encode("utf-8")
     userinput_bytes = user_input.lower().encode("utf-8")
-    dialect_int = 0
+    dialect_int = map_dialect_to_rust_int(dialect)
     c_int_res = zen_vulns_lib.detect_sql_injection(
         query_bytes, userinput_bytes, dialect_int
     )

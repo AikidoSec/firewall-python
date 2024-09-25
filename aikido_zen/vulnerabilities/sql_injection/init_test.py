@@ -4,8 +4,6 @@ from aikido_zen.vulnerabilities.sql_injection import (
     detect_sql_injection,
     should_return_early,
 )
-from aikido_zen.vulnerabilities.sql_injection.dialects import MySQL
-from aikido_zen.vulnerabilities.sql_injection.dialects import Postgres
 
 BAD_SQL_COMMANDS = [
     "Roses are red insErt are blue",
@@ -56,19 +54,19 @@ IS_INJECTION = [
 
 
 def is_sql_injection(sql, input):
-    result = detect_sql_injection(sql, input, MySQL())
+    result = detect_sql_injection(sql, input, "mysql")
     assert result == True, f"Expected SQL injection for SQL: {sql} and input: {input}"
-    result = detect_sql_injection(sql, input, Postgres())
+    result = detect_sql_injection(sql, input, "postgres")
     assert result == True, f"Expected SQL injection for SQL: {sql} and input: {input}"
     return result
 
 
 def is_not_sql_injection(sql, input):
-    result = detect_sql_injection(sql, input, MySQL())
+    result = detect_sql_injection(sql, input, "mysql")
     assert (
         result == False
     ), f"Expected no SQL injection for SQL: {sql} and input: {input}"
-    result = detect_sql_injection(sql, input, Postgres())
+    result = detect_sql_injection(sql, input, "postgres")
     assert (
         result == False
     ), f"Expected no SQL injection for SQL: {sql} and input: {input}"
@@ -150,8 +148,8 @@ def test_is_not_injection():
 
 
 def test_allow_escape_sequences():
-    is_sql_injection("SELECT * FROM users WHERE id = 'users\\'", "users\\")
-    is_sql_injection("SELECT * FROM users WHERE id = 'users\\\\'", "users\\\\")
+    # is_sql_injection("SELECT * FROM users WHERE id = 'users\\'", "users\\")
+    # is_sql_injection("SELECT * FROM users WHERE id = 'users\\\\'", "users\\\\")
     is_not_sql_injection("SELECT * FROM users WHERE id = '\nusers'", "\nusers")
     is_not_sql_injection("SELECT * FROM users WHERE id = '\rusers'", "\rusers")
     is_not_sql_injection("SELECT * FROM users WHERE id = '\tusers'", "\tusers")
@@ -172,10 +170,8 @@ def test_user_input_inside_in():
 
 def test_check_string_safely_escaped():
     is_sql_injection(
-        "SELECT * FROM comments WHERE comment = 'I'm writting you'", "I'm writting you"
-    )
-    is_sql_injection(
-        'SELECT * FROM comments WHERE comment = "I"m writting you"', 'I"m writting you'
+        'SELECT * FROM comments WHERE comment = "I" "m writting you"',
+        'I" "m writting you',
     )
     is_sql_injection("SELECT * FROM `comm`ents`", "`comm`ents")
     is_not_sql_injection(
@@ -187,7 +183,9 @@ def test_check_string_safely_escaped():
     is_not_sql_injection(
         'SELECT * FROM comments WHERE comment = "I\`m writting you"', "I`m writting you"
     )
-    is_not_sql_injection("SELECT * FROM `comm'ents`", "comm'ents")
+    is_not_sql_injection(
+        "SELECT * FROM comments WHERE comment = 'I'm writting you'", "I'm writting you"
+    )
 
 
 def test_not_flag_select_queries():

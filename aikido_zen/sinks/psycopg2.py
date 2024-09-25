@@ -4,7 +4,6 @@ Sink module for `psycopg2`
 
 import copy
 import aikido_zen.importhook as importhook
-from aikido_zen.vulnerabilities.sql_injection.dialects import Postgres
 from aikido_zen.background_process.packages import pkg_compat_check
 import aikido_zen.vulnerabilities as vulns
 
@@ -21,7 +20,7 @@ def wrap_cursor_factory(cursor_factory):
             vulns.run_vulnerability_scan(
                 kind="sql_injection",
                 op="psycopg2.Connection.Cursor.execute",
-                args=(args[0], Postgres()),  #  args[0] : sql
+                args=(args[0], "postgres"),  #  args[0] : sql
             )
             if former_cursor_factory and hasattr(former_cursor_factory, "execute"):
                 return former_cursor_factory.execute(self, *args, **kwargs)
@@ -33,7 +32,7 @@ def wrap_cursor_factory(cursor_factory):
             vulns.run_vulnerability_scan(
                 kind="sql_injection",
                 op="psycopg2.Connection.Cursor.executemany",
-                args=(sql, Postgres()),
+                args=(sql, "postgres"),
             )
             if former_cursor_factory and hasattr(former_cursor_factory, "executemany"):
                 return former_cursor_factory.executemany(self, *args, **kwargs)

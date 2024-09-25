@@ -2,7 +2,6 @@ import pytest
 from unittest.mock import patch
 import aikido_zen.sinks.mysqlclient
 from aikido_zen.background_process.comms import reset_comms
-from aikido_zen.vulnerabilities.sql_injection.dialects import MySQL
 
 kind = "sql_injection"
 op = "MySQLdb.connections.query"

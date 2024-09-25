@@ -2,7 +2,6 @@ import pytest
 from unittest.mock import patch
 import aikido_zen.sinks.psycopg2
 from aikido_zen.background_process.comms import reset_comms
-from aikido_zen.vulnerabilities.sql_injection.dialects import Postgres
 
 kind = "sql_injection"
 op = "pymysql.connections.query"
