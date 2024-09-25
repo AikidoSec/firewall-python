@@ -175,7 +175,7 @@ def test_check_string_safely_escaped():
         'SELECT * FROM comments WHERE comment = "I" "m writting you"',
         'I" "m writting you',
     )
-    is_sql_injection("SELECT * FROM `comm`ents`", "`comm`ents")
+    is_sql_injection("SELECT * FROM `comm`ents``", "`comm`ents")
     is_not_sql_injection(
         'SELECT * FROM comments WHERE comment = "I\'m writting you"', "I'm writting you"
     )
