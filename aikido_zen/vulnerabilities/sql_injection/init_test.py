@@ -1,6 +1,9 @@
 import os
 import pytest
-from aikido_zen.vulnerabilities.sql_injection import detect_sql_injection
+from aikido_zen.vulnerabilities.sql_injection import (
+    detect_sql_injection,
+    should_return_early,
+)
 from aikido_zen.vulnerabilities.sql_injection.dialects import MySQL
 from aikido_zen.vulnerabilities.sql_injection.dialects import Postgres
 from aikido_zen.vulnerabilities.sql_injection.consts import SQL_DANGEROUS_IN_STRING
@@ -75,6 +78,60 @@ def is_not_sql_injection(sql, input):
         result == False
     ), f"Expected no SQL injection for SQL: {sql} and input: {input}"
     return result
+
+
+def test_should_return_early():
+    # Test cases where the function should return True
+
+    # User input is empty
+    assert should_return_early("SELECT * FROM users", "") == True
+
+    # User input is a single character
+    assert should_return_early("SELECT * FROM users", "a") == True
+
+    # User input is larger than query
+    assert (
+        should_return_early("SELECT * FROM users", "SELECT * FROM users WHERE id = 1")
+        == True
+    )
+
+    # User input not in query
+    assert should_return_early("SELECT * FROM users", "DELETE") == True
+
+    # User input is alphanumerical
+    assert should_return_early("SELECT * FROM users", "user123") == True
+
+    # User input is a valid comma-separated number list
+    assert should_return_early("SELECT * FROM users", "1,2,3") == True
+
+    # User input is a valid number
+    assert should_return_early("SELECT * FROM users", "123") == True
+
+    # User input is a valid number with spaces
+    assert should_return_early("SELECT * FROM users", "  123  ") == True
+
+    # User input is a valid number with commas
+    assert should_return_early("SELECT * FROM users", "1, 2, 3") == True
+
+    # Test cases where the function should return False
+
+    # User input is in query
+    assert should_return_early("SELECT * FROM users", " users") == False
+
+    # User input is a valid string in query
+    assert should_return_early("SELECT * FROM users", "SELECT ") == False
+
+    # User input is a valid string in query with different case
+    assert should_return_early("SELECT * FROM users", "select ") == False
+
+    # User input is a valid string in query with mixed case
+    assert should_return_early("SELECT * FROM users", " UsErS") == False
+
+    # User input is a valid string in query with special characters
+    assert (
+        should_return_early("SELECT * FROM users; drop table", "users; DROP TABLE")
+        == False
+    )
 
 
 def test_bad_sql_commands():
