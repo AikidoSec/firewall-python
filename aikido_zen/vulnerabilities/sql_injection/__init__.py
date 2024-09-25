@@ -16,8 +16,8 @@ def detect_sql_injection(query, user_input, dialect):
     if should_return_early(query, user_input):
         return False
 
-    query_bytes = query.encode("utf-8")
-    userinput_bytes = user_input.encode("utf-8")
+    query_bytes = query.lower().encode("utf-8")
+    userinput_bytes = user_input.lower().encode("utf-8")
     dialect_int = 0
     c_int_res = zen_vulns_lib.detect_sql_injection(
         query_bytes, userinput_bytes, dialect_int
