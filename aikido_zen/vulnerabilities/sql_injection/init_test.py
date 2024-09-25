@@ -48,10 +48,10 @@ IS_NOT_INJECTION = [
     ["SELECT * FROM table", "*"],
     ['"COPY/*"', "COPY/*"],
     ["'union'  is not \"UNION--\"", "UNION--"],
+    ["'union'  is not UNION", "UNION"],
 ]
 
 IS_INJECTION = [
-    ["'union'  is not UNION", "UNION"],
     ["UNTER;", "UNTER;"],
 ]
 
