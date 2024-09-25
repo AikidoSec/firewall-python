@@ -148,8 +148,10 @@ def test_is_not_injection():
 
 
 def test_allow_escape_sequences():
-    # is_sql_injection("SELECT * FROM users WHERE id = 'users\\'", "users\\")
-    # is_sql_injection("SELECT * FROM users WHERE id = 'users\\\\'", "users\\\\")
+    # Invalid queries :
+    is_not_sql_injection("SELECT * FROM users WHERE id = 'users\\'", "users\\")
+    is_not_sql_injection("SELECT * FROM users WHERE id = 'users\\\\'", "users\\\\")
+
     is_not_sql_injection("SELECT * FROM users WHERE id = '\nusers'", "\nusers")
     is_not_sql_injection("SELECT * FROM users WHERE id = '\rusers'", "\rusers")
     is_not_sql_injection("SELECT * FROM users WHERE id = '\tusers'", "\tusers")
