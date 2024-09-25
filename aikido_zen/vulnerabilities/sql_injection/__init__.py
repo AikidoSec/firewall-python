@@ -40,7 +40,7 @@ def should_return_early(query, user_input):
     # Lowercase :
     query_l = query.lower()
     user_input_l = user_input.lower()
-    if not query_l.contains(user_input_l):
+    if user_input_l not in query_l:
         # User input not in query, returning
         return True
 
