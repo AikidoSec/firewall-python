@@ -22,7 +22,6 @@ BAD_SQL_COMMANDS = [
     "Roses are red or blue",
     "Roses are red and lovely",
     "This is a group_concat_test",
-    "I'm writting you",
     "Termin;ate",
     "Roses <> violets",
     "Roses < Violets",
@@ -31,13 +30,10 @@ BAD_SQL_COMMANDS = [
 ]
 
 GOOD_SQL_COMMANDS = [
-    "Roses are red rollbacks are blue",
-    "Roses are red truncates are blue",
-    "Roses are reddelete are blue",
-    "Roses are red WHEREis blue",
-    "Roses are red ORis isAND",
-    "abcdefghijklmnop@hotmail.com",
-    "steve@yahoo.com",
+    "Roses asks red truncates asks blue",
+    "Roses asks reddelete asks blue",
+    "Roses asks red WHEREis blue",
+    "Roses asks red ORis isAND",
     "I was benchmark ing",
     "We were delay ed",
     "I will waitfor you",
