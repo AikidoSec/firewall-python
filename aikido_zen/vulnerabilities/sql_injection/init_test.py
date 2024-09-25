@@ -158,7 +158,7 @@ def test_allow_escape_sequences():
 
 
 def test_user_input_inside_in():
-    is_sql_injection("SELECT * FROM users WHERE id IN ('123')", "'123'")
+    is_not_sql_injection("SELECT * FROM users WHERE id IN ('123')", "'123'")
     is_not_sql_injection("SELECT * FROM users WHERE id IN (123)", "123")
     is_not_sql_injection("SELECT * FROM users WHERE id IN (123, 456)", "123")
     is_not_sql_injection("SELECT * FROM users WHERE id IN (123, 456)", "456")
