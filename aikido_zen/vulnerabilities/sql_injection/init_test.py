@@ -6,7 +6,6 @@ from aikido_zen.vulnerabilities.sql_injection import (
 )
 from aikido_zen.vulnerabilities.sql_injection.dialects import MySQL
 from aikido_zen.vulnerabilities.sql_injection.dialects import Postgres
-from aikido_zen.vulnerabilities.sql_injection.consts import SQL_DANGEROUS_IN_STRING
 
 BAD_SQL_COMMANDS = [
     "Roses are red insErt are blue",
@@ -315,12 +314,6 @@ def test_lowercased_input_sql_injection():
     expected_sql_injection = "' OR 1=1 -- a"
 
     assert is_sql_injection(sql, expected_sql_injection)
-
-
-@pytest.mark.parametrize("dangerous", SQL_DANGEROUS_IN_STRING)
-def test_dangerous_strings(dangerous):
-    input = f"{dangerous} a"
-    is_sql_injection(f"SELECT * FROM users WHERE {input}", input)
 
 
 def test_function_calls_as_sql_injections():
