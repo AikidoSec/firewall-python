@@ -331,10 +331,9 @@ def test_function_calls_as_sql_injections():
     is_sql_injection("1foo_bar()", "1foo_bar()")
     is_sql_injection("1foo-bar()", "1foo-bar()")
     is_sql_injection("#foobar()", "#foobar()")
-
-    is_not_sql_injection("foobar)", "foobar)")
-    is_not_sql_injection("foobar      )", "foobar      )")
-    is_not_sql_injection("€foobar()", "€foobar()")
+    is_sql_injection("foobar)", "foobar)")
+    is_sql_injection("foobar      )", "foobar      )")
+    is_sql_injection("€foobar()", "€foobar()")
 
 
 def file_paths():
