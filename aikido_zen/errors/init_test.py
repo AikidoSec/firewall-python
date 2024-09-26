@@ -11,10 +11,7 @@ from . import (
 
 def test_aikido_exception_default_message():
     exception = AikidoException()
-    assert (
-        str(exception)
-        == "(AikidoException(...), 'Aikido Zen has blocked unknown')"
-    )
+    assert str(exception) == "(AikidoException(...), 'Aikido Zen has blocked unknown')"
 
 
 def test_aikido_sql_injection():
