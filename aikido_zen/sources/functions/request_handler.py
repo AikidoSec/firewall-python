@@ -75,7 +75,7 @@ def pre_response():
         receive=True,
     )
     if ratelimit_res["success"] and ratelimit_res["data"]["block"]:
-        message = "You are rate limited by Aikido firewall"
+        message = "You are rate limited by Aikido Zen"
         if ratelimit_res["data"]["trigger"] == "ip":
             message += f" (Your IP: {context.remote_address})"
         return (message, 429)
