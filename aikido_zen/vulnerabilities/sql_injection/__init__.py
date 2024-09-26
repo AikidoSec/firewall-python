@@ -46,7 +46,7 @@ def should_return_early(query, user_input):
         return True
 
     if user_input_l.replace("_", "").isalnum():
-        # User input is alphanumerical with dashes, returning
+        # User input is alphanumerical (with underscores), returning
         return True
 
     cleaned_input_for_list = user_input_l.replace(" ", "").replace(",", "")
