@@ -4,21 +4,6 @@ Main export is the is_useful_route function
 
 import os
 
-NOT_FOUND = 404
-METHOD_NOT_ALLOWED = 405
-MOVED_PERMANENTLY = 301
-FOUND = 302
-SEE_OTHER = 303
-TEMPORARY_REDIRECT = 307
-PERMANENT_REDIRECT = 308
-ERROR_CODES = [NOT_FOUND, METHOD_NOT_ALLOWED]
-REDIRECT_CODES = [
-    MOVED_PERMANENTLY,
-    FOUND,
-    SEE_OTHER,
-    TEMPORARY_REDIRECT,
-    PERMANENT_REDIRECT,
-]
 EXCLUDED_METHODS = ["OPTIONS", "HEAD"]
 IGNORE_EXTENSIONS = ["properties", "php", "asp", "aspx", "jsp", "config"]
 IGNORE_STRINGS = ["cgi-bin"]
@@ -33,13 +18,13 @@ def is_useful_route(status_code, route, method):
     - etc.
     """
     status_code = int(status_code)
+
+    is_valid_code = status_code >= 200 and status_code < 400
+    if not is_valid_code:
+        # Status code needs to be between 200 and 400 in order for it to be "useful"
+        return False
+
     if method in EXCLUDED_METHODS:
-        return False
-
-    if status_code in ERROR_CODES:
-        return False
-
-    if status_code in REDIRECT_CODES:
         return False
 
     segments = route.split("/")
