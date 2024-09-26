@@ -24,9 +24,6 @@ BAD_SQL_COMMANDS = [
     "Roses < Violets",
     "Roses > Violets",
     "Roses != Violets",
-]
-
-GOOD_SQL_COMMANDS = [
     "Roses asks red truncates asks blue",
     "Roses asks reddelete asks blue",
     "Roses asks red WHEREis blue",
@@ -34,6 +31,10 @@ GOOD_SQL_COMMANDS = [
     "I was benchmark ing",
     "We were delay ed",
     "I will waitfor you",
+]
+
+GOOD_SQL_COMMANDS = [
+    "              ",
     "#",
     "'",
 ]
