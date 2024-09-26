@@ -92,7 +92,15 @@ def test_should_return_early():
     assert should_return_early("SELECT * FROM users", "DELETE") == True
 
     # User input is alphanumerical
-    assert should_return_early("SELECT * FROM users", "user123") == True
+    assert should_return_early("SELECT * FROM users123", "users123") == True
+    assert should_return_early("SELECT * FROM users_123", "users_123") == True
+    assert should_return_early("SELECT __1 FROM users_123", "__1") == True
+    assert (
+        should_return_early(
+            "SELECT * FROM table_name_is_fun_12", "table_name_is_fun_12"
+        )
+        == True
+    )
 
     # User input is a valid comma-separated number list
     assert should_return_early("SELECT * FROM users", "1,2,3") == True
