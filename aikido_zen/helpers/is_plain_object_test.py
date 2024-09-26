@@ -1,5 +1,6 @@
 import pytest
 from aikido_zen.helpers.is_plain_object import is_plain_object
+from collections import defaultdict, OrderedDict, ChainMap
 
 
 def test_is_plain_object_true():
@@ -32,3 +33,21 @@ def test_is_plain_object_modified_prototype():
     instance = CustomConstructor()
 
     assert is_plain_object(instance) == False
+
+
+def test_is_plain_object_mapping_types():
+    fruit_count = defaultdict(int)
+    fruit_count["apple"] += 1
+    fruit_count["banana"] += 2
+    assert is_plain_object(fruit_count) == True
+
+    ordered_dict = OrderedDict()
+    ordered_dict["first"] = 1
+    ordered_dict["second"] = 2
+    ordered_dict["third"] = 3
+    assert is_plain_object(ordered_dict) == True
+
+    dict1 = {"a": 1, "b": 2}
+    dict2 = {"b": 3, "c": 4}
+    chain_map = ChainMap(dict1, dict2)
+    assert is_plain_object(chain_map) == True
