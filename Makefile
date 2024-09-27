@@ -39,5 +39,5 @@ benchmark:
 
 .PHONY: internals_lib_install
 internals_lib_install:
-	mkdir -p ./libzen_internals/
-	curl -L -o ./libzen_internals/lib.so https://github.com/AikidoSec/zen-internals/releases/download/v0.1.1/libzen_internals.so
+	mkdir -p ./aikido_zen/lib/
+	curl -L -o ./aikido_zen/lib/libzen_internals.so https://github.com/AikidoSec/zen-internals/releases/download/v0.1.1/libzen_internals.so

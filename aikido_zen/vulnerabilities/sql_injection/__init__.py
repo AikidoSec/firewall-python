@@ -2,12 +2,15 @@
 SQL Injection algorithm
 """
 
+import os
 import re
 import ctypes
 from aikido_zen.helpers.logging import logger
 from .map_dialect_to_rust_int import map_dialect_to_rust_int
 
-internals_lib = ctypes.CDLL("./libzen_internals/lib.so")
+current_dir = os.path.dirname(os.path.abspath(__file__))
+lib_path = os.path.join(current_dir, "../../lib", "libzen_internals.so")
+internals_lib = ctypes.CDLL(lib_path)
 
 
 def detect_sql_injection(query, user_input, dialect):
