@@ -5,6 +5,10 @@ from aikido_zen.vulnerabilities.sql_injection import (
     should_return_early,
 )
 
+"""Removed tests :
+-> `I'm writting you` : Invalid SQL
+-> Moved a lot of the keywords/words together collection to BAD_SQL_COMMANDS.
+"""
 BAD_SQL_COMMANDS = [
     "Roses are red insErt are blue",
     "Roses are red cREATE are blue",
@@ -39,6 +43,7 @@ GOOD_SQL_COMMANDS = [
     "'",
 ]
 
+# Moved ["'union'  is not UNION", "UNION"], to IS_NOT_INJECTION : This is in fact, not an injection.
 IS_NOT_INJECTION = [
     ["'UNION 123' UNION \"UNION 123\"", "UNION 123"],
     ["'union'  is not \"UNION\"", "UNION!"],
@@ -150,6 +155,14 @@ def test_is_not_injection():
         is_not_sql_injection(sql, input)
 
 
+"""
+Moved : 
+is_sql_injection("SELECT * FROM users WHERE id = 'users\\'", "users\\")
+is_sql_injection("SELECT * FROM users WHERE id = 'users\\\\'", "users\\\\")
+to is_not_sql_injection. Reason : Invalid SQL.
+"""
+
+
 def test_allow_escape_sequences():
     # Invalid queries :
     is_not_sql_injection("SELECT * FROM users WHERE id = 'users\\'", "users\\")
@@ -160,6 +173,9 @@ def test_allow_escape_sequences():
     is_not_sql_injection("SELECT * FROM users WHERE id = '\tusers'", "\tusers")
 
 
+# Marked "SELECT * FROM users WHERE id IN ('123')", "'123'" as not a sql injection, Reason :
+# We replace '123' token with another token and the token count remains the same. This is also
+# Not an actual SQL Injection so the algorithm is valid in it's reasoning.
 def test_user_input_inside_in():
     is_not_sql_injection("SELECT * FROM users WHERE id IN ('123')", "'123'")
     is_not_sql_injection("SELECT * FROM users WHERE id IN (123)", "123")
@@ -173,6 +189,7 @@ def test_user_input_inside_in():
     )
 
 
+# Updated tests so the strings terminate and this is valid SQL.
 def test_check_string_safely_escaped():
     is_sql_injection(
         'SELECT * FROM comments WHERE comment = "I" "m writting you"',
@@ -317,6 +334,16 @@ def test_lowercased_input_sql_injection():
     expected_sql_injection = "' OR 1=1 -- a"
 
     assert is_sql_injection(sql, expected_sql_injection)
+
+
+# Removed dangerous character parametized loop : This was all producing invalid SQL.
+
+"""
+Marked the following as SQL injection since this would result in 2 or more tokens becoming one :
+is_not_sql_injection("foobar)", "foobar)")
+is_not_sql_injection("foobar      )", "foobar      )")
+is_not_sql_injection("€foobar()", "€foobar()")
+"""
 
 
 def test_function_calls_as_sql_injections():
