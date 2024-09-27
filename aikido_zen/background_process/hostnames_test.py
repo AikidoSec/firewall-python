@@ -61,7 +61,8 @@ def test_as_array():
         {"hostname": "example.com", "port": 80, "hits": 1},
         {"hostname": "test.com", "port": 443, "hits": 1},
     ]
-    assert list(hostnames.as_array()) == expected_array
+    assert hostnames.as_array() == expected_array
+    assert isinstance(hostnames.as_array(), list)
 
 
 def test_clear():
