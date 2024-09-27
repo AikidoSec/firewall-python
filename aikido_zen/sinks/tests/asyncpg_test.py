@@ -32,7 +32,7 @@ async def test_conn_execute(database_conn):
         called_with_op = mock_run_vulnerability_scan.call_args[1]["op"]
         called_with_kind = mock_run_vulnerability_scan.call_args[1]["kind"]
         assert called_with_args[0] == query
-        assert isinstance(called_with_args[1], Postgres)
+        assert called_with_args[1] == "postgres"
         assert called_with_op == "asyncpg.connection.Connection.execute"
         assert called_with_kind == "sql_injection"
 
@@ -51,7 +51,7 @@ async def test_conn_fetchrow(database_conn):
 
         called_with_args = mock_run_vulnerability_scan.call_args[1]["args"]
         assert called_with_args[0] == query
-        assert isinstance(called_with_args[1], Postgres)
+        assert called_with_args[1] == "postgres"
 
         await conn.close()
 
@@ -68,7 +68,7 @@ async def test_conn_fetch(database_conn):
 
         called_with_args = mock_run_vulnerability_scan.call_args[1]["args"]
         assert called_with_args[0] == query
-        assert isinstance(called_with_args[1], Postgres)
+        assert called_with_args[1] == "postgres"
 
         await conn.close()
 
@@ -85,7 +85,7 @@ async def test_conn_fetchval(database_conn):
 
         called_with_args = mock_run_vulnerability_scan.call_args[1]["args"]
         assert called_with_args[0] == query
-        assert isinstance(called_with_args[1], Postgres)
+        assert called_with_args[1] == "postgres"
 
         await conn.close()
 
@@ -151,6 +151,6 @@ async def test_conn_cursor(database_conn):
 
             called_with_args = mock_run_vulnerability_scan.call_args[1]["args"]
             assert called_with_args[0] == "BEGIN;"
-            assert isinstance(called_with_args[1], Postgres)
+            assert called_with_args[1] == "postgres"
 
         await conn.close()
