@@ -7,7 +7,7 @@ import ctypes
 from aikido_zen.helpers.logging import logger
 from .map_dialect_to_rust_int import map_dialect_to_rust_int
 
-zen_vulns_lib = ctypes.CDLL("zen_vulns_lib/libzen_rustlib.so")
+internals_lib = ctypes.CDLL("./libzen_internals/lib.so")
 
 
 def detect_sql_injection(query, user_input, dialect):
@@ -22,7 +22,7 @@ def detect_sql_injection(query, user_input, dialect):
     query_bytes = query_l.encode("utf-8")
     userinput_bytes = userinput_l.encode("utf-8")
     dialect_int = map_dialect_to_rust_int(dialect)
-    c_int_res = zen_vulns_lib.detect_sql_injection(
+    c_int_res = internals_lib.detect_sql_injection(
         query_bytes, userinput_bytes, dialect_int
     )
     return bool(c_int_res)
