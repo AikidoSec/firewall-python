@@ -40,7 +40,7 @@ class AikidoNoSQLInjection(AikidoException):
 class AikidoRateLimiting(AikidoException):
     """Exception caused when a page was rate limited"""
 
-    def __init__(self, message="You are rate limited by Aikido Zen."):
+    def __init__(self, message="You are rate limited by Zen."):
         super().__init__(message)
         self.message = message
 
