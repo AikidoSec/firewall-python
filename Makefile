@@ -1,5 +1,5 @@
-.PHONY: build
-build:
+build: internals_lib_install _build
+_build:
 	poetry build
 
 .PHONY: clean
@@ -11,14 +11,13 @@ lint:
 	poetry run black aikido_zen/
 	poetry run pylint aikido_zen/
 
-.PHONY: install
-install:
+install: internals_lib_install _install
+_install:
 	pip install poetry
 	poetry install
 
-.PHONY: dev_install
-dev_install:
-	pip install poetry
+dev_install: install _dev_install
+_dev_install:
 	poetry install --with=dev
 
 
@@ -37,3 +36,8 @@ cov:
 .PHONY: benchmark
 benchmark:
 	k6 run -q ./benchmarks/flask-mysql-benchmarks.js
+
+.PHONY: internals_lib_install
+internals_lib_install:
+	mkdir -p ./libzen_internals/
+	curl -L -o ./libzen_internals/lib.so https://github.com/AikidoSec/zen-internals/releases/download/v0.1.1/libzen_internals.so
