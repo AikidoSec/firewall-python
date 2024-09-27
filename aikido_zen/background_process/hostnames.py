@@ -21,7 +21,7 @@ class Hostnames:
 
     def as_array(self):
         """Exports the contents as an array"""
-        return self.map.values()
+        return list(self.map.values())
 
     def clear(self):
         """Clear the entire map"""
