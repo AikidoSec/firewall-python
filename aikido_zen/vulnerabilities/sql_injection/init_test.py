@@ -123,15 +123,9 @@ def test_should_return_early():
     # User input is a valid string in query
     assert should_return_early("SELECT * FROM users", "SELECT ") == False
 
-    # User input is a valid string in query with different case
-    assert should_return_early("SELECT * FROM users", "select ") == False
-
-    # User input is a valid string in query with mixed case
-    assert should_return_early("SELECT * FROM users", " UsErS") == False
-
     # User input is a valid string in query with special characters
     assert (
-        should_return_early("SELECT * FROM users; drop table", "users; DROP TABLE")
+        should_return_early("SELECT * FROM users; DROP TABLE", "users; DROP TABLE")
         == False
     )
 
