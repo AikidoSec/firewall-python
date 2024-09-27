@@ -8,6 +8,8 @@ from aikido_zen.vulnerabilities.sql_injection import (
 """Removed tests :
 -> `I'm writting you` : Invalid SQL
 -> Moved a lot of the keywords/words together collection to BAD_SQL_COMMANDS.
+-> Removed the following GOOD_SQL_COMMANDS : "abcdefghijklmnop@hotmail.com", "steve@yahoo.com"
+    Reason : This should never occur unencapsulated in query, results in 5 tokens or so being morphed into one.
 """
 BAD_SQL_COMMANDS = [
     "Roses are red insErt are blue",
