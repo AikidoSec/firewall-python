@@ -393,12 +393,25 @@ def file_paths():
 
 # Define the Pytest tests
 for file_path in file_paths():
+    import MySQLdb
+
     with open(file_path, "r", encoding="utf-8") as file:
         for line in file:
             sql = line.rstrip("\n")
+            escaped_sql = MySQLdb._mysql.escape_string(sql).decode("utf-8")
 
             def test_sql_injection():
                 is_sql_injection(sql, sql)
+                is_not_sql_injection(f"'{escaped_sql}'", escaped_sql, "mysql")
+                is_not_sql_injection(f"'{escaped_sql}'", sql, "mysql")
 
             def test_sql_injection_query():
                 is_sql_injection(f"SELECT * FROM users WHERE id = {sql}", sql)
+                is_not_sql_injection(
+                    f"SELECT * FROM users WHERE id = '{escaped_sql}'",
+                    escaped_sql,
+                    "mysql",
+                )
+                is_not_sql_injection(
+                    f"SELECT * FROM users WHERE id = '{escaped_sql}'", sql, "mysql"
+                )
