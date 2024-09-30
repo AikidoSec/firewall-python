@@ -61,24 +61,30 @@ IS_INJECTION = [
 ]
 
 
-def is_sql_injection(sql, input):
-    result = detect_sql_injection(sql, input, "mysql")
-    assert result == True, f"Expected SQL injection for SQL: {sql} and input: {input}"
-    result = detect_sql_injection(sql, input, "postgres")
-    assert result == True, f"Expected SQL injection for SQL: {sql} and input: {input}"
-    return result
+def is_sql_injection(sql, input, dialect="all"):
+    if dialect == "mysql" or dialect == "all":
+        result = detect_sql_injection(sql, input, "mysql")
+        assert (
+            result == True
+        ), f"Expected SQL injection for SQL: {sql} and input: {input}"
+    if dialect == "postgres" or dialect == "all":
+        result = detect_sql_injection(sql, input, "postgres")
+        assert (
+            result == True
+        ), f"Expected SQL injection for SQL: {sql} and input: {input}"
 
 
-def is_not_sql_injection(sql, input):
-    result = detect_sql_injection(sql, input, "mysql")
-    assert (
-        result == False
-    ), f"Expected no SQL injection for SQL: {sql} and input: {input}"
-    result = detect_sql_injection(sql, input, "postgres")
-    assert (
-        result == False
-    ), f"Expected no SQL injection for SQL: {sql} and input: {input}"
-    return result
+def is_not_sql_injection(sql, input, dialect="all"):
+    if dialect == "mysql" or dialect == "all":
+        result = detect_sql_injection(sql, input, "mysql")
+        assert (
+            result == False
+        ), f"Expected no SQL injection for SQL: {sql} and input: {input}"
+    if dialect == "postgres" or dialect == "all":
+        result = detect_sql_injection(sql, input, "postgres")
+        assert (
+            result == False
+        ), f"Expected no SQL injection for SQL: {sql} and input: {input}"
 
 
 def test_should_return_early():
@@ -337,7 +343,7 @@ def test_lowercased_input_sql_injection():
     """
     expected_sql_injection = "' OR 1=1 -- a"
 
-    assert is_sql_injection(sql, expected_sql_injection)
+    is_sql_injection(sql, expected_sql_injection)
 
 
 # Removed dangerous character parametized loop : This was all producing invalid SQL.
@@ -388,7 +394,7 @@ for file_path in file_paths():
             sql = line.rstrip("\n")
 
             def test_sql_injection():
-                assert is_sql_injection(sql, sql)
+                is_sql_injection(sql, sql)
 
             def test_sql_injection_query():
-                assert is_sql_injection(f"SELECT * FROM users WHERE id = {sql}", sql)
+                is_sql_injection(f"SELECT * FROM users WHERE id = {sql}", sql)
