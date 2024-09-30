@@ -66,7 +66,7 @@ class AikidoIPCCommunications:
         def target(address, key, receive, data, result_obj):
             try:
                 # Create a connection, this can get stuck :
-                conn = con.Client(address, authkey=key)
+                conn = con.Client(address, authkey=None)
 
                 # Send/Receive data :
                 conn.send(data)
