@@ -210,6 +210,8 @@ def test_check_string_safely_escaped():
     is_not_sql_injection(
         "SELECT * FROM comments WHERE comment = 'I'm writting you'", "I'm writting you"
     )
+    # MySQL Specific code : 
+    assert not detect_sql_injection("SELECT * FROM `comm'ents`", "comm'ents", "mysql")
 
 
 def test_not_flag_select_queries():
