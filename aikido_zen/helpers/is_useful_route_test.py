@@ -9,8 +9,10 @@ def test_not_found_or_method_not_allowed():
 
 def test_discover_route_for_all_other_status_codes():
     assert is_useful_route(status_code=200, route="/", method="GET") is True
-    assert is_useful_route(status_code=500, route="/", method="GET") is True
-    assert is_useful_route(status_code=400, route="/", method="GET") is True
+    assert is_useful_route(status_code=500, route="/", method="GET") is False
+    assert is_useful_route(status_code=400, route="/", method="GET") is False
+    assert is_useful_route(status_code=199, route="/", method="GET") is False
+    assert is_useful_route(status_code=399, route="/", method="GET") is True
     assert is_useful_route(status_code=300, route="/", method="GET") is True
     assert is_useful_route(status_code=201, route="/", method="GET") is True
 
@@ -160,9 +162,9 @@ def test_ignore_files_that_end_with_config():
     )
 
 
-def test_ignore_redirects():
-    assert is_useful_route(status_code=301, route="/", method="GET") is False
-    assert is_useful_route(status_code=302, route="/", method="GET") is False
-    assert is_useful_route(status_code=303, route="/", method="GET") is False
-    assert is_useful_route(status_code=307, route="/", method="GET") is False
-    assert is_useful_route(status_code=308, route="/", method="GET") is False
+def test_allow_redirects():
+    assert is_useful_route(status_code=301, route="/", method="GET") is True
+    assert is_useful_route(status_code=302, route="/", method="GET") is True
+    assert is_useful_route(status_code=303, route="/", method="GET") is True
+    assert is_useful_route(status_code=307, route="/", method="GET") is True
+    assert is_useful_route(status_code=308, route="/", method="GET") is True
