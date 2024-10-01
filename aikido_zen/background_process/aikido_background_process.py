@@ -4,7 +4,6 @@ Simply exports the aikido background process
 
 import multiprocessing.connection as con
 import time
-import os
 import sched
 import traceback
 import sys
@@ -19,6 +18,7 @@ from aikido_zen.helpers.token import get_token_from_env
 from aikido_zen.background_process.api.http_api_ratelimited import (
     ReportingApiHTTPRatelimited,
 )
+from aikido_zen.helpers.urls.get_api_url import get_api_url
 from .commands import process_incoming_command
 
 EMPTY_QUEUE_INTERVAL = 5  # 5 seconds
@@ -74,7 +74,7 @@ class AikidoBackgroundProcess:
         self.send_to_connection_manager(event_scheduler)
 
         api = ReportingApiHTTPRatelimited(
-            "https://guard.aikido.dev/",
+            reporting_url=get_api_url(),
             max_events_per_interval=100,
             interval_in_ms=60 * 60 * 1000,
         )
