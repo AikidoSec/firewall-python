@@ -12,6 +12,8 @@ def get_realtime_url():
     """Fetches the default realtime url or environment variable"""
     realtime_url = os.getenv("AIKIDO_REALTIME_ENDPOINT")
     if realtime_url is not None:
+        if not realtime_url.endswith("/"):
+            realtime_url += "/"
         return realtime_url
     return "https://runtime.aikido.dev/"
 
