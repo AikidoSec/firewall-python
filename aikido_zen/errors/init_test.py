@@ -32,10 +32,7 @@ def test_aikido_nosql_injection():
 
 def test_aikido_rate_limiting():
     exception = AikidoRateLimiting()
-    assert (
-        str(exception)
-        == "(AikidoRateLimiting(...), 'You are rate limited by Aikido Zen.')"
-    )
+    assert str(exception) == "(AikidoRateLimiting(...), 'You are rate limited by Zen.')"
 
 
 def test_aikido_shell_injection():
