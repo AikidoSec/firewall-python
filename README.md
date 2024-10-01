@@ -74,6 +74,10 @@ Here's how:
 * Copy the token.
 * Set the token as an environment variable, `AIKIDO_TOKEN`
 
+You can change the API endpoint together with the realtime endpoint by setting the following **optional** environment variables : 
+* `AIKIDO_ENDPOINT` set this to the string for your endpoint (e.g. `https://guard.aikido.dev/`)
+* `AIKIDO_REALTIME_ENDPOINT` set this to the string for your realtime endpoint i.e. 1 min polling for config changes. (e.g. `https://realtime.aikido.dev/`)
+
 ## Running in production (blocking) mode
 
 By default, Zen will only detect and report attacks to Aikido.
