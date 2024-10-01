@@ -9,15 +9,21 @@ class Context:
         body={},
         xml={},
         content_type="application/x-www-form-urlencoded",
+        headers={},
+        query={},
+        cookies={},
     ):
         self.method = method
         self.route = path
         self.body = body
         self.xml = xml
-        self.headers = {"CONTENT_TYPE": content_type}
+        self.headers = headers
+        self.headers["CONTENT_TYPE"] = content_type
+        self.query = query
+        self.cookies = cookies
 
 
-# route_to_key tests :
+# route_to_key tests:
 def test_route_to_key_get():
     assert route_to_key("GET", "/api/resource") == "GET:/api/resource"
 
@@ -110,19 +116,19 @@ def test_iterable():
         "method": "GET",
         "path": "/api/resource1",
         "hits": 1,
-        "body": None,
+        "apispec": {},
     } in routes_list
     assert {
         "method": "POST",
         "path": "/api/resource2",
         "hits": 1,
-        "body": None,
+        "apispec": {},
     } in routes_list
     assert {
         "method": "PUT",
         "path": "/api/resource3",
         "hits": 1,
-        "body": None,
+        "apispec": {},
     } in routes_list
 
 
@@ -162,25 +168,29 @@ def test_api_discovery_for_new_routes(monkeypatch):
         "method": "GET",
         "path": "/api/resource1",
         "hits": 1,
-        "body": {
-            "schema": {
-                "properties": {
-                    "user": {
-                        "properties": {
-                            "email": {
-                                "type": "string",
+        "apispec": {
+            "body": {
+                "schema": {
+                    "properties": {
+                        "user": {
+                            "properties": {
+                                "email": {
+                                    "type": "string",
+                                },
+                                "name": {
+                                    "type": "string",
+                                },
+                                "phone": {"type": "number"},
                             },
-                            "name": {
-                                "type": "string",
-                            },
-                            "phone": {"type": "number"},
+                            "type": "object",
                         },
-                        "type": "object",
                     },
+                    "type": "object",
                 },
-                "type": "object",
+                "type": "form-urlencoded",
             },
-            "type": "form-urlencoded",
+            "auth": None,
+            "query": None,
         },
     } in routes_list
 
@@ -196,7 +206,7 @@ def test_api_discovery_existing_route_empty(monkeypatch):
         "method": "GET",
         "path": "/api/resource1",
         "hits": 1,
-        "body": None,
+        "apispec": {},
     } in routes_list
     context2 = Context(
         "GET",
@@ -217,25 +227,29 @@ def test_api_discovery_existing_route_empty(monkeypatch):
         "method": "GET",
         "path": "/api/resource1",
         "hits": 2,
-        "body": {
-            "schema": {
-                "properties": {
-                    "user": {
-                        "properties": {
-                            "email": {
-                                "type": "string",
+        "apispec": {
+            "body": {
+                "schema": {
+                    "properties": {
+                        "user": {
+                            "properties": {
+                                "email": {
+                                    "type": "string",
+                                },
+                                "name": {
+                                    "type": "string",
+                                },
+                                "phone": {"type": "number"},
                             },
-                            "name": {
-                                "type": "string",
-                            },
-                            "phone": {"type": "number"},
+                            "type": "object",
                         },
-                        "type": "object",
                     },
+                    "type": "object",
                 },
-                "type": "object",
+                "type": "form-urlencoded",
             },
-            "type": "form-urlencoded",
+            "auth": None,
+            "query": None,
         },
     } in routes_list
 
@@ -269,25 +283,262 @@ def test_api_discovery_merge_routes(monkeypatch):
         "method": "GET",
         "path": "/api/resource1",
         "hits": 2,
-        "body": {
-            "schema": {
-                "properties": {
-                    "user": {
-                        "properties": {
-                            "email": {
-                                "type": "string",
+        "apispec": {
+            "body": {
+                "schema": {
+                    "properties": {
+                        "user": {
+                            "properties": {
+                                "email": {
+                                    "type": "string",
+                                },
+                                "name": {
+                                    "type": "string",
+                                },
+                                "phone": {"type": "number", "optional": True},
+                                "age": {"type": "number", "optional": True},
                             },
-                            "name": {
-                                "type": "string",
-                            },
-                            "phone": {"type": "number", "optional": True},
-                            "age": {"type": "number", "optional": True},
+                            "type": "object",
                         },
-                        "type": "object",
                     },
+                    "type": "object",
                 },
-                "type": "object",
+                "type": "json",
             },
-            "type": "json",
+            "auth": None,
+            "query": None,
         },
     } in routes_list
+
+
+def test_merge_body_schema(monkeypatch):
+    monkeypatch.setenv("AIKIDO_FEATURE_COLLECT_API_SCHEMA", "1")
+
+    routes = Routes(200)
+    assert list(routes) == []
+
+    routes.add_route(Context("POST", "/body"))
+    assert list(routes) == [
+        {
+            "method": "POST",
+            "path": "/body",
+            "hits": 1,
+            "apispec": {},
+        },
+    ]
+
+    routes.add_route(
+        Context(
+            "POST",
+            "/body",
+            {"test": "abc", "arr": [1, 2, 3], "sub": {"y": 123}},
+        )
+    )
+    assert list(routes) == [
+        {
+            "method": "POST",
+            "path": "/body",
+            "hits": 2,
+            "apispec": {
+                "body": {
+                    "type": "form-urlencoded",
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "test": {"type": "string"},
+                            "arr": {
+                                "type": "array",
+                                "items": {"type": "number"},
+                            },
+                            "sub": {
+                                "type": "object",
+                                "properties": {
+                                    "y": {"type": "number"},
+                                },
+                            },
+                        },
+                    },
+                },
+                "auth": None,
+                "query": None,
+            },
+        },
+    ]
+    routes.add_route(
+        Context(
+            "POST",
+            "/body",
+            {"test": "abc", "arr": [1, 2, 3], "test2": 1, "sub": {"x": 123}},
+        )
+    )
+    routes.add_route(Context("POST", "/body"))
+    assert list(routes) == [
+        {
+            "method": "POST",
+            "path": "/body",
+            "hits": 4,
+            "apispec": {
+                "body": {
+                    "type": "form-urlencoded",
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "test": {"type": "string"},
+                            "arr": {
+                                "type": "array",
+                                "items": {"type": "number"},
+                            },
+                            "sub": {
+                                "type": "object",
+                                "properties": {
+                                    "y": {"type": "number", "optional": True},
+                                    "x": {"type": "number", "optional": True},
+                                },
+                            },
+                            "test2": {"type": "number", "optional": True},
+                        },
+                    },
+                },
+                "auth": None,
+                "query": None,
+            },
+        },
+    ]
+
+
+def test_add_query_schema(monkeypatch):
+    monkeypatch.setenv("AIKIDO_FEATURE_COLLECT_API_SCHEMA", "1")
+
+    routes = Routes(200)
+
+    routes.add_route(Context("GET", "/query", None, query={"test": "abc", "t": "123"}))
+    assert list(routes) == [
+        {
+            "method": "GET",
+            "path": "/query",
+            "hits": 1,
+            "apispec": {
+                "body": None,
+                "auth": None,
+                "query": {
+                    "type": "object",
+                    "properties": {
+                        "test": {"type": "string"},
+                        "t": {"type": "string"},
+                    },
+                },
+            },
+        },
+    ]
+
+
+def test_merge_query_schema(monkeypatch):
+    monkeypatch.setenv("AIKIDO_FEATURE_COLLECT_API_SCHEMA", "1")
+
+    routes = Routes(200)
+    assert list(routes) == []
+
+    routes.add_route(Context("GET", "/query"))
+    assert list(routes) == [
+        {
+            "method": "GET",
+            "path": "/query",
+            "hits": 1,
+            "apispec": {},
+        },
+    ]
+
+    routes.add_route(Context("GET", "/query", None, query={"test": "abc"}))
+    routes.add_route(Context("GET", "/query", None, query={"x": "123", "test": "abc"}))
+    routes.add_route(Context("GET", "/query"))
+
+    assert list(routes) == [
+        {
+            "method": "GET",
+            "path": "/query",
+            "hits": 4,
+            "apispec": {
+                "query": {
+                    "type": "object",
+                    "properties": {
+                        "test": {"type": "string"},
+                        "x": {"type": "string", "optional": True},
+                    },
+                },
+                "auth": None,
+                "body": None,
+            },
+        },
+    ]
+
+
+def test_add_auth_schema(monkeypatch):
+    monkeypatch.setenv("AIKIDO_FEATURE_COLLECT_API_SCHEMA", "1")
+
+    routes = Routes(200)
+
+    routes.add_route(Context("GET", "/auth", headers={"AUTHORIZATION": "Bearer token"}))
+    routes.add_route(Context("GET", "/auth2", cookies={"session": "test"}))
+    routes.add_route(Context("GET", "/auth3", headers={"X_API_KEY": "token"}))
+
+    assert list(routes) == [
+        {
+            "method": "GET",
+            "path": "/auth",
+            "hits": 1,
+            "apispec": {
+                "body": None,
+                "query": None,
+                "auth": [{"type": "http", "scheme": "bearer"}],
+            },
+        },
+        {
+            "method": "GET",
+            "path": "/auth2",
+            "hits": 1,
+            "apispec": {
+                "body": None,
+                "query": None,
+                "auth": [{"type": "apiKey", "in": "cookie", "name": "session"}],
+            },
+        },
+        {
+            "method": "GET",
+            "path": "/auth3",
+            "hits": 1,
+            "apispec": {
+                "body": None,
+                "query": None,
+                "auth": [{"type": "apiKey", "in": "header", "name": "x-api-key"}],
+            },
+        },
+    ]
+
+
+def test_merge_auth_schema(monkeypatch):
+    monkeypatch.setenv("AIKIDO_FEATURE_COLLECT_API_SCHEMA", "1")
+
+    routes = Routes(200)
+    assert list(routes) == []
+
+    routes.add_route(Context("GET", "/auth"))
+    routes.add_route(Context("GET", "/auth", headers={"AUTHORIZATION": "Bearer token"}))
+    routes.add_route(Context("GET", "/auth", headers={"AUTHORIZATION": "Basic token"}))
+    routes.add_route(Context("GET", "/auth", headers={"X_API_KEY": "token"}))
+    routes.add_route(Context("GET", "/auth"))
+
+    assert list(routes)[0] == {
+        "method": "GET",
+        "path": "/auth",
+        "hits": 5,
+        "apispec": {
+            "auth": [
+                {"type": "http", "scheme": "bearer"},
+                {"type": "http", "scheme": "basic"},
+                {"type": "apiKey", "in": "header", "name": "x-api-key"},
+            ],
+            "body": None,
+            "query": None,
+        },
+    }
+    assert len(list(routes)) == 1

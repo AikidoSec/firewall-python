@@ -8,7 +8,7 @@ from aikido_zen.helpers.logging import logger
 from aikido_zen.context import Context
 from aikido_zen.background_process.packages import pkg_compat_check, ANY_VERSION
 from aikido_zen.context import get_current_context
-from .functions.request_handler import request_handler
+import aikido_zen.sources.functions.request_handler as funcs
 
 
 def aik_full_dispatch_request(*args, former_full_dispatch_request=None, **kwargs):
@@ -30,12 +30,12 @@ def aik_full_dispatch_request(*args, former_full_dispatch_request=None, **kwargs
 
     req = request_ctx.request
     extract_and_save_data_from_flask_request(req)
-    pre_response = request_handler(stage="pre_response")
+    pre_response = funcs.request_handler(stage="pre_response")
     if pre_response:
         # This happens when a route is rate limited, a user blocked, etc...
         return Response(pre_response[0], status=pre_response[1], mimetype="text/plain")
     res = former_full_dispatch_request(*args, **kwargs)
-    request_handler(stage="post_response", status_code=res.status_code)
+    funcs.request_handler(stage="post_response", status_code=res.status_code)
     return res
 
 
@@ -63,11 +63,14 @@ def aikido___call__(flask_app, environ, start_response):
     try:
         context1 = Context(req=environ, source="flask")
         context1.set_as_current_context()
-        request_handler(stage="init")
+        funcs.request_handler(stage="init")
     except Exception as e:
         logger.debug("Exception on aikido __call__ function : %s", e)
     res = flask_app.wsgi_app(environ, start_response)
     return res
+
+
+FLASK_REQUIRED_VERSION = "2.3.0"
 
 
 @importhook.on_import("flask.app")
@@ -77,7 +80,7 @@ def on_flask_import(flask):
     @app.route |-> `add_url_rule` |-> self.view_functions. these get called via
     full_dispatch_request, which we wrap. We also wrap __call__ to run our middleware.
     """
-    if not pkg_compat_check("flask", required_version=ANY_VERSION):
+    if not pkg_compat_check("flask", required_version=FLASK_REQUIRED_VERSION):
         return flask
     modified_flask = importhook.copy_module(flask)
     former_fdr = copy.deepcopy(flask.Flask.full_dispatch_request)

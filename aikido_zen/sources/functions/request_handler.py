@@ -14,8 +14,6 @@ def request_handler(stage, status_code=0):
     try:
         if stage == "init":
             #  This gets executed the first time a request get's intercepted
-            if get_comms():
-                get_comms().send_data_to_bg_process("STATISTICS", {"action": "request"})
             context = get_current_context()
             if context:  # Create a lifecycle cache
                 IPCLifecycleCache(context)
@@ -75,7 +73,7 @@ def pre_response():
         receive=True,
     )
     if ratelimit_res["success"] and ratelimit_res["data"]["block"]:
-        message = "You are rate limited by Aikido firewall"
+        message = "You are rate limited by Zen"
         if ratelimit_res["data"]["trigger"] == "ip":
             message += f" (Your IP: {context.remote_address})"
         return (message, 429)

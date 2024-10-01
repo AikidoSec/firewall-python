@@ -1,4 +1,4 @@
-"""Exports set_wsgi_attributes_on_context"""
+"""Exports set_asgi_attributes_on_context"""
 
 from urllib.parse import parse_qs
 from aikido_zen.helpers.get_ip_from_request import get_ip_from_request
@@ -10,8 +10,8 @@ from .build_url_from_asgi import build_url_from_asgi
 
 def set_asgi_attributes_on_context(context, scope):
     """
-    This extracts WSGI attributes, described in :
-    https://peps.python.org/pep-3333/#environ-variables
+    This extracts ASGI Scope attributes, described in :
+    https://asgi.readthedocs.io/en/latest/specs/www.html#http-connection-scope
     """
     logger.debug("Setting ASGI attributes")
     context.method = scope["method"]

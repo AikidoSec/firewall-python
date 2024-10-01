@@ -21,10 +21,14 @@ def match_filter_part_in_user(user_input, filter_part, path_to_payload=None):
             return match_filter_part_in_user(
                 jwt[1], filter_part, path_to_payload + [{"type": "jwt"}]
             )
-    if user_input == filter_part:
-        return {"match": True, "pathToPayload": build_path_to_payload(path_to_payload)}
 
     if is_plain_object(user_input):
+        filtered_input = remove_keys_that_dont_start_with_dollar_sign(user_input)
+        if filtered_input == filter_part:
+            return {
+                "match": True,
+                "pathToPayload": build_path_to_payload(path_to_payload),
+            }
         for key in user_input:
             match = match_filter_part_in_user(
                 user_input[key],

@@ -86,6 +86,13 @@ commands = [
     "set",
     "lsattr",
     "killall5",
+    "dmesg",
+    "history",
+    "free",
+    "uptime",
+    "finger",
+    "top",
+    "shopt",
     ":",  # Colon is a null command
 ]
 

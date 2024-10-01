@@ -8,15 +8,13 @@ import aikido_zen.sinks.socket
 import aikido_zen.sinks.http_client
 import requests
 
-SSRF_TEST = "http://firewallssrfredirects-env-2.eba-7ifve22q.eu-north-1.elasticbeanstalk.com/ssrf-test"
-SSRF_TEST_DOMAIN = "http://firewallssrfredirects-env-2.eba-7ifve22q.eu-north-1.elasticbeanstalk.com/ssrf-test-domain"
-SSRF_TEST_TWICE = "http://firewallssrfredirects-env-2.eba-7ifve22q.eu-north-1.elasticbeanstalk.com/ssrf-test-twice"
-SSRF_TEST_DOMAIN_TWICE = "http://firewallssrfredirects-env-2.eba-7ifve22q.eu-north-1.elasticbeanstalk.com/ssrf-test-domain-twice"
+SSRF_TEST = "http://ssrf-redirects.testssandbox.com/ssrf-test"
+SSRF_TEST_DOMAIN = "http://ssrf-redirects.testssandbox.com/ssrf-test-domain"
+SSRF_TEST_TWICE = "http://ssrf-redirects.testssandbox.com/ssrf-test-twice"
+SSRF_TEST_DOMAIN_TWICE = "http://ssrf-redirects.testssandbox.com/ssrf-test-domain-twice"
 
-CROSS_DOMAIN_TEST = "http://ec2-13-60-120-68.eu-north-1.compute.amazonaws.com/ssrf-test"
-CROSS_DOMAIN_TEST_DOMAIN_TWICE = (
-    "http://ec2-13-60-120-68.eu-north-1.compute.amazonaws.com/ssrf-test-domain-twice"
-)
+CROSS_DOMAIN_TEST = "http://firewallssrfredirects-env-2.eba-7ifve22q.eu-north-1.elasticbeanstalk.com/ssrf-test"
+CROSS_DOMAIN_TEST_DOMAIN_TWICE = "http://firewallssrfredirects-env-2.eba-7ifve22q.eu-north-1.elasticbeanstalk.com/ssrf-test-domain-twice"
 
 
 def set_context_and_lifecycle(url):

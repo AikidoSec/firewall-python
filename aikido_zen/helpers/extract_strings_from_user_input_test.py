@@ -93,6 +93,30 @@ def test_decodes_jwts():
     )
 
 
+def test_ignores_jwt_issuers():
+    """
+    {
+        "sub": "1234567890",
+        "name": "John Doe",
+        "iat": 1516239022,
+        "iss": "https://example.com"
+    }
+    """
+    assert extract_strings_from_user_input(
+        {
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJpc3MiOiJodHRwczovL2V4YW1wbGUuY29tIn0.QLC0vl-A11a1WcUPD6vQR2PlUvRMsqpegddfQzPajQM",
+        }
+    ) == {
+        "token": ".",
+        "iat": ".token<jwt>",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJpc3MiOiJodHRwczovL2V4YW1wbGUuY29tIn0.QLC0vl-A11a1WcUPD6vQR2PlUvRMsqpegddfQzPajQM": ".token",
+        "sub": ".token<jwt>",
+        "1234567890": ".token<jwt>.sub",
+        "name": ".token<jwt>",
+        "John Doe": ".token<jwt>.name",
+    }
+
+
 def test_jwt_as_string():
     assert extract_strings_from_user_input(
         {"header": "/;ping%20localhost;.e30=."}

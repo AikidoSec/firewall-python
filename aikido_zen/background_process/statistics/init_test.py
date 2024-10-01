@@ -10,7 +10,10 @@ def stats():
     return Statistics(max_perf_samples_in_mem=50, max_compressed_stats_in_mem=5)
 
 
-def test_it_resets_stats(stats):
+def test_it_resets_stats(stats, monkeypatch):
+    monkeypatch.setattr(
+        "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms", lambda: 2
+    )
     stats.on_inspected_call(
         without_context=False,
         sink="mongodb",
@@ -34,6 +37,7 @@ def test_it_resets_stats(stats):
             },
         },
         "startedAt": started_at,
+        "endedAt": 2,
         "requests": {
             "total": 0,
             "aborted": 0,
@@ -50,6 +54,7 @@ def test_it_resets_stats(stats):
     assert stats.get_stats() == {
         "sinks": {},
         "startedAt": started_at,  # Assuming reset sets this to the current time
+        "endedAt": 2,
         "requests": {
             "total": 0,
             "aborted": 0,
@@ -61,11 +66,15 @@ def test_it_resets_stats(stats):
     }
 
 
-def test_it_keeps_track_of_amount_of_calls(stats):
+def test_it_keeps_track_of_amount_of_calls(stats, monkeypatch):
+    monkeypatch.setattr(
+        "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms", lambda: 2
+    )
     started_at = stats.get_stats()["startedAt"]
     assert stats.get_stats() == {
         "sinks": {},
         "startedAt": started_at,
+        "endedAt": 2,
         "requests": {
             "total": 0,
             "aborted": 0,
@@ -98,6 +107,7 @@ def test_it_keeps_track_of_amount_of_calls(stats):
             },
         },
         "startedAt": started_at,
+        "endedAt": 2,
         "requests": {
             "total": 0,
             "aborted": 0,
@@ -130,6 +140,7 @@ def test_it_keeps_track_of_amount_of_calls(stats):
             },
         },
         "startedAt": started_at,
+        "endedAt": 2,
         "requests": {
             "total": 0,
             "aborted": 0,
@@ -156,6 +167,7 @@ def test_it_keeps_track_of_amount_of_calls(stats):
             },
         },
         "startedAt": started_at,
+        "endedAt": 2,
         "requests": {
             "total": 0,
             "aborted": 0,
@@ -188,6 +200,7 @@ def test_it_keeps_track_of_amount_of_calls(stats):
             },
         },
         "startedAt": started_at,
+        "endedAt": 2,
         "requests": {
             "total": 0,
             "aborted": 0,
@@ -220,6 +233,7 @@ def test_it_keeps_track_of_amount_of_calls(stats):
             },
         },
         "startedAt": started_at,
+        "endedAt": 2,
         "requests": {
             "total": 0,
             "aborted": 0,
@@ -247,12 +261,16 @@ def test_it_keeps_track_of_amount_of_calls(stats):
     assert len(stats.get_stats()["sinks"]["mongodb"]["compressedTimings"]) == 1
 
 
-def test_it_keeps_track_of_requests(stats):
+def test_it_keeps_track_of_requests(stats, monkeypatch):
+    monkeypatch.setattr(
+        "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms", lambda: 9
+    )
     started_at = stats.get_stats()["startedAt"]
 
     assert stats.get_stats() == {
         "sinks": {},
         "startedAt": started_at,
+        "endedAt": 9,
         "requests": {
             "total": 0,
             "aborted": 0,
@@ -268,6 +286,7 @@ def test_it_keeps_track_of_requests(stats):
     assert stats.get_stats() == {
         "sinks": {},
         "startedAt": started_at,
+        "endedAt": 9,
         "requests": {
             "total": 1,
             "aborted": 0,
@@ -284,6 +303,7 @@ def test_it_keeps_track_of_requests(stats):
     assert stats.get_stats() == {
         "sinks": {},
         "startedAt": started_at,
+        "endedAt": 9,
         "requests": {
             "total": 2,
             "aborted": 0,
@@ -300,6 +320,7 @@ def test_it_keeps_track_of_requests(stats):
     assert stats.get_stats() == {
         "sinks": {},
         "startedAt": started_at,
+        "endedAt": 9,
         "requests": {
             "total": 3,
             "aborted": 0,
@@ -316,6 +337,7 @@ def test_it_keeps_track_of_requests(stats):
     assert stats.get_stats() == {
         "sinks": {},
         "startedAt": started_at,  # Assuming reset sets this to the current time
+        "endedAt": 9,
         "requests": {
             "total": 0,
             "aborted": 0,
@@ -345,13 +367,17 @@ def test_it_force_compresses_stats(stats):
     assert stats.has_compressed_stats() is True
 
 
-def test_it_keeps_track_of_aborted_requests(stats):
+def test_it_keeps_track_of_aborted_requests(stats, monkeypatch):
+    monkeypatch.setattr(
+        "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms", lambda: 5
+    )
     stats.requests["aborted"] += 1
     started_at = stats.get_stats()["startedAt"]
 
     assert stats.get_stats() == {
         "sinks": {},
         "startedAt": started_at,
+        "endedAt": 5,
         "requests": {
             "total": 0,
             "aborted": 1,

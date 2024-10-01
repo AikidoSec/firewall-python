@@ -66,6 +66,16 @@ def test_filter_with_ne_and_empty_request(create_context):
     assert detect_nosql_injection(create_context(), {"title": {"$ne": None}}) == {}
 
 
+def test_filter_with_string_value(create_context):
+    assert (
+        detect_nosql_injection(
+            create_context(body={"title": {"title": "title", "a": "b"}}),
+            {"title": {"title": "title", "a": "b"}},
+        )
+        == {}
+    )
+
+
 def test_using_gt_in_query_parameter(create_context):
     assert detect_nosql_injection(
         create_context(query={"title": {"$gt": ""}}), {"title": {"$gt": ""}}
@@ -272,6 +282,30 @@ def test_using_gt_in_query_parameter(create_context):
         "injection": True,
         "source": "query",
         "pathToPayload": ".age",
+        "payload": {"$gt": "21"},
+    }
+
+
+def test_using_gt_in_query_parameter_with_other_params(create_context):
+    assert detect_nosql_injection(
+        create_context(query={"age": {"$gt": "21"}}),
+        {"age": {"$gt": "21", "test": "true"}},
+    ) == {
+        "injection": True,
+        "source": "query",
+        "pathToPayload": ".age",
+        "payload": {"$gt": "21"},
+    }
+
+
+def test_using_filter_as_body(create_context):
+    assert detect_nosql_injection(
+        create_context(body={"$gt": "21", "pswd": "Test"}),
+        {"$gt": "21", "pswd": "Test"},
+    ) == {
+        "injection": True,
+        "source": "body",
+        "pathToPayload": ".",
         "payload": {"$gt": "21"},
     }
 
