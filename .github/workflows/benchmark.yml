@@ -68,6 +68,9 @@ jobs:
           cd wrk
           sudo make
           sudo cp wrk /usr/local/bin
-      - name: Do wrk testrun
-        run: |
-          wrk -t12 -c400 -d30s --latency http://127.0.0.1:8102/just
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Run benchmark
+        run: python ./benchmarks/starlette_benchmark.py
