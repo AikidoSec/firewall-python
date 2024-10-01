@@ -17,10 +17,11 @@ jobs:
         with:
           python-version: 3.9
 
-      - name: Install dependencies
+      - name: Install dependencies (and wrk)
         run: |
           python -m pip install --upgrade pip
           make dev_install
+          sudo apt install -y wrk
       - name: Install aikido_zen
         run: |
           make build
