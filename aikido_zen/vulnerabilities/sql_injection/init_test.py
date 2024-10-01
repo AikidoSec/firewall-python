@@ -213,8 +213,18 @@ def test_check_string_safely_escaped():
     is_not_sql_injection(
         'SELECT * FROM comments WHERE comment = "I\`m writting you"', "I`m writting you"
     )
+    # Invalid query (strings don't terminate)
     is_not_sql_injection(
         "SELECT * FROM comments WHERE comment = 'I'm writting you'", "I'm writting you"
+    )
+    # Positive example of same query :
+    is_sql_injection(
+        "SELECT * FROM comments WHERE comment = 'I'm writting you--'",
+        "I'm writting you--",
+    )
+    is_sql_injection(
+        "SELECT * FROM comments WHERE comment = 'I'm writting you''",
+        "I'm writting you'",
     )
     # Invalid query in postgres, tests fallback :
     is_sql_injection("SELECT * FROM `comm` ents", "`comm` ents", "postgres")
