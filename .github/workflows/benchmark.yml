@@ -3,7 +3,7 @@ on:
   push: {}
   workflow_call: {}
 jobs:
-  benchmark:
+  benchmark_sql_algorithm:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -17,11 +17,10 @@ jobs:
         with:
           python-version: 3.9
 
-      - name: Install dependencies (and wrk)
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           make dev_install
-          sudo apt install -y wrk
       - name: Install aikido_zen
         run: |
           make build
@@ -31,7 +30,16 @@ jobs:
         run: |
           poetry run python ./benchmarks/sql_benchmark/sql_benchmark_fw.py
           poetry run python ./benchmarks/sql_benchmark/sql_benchmark_no_fw.py
-      - name: Run Docker Compose
+  benchmark_with_flask_mysql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Start databases
+        working-directory:  ./sample-apps/databases
+        run: docker compose up --build -d
+      - name: Start flask-mysql
         working-directory: ./sample-apps/flask-mysql
         run: |
           docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
@@ -40,3 +48,26 @@ jobs:
       - name: Run flask-mysql k6 Benchmark
         run: |
           k6 run -q ./benchmarks/flask-mysql-benchmarks.js
+  benchmark_with_starlette_app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Start databases
+        working-directory:  ./sample-apps/databases
+        run: docker compose up --build -d
+      - name: Start starlette multi-threaded
+        working-directory: ./sample-apps/starlette-postgres-uvicorn
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
+      - name: Install wrk
+        run: |
+          sudo apt-get install build-essential libssl-dev git -y
+          git clone https://github.com/wg/wrk.git wrk
+          cd wrk
+          sudo make
+          sudo cp wrk /usr/local/bin
+      - name: Do wrk testrun
+        run: |
+          wrk -t12 -c400 -d30s --latency http://127.0.0.1:8102/just
