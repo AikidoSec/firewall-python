@@ -7,7 +7,7 @@ from aikido_zen.helpers.attack_human_name import attack_human_name
 
 def generate_default_message(kind):
     """Generates a default message based on kind of attack"""
-    return "Aikido Zen has blocked " + attack_human_name(kind)
+    return "Zen has blocked " + attack_human_name(kind)
 
 
 class AikidoException(Exception):
