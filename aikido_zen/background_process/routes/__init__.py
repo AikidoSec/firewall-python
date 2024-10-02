@@ -16,11 +16,12 @@ class Routes:
         self.max_size = max_size
         self.routes = {}
 
-    def add_route(self, context):
+    def add_route(self, route_metadata):
         """
         Adds your route
+        route_metadata object includes route, url and method
         """
-        method, path = context.method, context.route
+        method, path = route_metadata.get("method"), route_metadata.get("route")
         key = route_to_key(method, path)
 
         if self.routes.get(key):
@@ -34,20 +35,18 @@ class Routes:
                 "method": method,
                 "path": path,
                 "hits": 1,
-                "apispec": None,
+                "apispec": {},
             }
+
     def update_route_with_apispec(self, route_metadata, apispec):
         """
-        If apispec not set, this sets apispec, and if it is set this merges apispec
+        Updates apispec of a given route (or creates it).
         route_metadata object includes route, url and method
         """
         key = route_to_key(route_metadata.get("method"), route_metadata.get("route"))
         if not self.routes.get(key):
             return
-        if not self.routes[key].get("apispec"):
-            self.routes[key]["apispec"] = apispec
-        else:
-            update_route_info(apispec, self.routes[key])
+        update_route_info(apispec, self.routes[key])
 
     def clear(self):
         """Deletes all routes"""
