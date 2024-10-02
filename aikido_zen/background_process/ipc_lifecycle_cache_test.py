@@ -25,14 +25,14 @@ def test_ipc_lifecycle_cache_initialization(mock_context, mock_comms):
         "success": True,
         "data": {
             "bypassed_ips": {"192.168.1.1", "192.168.1.2"},
-            "matched_endpoints": [{"endpoint": {"forceProtectionOff": True}}],
+            "matched_endpoints": [{"forceProtectionOff": True}],
         },
     }
 
     cache = IPCLifecycleCache(mock_context)
 
     assert cache.bypassed_ips == {"192.168.1.1", "192.168.1.2"}
-    assert cache.matched_endpoints == [{"endpoint": {"forceProtectionOff": True}}]
+    assert cache.matched_endpoints == [{"forceProtectionOff": True}]
 
 
 def test_ipc_lifecycle_cache_populate(mock_context, mock_comms):
@@ -44,14 +44,14 @@ def test_ipc_lifecycle_cache_populate(mock_context, mock_comms):
         "success": True,
         "data": {
             "bypassed_ips": {"192.168.1.3"},
-            "matched_endpoints": [{"endpoint": {"forceProtectionOff": False}}],
+            "matched_endpoints": [{"forceProtectionOff": False}],
         },
     }
 
     cache.populate(mock_context)
 
     assert cache.bypassed_ips == {"192.168.1.3"}
-    assert cache.matched_endpoints == [{"endpoint": {"forceProtectionOff": False}}]
+    assert cache.matched_endpoints == [{"forceProtectionOff": False}]
 
 
 def test_ipc_lifecycle_cache_is_bypassed_ip(mock_context, mock_comms):
@@ -76,7 +76,7 @@ def test_ipc_lifecycle_cache_protection_forced_off(mock_context, mock_comms):
         "success": True,
         "data": {
             "bypassed_ips": {},
-            "matched_endpoints": [{"endpoint": {"forceProtectionOff": True}}],
+            "matched_endpoints": [{"forceProtectionOff": True}],
         },
     }
 
@@ -89,7 +89,7 @@ def test_ipc_lifecycle_cache_protection_forced_off(mock_context, mock_comms):
         "success": True,
         "data": {
             "bypassed_ips": {},
-            "matched_endpoints": [{"endpoint": {"forceProtectionOff": False}}],
+            "matched_endpoints": [{"forceProtectionOff": False}],
         },
     }
 

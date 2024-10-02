@@ -6,7 +6,9 @@ from aikido_zen.helpers.is_useful_route import is_useful_route
 from aikido_zen.helpers.logging import logger
 from aikido_zen.background_process.ipc_lifecycle_cache import (
     IPCLifecycleCache,
+    get_cache,
 )
+from aikido_zen.ratelimiting.get_ratelimited_endpoint import get_ratelimited_endpoint
 
 
 def request_handler(stage, status_code=0):
@@ -63,20 +65,23 @@ def pre_response():
             return ("You are blocked by Aikido Firewall.", 403)
 
     # Ratelimiting :
-    ratelimit_res = comms.send_data_to_bg_process(
-        action="SHOULD_RATELIMIT",
-        obj={
-            "route_metadata": context.get_route_metadata(),
-            "user": context.user,
-            "remote_address": context.remote_address,
-        },
-        receive=True,
-    )
-    if ratelimit_res["success"] and ratelimit_res["data"]["block"]:
-        message = "You are rate limited by Zen"
-        if ratelimit_res["data"]["trigger"] == "ip":
-            message += f" (Your IP: {context.remote_address})"
-        return (message, 429)
+    endpoints = getattr(get_cache(), "matched_endpoints", None)
+    if get_ratelimited_endpoint(endpoints, context.route):
+        # As an optimization check if the route is rate limited before sending over IPC
+        ratelimit_res = comms.send_data_to_bg_process(
+            action="SHOULD_RATELIMIT",
+            obj={
+                "route_metadata": context.get_route_metadata(),
+                "user": context.user,
+                "remote_address": context.remote_address,
+            },
+            receive=True,
+        )
+        if ratelimit_res["success"] and ratelimit_res["data"]["block"]:
+            message = "You are rate limited by Zen"
+            if ratelimit_res["data"]["trigger"] == "ip":
+                message += f" (Your IP: {context.remote_address})"
+            return (message, 429)
 
 
 def post_response(status_code):

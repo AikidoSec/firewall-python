@@ -2,26 +2,27 @@
 Aikido can rate limit urls, IPs, Users
 """
 
+from .get_ratelimited_endpoint import get_ratelimited_endpoint
+
 
 def should_ratelimit_request(route_metadata, remote_address, user, connection_manager):
     """
     Checks if the request should be ratelimited or not
     route_metadata object includes route, url and method
     """
-    match = connection_manager.conf.get_endpoint(route_metadata)
-    if not match:
-        return {"block": False}
-    endpoint = match["endpoint"]
-    route = match["route"]
-    if not endpoint["rateLimiting"] or not endpoint["rateLimiting"]["enabled"]:
+    endpoints = connection_manager.conf.get_endpoints(route_metadata)
+    endpoint = get_ratelimited_endpoint(endpoints, route_metadata["route"])
+    if not endpoint:
         return {"block": False}
 
-    # Production logic, still missing
-    is_bypassed_ip = connection_manager.conf.is_bypassed_ip(remote_address)
     max_requests = int(endpoint["rateLimiting"]["maxRequests"])
     windows_size_in_ms = int(endpoint["rateLimiting"]["windowSizeInMS"])
+
+    is_bypassed_ip = connection_manager.conf.is_bypassed_ip(remote_address)
     if remote_address and not is_bypassed_ip:
-        method = route_metadata["method"]
+        method = endpoint.get("method")
+        route = endpoint.get("route")
+
         allowed = connection_manager.rate_limiter.is_allowed(
             f"{method}:{route}:ip:{remote_address}",
             windows_size_in_ms,
@@ -29,9 +30,11 @@ def should_ratelimit_request(route_metadata, remote_address, user, connection_ma
         )
         if not allowed:
             return {"block": True, "trigger": "ip"}
+
     if user:
         uid = user["id"]
-        method = route_metadata["method"]
+        method = endpoint.get("method")
+        route = endpoint.get("route")
 
         allowed = connection_manager.rate_limiter.is_allowed(
             f"{method}:{route}:user:{uid}",
@@ -40,4 +43,5 @@ def should_ratelimit_request(route_metadata, remote_address, user, connection_ma
         )
         if not allowed:
             return {"block": True, "trigger": "user"}
+
     return {"block": False}
