@@ -63,7 +63,7 @@ def test_run_vulnerability_scan_context_no_lifecycle(caplog):
 def test_lifecycle_cache_parts(caplog, get_context):
     get_context.set_as_current_context()
     cache = IPCLifecycleCache(get_context)
-    cache.matched_endpoints = [{"endpoint": {"forceProtectionOff": True}}]
+    cache.matched_endpoints = [{"forceProtectionOff": True}]
     assert cache.protection_forced_off()
     run_vulnerability_scan(kind="test", op="test", args=tuple())
     assert len(caplog.text) == 0
