@@ -6,6 +6,8 @@ def get_ratelimited_endpoint(endpoints, route):
     Filters through endpoints, tries to find an exact match otherwise tries to find the
     endpoint with the least amount of allowed requests.
     """
+    if not endpoints:
+        return None
     matches = []
     for endpoint in endpoints:
         if (
