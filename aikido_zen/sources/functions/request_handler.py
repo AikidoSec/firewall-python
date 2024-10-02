@@ -49,7 +49,7 @@ def pre_response():
         )
         if blocked_res["success"] and blocked_res["data"]:
             return ("You are blocked by Aikido Firewall.", 403)
-    
+
     # Fetch endpoints for IP Allowlist and ratelimiting :
     endpoints = getattr(get_cache(), "matched_endpoints", None)
     if not endpoints:
