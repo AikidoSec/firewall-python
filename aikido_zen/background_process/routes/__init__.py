@@ -27,7 +27,6 @@ class Routes:
             # Route already exists, add a hit
             route = self.routes.get(key)
             route["hits"] += 1
-            update_route_info(context, route)  # API Discovery
         else:
             self.manage_routes_size()
             # Add an empty route :
@@ -35,8 +34,20 @@ class Routes:
                 "method": method,
                 "path": path,
                 "hits": 1,
-                "apispec": get_api_info(context),
+                "apispec": None,
             }
+    def update_route_with_apispec(self, route_metadata, apispec):
+        """
+        If apispec not set, this sets apispec, and if it is set this merges apispec
+        route_metadata object includes route, url and method
+        """
+        key = route_to_key(route_metadata.get("method"), route_metadata.get("route"))
+        if not self.routes.get(key):
+            return
+        if not self.routes[key].get("apispec"):
+            self.routes[key]["apispec"] = apispec
+        else:
+            update_route_info(apispec, self.routes[key])
 
     def clear(self):
         """Deletes all routes"""
