@@ -3,6 +3,7 @@
 from aikido_zen.background_process import get_comms
 from aikido_zen.context import get_current_context
 from aikido_zen.api_discovery.get_api_info import get_api_info
+from aikido_zen.api_discovery.update_route_info import ANALYSIS_ON_FIRST_X_ROUTES
 from aikido_zen.helpers.is_useful_route import is_useful_route
 from aikido_zen.helpers.logging import logger
 from aikido_zen.background_process.ipc_lifecycle_cache import (
@@ -11,8 +12,6 @@ from aikido_zen.background_process.ipc_lifecycle_cache import (
 )
 from aikido_zen.ratelimiting.get_ratelimited_endpoint import get_ratelimited_endpoint
 from .ip_allowed_to_access_route import ip_allowed_to_access_route
-
-ANALYSIS_ON_FIRST_X_ROUTES = 20
 
 
 def request_handler(stage, status_code=0):
