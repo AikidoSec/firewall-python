@@ -10,6 +10,7 @@ from aikido_zen.background_process.ipc_lifecycle_cache import (
     get_cache,
 )
 from aikido_zen.ratelimiting.get_ratelimited_endpoint import get_ratelimited_endpoint
+from .ip_allowed_to_access_route import ip_allowed_to_access_route
 
 ANALYSIS_ON_FIRST_X_ROUTES = 20
 
@@ -44,21 +45,6 @@ def pre_response():
         logger.debug("Request was not complete, not running any pre_response code")
         return
 
-    # IP Allowlist:
-    res = comms.send_data_to_bg_process(
-        action="IS_IP_ALLOWED",
-        obj={
-            "route_metadata": context.get_route_metadata(),
-            "remote_address": context.remote_address,
-        },
-        receive=True,
-    )
-    if res["success"] and not res["data"]:
-        message = "Your IP address is not allowed to access this resource."
-        if context.remote_address:
-            message += f" (Your IP: {context.remote_address})"
-        return (message, 403)
-
     # Blocked users:
     if context.user:
         blocked_res = comms.send_data_to_bg_process(
@@ -67,8 +53,21 @@ def pre_response():
         if blocked_res["success"] and blocked_res["data"]:
             return ("You are blocked by Aikido Firewall.", 403)
 
-    # Ratelimiting :
+    # Fetch endpoints for IP Allowlist and ratelimiting :
     endpoints = getattr(get_cache(), "matched_endpoints", None)
+    if not endpoints:
+        return
+
+    # IP Allowlist:
+    if not ip_allowed_to_access_route(
+        context.remote_address, context.get_route_metadata(), endpoints
+    ):
+        message = "Your IP address is not allowed to access this resource."
+        if context.remote_address:
+            message += f" (Your IP: {context.remote_address})"
+        return (message, 403)
+
+    # Ratelimiting :
     if get_ratelimited_endpoint(endpoints, context.route):
         # As an optimization check if the route is rate limited before sending over IPC
         ratelimit_res = comms.send_data_to_bg_process(
