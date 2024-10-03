@@ -1,6 +1,7 @@
 import pytest
 from aikido_zen.vulnerabilities.nosql_injection import detect_nosql_injection
 from aikido_zen.context import Context
+from collections import defaultdict, OrderedDict, ChainMap
 
 
 @pytest.fixture
@@ -99,6 +100,30 @@ def test_safe_filter(create_context):
 def test_using_ne_in_body(create_context):
     assert detect_nosql_injection(
         create_context(body={"title": {"$ne": None}}), {"title": {"$ne": None}}
+    ) == {
+        "injection": True,
+        "source": "body",
+        "pathToPayload": ".title",
+        "payload": {"$ne": None},
+    }
+
+
+def test_using_ne_in_body_with_chainmap(create_context):
+    assert detect_nosql_injection(
+        create_context(body={"title": {"$ne": None}}),
+        ChainMap({"title": {"$ne": None}}, {}),
+    ) == {
+        "injection": True,
+        "source": "body",
+        "pathToPayload": ".title",
+        "payload": {"$ne": None},
+    }
+
+
+def test_using_ne_in_body_with_ordereddict(create_context):
+    assert detect_nosql_injection(
+        create_context(body={"title": {"$ne": None}}),
+        OrderedDict({"title": {"$ne": None}}),
     ) == {
         "injection": True,
         "source": "body",

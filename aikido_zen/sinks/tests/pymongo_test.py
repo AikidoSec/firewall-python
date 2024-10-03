@@ -3,6 +3,7 @@ from unittest.mock import patch
 import aikido_zen.sinks.pymongo
 from aikido_zen.background_process.comms import reset_comms
 import pymongo.errors as mongo_errs
+from collections import defaultdict, OrderedDict, ChainMap
 
 
 @pytest.fixture
@@ -20,6 +21,22 @@ def test_replace_one(db):
     ) as mock_run_vulnerability_scan:
         dogs = db["dogs"]
         filter, repl = {"dog_name": "test"}, {"dog_name": "dog2", "pswd": "pswd"}
+        dogs.replace_one(filter, repl)
+
+        called_with = mock_run_vulnerability_scan.call_args[1]
+        assert called_with["args"][0] == filter
+        assert called_with["op"] == "pymongo.collection.Collection.replace_one"
+        assert called_with["kind"] == "nosql_injection"
+
+
+def test_replace_one_with_chainmap(db):
+    reset_comms()
+    with patch(
+        "aikido_zen.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        dogs = db["dogs"]
+        repl = {"dog_name": "dog2", "pswd": "pswd"}
+        filter = ChainMap({"dog_name": "test"}, {})
         dogs.replace_one(filter, repl)
 
         called_with = mock_run_vulnerability_scan.call_args[1]
