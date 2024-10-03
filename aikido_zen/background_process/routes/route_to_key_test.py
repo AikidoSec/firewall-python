@@ -2,6 +2,10 @@ import pytest
 from .route_to_key import route_to_key
 
 
+def gen_route_metadata(method="GET", route="/test", url="http://localhost:5000"):
+    return {"method": method, "route": route, "url": url}
+
+
 def test_route_to_key_get():
     assert (
         route_to_key(gen_route_metadata(method="GET", route="/api/resource"))
