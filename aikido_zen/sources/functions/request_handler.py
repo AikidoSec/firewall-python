@@ -2,6 +2,7 @@
 
 from aikido_zen.background_process import get_comms
 from aikido_zen.context import get_current_context
+from aikido_zen.api_discovery.get_api_info import get_api_info
 from aikido_zen.helpers.is_useful_route import is_useful_route
 from aikido_zen.helpers.logging import logger
 from aikido_zen.background_process.ipc_lifecycle_cache import (
@@ -9,6 +10,8 @@ from aikido_zen.background_process.ipc_lifecycle_cache import (
     get_cache,
 )
 from aikido_zen.ratelimiting.get_ratelimited_endpoint import get_ratelimited_endpoint
+
+ANALYSIS_ON_FIRST_X_ROUTES = 20
 
 
 def request_handler(stage, status_code=0):
@@ -96,4 +99,13 @@ def post_response(status_code):
         context.method,
     )
     if is_curr_route_useful:
-        get_comms().send_data_to_bg_process("ROUTE", context)
+        hits = getattr(get_cache(), "hits", 0)
+        if hits <= ANALYSIS_ON_FIRST_X_ROUTES:
+            # Only analyze the first x routes for api discovery
+            get_comms().send_data_to_bg_process(
+                "ROUTE",
+                {
+                    "route_metadata": context.get_route_metadata(),
+                    "apispec": get_api_info(context),
+                },
+            )
