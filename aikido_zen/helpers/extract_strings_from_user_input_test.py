@@ -4,6 +4,7 @@ from aikido_zen.helpers.extract_strings_from_user_input import (
     extract_strings_from_user_input,
     extract_strings_from_user_input_cached,
 )
+from collections import OrderedDict, ChainMap
 
 
 def from_obj(obj):
@@ -42,6 +43,28 @@ def test_extract_cookie_objects():
     )
     assert extract_strings_from_user_input(
         {"session": "ABC", "session2": 1234}
+    ) == from_obj({"session2": ".", "session": ".", "ABC": ".session"})
+
+
+def test_extract_cookie_objects_as_chainmap():
+    assert extract_strings_from_user_input(
+        ChainMap({"session": "ABC"}, {"session2": "DEF"})
+    ) == from_obj(
+        {"session2": ".", "session": ".", "ABC": ".session", "DEF": ".session2"}
+    )
+    assert extract_strings_from_user_input(
+        ChainMap({"session": "ABC"}, {"session2": 1234})
+    ) == from_obj({"session2": ".", "session": ".", "ABC": ".session"})
+
+
+def test_extract_cookie_objects_from_ordereddict():
+    assert extract_strings_from_user_input(
+        OrderedDict({"session": "ABC", "session2": "DEF"})
+    ) == from_obj(
+        {"session2": ".", "session": ".", "ABC": ".session", "DEF": ".session2"}
+    )
+    assert extract_strings_from_user_input(
+        OrderedDict({"session": "ABC", "session2": 1234})
     ) == from_obj({"session2": ".", "session": ".", "ABC": ".session"})
 
 
