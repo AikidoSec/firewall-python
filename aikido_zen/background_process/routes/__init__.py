@@ -17,6 +17,20 @@ class Routes:
         self.max_size = max_size
         self.routes = {}
 
+    def initialize_route(self, route_metadata):
+        """
+        Initializes a route for the first time.
+        """
+        key = route_to_key(route_metadata)
+        if self.routes.get(key):
+            return
+        self.routes[key] = {
+            "method": route_metadata.get("method"),
+            "path": route_metadata.get("route"),
+            "hits": 0,
+            "apispec": {},
+        }
+
     def add_route(self, route_metadata):
         """
         Adds your route
