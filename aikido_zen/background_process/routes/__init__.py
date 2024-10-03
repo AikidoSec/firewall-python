@@ -22,7 +22,7 @@ class Routes:
         route_metadata object includes route, url and method
         """
         method, path = route_metadata.get("method"), route_metadata.get("route")
-        key = route_to_key(method, path)
+        key = route_to_key(route_metadata)
 
         if self.routes.get(key):
             # Route already exists, add a hit
@@ -43,10 +43,15 @@ class Routes:
         Updates apispec of a given route (or creates it).
         route_metadata object includes route, url and method
         """
-        key = route_to_key(route_metadata.get("method"), route_metadata.get("route"))
+        key = route_to_key(route_metadata)
         if not self.routes.get(key):
             return
         update_route_info(apispec, self.routes[key])
+
+    def get(self, route_metadata):
+        """Gets you the route entry if it exists using route metadata"""
+        key = route_to_key(route_metadata)
+        return self.routes.get(key)
 
     def clear(self):
         """Deletes all routes"""
@@ -71,6 +76,8 @@ class Routes:
         return len(self.routes)
 
 
-def route_to_key(method, path):
+def route_to_key(route_metadata):
     """Creates a key from the method and path"""
-    return f"{method}:{path}"
+    method = route_metadata.get("method")
+    route = route_metadata.get("route")
+    return f"{method}:{route}"

@@ -30,37 +30,84 @@ def gen_route_metadata(method="GET", route="/test", url="http://localhost:5000")
 
 # route_to_key tests:
 def test_route_to_key_get():
-    assert route_to_key("GET", "/api/resource") == "GET:/api/resource"
+    assert (
+        route_to_key(gen_route_metadata(method="GET", route="/api/resource"))
+        == "GET:/api/resource"
+    )
 
 
 def test_route_to_key_post():
-    assert route_to_key("POST", "/api/resource") == "POST:/api/resource"
+    assert (
+        route_to_key(gen_route_metadata(method="POST", route="/api/resource"))
+        == "POST:/api/resource"
+    )
 
 
 def test_route_to_key_put():
-    assert route_to_key("PUT", "/api/resource") == "PUT:/api/resource"
+    assert (
+        route_to_key(gen_route_metadata(method="PUT", route="/api/resource"))
+        == "PUT:/api/resource"
+    )
 
 
 def test_route_to_key_delete():
-    assert route_to_key("DELETE", "/api/resource") == "DELETE:/api/resource"
+    assert (
+        route_to_key(gen_route_metadata(method="DELETE", route="/api/resource"))
+        == "DELETE:/api/resource"
+    )
 
 
 def test_route_to_key_with_query_params():
-    assert route_to_key("GET", "/api/resource?query=1") == "GET:/api/resource?query=1"
+    assert (
+        route_to_key(gen_route_metadata(method="GET", route="/api/resource?query=1"))
+        == "GET:/api/resource?query=1"
+    )
 
 
 def test_route_to_key_with_trailing_slash():
-    assert route_to_key("GET", "/api/resource/") == "GET:/api/resource/"
+    assert (
+        route_to_key(gen_route_metadata(method="GET", route="/api/resource/"))
+        == "GET:/api/resource/"
+    )
 
 
 def test_route_to_key_empty_path():
-    assert route_to_key("GET", "") == "GET:"
+    assert route_to_key(gen_route_metadata(method="GET", route="")) == "GET:"
 
 
 def test_initialization():
     routes = Routes(max_size=3)
     assert routes.max_size == 3
     assert routes.routes == {}
+
+
+def test_get_route():
+    routes = Routes(max_size=3)
+
+    routes.add_route(gen_route_metadata(method="GET", route="/api/resource1"))
+    routes.add_route(gen_route_metadata(method="POST", route="/api/resource2"))
+    routes.add_route(gen_route_metadata(method="PUT", route="/api/resource3"))
+
+    assert routes.get(gen_route_metadata(method="GET", route="/api/resource1")) == {
+        "method": "GET",
+        "path": "/api/resource1",
+        "hits": 1,
+        "apispec": {},
+    }
+    assert routes.get(gen_route_metadata(method="POST", route="/api/resource2")) == {
+        "method": "POST",
+        "path": "/api/resource2",
+        "hits": 1,
+        "apispec": {},
+    }
+    assert routes.get(gen_route_metadata(method="PUT", route="/api/resource3")) == {
+        "method": "PUT",
+        "path": "/api/resource3",
+        "hits": 1,
+        "apispec": {},
+    }
+    assert routes.get(gen_route_metadata(method="GE", route="/api/resource1")) == None
+    assert routes.get(gen_route_metadata(method="GET", route="/api/resource")) == None
 
 
 def test_add_route_new():
