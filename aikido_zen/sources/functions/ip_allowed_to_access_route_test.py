@@ -9,10 +9,8 @@ def gen_route_metadata(
     return {"url": url, "route": route, "method": method}
 
 
-def create_connection_manager(allowed_ip_addresses):
-    # Mock the connection_manager with the necessary attributes
-    connection_manager = MagicMock()
-    connection_manager.conf.get_endpoints = lambda x: [
+def gen_endpoints(allowed_ip_addresses):
+    return [
         {
             "route": "/posts/:id",
             "method": "POST",
@@ -20,76 +18,58 @@ def create_connection_manager(allowed_ip_addresses):
             "force_protection_off": False,
         },
     ]
-    return connection_manager
 
 
 def test_always_allows_request_if_not_production():
     context = gen_route_metadata()
-    connection_manager = create_connection_manager(["1.2.3.4"])
-    assert ip_allowed_to_access_route("::1", context, connection_manager) is True
+    endpoints = gen_endpoints(["1.2.3.4"])
+    assert ip_allowed_to_access_route("::1", context, endpoints) is True
 
 
 def test_always_allows_request_if_no_match():
-    connection_manager = create_connection_manager(["1.2.3.4"])
+    endpoints = gen_endpoints(["1.2.3.4"])
     modified_context = gen_route_metadata(route="/", method="GET")
-    assert (
-        ip_allowed_to_access_route("1.2.3.4", modified_context, connection_manager)
-        is True
-    )
+    assert ip_allowed_to_access_route("1.2.3.4", modified_context, endpoints) is True
 
 
 def test_always_allows_request_if_allowed_ip_address():
-    connection_manager = create_connection_manager(["1.2.3.4"])
+    endpoints = gen_endpoints(["1.2.3.4"])
     modified_context = gen_route_metadata()
-    assert (
-        ip_allowed_to_access_route("1.2.3.4", modified_context, connection_manager)
-        is True
-    )
+    assert ip_allowed_to_access_route("1.2.3.4", modified_context, endpoints) is True
 
 
 def test_always_allows_request_if_localhost():
-    connection_manager = create_connection_manager(["1.2.3.4"])
+    endpoints = gen_endpoints(["1.2.3.4"])
     modified_context = gen_route_metadata()
-    assert (
-        ip_allowed_to_access_route("::1", modified_context, connection_manager) is True
-    )
+    assert ip_allowed_to_access_route("::1", modified_context, endpoints) is True
 
 
 def test_blocks_request_if_no_ip_address():
-    connection_manager = create_connection_manager(["1.2.3.4"])
+    endpoints = gen_endpoints(["1.2.3.4"])
     modified_context = gen_route_metadata()
-    assert (
-        ip_allowed_to_access_route(None, modified_context, connection_manager) is False
-    )
+    assert ip_allowed_to_access_route(None, modified_context, endpoints) is False
 
 
 def test_allows_request_if_configuration_is_broken():
-    connection_manager = create_connection_manager({})  # Broken configuration
+    endpoints = gen_endpoints({})  # Broken configuration
     modified_context = gen_route_metadata(method="POST", route="/posts/:id")
-    assert (
-        ip_allowed_to_access_route("3.4.5.6", modified_context, connection_manager)
-        is True
-    )
+    assert ip_allowed_to_access_route("3.4.5.6", modified_context, endpoints) is True
 
 
 def test_allows_request_if_allowed_ip_addresses_is_empty():
-    connection_manager = create_connection_manager([])
+    endpoints = gen_endpoints([])
     context = gen_route_metadata()
-    assert ip_allowed_to_access_route("3.4.5.6", context, connection_manager) is True
+    assert ip_allowed_to_access_route("3.4.5.6", context, endpoints) is True
 
 
 def test_blocks_request_if_not_allowed_ip_address():
-    connection_manager = create_connection_manager(["1.2.3.4"])
+    endpoints = gen_endpoints(["1.2.3.4"])
     modified_context = gen_route_metadata()
-    assert (
-        ip_allowed_to_access_route("3.4.5.6", modified_context, connection_manager)
-        is False
-    )
+    assert ip_allowed_to_access_route("3.4.5.6", modified_context, endpoints) is False
 
 
 def test_checks_every_matching_endpoint():
-    connection_manager = MagicMock()
-    connection_manager.conf.get_endpoints = lambda x: [
+    endpoints = [
         {
             "route": "/posts/:id",
             "method": "POST",
@@ -104,15 +84,11 @@ def test_checks_every_matching_endpoint():
         },
     ]
     modified_context = gen_route_metadata(method="POST", route="/posts/:id")
-    assert (
-        ip_allowed_to_access_route("3.4.5.6", modified_context, connection_manager)
-        is False
-    )
+    assert ip_allowed_to_access_route("3.4.5.6", modified_context, endpoints) is False
 
 
 def test_if_allowed_ips_is_empty_or_broken():
-    connection_manager = MagicMock()
-    connection_manager.conf.get_endpoints = lambda x: [
+    endpoints = [
         {
             "route": "/posts/:id",
             "method": "POST",
@@ -134,16 +110,12 @@ def test_if_allowed_ips_is_empty_or_broken():
     ]
     modified_context_allowed = gen_route_metadata()
     assert (
-        ip_allowed_to_access_route(
-            "1.2.3.4", modified_context_allowed, connection_manager
-        )
+        ip_allowed_to_access_route("1.2.3.4", modified_context_allowed, endpoints)
         is True
     )
 
     modified_context_blocked = gen_route_metadata()
     assert (
-        ip_allowed_to_access_route(
-            "3.4.5.6", modified_context_blocked, connection_manager
-        )
+        ip_allowed_to_access_route("3.4.5.6", modified_context_blocked, endpoints)
         is False
     )

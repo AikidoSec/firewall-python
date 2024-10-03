@@ -34,7 +34,7 @@ class AikidoBackgroundProcess:
     def __init__(self, address, key):
         logger.debug("Background process started")
         try:
-            listener = con.Listener(address, authkey=key)
+            listener = con.Listener(address, authkey=None)
         except OSError:
             logger.warning(
                 "Aikido listener may already be running on port %s, exiting", address[1]

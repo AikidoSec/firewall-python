@@ -11,7 +11,6 @@ from .kill import process_kill
 from .hostnames_add import process_hostnames_add
 from .should_block_user import process_should_block_user
 from .statistics import process_statistics
-from .is_ip_allowed import process_is_ip_allowed
 from .fetch_initial_metadata import process_fetch_initial_metadata
 from .ping import process_ping
 
@@ -29,7 +28,6 @@ commands_map = {
     "WRAPPED_PACKAGE": (process_wrapped_package, True),
     "SHOULD_RATELIMIT": (process_should_ratelimit, True),
     "SHOULD_BLOCK_USER": (process_should_block_user, True),
-    "IS_IP_ALLOWED": (process_is_ip_allowed, True),
     "FETCH_INITIAL_METADATA": (process_fetch_initial_metadata, True),
     "PING": (process_ping, True),
 }
@@ -42,7 +40,7 @@ def process_incoming_command(connection_manager, obj, conn, queue):
     if action in commands_map:
         func, returns_data = commands_map[action]
         if returns_data:
-            conn.send(func(connection_manager, data, queue))
+            return conn.send(func(connection_manager, data, queue))
         func(connection_manager, data, queue)
     else:
         logger.debug("Command : `%s` not found, aborting", action)
