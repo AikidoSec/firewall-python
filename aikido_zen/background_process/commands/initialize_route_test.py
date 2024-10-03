@@ -22,6 +22,7 @@ def test_process_initialize_route_adds_route(mock_connection_manager):
     # Check that the add_route method was called with the correct arguments
     mock_connection_manager.routes.initialize_route.assert_called_once_with(123456)
 
+
 def test_process_initialize_route_no_connection_manager():
     """Test that process_initialize_route does nothing when connection_manager is not present."""
     data = 123456
