@@ -19,8 +19,11 @@ def test_process_initialize_route(mock_connection_manager):
         mock_connection_manager, data, None
     )  # conn is not used in this function
 
-    # Check that the add_route method was called with the correct arguments
+    # Check that increment_route and initialize_route methods were called with the correct arguments
     mock_connection_manager.routes.initialize_route.assert_called_once_with(
+        route_metadata=123456
+    )
+    mock_connection_manager.routes.increment_route.assert_called_once_with(
         route_metadata=123456
     )
 
