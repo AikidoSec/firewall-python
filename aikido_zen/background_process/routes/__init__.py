@@ -31,27 +31,17 @@ class Routes:
             "apispec": {},
         }
 
-    def add_route(self, route_metadata):
+    def increment_route(self, route_metadata):
         """
-        Adds your route
+        Adds a hit to the route (if it exists) specified in route_metadata.
         route_metadata object includes route, url and method
         """
-        method, path = route_metadata.get("method"), route_metadata.get("route")
         key = route_to_key(route_metadata)
-
-        if self.routes.get(key):
-            # Route already exists, add a hit
-            route = self.routes.get(key)
-            route["hits"] += 1
-        else:
-            self.manage_routes_size()
-            # Add an empty route :
-            self.routes[key] = {
-                "method": method,
-                "path": path,
-                "hits": 1,
-                "apispec": {},
-            }
+        if not self.routes.get(key):
+            return
+        # Add a hit to the route :
+        route = self.routes.get(key)
+        route["hits"] += 1
 
     def update_route_with_apispec(self, route_metadata, apispec):
         """
