@@ -106,7 +106,7 @@ def post_response(status_code):
     if hits == 0:
         # This route does not exist yet, initialize it:
         get_comms().send_data_to_bg_process("INITIALIZE_ROUTE", route_metadata)
-    if hits <= ANALYSIS_ON_FIRST_X_ROUTES:
+    if hits < ANALYSIS_ON_FIRST_X_ROUTES:
         # Only analyze the first x routes for api discovery
         apispec = get_api_info(context)
         if not apispec:
