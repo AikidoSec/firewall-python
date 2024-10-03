@@ -37,9 +37,14 @@ def test_initialization():
 def test_get_route():
     routes = Routes(max_size=3)
 
-    routes.add_route(gen_route_metadata(method="GET", route="/api/resource1"))
-    routes.add_route(gen_route_metadata(method="POST", route="/api/resource2"))
-    routes.add_route(gen_route_metadata(method="PUT", route="/api/resource3"))
+    routes.initialize_route(gen_route_metadata(method="GET", route="/api/resource1"))
+    routes.increment_route(gen_route_metadata(method="GET", route="/api/resource1"))
+
+    routes.initialize_route(gen_route_metadata(method="POST", route="/api/resource2"))
+    routes.increment_route(gen_route_metadata(method="POST", route="/api/resource2"))
+
+    routes.initialize_route(gen_route_metadata(method="PUT", route="/api/resource3"))
+    routes.increment_route(gen_route_metadata(method="PUT", route="/api/resource3"))
 
     assert routes.get(gen_route_metadata(method="GET", route="/api/resource1")) == {
         "method": "GET",
@@ -63,25 +68,47 @@ def test_get_route():
     assert routes.get(gen_route_metadata(method="GET", route="/api/resource")) == None
 
 
-def test_add_route_new():
+def test_initialize_route():
     routes = Routes(max_size=3)
-    routes.add_route(gen_route_metadata(route="/api/resource"))
+    routes.initialize_route(gen_route_metadata(route="/api/resource"))
+    assert len(routes.routes) == 1
+    assert routes.routes["GET:/api/resource"]["hits"] == 0
+
+    # Make sure does not do anything if route does not exist
+    routes.initialize_route(gen_route_metadata(route="/api/resource"))
+    assert len(routes.routes) == 1
+    assert routes.routes["GET:/api/resource"]["hits"] == 0
+
+
+def test_increment_route():
+    routes = Routes(max_size=3)
+
+    routes.initialize_route(gen_route_metadata(route="/api/resource"))
+    routes.increment_route(gen_route_metadata(route="/api/resource"))
     assert len(routes.routes) == 1
     assert routes.routes["GET:/api/resource"]["hits"] == 1
 
 
-def test_add_route_existing():
+def test_increment_route_twice():
     routes = Routes(max_size=3)
 
-    routes.add_route(gen_route_metadata(route="/api/resource"))
-    routes.add_route(gen_route_metadata(route="/api/resource"))
+    routes.initialize_route(gen_route_metadata(route="/api/resource"))
+    routes.increment_route(gen_route_metadata(route="/api/resource"))
+    routes.increment_route(gen_route_metadata(route="/api/resource"))
     assert len(routes.routes) == 1
     assert routes.routes["GET:/api/resource"]["hits"] == 2
 
 
+def test_increment_route_that_does_not_exist():
+    routes = Routes(max_size=3)
+    routes.increment_route(gen_route_metadata(route="/api/resource"))
+    routes.increment_route(gen_route_metadata(route="/api/resource"))
+    assert len(routes.routes) == 0
+
+
 def test_clear_routes():
     routes = Routes(max_size=3)
-    routes.add_route(gen_route_metadata(route="/api/resource"))
+    routes.initialize_route(gen_route_metadata(route="/api/resource"))
     routes.clear()
     assert len(routes.routes) == 0
 
@@ -89,9 +116,9 @@ def test_clear_routes():
 def test_manage_routes_size_eviction():
     routes = Routes(max_size=2)
 
-    routes.add_route(gen_route_metadata(route="/api/resource1"))
-    routes.add_route(gen_route_metadata(route="/api/resource2"))
-    routes.add_route(
+    routes.initialize_route(gen_route_metadata(route="/api/resource1"))
+    routes.initialize_route(gen_route_metadata(route="/api/resource2"))
+    routes.initialize_route(
         gen_route_metadata(route="/api/resource3")
     )  # This should evict the least used route
 
@@ -104,28 +131,28 @@ def test_manage_routes_size_eviction():
 def test_iterable():
     routes = Routes(max_size=3)
 
-    routes.add_route(gen_route_metadata(method="GET", route="/api/resource1"))
-    routes.add_route(gen_route_metadata(method="POST", route="/api/resource2"))
-    routes.add_route(gen_route_metadata(method="PUT", route="/api/resource3"))
+    routes.initialize_route(gen_route_metadata(method="GET", route="/api/resource1"))
+    routes.initialize_route(gen_route_metadata(method="POST", route="/api/resource2"))
+    routes.initialize_route(gen_route_metadata(method="PUT", route="/api/resource3"))
 
     routes_list = list(routes)
     assert len(routes_list) == 3
     assert {
         "method": "GET",
         "path": "/api/resource1",
-        "hits": 1,
+        "hits": 0,
         "apispec": {},
     } in routes_list
     assert {
         "method": "POST",
         "path": "/api/resource2",
-        "hits": 1,
+        "hits": 0,
         "apispec": {},
     } in routes_list
     assert {
         "method": "PUT",
         "path": "/api/resource3",
-        "hits": 1,
+        "hits": 0,
         "apispec": {},
     } in routes_list
 
@@ -134,10 +161,10 @@ def test_len():
     routes = Routes(max_size=3)
     assert len(routes) == 0
 
-    routes.add_route(gen_route_metadata(route="/api/resource"))
+    routes.initialize_route(gen_route_metadata(route="/api/resource"))
     assert len(routes) == 1
 
-    routes.add_route(gen_route_metadata(method="POST", route="/api/resource2"))
+    routes.initialize_route(gen_route_metadata(method="POST", route="/api/resource2"))
     assert len(routes) == 2
 
 
@@ -155,14 +182,14 @@ def test_api_discovery_for_new_routes(monkeypatch):
             },
         },
     )
-    routes.add_route(gen_route_metadata(route="/api/resource1"))
+    routes.initialize_route(gen_route_metadata(route="/api/resource1"))
 
     routes_list = list(routes)
     assert len(routes_list) == 1
     assert {
         "method": "GET",
         "path": "/api/resource1",
-        "hits": 1,
+        "hits": 0,
         "apispec": {},
     } in routes_list
 
@@ -176,7 +203,7 @@ def test_api_discovery_for_new_routes(monkeypatch):
     assert {
         "method": "GET",
         "path": "/api/resource1",
-        "hits": 1,
+        "hits": 0,
         "apispec": apispec,
     } in routes_list
 
@@ -187,13 +214,13 @@ def test_api_discovery_existing_route_empty(monkeypatch):
     route_metadata = gen_route_metadata(route="/api/resource1")
 
     context1 = Context("GET", "/api/resource1")
-    routes.add_route(route_metadata)
+    routes.initialize_route(route_metadata)
     routes.update_route_with_apispec(route_metadata, get_api_info(context1))
     routes_list = list(routes)
     assert {
         "method": "GET",
         "path": "/api/resource1",
-        "hits": 1,
+        "hits": 0,
         "apispec": {},
     } in routes_list
 
@@ -208,7 +235,7 @@ def test_api_discovery_existing_route_empty(monkeypatch):
             },
         },
     )
-    routes.add_route(route_metadata)
+    routes.increment_route(route_metadata)
     routes.update_route_with_apispec(route_metadata, get_api_info(context2))
 
     routes_list = list(routes)
@@ -216,7 +243,7 @@ def test_api_discovery_existing_route_empty(monkeypatch):
     assert {
         "method": "GET",
         "path": "/api/resource1",
-        "hits": 2,
+        "hits": 1,
         "apispec": {
             "body": {
                 "schema": {
@@ -266,9 +293,10 @@ def test_api_discovery_merge_routes(monkeypatch):
         },
         content_type="application/json",
     )
-    routes.add_route(route_metadata)
+    routes.initialize_route(route_metadata)
+    routes.increment_route(route_metadata)
     routes.update_route_with_apispec(route_metadata, get_api_info(context1))
-    routes.add_route(route_metadata)
+    routes.increment_route(route_metadata)
     routes.update_route_with_apispec(route_metadata, get_api_info(context2))
 
     routes_list = list(routes)
@@ -311,7 +339,8 @@ def test_merge_body_schema(monkeypatch):
     routes = Routes(200)
     assert list(routes) == []
 
-    routes.add_route(gen_route_metadata(method="POST", route="/body"))
+    routes.initialize_route(gen_route_metadata(method="POST", route="/body"))
+    routes.increment_route(gen_route_metadata(method="POST", route="/body"))
     assert list(routes) == [
         {
             "method": "POST",
@@ -327,7 +356,7 @@ def test_merge_body_schema(monkeypatch):
         {"test": "abc", "arr": [1, 2, 3], "sub": {"y": 123}},
     )
     route_metadata1 = gen_route_metadata(method="POST", route="/body")
-    routes.add_route(route_metadata1)
+    routes.increment_route(route_metadata1)
     routes.update_route_with_apispec(route_metadata1, get_api_info(context1))
     assert list(routes) == [
         {
@@ -365,9 +394,9 @@ def test_merge_body_schema(monkeypatch):
         "/body",
         {"test": "abc", "arr": [1, 2, 3], "test2": 1, "sub": {"x": 123}},
     )
-    routes.add_route(route_metadata1)
+    routes.increment_route(route_metadata1)
     routes.update_route_with_apispec(route_metadata1, get_api_info(context2))
-    routes.add_route(route_metadata1)
+    routes.increment_route(route_metadata1)
     assert list(routes) == [
         {
             "method": "POST",
@@ -409,14 +438,14 @@ def test_add_query_schema(monkeypatch):
     context = Context("GET", "/query", None, query={"test": "abc", "t": "123"})
     route_metadata = gen_route_metadata(route="/query")
 
-    routes.add_route(route_metadata)
+    routes.initialize_route(route_metadata)
     routes.update_route_with_apispec(route_metadata, get_api_info(context))
 
     assert list(routes) == [
         {
             "method": "GET",
             "path": "/query",
-            "hits": 1,
+            "hits": 0,
             "apispec": {
                 "body": None,
                 "auth": None,
@@ -438,7 +467,8 @@ def test_merge_query_schema(monkeypatch):
     routes = Routes(200)
     assert list(routes) == []
     route_metadata = gen_route_metadata(route="/query")
-    routes.add_route(route_metadata)
+    routes.initialize_route(route_metadata)
+    routes.increment_route(route_metadata)
     assert list(routes) == [
         {
             "method": "GET",
@@ -450,13 +480,13 @@ def test_merge_query_schema(monkeypatch):
     context1 = Context("GET", "/query", None, query={"test": "abc"})
     context2 = Context("GET", "/query", None, query={"x": "123", "test": "abc"})
 
-    routes.add_route(route_metadata)
+    routes.increment_route(route_metadata)
     routes.update_route_with_apispec(route_metadata, get_api_info(context1))
 
-    routes.add_route(route_metadata)
+    routes.increment_route(route_metadata)
     routes.update_route_with_apispec(route_metadata, get_api_info(context2))
 
-    routes.add_route(route_metadata)
+    routes.increment_route(route_metadata)
 
     assert list(routes) == [
         {
@@ -489,18 +519,18 @@ def test_add_auth_schema(monkeypatch):
     route_metadata3 = gen_route_metadata(route="/auth3")
     context3 = Context("GET", "/auth3", headers={"X_API_KEY": "token"})
 
-    routes.add_route(route_metadata1)
+    routes.initialize_route(route_metadata1)
     routes.update_route_with_apispec(route_metadata1, get_api_info(context1))
-    routes.add_route(route_metadata2)
+    routes.initialize_route(route_metadata2)
     routes.update_route_with_apispec(route_metadata2, get_api_info(context2))
-    routes.add_route(route_metadata3)
+    routes.initialize_route(route_metadata3)
     routes.update_route_with_apispec(route_metadata3, get_api_info(context3))
 
     assert list(routes) == [
         {
             "method": "GET",
             "path": "/auth",
-            "hits": 1,
+            "hits": 0,
             "apispec": {
                 "body": None,
                 "query": None,
@@ -510,7 +540,7 @@ def test_add_auth_schema(monkeypatch):
         {
             "method": "GET",
             "path": "/auth2",
-            "hits": 1,
+            "hits": 0,
             "apispec": {
                 "body": None,
                 "query": None,
@@ -520,7 +550,7 @@ def test_add_auth_schema(monkeypatch):
         {
             "method": "GET",
             "path": "/auth3",
-            "hits": 1,
+            "hits": 0,
             "apispec": {
                 "body": None,
                 "query": None,
@@ -537,20 +567,21 @@ def test_merge_auth_schema(monkeypatch):
     assert list(routes) == []
     route_metadata = gen_route_metadata(route="/auth")
 
-    routes.add_route(route_metadata)
+    routes.initialize_route(route_metadata)
+    routes.increment_route(route_metadata)
 
     context1 = Context("GET", "/auth", headers={"AUTHORIZATION": "Bearer token"})
-    routes.add_route(route_metadata)
+    routes.increment_route(route_metadata)
     routes.update_route_with_apispec(route_metadata, get_api_info(context1))
 
     context2 = Context("GET", "/auth", headers={"AUTHORIZATION": "Basic token"})
-    routes.add_route(route_metadata)
+    routes.increment_route(route_metadata)
     routes.update_route_with_apispec(route_metadata, get_api_info(context2))
 
     context3 = Context("GET", "/auth", headers={"X_API_KEY": "token"})
-    routes.add_route(route_metadata)
+    routes.increment_route(route_metadata)
     routes.update_route_with_apispec(route_metadata, get_api_info(context3))
-    routes.add_route(route_metadata)
+    routes.increment_route(route_metadata)
 
     assert list(routes)[0] == {
         "method": "GET",

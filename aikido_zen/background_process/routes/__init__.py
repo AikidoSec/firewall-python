@@ -21,6 +21,7 @@ class Routes:
         """
         Initializes a route for the first time.
         """
+        self.manage_routes_size()
         key = route_to_key(route_metadata)
         if self.routes.get(key):
             return
