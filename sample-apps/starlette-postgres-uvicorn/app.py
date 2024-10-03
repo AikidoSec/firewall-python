@@ -55,6 +55,9 @@ async def create_dog(request: Request):
 
     return JSONResponse({"message": f'Dog {dog_name} created successfully'}, status_code=201)
 
+async def just(request: Request):
+    return JSONResponse({"message": "Empty Page"})
+
 def sync_route(request):
     data = {"message": "This is a non-async route!"}
     return JSONResponse(data)
@@ -64,5 +67,6 @@ app = Starlette(routes=[
     Route("/dogpage/{dog_id:int}", get_dogpage),
     Route("/create", show_create_dog_form, methods=["GET"]),
     Route("/create", create_dog, methods=["POST"]),
-    Route("/sync_route", sync_route)
+    Route("/sync_route", sync_route),
+    Route("/just", just,  methods=["GET"])
 ])

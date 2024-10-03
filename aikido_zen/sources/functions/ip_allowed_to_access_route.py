@@ -3,7 +3,7 @@
 from aikido_zen.helpers.is_localhost_ip import is_localhost_ip
 
 
-def ip_allowed_to_access_route(remote_address, route_metadata, connection_manager):
+def ip_allowed_to_access_route(remote_address, route_metadata, endpoints):
     """
     Checks if the ip address can access the route, given the service conf
     """
@@ -11,11 +11,10 @@ def ip_allowed_to_access_route(remote_address, route_metadata, connection_manage
     if ip and is_localhost_ip(ip):
         return True
 
-    matches = connection_manager.conf.get_endpoints(route_metadata)
-    if not matches:
+    if not endpoints:
         return True
 
-    for endpoint in matches:
+    for endpoint in endpoints:
         if not "allowedIPAddresses" in endpoint:
             #  This feature is not supported by the current aikido server version
             continue
