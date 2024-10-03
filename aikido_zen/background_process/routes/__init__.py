@@ -5,6 +5,7 @@ Exports class Routes
 from aikido_zen.helpers.logging import logger
 from aikido_zen.api_discovery.update_route_info import update_route_info
 from aikido_zen.api_discovery.get_api_info import get_api_info
+from .route_to_key import route_to_key
 
 
 class Routes:
@@ -74,10 +75,3 @@ class Routes:
 
     def __len__(self):
         return len(self.routes)
-
-
-def route_to_key(route_metadata):
-    """Creates a key from the method and path"""
-    method = route_metadata.get("method")
-    route = route_metadata.get("route")
-    return f"{method}:{route}"

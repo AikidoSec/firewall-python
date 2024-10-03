@@ -1,4 +1,4 @@
-from aikido_zen.background_process.routes import route_to_key, Routes
+from aikido_zen.background_process.routes import Routes
 from aikido_zen.api_discovery.get_api_info import get_api_info
 
 
@@ -26,53 +26,6 @@ class Context:
 
 def gen_route_metadata(method="GET", route="/test", url="http://localhost:5000"):
     return {"method": method, "route": route, "url": url}
-
-
-# route_to_key tests:
-def test_route_to_key_get():
-    assert (
-        route_to_key(gen_route_metadata(method="GET", route="/api/resource"))
-        == "GET:/api/resource"
-    )
-
-
-def test_route_to_key_post():
-    assert (
-        route_to_key(gen_route_metadata(method="POST", route="/api/resource"))
-        == "POST:/api/resource"
-    )
-
-
-def test_route_to_key_put():
-    assert (
-        route_to_key(gen_route_metadata(method="PUT", route="/api/resource"))
-        == "PUT:/api/resource"
-    )
-
-
-def test_route_to_key_delete():
-    assert (
-        route_to_key(gen_route_metadata(method="DELETE", route="/api/resource"))
-        == "DELETE:/api/resource"
-    )
-
-
-def test_route_to_key_with_query_params():
-    assert (
-        route_to_key(gen_route_metadata(method="GET", route="/api/resource?query=1"))
-        == "GET:/api/resource?query=1"
-    )
-
-
-def test_route_to_key_with_trailing_slash():
-    assert (
-        route_to_key(gen_route_metadata(method="GET", route="/api/resource/"))
-        == "GET:/api/resource/"
-    )
-
-
-def test_route_to_key_empty_path():
-    assert route_to_key(gen_route_metadata(method="GET", route="")) == "GET:"
 
 
 def test_initialization():
