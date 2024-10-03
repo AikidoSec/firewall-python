@@ -26,6 +26,7 @@ def test_ipc_lifecycle_cache_initialization(mock_context, mock_comms):
         "data": {
             "bypassed_ips": {"192.168.1.1", "192.168.1.2"},
             "matched_endpoints": [{"forceProtectionOff": True}],
+            "hits": 101,
         },
     }
 
@@ -33,6 +34,7 @@ def test_ipc_lifecycle_cache_initialization(mock_context, mock_comms):
 
     assert cache.bypassed_ips == {"192.168.1.1", "192.168.1.2"}
     assert cache.matched_endpoints == [{"forceProtectionOff": True}]
+    assert cache.hits == 101
 
 
 def test_ipc_lifecycle_cache_populate(mock_context, mock_comms):
@@ -45,6 +47,7 @@ def test_ipc_lifecycle_cache_populate(mock_context, mock_comms):
         "data": {
             "bypassed_ips": {"192.168.1.3"},
             "matched_endpoints": [{"forceProtectionOff": False}],
+            "hits": 20,
         },
     }
 
@@ -52,6 +55,7 @@ def test_ipc_lifecycle_cache_populate(mock_context, mock_comms):
 
     assert cache.bypassed_ips == {"192.168.1.3"}
     assert cache.matched_endpoints == [{"forceProtectionOff": False}]
+    assert cache.hits == 20
 
 
 def test_ipc_lifecycle_cache_is_bypassed_ip(mock_context, mock_comms):
@@ -61,6 +65,7 @@ def test_ipc_lifecycle_cache_is_bypassed_ip(mock_context, mock_comms):
         "data": {
             "bypassed_ips": {"192.168.1.1"},
             "matched_endpoints": [],
+            "hits": 0,
         },
     }
 
@@ -77,6 +82,7 @@ def test_ipc_lifecycle_cache_protection_forced_off(mock_context, mock_comms):
         "data": {
             "bypassed_ips": {},
             "matched_endpoints": [{"forceProtectionOff": True}],
+            "hits": 0,
         },
     }
 
@@ -90,6 +96,7 @@ def test_ipc_lifecycle_cache_protection_forced_off(mock_context, mock_comms):
         "data": {
             "bypassed_ips": {},
             "matched_endpoints": [{"forceProtectionOff": False}],
+            "hits": 0,
         },
     }
 
@@ -113,6 +120,7 @@ def test_ipc_lifecycle_cache_no_data(mock_context, mock_comms):
         "data": {
             "bypassed_ips": set(),
             "matched_endpoints": [],
+            "hits": 0,
         },
     }
 
@@ -120,3 +128,4 @@ def test_ipc_lifecycle_cache_no_data(mock_context, mock_comms):
 
     assert cache.bypassed_ips == set()
     assert cache.matched_endpoints == []
+    assert cache.hits == 0

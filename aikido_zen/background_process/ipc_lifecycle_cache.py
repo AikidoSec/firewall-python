@@ -24,6 +24,7 @@ class IPCLifecycleCache:
     def __init__(self, context):
         self.bypassed_ips = []
         self.matched_endpoints = []
+        self.hits = 0
         self.populate(context)
         self.save()
 
@@ -42,6 +43,8 @@ class IPCLifecycleCache:
                 self.bypassed_ips = res["data"]["bypassed_ips"]
             if isinstance(res["data"]["matched_endpoints"], list):
                 self.matched_endpoints = res["data"]["matched_endpoints"]
+            if isinstance(res["data"]["hits"], int):
+                self.hits = res["data"]["hits"]
 
     def is_bypassed_ip(self, ip):
         """Checks if the ip is present in the bypassed_ips list"""

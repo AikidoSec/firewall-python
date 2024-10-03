@@ -5,6 +5,7 @@ Exports class Routes
 from aikido_zen.helpers.logging import logger
 from aikido_zen.api_discovery.update_route_info import update_route_info
 from aikido_zen.api_discovery.get_api_info import get_api_info
+from .route_to_key import route_to_key
 
 
 class Routes:
@@ -16,27 +17,47 @@ class Routes:
         self.max_size = max_size
         self.routes = {}
 
-    def add_route(self, context):
+    def initialize_route(self, route_metadata):
         """
-        Adds your route
+        Initializes a route for the first time.
         """
-        method, path = context.method, context.route
-        key = route_to_key(method, path)
-
+        self.manage_routes_size()
+        key = route_to_key(route_metadata)
         if self.routes.get(key):
-            # Route already exists, add a hit
-            route = self.routes.get(key)
-            route["hits"] += 1
-            update_route_info(context, route)  # API Discovery
-        else:
-            self.manage_routes_size()
-            # Add an empty route :
-            self.routes[key] = {
-                "method": method,
-                "path": path,
-                "hits": 1,
-                "apispec": get_api_info(context),
-            }
+            return
+        self.routes[key] = {
+            "method": route_metadata.get("method"),
+            "path": route_metadata.get("route"),
+            "hits": 0,
+            "apispec": {},
+        }
+
+    def increment_route(self, route_metadata):
+        """
+        Adds a hit to the route (if it exists) specified in route_metadata.
+        route_metadata object includes route, url and method
+        """
+        key = route_to_key(route_metadata)
+        if not self.routes.get(key):
+            return
+        # Add a hit to the route :
+        route = self.routes.get(key)
+        route["hits"] += 1
+
+    def update_route_with_apispec(self, route_metadata, apispec):
+        """
+        Updates apispec of a given route (or creates it).
+        route_metadata object includes route, url and method
+        """
+        key = route_to_key(route_metadata)
+        if not self.routes.get(key):
+            return
+        update_route_info(apispec, self.routes[key])
+
+    def get(self, route_metadata):
+        """Gets you the route entry if it exists using route metadata"""
+        key = route_to_key(route_metadata)
+        return self.routes.get(key)
 
     def clear(self):
         """Deletes all routes"""
@@ -59,8 +80,3 @@ class Routes:
 
     def __len__(self):
         return len(self.routes)
-
-
-def route_to_key(method, path):
-    """Creates a key from the method and path"""
-    return f"{method}:{path}"

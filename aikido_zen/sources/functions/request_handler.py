@@ -2,6 +2,8 @@
 
 from aikido_zen.background_process import get_comms
 from aikido_zen.context import get_current_context
+from aikido_zen.api_discovery.get_api_info import get_api_info
+from aikido_zen.api_discovery.update_route_info import ANALYSIS_ON_FIRST_X_ROUTES
 from aikido_zen.helpers.is_useful_route import is_useful_route
 from aikido_zen.helpers.logging import logger
 from aikido_zen.background_process.ipc_lifecycle_cache import (
@@ -19,6 +21,8 @@ def request_handler(stage, status_code=0):
             #  This gets executed the first time a request get's intercepted
             context = get_current_context()
             if context:  # Create a lifecycle cache
+                # This fetches initial metadata, which also adds statistics
+                # and increments this route's hits. (Optimization)
                 IPCLifecycleCache(context)
         if stage == "pre_response":
             return pre_response()
@@ -94,5 +98,18 @@ def post_response(status_code):
         context.route,
         context.method,
     )
-    if is_curr_route_useful:
-        get_comms().send_data_to_bg_process("ROUTE", context)
+    if not is_curr_route_useful:
+        return
+    hits = getattr(get_cache(), "hits", 0)
+    route_metadata = context.get_route_metadata()
+    if hits == 0:
+        # This route does not exist yet, initialize it:
+        get_comms().send_data_to_bg_process("INITIALIZE_ROUTE", route_metadata)
+    if hits < ANALYSIS_ON_FIRST_X_ROUTES:
+        # Only analyze the first x routes for api discovery
+        apispec = get_api_info(context)
+        if not apispec:
+            return
+        get_comms().send_data_to_bg_process(
+            "UPDATE_APISPEC", {"route_metadata": route_metadata, "apispec": apispec}
+        )
