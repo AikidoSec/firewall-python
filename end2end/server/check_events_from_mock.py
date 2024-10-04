@@ -18,8 +18,3 @@ def validate_started_event(event, stack, dry_mode=False, serverless=False, os_na
     assert event["agent"]["platform"]["name"] == platform
     assert event["agent"]["serverless"] ==  serverless
     assert set(event["agent"]["stack"]) == set(stack)
-
-events = fetch_events_from_mock("http://localhost:5000")
-started_events = filter_on_event_type(events, "started")
-validate_started_event(started_events[0], ["pymysql", "flask"])
-print(started_events)
