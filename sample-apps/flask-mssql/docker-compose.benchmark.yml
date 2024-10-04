@@ -14,7 +14,4 @@ services:
     environment:
       - FIREWALL_DISABLED=1
   backend:
-    environment:
-      - AIKIDO_TOKEN="test_aikido_token"
-      - AIKIDO_BLOCKING=1
-
+    env_file: .env.example

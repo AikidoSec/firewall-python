@@ -9,7 +9,7 @@ def update_service_config(connection_manager, res):
     """
     Update configuration based on the server's response
     """
-    if res["success"] is False:
+    if res.get("success", False) is False:
         logger.debug(res)
         return
     if "block" in res.keys() and res["block"] != connection_manager.block:

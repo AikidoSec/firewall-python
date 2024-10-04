@@ -19,7 +19,5 @@ services:
       DB_USER: 'user'
       DB_PASSWORD: 'password'
   backend:
-    environment:
-      AIKIDO_TOKEN: "test_aikido_token"
-      AIKIDO_BLOCKING: 1
+    env_file: .env.example
 
