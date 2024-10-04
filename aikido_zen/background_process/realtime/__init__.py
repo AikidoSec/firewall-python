@@ -43,4 +43,6 @@ def get_config_last_updated_at(token):
     if response.status_code != 200:
         logger.info("Invalid response from realtime api : %s", response.status_code)
 
-    return int(response.json().get("configUpdatedAt", 0))  #  Return configUpdatedAt time
+    return int(
+        response.json().get("configUpdatedAt", 0)
+    )  #  Return configUpdatedAt time
