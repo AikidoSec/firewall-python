@@ -4,7 +4,6 @@ Sink module for `psycopg`
 
 import copy
 import aikido_zen.importhook as importhook
-from aikido_zen.vulnerabilities.sql_injection.dialects import Postgres
 from aikido_zen.background_process.packages import pkg_compat_check
 import aikido_zen.vulnerabilities as vulns
 
@@ -27,19 +26,19 @@ def on_psycopg_import(psycopg):
     def aikido_copy(self, statement, params=None, *args, **kwargs):
         sql = statement
         vulns.run_vulnerability_scan(
-            kind="sql_injection", op="psycopg.Cursor.copy", args=(sql, Postgres())
+            kind="sql_injection", op="psycopg.Cursor.copy", args=(sql, "postgres")
         )
         return former_copy_funtcion(self, statement, params, *args, **kwargs)
 
     def aikido_execute(self, query, params=None, *args, **kwargs):
         sql = query
         vulns.run_vulnerability_scan(
-            kind="sql_injection", op="psycopg.Cursor.execute", args=(sql, Postgres())
+            kind="sql_injection", op="psycopg.Cursor.execute", args=(sql, "postgres")
         )
         return former_execute_function(self, query, params, *args, **kwargs)
 
     def aikido_executemany(self, query, params_seq):
-        args = (query, Postgres())
+        args = (query, "postgres")
         op = "psycopg.Cursor.executemany"
         vulns.run_vulnerability_scan(kind="sql_injection", op=op, args=args)
         return former_executemany_function(self, query, params_seq)

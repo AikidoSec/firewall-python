@@ -4,7 +4,6 @@ Sink module for `asyncpg`
 
 import copy
 import aikido_zen.importhook as importhook
-from aikido_zen.vulnerabilities.sql_injection.dialects import Postgres
 from aikido_zen.background_process.packages import pkg_compat_check
 import aikido_zen.vulnerabilities as vulns
 from aikido_zen.helpers.logging import logger
@@ -36,7 +35,7 @@ def on_asyncpg_import(asyncpg):
         vulns.run_vulnerability_scan(
             kind="sql_injection",
             op="asyncpg.connection.Connection._execute",
-            args=(query, Postgres()),
+            args=(query, "postgres"),
         )
 
         return former__execute(_self, query, *args, **kwargs)
@@ -46,7 +45,7 @@ def on_asyncpg_import(asyncpg):
         vulns.run_vulnerability_scan(
             kind="sql_injection",
             op="asyncpg.connection.Connection.executemany",
-            args=(query, Postgres()),
+            args=(query, "postgres"),
         )
         return former_executemany(_self, query, *args, **kwargs)
 
@@ -54,7 +53,7 @@ def on_asyncpg_import(asyncpg):
         vulns.run_vulnerability_scan(
             kind="sql_injection",
             op="asyncpg.connection.Connection.execute",
-            args=(query, Postgres()),
+            args=(query, "postgres"),
         )
         return former_execute(_self, query, *args, **kwargs)
 
