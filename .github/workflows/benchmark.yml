@@ -42,6 +42,7 @@ jobs:
       - name: Start flask-mysql
         working-directory: ./sample-apps/flask-mysql
         run: |
+          cp .env.benchmark .env.example
           docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
       - name: Install K6
         uses: grafana/setup-k6-action@v1
@@ -60,6 +61,7 @@ jobs:
       - name: Start starlette multi-threaded
         working-directory: ./sample-apps/starlette-postgres-uvicorn
         run: |
+          cp .env.benchmark .env.example
           docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
       - name: Install wrk
         run: |
