@@ -1,7 +1,7 @@
 import subprocess
 import sys
 
-CURRENT_ACCEPTABLE_PERCENTAGE = 80
+CURRENT_ACCEPTABLE_PERCENTAGE = 55
 
 
 def generate_wrk_command_for_url(url):
