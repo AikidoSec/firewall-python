@@ -7,7 +7,7 @@ CURRENT_ACCEPTABLE_PERCENTAGE = 80
 def generate_wrk_command_for_url(url):
     # Define the command with awk included
     return (
-        f"wrk -t12 -c400 -d30s --latency {url} | grep 'Requests/sec' | "
+        f"wrk -t12 -c400 -d15s --latency {url} | grep 'Requests/sec' | "
         + "awk '{print $2}'"
     )
 
