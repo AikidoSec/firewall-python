@@ -101,7 +101,10 @@ jobs:
       run: |
         docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
     - name: Run end2end tests for flask-postgres-xml
-      run: sleep 5 && poetry run pytest ./end2end/flask_postgres_xml_test.py
+      run: | 
+        sleep 5
+        poetry run pytest ./end2end/flask_postgres_xml_test.py
+        poetry run pytest ./end2end/flask_postgres_xml_lxml_test.py
 
     # quart-postgres-uvicorn
     - name: Restart mock server
