@@ -104,6 +104,7 @@ jobs:
       run: | 
         sleep 5
         poetry run pytest ./end2end/flask_postgres_xml_test.py
+        docker restart mock_core
         poetry run pytest ./end2end/flask_postgres_xml_lxml_test.py
 
     # quart-postgres-uvicorn
