@@ -63,6 +63,7 @@ def test_validate_user_invalid_user_type_dict_without_id(caplog):
     assert result is None
     assert "expects an object with 'id' property." in caplog.text
 
+
 def test_set_user_with_none(caplog):
     result = set_user(None)
     assert "expects a dict with 'id' and 'name' properties" in caplog.text
