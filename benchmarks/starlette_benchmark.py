@@ -15,15 +15,15 @@ def run_benchmark(route1, route2, descriptor):
     command_for_fw = generate_wrk_command_for_url(route1)
     command_for_no_fw = generate_wrk_command_for_url(route2)
 
-    result_fw = subprocess.run(
-        command_for_fw,
+    result_no_fw = subprocess.run(
+        command_for_no_fw,
         shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
     )
-    result_no_fw = subprocess.run(
-        command_for_no_fw,
+    result_fw = subprocess.run(
+        command_for_fw,
         shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
