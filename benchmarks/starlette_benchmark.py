@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import time
 
 CURRENT_ACCEPTABLE_PERCENTAGE = 55
 
@@ -22,6 +23,7 @@ def run_benchmark(route1, route2, descriptor):
         stderr=subprocess.PIPE,
         text=True,
     )
+    time.sleep(5)
     result_fw = subprocess.run(
         command_for_fw,
         shell=True,
