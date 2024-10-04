@@ -1,11 +1,20 @@
+import time
 import pytest
 import json
 import requests
+from .server.check_events_from_mock import fetch_events_from_mock, validate_started_event, filter_on_event_type
+
 # e2e tests for flask_postgres sample app
 post_url_fw = "http://localhost:8090/create"
 post_url_nofw = "http://localhost:8091/create"
 get_url_cookie_fw = "http://localhost:8090/create_with_cookie"
 get_url_cookie_nofw = "http://localhost:8091/create_with_cookie"
+
+def test_firewall_started_okay():
+    events = fetch_events_from_mock("http://localhost:5000")
+    started_events = filter_on_event_type(events, "started")
+    assert len(started_events) == 1
+    validate_started_event(started_events[0], ["flask", "psycopg2-binary"])
 
 def test_safe_response_with_firewall():
     dog_name = "Bobby Tables"
@@ -63,3 +72,33 @@ def test_dangerous_cookie_creation_without_firewall():
     }
     res = requests.get(get_url_cookie_nofw, cookies=cookies)
     assert res.status_code == 200
+
+def test_attacks_detected():
+    time.sleep(5) # Wait for attack to be reported
+    events = fetch_events_from_mock("http://localhost:5000")
+    attacks = filter_on_event_type(events, "detected_attack")
+    
+    assert len(attacks) == 2
+    del attacks[0]["attack"]["stack"]
+    del attacks[1]["attack"]["stack"]
+
+    assert attacks[0]["attack"] == {
+        "blocked": True,
+        "kind": "sql_injection",
+        'metadata': {'sql': "INSERT INTO dogs (dog_name, isAdmin) VALUES ('Dangerous Bobby', TRUE); -- ', FALSE)"},
+        'operation': "psycopg2.Connection.Cursor.execute",
+        'pathToPayload': '.dog_name',
+        'payload':  '"Dangerous Bobby\', TRUE); -- "',
+        'source': "body",
+        'user': None
+    }
+    assert attacks[1]["attack"] == {
+        "blocked": True,
+        "kind": "sql_injection",
+        'metadata': {'sql': "INSERT INTO dogs (dog_name, isAdmin) VALUES ('Bobby', TRUE) --', FALSE)"},
+        'operation': "psycopg2.Connection.Cursor.execute",
+        'pathToPayload': '.dog_name',
+        'payload': "\"Bobby', TRUE) --\"",
+        'source': "cookies",
+        'user': None
+    }
