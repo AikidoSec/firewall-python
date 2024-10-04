@@ -25,13 +25,15 @@ jobs:
         python -m pip install --upgrade pip
         make install
 
+    # django-mysql
     - name: Start django-mysql
       working-directory: ./sample-apps/django-mysql
       run: |
         docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
     - name: Run end2end tests for django-mysql
-      run: poetry run pytest ./end2end/django_mysql_test.py
+      run: sleep 5 && poetry run pytest ./end2end/django_mysql_test.py
 
+    # django-mysql-gunicorn
     - name: Restart mock server
       run: docker restart mock_core
     - name: Start django-mysql-gunicorn
@@ -39,18 +41,31 @@ jobs:
       run: |
         docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
     - name: Run end2end tests for django-mysql-gunicorn
-      run: poetry run pytest ./end2end/django_mysql_gunicorn_test.py
+      run: sleep 5 && poetry run pytest ./end2end/django_mysql_gunicorn_test.py
 
+    # django-postgres-gunicorn
+    - name: Restart mock server
+      run: docker restart mock_core
     - name: Start django-postgres-gunicorn
       working-directory: ./sample-apps/django-postgres-gunicorn
       run: |
         docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
+    - name: Run end2end tests for django-postgres-gunicorn
+      run: sleep 5 && poetry run pytest ./end2end/django_postgres_gunicorn_test.py
 
-  
+    # flask-mongo
+    - name: Restart mock server
+      run: docker restart mock_core
     - name: Start flask-mongo
       working-directory: ./sample-apps/flask-mongo
       run: |
         docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
+    - name: Run end2end tests for flask-mongo
+      run: sleep 5 && poetry run pytest ./end2end/flask_mongo_test.py
+
+    # flask-mysql
+    - name: Restart mock server
+      run: docker restart mock_core
     - name: Start flask-mysql
       working-directory: ./sample-apps/flask-mysql
       run: |
