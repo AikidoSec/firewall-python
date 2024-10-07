@@ -13,9 +13,10 @@ class Routes:
     Stores all routes
     """
 
-    def __init__(self, max_size=1000):
+    def __init__(self, max_size=1000, in_thread=False):
         self.max_size = max_size
         self.routes = {}
+        self.in_thread = in_thread
 
     def initialize_route(self, route_metadata):
         """
@@ -31,6 +32,8 @@ class Routes:
             "hits": 0,
             "apispec": {},
         }
+        if self.in_thread:
+            self.routes[key]["thread_hits"] = 0
 
     def increment_route(self, route_metadata):
         """
@@ -43,6 +46,8 @@ class Routes:
         # Add a hit to the route :
         route = self.routes.get(key)
         route["hits"] += 1
+        if self.in_thread:
+            route["thread_hits"] += 1
 
     def update_route_with_apispec(self, route_metadata, apispec):
         """

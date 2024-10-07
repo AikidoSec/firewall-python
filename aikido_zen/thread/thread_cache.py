@@ -4,8 +4,7 @@ from threading import local
 import aikido_zen.background_process.comms as comms
 from aikido_zen.helpers.logging import logger
 from aikido_zen.helpers.get_current_unixtime_ms import get_unixtime_ms
-from aikido_zen.background_process.routes.route_to_key import route_to_key
-from .routes import Routes
+from aikido_zen.background_process.routes import Routes
 
 THREAD_CONFIG_TLL_MS = 60 * 1000  # Time-To-Live is 60 seconds for the thread cache
 
@@ -25,17 +24,6 @@ class ThreadCache:
 
         # Save as a thread-local object :
         threadlocal_storage.cache = self
-
-    def route_init(self, route_metadata):
-        """Registers a new route"""
-        key = route_to_key(route_metadata)
-
-    def get(self, route_metadata):
-        """Returns the route's config data without modifying it"""
-        key = route_to_key(route_metadata)
-        if not key in self.routes:
-            return None
-
     def is_bypassed_ip(self, ip):
         """Checks the given IP against the list of bypassed ips"""
         return ip in self.bypassed_ips
@@ -50,7 +38,7 @@ class ThreadCache:
 
     def reset(self):
         """Empties out all values of the cache"""
-        self.routes = Routes(max_size=1000)
+        self.routes = Routes(max_size=1000, in_thread=True)
         self.bypassed_ips = set()
         self.endpoints = []
 
@@ -61,7 +49,7 @@ class ThreadCache:
         self.reset()
         res = comms.get_comms().send_data_to_bg_process(
             action="RENEW_CONFIG",
-            obj={"current_routes": self.routes},
+            obj={"current_routes": dict(self.routes)},
             receive=True,
         )
         if res["success"]:
@@ -70,8 +58,7 @@ class ThreadCache:
             if isinstance(res["data"]["endpoints"], list):
                 self.endpoints = res["data"]["endpoints"]
             if isinstance(res["data"]["routes"], dict):
-                # Fix :
-                self.routes.load(res["data"]["routes"])
+                self.routes.routes = res["data"]["routes"]
             self.last_renewal = get_unixtime_ms(monotonic=True)
         else:
             self.last_renewal = 0
