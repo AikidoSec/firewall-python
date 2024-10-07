@@ -13,7 +13,10 @@ threadlocal_storage = local()
 
 def get_cache():
     """Returns the current ThreadCache"""
-    return getattr(threadlocal_storage, "cache")
+    cache = getattr(threadlocal_storage, "cache", None)
+    if cache:
+        cache.renew_if_ttl_expired()
+    return cache
 
 
 class ThreadCache:
@@ -24,6 +27,7 @@ class ThreadCache:
 
         # Save as a thread-local object :
         threadlocal_storage.cache = self
+
     def is_bypassed_ip(self, ip):
         """Checks the given IP against the list of bypassed ips"""
         return ip in self.bypassed_ips
@@ -41,17 +45,19 @@ class ThreadCache:
         self.routes = Routes(max_size=1000, in_thread=True)
         self.bypassed_ips = set()
         self.endpoints = []
+        self.reqs = 0
 
     def renew(self):
         """
         Makes an IPC call to store the amount of hits and requests and renew the config
         """
-        self.reset()
         res = comms.get_comms().send_data_to_bg_process(
             action="RENEW_CONFIG",
-            obj={"current_routes": dict(self.routes)},
+            obj={"current_routes": dict(self.routes.routes), "reqs": self.reqs},
             receive=True,
         )
+
+        self.reset()
         if res["success"]:
             if isinstance(res["data"]["bypassed_ips"], set):
                 self.bypassed_ips = res["data"]["bypassed_ips"]
@@ -62,3 +68,11 @@ class ThreadCache:
             self.last_renewal = get_unixtime_ms(monotonic=True)
         else:
             self.last_renewal = 0
+
+    def increment_stats(self):
+        """Increments the requests"""
+        self.reqs += 1
+
+
+# Create a thread cache :
+ThreadCache()
