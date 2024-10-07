@@ -6,13 +6,10 @@ from aikido_zen.api_discovery.get_api_info import get_api_info
 from aikido_zen.api_discovery.update_route_info import ANALYSIS_ON_FIRST_X_ROUTES
 from aikido_zen.helpers.is_useful_route import is_useful_route
 from aikido_zen.helpers.logging import logger
-from aikido_zen.background_process.ipc_lifecycle_cache import (
-    IPCLifecycleCache,
-    get_cache,
-)
+from aikido_zen.thread.thread_cache import get_cache
 from aikido_zen.ratelimiting.get_ratelimited_endpoint import get_ratelimited_endpoint
 from .ip_allowed_to_access_route import ip_allowed_to_access_route
-
+from aikido_zen.helpers.match_endpoints import match_endpoints
 
 def request_handler(stage, status_code=0):
     """This will check for rate limiting, Allowed IP's, useful routes, etc."""
@@ -20,10 +17,11 @@ def request_handler(stage, status_code=0):
         if stage == "init":
             #  This gets executed the first time a request get's intercepted
             context = get_current_context()
-            if context:  # Create a lifecycle cache
-                # This fetches initial metadata, which also adds statistics
-                # and increments this route's hits. (Optimization)
-                IPCLifecycleCache(context)
+            thread_cache = get_cache()
+            if context and thread_cache:
+                # Increment the route hits if the route exists : 
+                thread_cache.routes.increment_route(context.get_route_metadata())
+                
         if stage == "pre_response":
             return pre_response()
         if stage == "post_response":
@@ -55,13 +53,15 @@ def pre_response():
             return ("You are blocked by Aikido Firewall.", 403)
 
     # Fetch endpoints for IP Allowlist and ratelimiting :
-    endpoints = getattr(get_cache(), "matched_endpoints", None)
-    if not endpoints:
+    route_metadata = context.get_route_metadata()
+    endpoints = getattr(get_cache(), "endpoints", None)
+    matched_endpoints = match_endpoints(route_metadata, endpoints)
+    if not matched_endpoints:
         return
 
     # IP Allowlist:
     if not ip_allowed_to_access_route(
-        context.remote_address, context.get_route_metadata(), endpoints
+        context.remote_address, route_metadata, matched_endpoints
     ):
         message = "Your IP address is not allowed to access this resource."
         if context.remote_address:
@@ -69,12 +69,12 @@ def pre_response():
         return (message, 403)
 
     # Ratelimiting :
-    if get_ratelimited_endpoint(endpoints, context.route):
+    if get_ratelimited_endpoint(matched_endpoints, context.route):
         # As an optimization check if the route is rate limited before sending over IPC
         ratelimit_res = comms.send_data_to_bg_process(
             action="SHOULD_RATELIMIT",
             obj={
-                "route_metadata": context.get_route_metadata(),
+                "route_metadata": route_metadata,
                 "user": context.user,
                 "remote_address": context.remote_address,
             },
@@ -100,12 +100,12 @@ def post_response(status_code):
     )
     if not is_curr_route_useful:
         return
-    hits = getattr(get_cache(), "hits", 0)
     route_metadata = context.get_route_metadata()
-    if hits == 0:
+    route = get_cache().routes.get(route_metadata)
+    if not route:
         # This route does not exist yet, initialize it:
-        #get_comms().send_data_to_bg_process("INITIALIZE_ROUTE", route_metadata)
-    if hits < ANALYSIS_ON_FIRST_X_ROUTES:
+        get_cache().routes.initialize_route(route_metadata)
+    elif route["hits"] < ANALYSIS_ON_FIRST_X_ROUTES:
         # Only analyze the first x routes for api discovery
         apispec = get_api_info(context)
         if not apispec:
