@@ -1,5 +1,6 @@
 import pytest
 from .merge_data_schemas import merge_data_schemas
+from .get_api_info import get_data_schema
 
 
 @pytest.fixture
@@ -78,14 +79,6 @@ def test_merge_with_optional_properties(schema_a, schema_d):
     assert merged["properties"]["address"]["optional"] is True
 
 
-def test_merge_array_schemas(schema_e, schema_f):
-    merged = merge_data_schemas(schema_e, schema_f)
-    assert merged["type"] == "array"
-    assert (
-        merged["items"]["type"] == "string"
-    )  # Assuming we prefer the first schema's item type
-
-
 def test_merge_empty_properties(schema_a):
     empty_schema = {"type": "object", "properties": {}}
     merged = merge_data_schemas(schema_a, empty_schema)
@@ -116,4 +109,118 @@ def test_merge_with_no_items(schema_e):
 
 def test_merge_with_different_item_types(schema_e, schema_f):
     merged = merge_data_schemas(schema_e, schema_f)
-    assert merged["items"].get("type") == "string"
+    assert set(merged["items"].get("type")) == {"string", "integer"}
+
+
+def test_empty_array():
+    assert merge_data_schemas(get_data_schema([]), get_data_schema([])) == {
+        "type": "array",
+        "items": None,
+    }
+
+
+def test_merge_types():
+    assert set(
+        merge_data_schemas(get_data_schema("str"), get_data_schema(15))["type"]
+    ) == {"string", "number"}
+
+    # Cannot merge object with primitive type
+    assert merge_data_schemas(
+        get_data_schema({"test": "abc"}), get_data_schema(15)
+    ) == {
+        "type": "object",
+        "properties": {
+            "test": {
+                "type": "string",
+            },
+        },
+    }
+
+    merged_data_schema1 = merge_data_schemas(
+        get_data_schema({"test": "abc"}), get_data_schema({"test": True})
+    )
+    merged_data_schema1["properties"]["test"]["type"] = set(
+        merged_data_schema1["properties"]["test"]["type"]
+    )
+    assert merged_data_schema1 == {
+        "type": "object",
+        "properties": {
+            "test": {
+                "type": {"boolean", "string"},
+            },
+        },
+    }
+
+    merged_data_schema2 = merge_data_schemas(
+        get_data_schema({"test": "abc"}),
+        merge_data_schemas(
+            get_data_schema({"test": "abc"}), get_data_schema({"test": True})
+        ),
+    )
+    merged_data_schema2["properties"]["test"]["type"] = set(
+        merged_data_schema2["properties"]["test"]["type"]
+    )
+    assert merged_data_schema2 == {
+        "type": "object",
+        "properties": {
+            "test": {
+                "type": {"boolean", "string"},
+            },
+        },
+    }
+
+    merged_data_schema3 = merge_data_schemas(
+        merge_data_schemas(
+            get_data_schema({"test": True}), get_data_schema({"test": "test"})
+        ),
+        get_data_schema({"test": "abc"}),
+    )
+    merged_data_schema3["properties"]["test"]["type"] = set(
+        merged_data_schema3["properties"]["test"]["type"]
+    )
+    assert merged_data_schema3 == {
+        "type": "object",
+        "properties": {
+            "test": {
+                "type": {"string", "boolean"},
+            },
+        },
+    }
+
+    merged_data_schema4 = merge_data_schemas(
+        merge_data_schemas(
+            get_data_schema({"test": "abc"}), get_data_schema({"test": 123})
+        ),
+        get_data_schema({"test": True}),
+    )
+    merged_data_schema4["properties"]["test"]["type"] = set(
+        merged_data_schema4["properties"]["test"]["type"]
+    )
+    assert merged_data_schema4 == {
+        "type": "object",
+        "properties": {
+            "test": {
+                "type": {"number", "boolean", "string"},
+            },
+        },
+    }
+
+    merged_data_schema5 = merge_data_schemas(
+        merge_data_schemas(
+            get_data_schema({"test": "test"}), get_data_schema({"test": True})
+        ),
+        merge_data_schemas(
+            get_data_schema({"test": 123}), get_data_schema({"test": True})
+        ),
+    )
+    merged_data_schema5["properties"]["test"]["type"] = set(
+        merged_data_schema5["properties"]["test"]["type"]
+    )
+    assert merged_data_schema5 == {
+        "type": "object",
+        "properties": {
+            "test": {
+                "type": {"string", "boolean", "number"},
+            },
+        },
+    }
