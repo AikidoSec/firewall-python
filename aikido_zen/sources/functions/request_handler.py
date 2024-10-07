@@ -20,7 +20,7 @@ def request_handler(stage, status_code=0):
             context = get_current_context()
             thread_cache = get_cache()
             if context and thread_cache:
-                thread_cache.increment_stats() # Increment request statistics
+                thread_cache.increment_stats()  # Increment request statistics
 
         if stage == "pre_response":
             return pre_response()
