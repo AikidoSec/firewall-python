@@ -48,11 +48,11 @@ def run_vulnerability_scan(kind, op, args):
         # This is because some scans/tests for SSRF do not require a lifecycle cache to be set.
         logger.debug("Not running scans, Lifecycle cache not found; %s : %s", kind, op)
         return
-    if thread_cache:
+    if thread_cache and context:
         if protection_forced_off(context.get_route_metadata(), thread_cache.endpoints):
             #  The client turned protection off for this route, not scanning
             return
-        if context and thread_cache.is_bypassed_ip(context.remote_address):
+        if thread_cache.is_bypassed_ip(context.remote_address):
             #  This IP is on the bypass list, not scanning
             return
 
