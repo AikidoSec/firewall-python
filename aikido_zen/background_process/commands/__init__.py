@@ -12,6 +12,7 @@ from .should_block_user import process_should_block_user
 from .statistics import process_statistics
 from .ping import process_ping
 from .update_apispec import process_update_apispec
+from .renew_config import process_renew_config
 
 commands_map = {
     # This maps to a tuple : (function, returns_data?)
@@ -23,6 +24,7 @@ commands_map = {
     "STATISTICS": (process_statistics, False),
     "HOSTNAMES_ADD": (process_hostnames_add, False),
     # Commands that return data :
+    "RENEW_CONFIG": (process_renew_config, True),
     "READ_PROPERTY": (process_read_property, True),
     "WRAPPED_PACKAGE": (process_wrapped_package, True),
     "SHOULD_RATELIMIT": (process_should_ratelimit, True),
