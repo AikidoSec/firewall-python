@@ -1,7 +1,7 @@
 import os
 import pytest
 from aikido_zen.context import Context
-from aikido_zen.background_process.ipc_lifecycle_cache import IPCLifecycleCache
+from aikido_zen.thread.thread_cache import ThreadCache
 from aikido_zen.errors import AikidoSSRF
 from aikido_zen.background_process.comms import reset_comms
 import aikido_zen.sinks.socket
@@ -39,7 +39,7 @@ def set_context_and_lifecycle(url):
         source="flask",
     )
     context.set_as_current_context()
-    IPCLifecycleCache(context)
+    ThreadCache()
 
 
 def test_srrf_test(monkeypatch):

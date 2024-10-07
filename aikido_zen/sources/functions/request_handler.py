@@ -11,6 +11,7 @@ from aikido_zen.ratelimiting.get_ratelimited_endpoint import get_ratelimited_end
 from .ip_allowed_to_access_route import ip_allowed_to_access_route
 from aikido_zen.helpers.match_endpoints import match_endpoints
 
+
 def request_handler(stage, status_code=0):
     """This will check for rate limiting, Allowed IP's, useful routes, etc."""
     try:
@@ -19,9 +20,9 @@ def request_handler(stage, status_code=0):
             context = get_current_context()
             thread_cache = get_cache()
             if context and thread_cache:
-                # Increment the route hits if the route exists : 
+                # Increment the route hits if the route exists :
                 thread_cache.routes.increment_route(context.get_route_metadata())
-                
+
         if stage == "pre_response":
             return pre_response()
         if stage == "post_response":

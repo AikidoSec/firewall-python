@@ -1,4 +1,5 @@
 """Exports class ThreadConfig"""
+
 from threading import local
 import aikido_zen.background_process.comms as comms
 from aikido_zen.helpers.logging import logger
@@ -9,6 +10,7 @@ from .routes import Routes
 THREAD_CONFIG_TLL_MS = 60 * 1000  # Time-To-Live is 60 seconds for the thread cache
 
 threadlocal_storage = local()
+
 
 def get_cache():
     """Returns the current ThreadCache"""
@@ -27,7 +29,6 @@ class ThreadCache:
     def route_init(self, route_metadata):
         """Registers a new route"""
         key = route_to_key(route_metadata)
-
 
     def get(self, route_metadata):
         """Returns the route's config data without modifying it"""
@@ -69,7 +70,7 @@ class ThreadCache:
             if isinstance(res["data"]["endpoints"], list):
                 self.endpoints = res["data"]["endpoints"]
             if isinstance(res["data"]["routes"], dict):
-                # Fix : 
+                # Fix :
                 self.routes.load(res["data"]["routes"])
             self.last_renewal = get_unixtime_ms(monotonic=True)
         else:
