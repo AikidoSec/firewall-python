@@ -47,6 +47,8 @@ class Routes:
         route = self.routes.get(key)
         route["hits"] += 1
         if self.in_thread:
+            if not route.get("thread_hits"):
+                route["thread_hits"] = 0
             route["thread_hits"] += 1
 
     def update_route_with_apispec(self, route_metadata, apispec):
