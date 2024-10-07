@@ -6,7 +6,7 @@ if firewall_disabled is not None:
     if firewall_disabled.lower() != "1":
         import aikido_zen  # Aikido package import
         aikido_zen.protect()
-
+import time
 import asyncpg
 from starlette.applications import Starlette
 from starlette.responses import HTMLResponse, JSONResponse
@@ -58,6 +58,10 @@ async def create_dog(request: Request):
 async def just(request: Request):
     return JSONResponse({"message": "Empty Page"})
 
+async def delayed_route(request: Request):
+    time.sleep(1/1000)
+    return JSONResponse({"message": "Empty Page"})
+
 def sync_route(request):
     data = {"message": "This is a non-async route!"}
     return JSONResponse(data)
@@ -68,5 +72,6 @@ app = Starlette(routes=[
     Route("/create", show_create_dog_form, methods=["GET"]),
     Route("/create", create_dog, methods=["POST"]),
     Route("/sync_route", sync_route),
-    Route("/just", just,  methods=["GET"])
+    Route("/just", just,  methods=["GET"]),
+    Route("/delayed_route", delayed_route, methods=["GET"])
 ])
