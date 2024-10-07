@@ -20,8 +20,7 @@ def request_handler(stage, status_code=0):
             context = get_current_context()
             thread_cache = get_cache()
             if context and thread_cache:
-                # Increment the route hits if the route exists :
-                thread_cache.routes.increment_route(context.get_route_metadata())
+                thread_cache.increment_stats() # Increment request statistics
 
         if stage == "pre_response":
             return pre_response()
@@ -102,15 +101,19 @@ def post_response(status_code):
     if not is_curr_route_useful:
         return
     route_metadata = context.get_route_metadata()
-    route = get_cache().routes.get(route_metadata)
-    if not route:
-        # This route does not exist yet, initialize it:
-        get_cache().routes.initialize_route(route_metadata)
-    elif route["hits"] < ANALYSIS_ON_FIRST_X_ROUTES:
-        # Only analyze the first x routes for api discovery
-        apispec = get_api_info(context)
-        if not apispec:
-            return
-        get_comms().send_data_to_bg_process(
-            "UPDATE_APISPEC", {"route_metadata": route_metadata, "apispec": apispec}
-        )
+    if get_cache():
+        route = get_cache().routes.get(route_metadata)
+        if not route:
+            # This route does not exist yet, initialize it:
+            get_cache().routes.initialize_route(route_metadata)
+        elif route["hits"] < ANALYSIS_ON_FIRST_X_ROUTES:
+            # Only analyze the first x routes for api discovery
+            apispec = get_api_info(context)
+            if apispec:
+                get_comms().send_data_to_bg_process(
+                    "UPDATE_APISPEC",
+                    {"route_metadata": route_metadata, "apispec": apispec},
+                )
+
+        # Add hit :
+        get_cache().routes.increment_route(route_metadata)
