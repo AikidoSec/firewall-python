@@ -10,7 +10,6 @@ from .kill import process_kill
 from .hostnames_add import process_hostnames_add
 from .should_block_user import process_should_block_user
 from .statistics import process_statistics
-from .fetch_initial_metadata import process_fetch_initial_metadata
 from .ping import process_ping
 from .update_apispec import process_update_apispec
 
@@ -28,7 +27,6 @@ commands_map = {
     "WRAPPED_PACKAGE": (process_wrapped_package, True),
     "SHOULD_RATELIMIT": (process_should_ratelimit, True),
     "SHOULD_BLOCK_USER": (process_should_block_user, True),
-    "FETCH_INITIAL_METADATA": (process_fetch_initial_metadata, True),
     "PING": (process_ping, True),
 }
 
