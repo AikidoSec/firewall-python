@@ -1,7 +1,7 @@
 """Exports request_handler function"""
 
-from aikido_zen.background_process import get_comms
-from aikido_zen.context import get_current_context
+import aikido_zen.background_process as communications
+import aikido_zen.context as ctx
 from aikido_zen.api_discovery.get_api_info import get_api_info
 from aikido_zen.api_discovery.update_route_info import update_route_info
 from aikido_zen.helpers.is_useful_route import is_useful_route
@@ -17,7 +17,7 @@ def request_handler(stage, status_code=0):
     try:
         if stage == "init":
             #  This gets executed the first time a request get's intercepted
-            context = get_current_context()
+            context = ctx.get_current_context()
             thread_cache = get_cache()
             if context and thread_cache:
                 thread_cache.increment_stats()  # Increment request statistics
@@ -38,14 +38,14 @@ def pre_response():
     - Blocked users
     - Ratelimiting
     """
-    context = get_current_context()
-    comms = get_comms()
+    context = ctx.get_current_context()
+    comms = communications.get_comms()
     if not context or not comms:
         logger.debug("Request was not complete, not running any pre_response code")
         return
 
     # Blocked users:
-    if context.user and get_comms() and get_comms().is_user_blocked(context.user["id"]):
+    if context.user and get_cache() and get_cache().is_user_blocked(context.user["id"]):
         return ("You are blocked by Aikido Firewall.", 403)
 
     # Fetch endpoints for IP Allowlist and ratelimiting :
@@ -87,8 +87,8 @@ def pre_response():
 
 def post_response(status_code):
     """Checks if the current route is useful"""
-    context = get_current_context()
-    comms = get_comms()
+    context = ctx.get_current_context()
+    comms = communications.get_comms()
     if not context or not comms:
         return
     is_curr_route_useful = is_useful_route(
@@ -105,7 +105,7 @@ def post_response(status_code):
         if not route:
             # This route does not exist yet, initialize it:
             cache.routes.initialize_route(route_metadata)
-            get_comms().send_data_to_bg_process("INITIALIZE_ROUTE", route_metadata)
+            comms.send_data_to_bg_process("INITIALIZE_ROUTE", route_metadata)
         # Run API Discovery :
         update_route_info(
             new_apispec=get_api_info(context), route=cache.routes.get(route_metadata)
