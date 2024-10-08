@@ -4,12 +4,13 @@ from aikido_zen.background_process import get_comms
 from aikido_zen.context import get_current_context
 from aikido_zen.api_discovery.get_api_info import get_api_info
 from aikido_zen.api_discovery.update_route_info import ANALYSIS_ON_FIRST_X_ROUTES
+from aikido_zen.api_discovery.update_route_info import update_route_info
 from aikido_zen.helpers.is_useful_route import is_useful_route
 from aikido_zen.helpers.logging import logger
 from aikido_zen.thread.thread_cache import get_cache
 from aikido_zen.ratelimiting.get_ratelimited_endpoint import get_ratelimited_endpoint
-from .ip_allowed_to_access_route import ip_allowed_to_access_route
 from aikido_zen.helpers.match_endpoints import match_endpoints
+from .ip_allowed_to_access_route import ip_allowed_to_access_route
 
 
 def request_handler(stage, status_code=0):
@@ -110,8 +111,7 @@ def post_response(status_code):
             # Only analyze the first x routes for api discovery
             apispec = get_api_info(context)
             if apispec:
-                # Merge into route :
-                pass
+                update_route_info(new_apispec=apispec, route=route)
 
         # Add hit :
         get_cache().routes.increment_route(route_metadata)
