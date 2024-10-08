@@ -28,7 +28,7 @@ def inspect_getaddrinfo_result(dns_results, hostname, port):
         return
 
     if not context or not get_cache():
-        # Context and lifecycle cache should be set for the following code
+        # Context and thread cache should be set for the following code
         return
     if get_cache().is_bypassed_ip(context.remote_address):
         # We check for bypassed ip's here since it is not checked for us

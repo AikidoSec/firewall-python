@@ -44,9 +44,9 @@ def run_vulnerability_scan(kind, op, args):
         return
 
     if not thread_cache and kind != "ssrf":
-        # Make a special exception for SSRF, which checks itself if lifecycle cache is set.
-        # This is because some scans/tests for SSRF do not require a lifecycle cache to be set.
-        logger.debug("Not running scans, Lifecycle cache not found; %s : %s", kind, op)
+        # Make a special exception for SSRF, which checks itself if thread cache is set.
+        # This is because some scans/tests for SSRF do not require a thread cache to be set.
+        logger.debug("Not running scans, thread cache not found; %s : %s", kind, op)
         return
     if thread_cache and context:
         if protection_forced_off(context.get_route_metadata(), thread_cache.endpoints):
