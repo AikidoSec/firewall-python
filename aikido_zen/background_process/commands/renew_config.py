@@ -14,7 +14,7 @@ def process_renew_config(connection_manager, data, conn, queue=None):
         existing_route = routes.get(route_metadata)
 
         # Update hit count :
-        thread_hits = int(route["thread_hits"])
+        thread_hits = int(route.get("thread_hits", 0))
         existing_route["hits"] += thread_hits
 
         # Update API Spec :
