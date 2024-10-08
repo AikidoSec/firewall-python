@@ -22,7 +22,7 @@ def process_renew_config(connection_manager, data, conn, queue=None):
     connection_manager.statistics.requests["total"] += data.get("reqs", 0)
 
     return {
-        "routes": list(connection_manager.routes),
+        "routes": dict(connection_manager.routes.routes),
         "endpoints": connection_manager.conf.endpoints,
         "bypassed_ips": connection_manager.conf.bypassed_ips,
         "blocked_uids": connection_manager.conf.blocked_uids,
