@@ -51,10 +51,10 @@ def test_run_vulnerability_scan_no_context_no_lifecycle(caplog):
 
 
 def test_run_vulnerability_scan_context_no_lifecycle(caplog):
-    current_context.set(1)
-    threadlocal_storage.cache = None
-    run_vulnerability_scan(kind="test", op="test", args=tuple())
-    assert len(caplog.text) == 0
+    with pytest.raises(Exception):
+        current_context.set(1)
+        threadlocal_storage.cache = None
+        run_vulnerability_scan(kind="test", op="test", args=tuple())
 
 
 def test_lifecycle_cache_ok(caplog, get_context):
