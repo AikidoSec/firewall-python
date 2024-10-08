@@ -181,3 +181,59 @@ def test_renew_if_ttl_expired_multiple_times(
     assert thread_cache.bypassed_ips == {"192.168.1.1"}
     assert thread_cache.endpoints == ["endpoint1"]
     assert thread_cache.blocked_uids == {"user123"}  # Should remain the same
+
+
+@patch("aikido_zen.background_process.comms.get_comms")
+@patch("aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms")
+def test_parses_routes_correctly(mock_get_unixtime_ms, mock_get_comms, thread_cache):
+    """Test renewing the cache multiple times if TTL has expired."""
+    mock_get_unixtime_ms.return_value = (
+        THREAD_CONFIG_TTL_MS + 1
+    )  # Simulate TTL expiration
+    mock_get_comms.return_value = MagicMock()
+    mock_get_comms.return_value.send_data_to_bg_process.return_value = {
+        "success": True,
+        "data": {
+            "bypassed_ips": {"192.168.1.1"},
+            "endpoints": ["endpoint1"],
+            "routes": {
+                "POST:/body": {
+                    "method": "POST",
+                    "path": "/body",
+                    "hits": 20,
+                    "hits_delta_since_sync": 25,
+                    "apispec": {},
+                },
+                "GET:/body": {
+                    "method": "GET",
+                    "path": "/body",
+                    "hits": 10,
+                    "hits_delta_since_sync": 5,
+                    "apispec": {},
+                },
+            },
+            "blocked_uids": {"user123"},
+        },
+    }
+
+    # First renewal
+    thread_cache.renew_if_ttl_expired()
+    assert thread_cache.bypassed_ips == {"192.168.1.1"}
+    assert thread_cache.endpoints == ["endpoint1"]
+    assert thread_cache.blocked_uids == {"user123"}
+    assert list(thread_cache.routes) == [
+        {
+            "method": "POST",
+            "path": "/body",
+            "hits": 20,
+            "hits_delta_since_sync": 0,
+            "apispec": {},
+        },
+        {
+            "method": "GET",
+            "path": "/body",
+            "hits": 10,
+            "hits_delta_since_sync": 0,
+            "apispec": {},
+        },
+    ]

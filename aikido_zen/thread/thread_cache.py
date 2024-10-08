@@ -79,6 +79,8 @@ class ThreadCache:
                 self.endpoints = res["data"]["endpoints"]
             if isinstance(res["data"]["routes"], dict):
                 self.routes.routes = res["data"]["routes"]
+                for route in self.routes.routes.values():
+                    route["hits_delta_since_sync"] = 0
             if isinstance(res["data"]["blocked_uids"], set):
                 self.blocked_uids = res["data"]["blocked_uids"]
             self.last_renewal = t.get_unixtime_ms(monotonic=True)
