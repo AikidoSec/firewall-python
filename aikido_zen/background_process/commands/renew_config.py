@@ -1,6 +1,7 @@
 """Exports process_renew_config"""
 
 from aikido_zen.api_discovery.update_route_info import update_route_info
+from aikido_zen.helpers.logging import logger
 
 
 def process_renew_config(connection_manager, data, conn, queue=None):
