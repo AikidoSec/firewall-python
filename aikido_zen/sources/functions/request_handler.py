@@ -3,7 +3,6 @@
 from aikido_zen.background_process import get_comms
 from aikido_zen.context import get_current_context
 from aikido_zen.api_discovery.get_api_info import get_api_info
-from aikido_zen.api_discovery.update_route_info import ANALYSIS_ON_FIRST_X_ROUTES
 from aikido_zen.api_discovery.update_route_info import update_route_info
 from aikido_zen.helpers.is_useful_route import is_useful_route
 from aikido_zen.helpers.logging import logger
@@ -103,11 +102,7 @@ def post_response(status_code):
         if not route:
             # This route does not exist yet, initialize it:
             get_cache().routes.initialize_route(route_metadata)
-        elif route["hits"] < ANALYSIS_ON_FIRST_X_ROUTES:
-            # Only analyze the first x routes for api discovery
-            apispec = get_api_info(context)
-            if apispec:
-                update_route_info(new_apispec=apispec, route=route)
-
+        # Run API Discovery :
+        update_route_info(new_apispec=get_api_info(context), route=route)
         # Add hit :
         get_cache().routes.increment_route(route_metadata)
