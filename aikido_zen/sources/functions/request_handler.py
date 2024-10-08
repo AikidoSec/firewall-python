@@ -99,12 +99,15 @@ def post_response(status_code):
     if not is_curr_route_useful:
         return
     route_metadata = context.get_route_metadata()
-    if get_cache():
-        route = get_cache().routes.get(route_metadata)
+    cache = get_cache()
+    if cache:
+        route = cache.routes.get(route_metadata)
         if not route:
             # This route does not exist yet, initialize it:
-            get_cache().routes.initialize_route(route_metadata)
+            cache.routes.initialize_route(route_metadata)
         # Run API Discovery :
-        update_route_info(new_apispec=get_api_info(context), route=route)
+        update_route_info(
+            new_apispec=get_api_info(context), route=cache.routes.get(route_metadata)
+        )
         # Add hit :
-        get_cache().routes.increment_route(route_metadata)
+        cache.routes.increment_route(route_metadata)
