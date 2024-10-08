@@ -31,6 +31,8 @@ class Routes:
             "hits": 0,
             "apispec": {},
         }
+        # This field counts the difference in hits in between synchronisation for threads :
+        self.routes[key]["hits_delta_since_sync"] = 0
 
     def increment_route(self, route_metadata):
         """
@@ -43,6 +45,7 @@ class Routes:
         # Add a hit to the route :
         route = self.routes.get(key)
         route["hits"] += 1
+        route["hits_delta_since_sync"] += 1
 
     def update_route_with_apispec(self, route_metadata, apispec):
         """

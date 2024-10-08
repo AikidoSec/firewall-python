@@ -16,7 +16,8 @@ import aikido_zen.background_process.comms as comm
 from aikido_zen.helpers.logging import logger
 from aikido_zen.helpers.get_clean_stacktrace import get_clean_stacktrace
 from aikido_zen.helpers.blocking_enabled import is_blocking_enabled
-from aikido_zen.background_process.ipc_lifecycle_cache import get_cache
+from aikido_zen.helpers.protection_forced_off import protection_forced_off
+from aikido_zen.thread.thread_cache import get_cache
 from .sql_injection.context_contains_sql_injection import context_contains_sql_injection
 from .nosql_injection.check_context import check_context_for_nosql_injection
 from .ssrf.inspect_getaddrinfo_result import inspect_getaddrinfo_result
@@ -35,23 +36,23 @@ def run_vulnerability_scan(kind, op, args):
     """
     context = get_current_context()
     comms = comm.get_comms()
-    lifecycle_cache = get_cache()
+    thread_cache = get_cache()
     if not context and kind != "ssrf":
         # Make a special exception for SSRF, which checks itself if context is set.
         # This is because some scans/tests for SSRF do not require a context to be set.
         logger.debug("Not running scans, context not found; %s : %s", kind, op)
         return
 
-    if not lifecycle_cache and kind != "ssrf":
-        # Make a special exception for SSRF, which checks itself if lifecycle cache is set.
-        # This is because some scans/tests for SSRF do not require a lifecycle cache to be set.
-        logger.debug("Not running scans, Lifecycle cache not found; %s : %s", kind, op)
+    if not thread_cache and kind != "ssrf":
+        # Make a special exception for SSRF, which checks itself if thread cache is set.
+        # This is because some scans/tests for SSRF do not require a thread cache to be set.
+        logger.debug("Not running scans, thread cache not found; %s : %s", kind, op)
         return
-    if lifecycle_cache:
-        if lifecycle_cache.protection_forced_off():
+    if thread_cache and context:
+        if protection_forced_off(context.get_route_metadata(), thread_cache.endpoints):
             #  The client turned protection off for this route, not scanning
             return
-        if context and lifecycle_cache.is_bypassed_ip(context.remote_address):
+        if thread_cache.is_bypassed_ip(context.remote_address):
             #  This IP is on the bypass list, not scanning
             return
 

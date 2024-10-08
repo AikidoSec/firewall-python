@@ -65,9 +65,9 @@ def run_benchmark(route1, route2, descriptor):
             sys.exit(1)
 
 # Run benchmarks :
-run_benchmark("http://localhost:8102/just", "http://localhost:8103/just", "an empty route")
 run_benchmark(
-    "http://localhost:8102/", 
-    "http://localhost:8103/", 
-    "a non empty route which makes requests to database"
+    "http://localhost:8102/delayed_route", 
+    "http://localhost:8103/delayed_route", 
+    "a non empty route which makes a simulated request to a database"
 )
+run_benchmark("http://localhost:8102/just", "http://localhost:8103/just", "an empty route")

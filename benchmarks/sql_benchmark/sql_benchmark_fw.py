@@ -42,10 +42,10 @@ def run_sql_fw(sql):
 
 def set_context(context_json):
     from aikido_zen.context import Context
-    from aikido_zen.background_process.ipc_lifecycle_cache import IPCLifecycleCache
+    from aikido_zen.thread.thread_cache import ThreadCache
     context = Context(context_obj=context_json)
     context.set_as_current_context()
-    IPCLifecycleCache(context)
+    ThreadCache()
 
 def benchmark():
     sql_with_fw_data = []
