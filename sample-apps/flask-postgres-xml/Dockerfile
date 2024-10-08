@@ -1,5 +1,5 @@
 # Use an official Python runtime as a parent image
-FROM python:3.11
+FROM python:3
 
 #Copy code base
 COPY ./ /tmp
