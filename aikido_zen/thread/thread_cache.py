@@ -15,6 +15,8 @@ def get_cache():
     cache = getattr(threadlocal_storage, "cache", None)
     if cache and isinstance(cache, ThreadCache):
         cache.renew_if_ttl_expired()
+    if not cache:
+        return ThreadCache()
     return cache
 
 
@@ -84,7 +86,3 @@ class ThreadCache:
     def increment_stats(self):
         """Increments the requests"""
         self.reqs += 1
-
-
-# Create a thread cache :
-ThreadCache()
