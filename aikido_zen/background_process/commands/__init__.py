@@ -8,7 +8,6 @@ from .wrapped_package import process_wrapped_package
 from .should_ratelimit import process_should_ratelimit
 from .kill import process_kill
 from .hostnames_add import process_hostnames_add
-from .should_block_user import process_should_block_user
 from .statistics import process_statistics
 from .ping import process_ping
 from .renew_config import process_renew_config
@@ -26,7 +25,6 @@ commands_map = {
     "READ_PROPERTY": (process_read_property, True),
     "WRAPPED_PACKAGE": (process_wrapped_package, True),
     "SHOULD_RATELIMIT": (process_should_ratelimit, True),
-    "SHOULD_BLOCK_USER": (process_should_block_user, True),
     "PING": (process_ping, True),
 }
 

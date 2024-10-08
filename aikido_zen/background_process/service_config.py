@@ -29,7 +29,3 @@ class ServiceConfig:
     def is_bypassed_ip(self, ip):
         """Checks if the IP is on the bypass list"""
         return ip in self.bypassed_ips
-
-    def is_user_blocked(self, user_id):
-        """Checks if the user id is blocked"""
-        return user_id in self.blocked_uids

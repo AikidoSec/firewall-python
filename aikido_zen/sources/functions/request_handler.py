@@ -46,12 +46,8 @@ def pre_response():
         return
 
     # Blocked users:
-    if context.user:
-        blocked_res = comms.send_data_to_bg_process(
-            action="SHOULD_BLOCK_USER", obj=context.user["id"], receive=True
-        )
-        if blocked_res["success"] and blocked_res["data"]:
-            return ("You are blocked by Aikido Firewall.", 403)
+    if context.user and get_comms() and get_comms().is_user_blocked(context.user["id"]):
+        return ("You are blocked by Aikido Firewall.", 403)
 
     # Fetch endpoints for IP Allowlist and ratelimiting :
     route_metadata = context.get_route_metadata()

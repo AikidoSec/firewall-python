@@ -36,6 +36,10 @@ class ThreadCache:
         """Checks the given IP against the list of bypassed ips"""
         return ip in self.bypassed_ips
 
+    def is_user_blocked(self, user_id):
+        """Checks if the user id is blocked"""
+        return user_id in self.blocked_uids
+
     def renew_if_ttl_expired(self):
         """Renews the data only if TTL has expired"""
         ttl_has_expired = (
@@ -49,6 +53,7 @@ class ThreadCache:
         self.routes = Routes(max_size=1000, in_thread=True)
         self.bypassed_ips = set()
         self.endpoints = []
+        self.blocked_uids = set()
         self.reqs = 0
         self.last_renewal = 0
 
@@ -72,6 +77,8 @@ class ThreadCache:
                 self.endpoints = res["data"]["endpoints"]
             if isinstance(res["data"]["routes"], dict):
                 self.routes.routes = res["data"]["routes"]
+            if isinstance(res["data"]["blocked_uids"], set):
+                self.blocked_uids = res["data"]["blocked_uids"]
             self.last_renewal = get_unixtime_ms(monotonic=True)
 
     def increment_stats(self):
