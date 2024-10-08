@@ -110,10 +110,8 @@ def post_response(status_code):
             # Only analyze the first x routes for api discovery
             apispec = get_api_info(context)
             if apispec:
-                get_comms().send_data_to_bg_process(
-                    "UPDATE_APISPEC",
-                    {"route_metadata": route_metadata, "apispec": apispec},
-                )
+                # Merge into route :
+                pass
 
         # Add hit :
         get_cache().routes.increment_route(route_metadata)

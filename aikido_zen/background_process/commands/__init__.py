@@ -11,14 +11,12 @@ from .hostnames_add import process_hostnames_add
 from .should_block_user import process_should_block_user
 from .statistics import process_statistics
 from .ping import process_ping
-from .update_apispec import process_update_apispec
 from .renew_config import process_renew_config
 
 commands_map = {
     # This maps to a tuple : (function, returns_data?)
     # Commands that don't return data :
     "ATTACK": (process_attack, False),
-    "UPDATE_APISPEC": (process_update_apispec, False),
     "USER": (process_user, False),
     "KILL": (process_kill, False),
     "STATISTICS": (process_statistics, False),
