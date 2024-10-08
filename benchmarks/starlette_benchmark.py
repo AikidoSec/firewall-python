@@ -25,7 +25,7 @@ def extract_requests_and_latency_tuple(output):
         print(output.stderr.strip())
         sys.exit(1)
 
-def run_benchmark(route1, route2, descriptor):
+def run_benchmark(route1, route2, descriptor, percentage_limit, ms_limit):
 
     output_nofw = subprocess.run(
         generate_wrk_command_for_url(route2),
@@ -54,7 +54,8 @@ def run_benchmark(route1, route2, descriptor):
 
         delta_in_ms = round(result_fw[1] - result_nofw[1], 2)
         print(f"-> Delta in ms: {delta_in_ms}ms after running load test on {descriptor}")
-
+        if delta_in_ms > ms_limit:
+            sys.exit(1)
         delay_percentage = round(
             (result_nofw[0] - result_fw[0]) / result_nofw[0] * 100
         )
@@ -68,6 +69,10 @@ def run_benchmark(route1, route2, descriptor):
 run_benchmark(
     "http://localhost:8102/delayed_route", 
     "http://localhost:8103/delayed_route", 
-    "a non empty route which makes a simulated request to a database"
+    "a non empty route which makes a simulated request to a database",
+    percentage_limit=10, ms_limit=20
 )
-run_benchmark("http://localhost:8102/just", "http://localhost:8103/just", "an empty route")
+run_benchmark(
+    "http://localhost:8102/just", "http://localhost:8103/just", "an empty route",
+    percentage_limit=15, ms_limit=25
+)
