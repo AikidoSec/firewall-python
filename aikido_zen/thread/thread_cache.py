@@ -2,7 +2,7 @@
 
 from threading import local
 import aikido_zen.background_process.comms as comms
-from aikido_zen.helpers.get_current_unixtime_ms import get_unixtime_ms
+import aikido_zen.helpers.get_current_unixtime_ms as t
 from aikido_zen.background_process.routes import Routes
 
 THREAD_CONFIG_TTL_MS = 60 * 1000  # Time-To-Live is 60 seconds for the thread cache
@@ -45,7 +45,7 @@ class ThreadCache:
     def renew_if_ttl_expired(self):
         """Renews the data only if TTL has expired"""
         ttl_has_expired = (
-            get_unixtime_ms(monotonic=True) - self.last_renewal > THREAD_CONFIG_TTL_MS
+            t.get_unixtime_ms(monotonic=True) - self.last_renewal > THREAD_CONFIG_TTL_MS
         )
         if ttl_has_expired:
             self.renew()
@@ -81,7 +81,7 @@ class ThreadCache:
                 self.routes.routes = res["data"]["routes"]
             if isinstance(res["data"]["blocked_uids"], set):
                 self.blocked_uids = res["data"]["blocked_uids"]
-            self.last_renewal = get_unixtime_ms(monotonic=True)
+            self.last_renewal = t.get_unixtime_ms(monotonic=True)
 
     def increment_stats(self):
         """Increments the requests"""
