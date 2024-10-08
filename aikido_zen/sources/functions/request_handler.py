@@ -51,6 +51,8 @@ def pre_response():
     # Fetch endpoints for IP Allowlist and ratelimiting :
     route_metadata = context.get_route_metadata()
     endpoints = getattr(get_cache(), "endpoints", None)
+    if not endpoints:
+        return
     matched_endpoints = match_endpoints(route_metadata, endpoints)
     if not matched_endpoints:
         return
