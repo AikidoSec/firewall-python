@@ -18,12 +18,13 @@ class Routes:
         self.routes = {}
         self.in_thread = in_thread
 
-    def initialize_route(self, route_metadata):
+    def initialize_route(self, route_metadata=None, key=None):
         """
         Initializes a route for the first time.
         """
         self.manage_routes_size()
-        key = route_to_key(route_metadata)
+        if route_metadata:
+            key = route_to_key(route_metadata)
         if self.routes.get(key):
             return
         self.routes[key] = {
@@ -61,9 +62,10 @@ class Routes:
             return
         update_route_info(apispec, self.routes[key])
 
-    def get(self, route_metadata):
+    def get(self, route_metadata=None, key=None):
         """Gets you the route entry if it exists using route metadata"""
-        key = route_to_key(route_metadata)
+        if route_metadata:
+            key = route_to_key(route_metadata)
         return self.routes.get(key)
 
     def clear(self):
