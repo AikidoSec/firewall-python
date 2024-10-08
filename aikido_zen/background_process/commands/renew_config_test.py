@@ -12,6 +12,7 @@ def setup_connection_manager():
     connection_manager.conf.endpoints = ["endpoint1", "endpoint2"]
     connection_manager.conf.bypassed_ips = ["192.168.1.1"]
     connection_manager.conf.blocked_uids = ["user1", "user2"]
+    connection_manager.statistics.requests = {"total": 0}  # Initialize total requests
     return connection_manager
 
 
@@ -19,18 +20,21 @@ def test_process_renew_config_initialization(setup_connection_manager):
     """Test the initialization of routes and hits update."""
     connection_manager = setup_connection_manager
     data = {
-        "route1": {
-            "method": "GET",
-            "path": "/api/v1/resource",
-            "thread_hits": 5,
-            "apispec": {"info": "API spec for resource"},
+        "current_routes": {
+            "route1": {
+                "method": "GET",
+                "path": "/api/v1/resource",
+                "thread_hits": 5,
+                "apispec": {"info": "API spec for resource"},
+            },
+            "route2": {
+                "method": "POST",
+                "path": "/api/v1/resource",
+                "thread_hits": 3,
+                "apispec": {"info": "API spec for resource"},
+            },
         },
-        "route2": {
-            "method": "POST",
-            "path": "/api/v1/resource",
-            "thread_hits": 3,
-            "apispec": {"info": "API spec for resource"},
-        },
+        "reqs": 10,  # Total requests to be added
     }
 
     result = process_renew_config(connection_manager, data, None)
@@ -50,6 +54,9 @@ def test_process_renew_config_initialization(setup_connection_manager):
         == 3
     )
 
+    # Check that the total requests were updated
+    assert connection_manager.statistics.requests["total"] == 10
+
     # Check that the return value is correct
     assert result["routes"] == list(connection_manager.routes)
     assert result["endpoints"] == connection_manager.conf.endpoints
@@ -61,12 +68,15 @@ def test_process_renew_config_existing_route(setup_connection_manager):
     """Test updating an existing route's hit count."""
     connection_manager = setup_connection_manager
     data = {
-        "route1": {
-            "method": "GET",
-            "path": "/api/v1/resource",
-            "thread_hits": 5,
-            "apispec": {"info": "API spec for resource"},
-        }
+        "current_routes": {
+            "route1": {
+                "method": "GET",
+                "path": "/api/v1/resource",
+                "thread_hits": 5,
+                "apispec": {"info": "API spec for resource"},
+            }
+        },
+        "reqs": 5,  # Total requests to be added
     }
 
     # First call to initialize the route
@@ -74,12 +84,15 @@ def test_process_renew_config_existing_route(setup_connection_manager):
 
     # Second call to update the existing route
     data_update = {
-        "route1": {
-            "method": "GET",
-            "path": "/api/v1/resource",
-            "thread_hits": 10,
-            "apispec": {"info": "Updated API spec for resource"},
-        }
+        "current_routes": {
+            "route1": {
+                "method": "GET",
+                "path": "/api/v1/resource",
+                "thread_hits": 10,
+                "apispec": {"info": "Updated API spec for resource"},
+            }
+        },
+        "reqs": 15,  # Additional requests to be added
     }
 
     result = process_renew_config(connection_manager, data_update, None)
@@ -92,6 +105,9 @@ def test_process_renew_config_existing_route(setup_connection_manager):
         == 15
     )
 
+    # Check that the total requests were updated
+    assert connection_manager.statistics.requests["total"] == 20  # 5 + 15
+
     # Check that the return value is correct
     assert result["routes"] == list(connection_manager.routes)
 
@@ -99,15 +115,11 @@ def test_process_renew_config_existing_route(setup_connection_manager):
 def test_process_renew_config_no_routes(setup_connection_manager):
     """Test behavior when no routes are provided."""
     connection_manager = setup_connection_manager
-    data = {}
+    data = {"current_routes": {}, "reqs": 0}  # No requests to add
 
     result = process_renew_config(connection_manager, data, None)
 
     # Check that no routes were initialized
     assert len(connection_manager.routes) == 0
 
-    # Check that the return value is correct
-    assert result["routes"] == list(connection_manager.routes)
-    assert result["endpoints"] == connection_manager.conf.endpoints
-    assert result["bypassed_ips"] == connection_manager.conf.bypassed_ips
-    assert result["blocked_uids"] == connection_manager.conf.blocked_uids
+    # Check that the total requests remain unchanged

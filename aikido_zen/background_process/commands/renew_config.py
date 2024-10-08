@@ -5,10 +5,8 @@ from aikido_zen.api_discovery.update_route_info import update_route_info
 
 def process_renew_config(connection_manager, data, conn, queue=None):
     """Fetches all config data needed for thread-local cache"""
-
-    # Process data here.
     routes = connection_manager.routes
-    for route in data.values():
+    for route in data.get("current_routes", {}).values():
         route_metadata = {"method": route["method"], "route": route["path"]}
         if not routes.get(route_metadata):
             routes.initialize_route(route_metadata)
@@ -20,6 +18,8 @@ def process_renew_config(connection_manager, data, conn, queue=None):
 
         # Update API Spec :
         update_route_info(route["apispec"], existing_route)
+
+    connection_manager.statistics.requests["total"] += data.get("reqs", 0)
 
     return {
         "routes": list(connection_manager.routes),
