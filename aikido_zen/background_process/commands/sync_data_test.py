@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock
-from .renew_config import process_renew_config
+from .sync_data import process_sync_data
 from aikido_zen.background_process.routes import Routes
 
 
@@ -16,7 +16,7 @@ def setup_connection_manager():
     return connection_manager
 
 
-def test_process_renew_config_initialization(setup_connection_manager):
+def test_process_sync_data_initialization(setup_connection_manager):
     """Test the initialization of routes and hits update."""
     connection_manager = setup_connection_manager
     data = {
@@ -37,7 +37,7 @@ def test_process_renew_config_initialization(setup_connection_manager):
         "reqs": 10,  # Total requests to be added
     }
 
-    result = process_renew_config(connection_manager, data, None)
+    result = process_sync_data(connection_manager, data, None)
 
     # Check that routes were initialized correctly
     assert len(connection_manager.routes) == 2
@@ -64,7 +64,7 @@ def test_process_renew_config_initialization(setup_connection_manager):
     assert result["blocked_uids"] == connection_manager.conf.blocked_uids
 
 
-def test_process_renew_config_existing_route(setup_connection_manager):
+def test_process_sync_data_existing_route(setup_connection_manager):
     """Test updating an existing route's hit count."""
     connection_manager = setup_connection_manager
     data = {
@@ -80,7 +80,7 @@ def test_process_renew_config_existing_route(setup_connection_manager):
     }
 
     # First call to initialize the route
-    process_renew_config(connection_manager, data, None)
+    process_sync_data(connection_manager, data, None)
 
     # Second call to update the existing route
     data_update = {
@@ -95,7 +95,7 @@ def test_process_renew_config_existing_route(setup_connection_manager):
         "reqs": 15,  # Additional requests to be added
     }
 
-    result = process_renew_config(connection_manager, data_update, None)
+    result = process_sync_data(connection_manager, data_update, None)
 
     # Check that the hit count was updated correctly
     assert (
@@ -112,12 +112,12 @@ def test_process_renew_config_existing_route(setup_connection_manager):
     assert result["routes"] == dict(connection_manager.routes.routes)
 
 
-def test_process_renew_config_no_routes(setup_connection_manager):
+def test_process_sync_data_no_routes(setup_connection_manager):
     """Test behavior when no routes are provided."""
     connection_manager = setup_connection_manager
     data = {"current_routes": {}, "reqs": 0}  # No requests to add
 
-    result = process_renew_config(connection_manager, data, None)
+    result = process_sync_data(connection_manager, data, None)
 
     # Check that no routes were initialized
     assert len(connection_manager.routes) == 0

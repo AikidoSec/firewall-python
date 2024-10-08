@@ -4,8 +4,13 @@ from aikido_zen.api_discovery.update_route_info import update_route_info
 from aikido_zen.helpers.logging import logger
 
 
-def process_renew_config(connection_manager, data, conn, queue=None):
-    """Fetches all config data needed for thread-local cache"""
+def process_sync_data(connection_manager, data, conn, queue=None):
+    """
+    Synchronizes data between the thread-local cache (with a TTL of usually 1 minute) and the
+    background thread. Which data gets synced?
+    Thread -> BG Process : Hits, request statistics, api specs
+    BG Process -> Thread : Routes, endpoints, bypasssed ip's, blocked users
+    """
     routes = connection_manager.routes
     for route in data.get("current_routes", {}).values():
         route_metadata = {"method": route["method"], "route": route["path"]}

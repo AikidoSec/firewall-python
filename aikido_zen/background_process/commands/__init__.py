@@ -11,7 +11,7 @@ from .kill import process_kill
 from .hostnames_add import process_hostnames_add
 from .statistics import process_statistics
 from .ping import process_ping
-from .renew_config import process_renew_config
+from .sync_data import process_sync_data
 
 commands_map = {
     # This maps to a tuple : (function, returns_data?)
@@ -23,7 +23,7 @@ commands_map = {
     "STATISTICS": (process_statistics, False),
     "HOSTNAMES_ADD": (process_hostnames_add, False),
     # Commands that return data :
-    "RENEW_CONFIG": (process_renew_config, True),
+    "SYNC_DATA": (process_sync_data, True),
     "READ_PROPERTY": (process_read_property, True),
     "WRAPPED_PACKAGE": (process_wrapped_package, True),
     "SHOULD_RATELIMIT": (process_should_ratelimit, True),

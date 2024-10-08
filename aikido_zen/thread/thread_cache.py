@@ -66,7 +66,7 @@ class ThreadCache:
         if not comms.get_comms():
             return
         res = comms.get_comms().send_data_to_bg_process(
-            action="RENEW_CONFIG",
+            action="SYNC_DATA",
             obj={"current_routes": dict(self.routes.routes), "reqs": self.reqs},
             receive=True,
         )
