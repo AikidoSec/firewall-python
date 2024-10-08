@@ -58,7 +58,7 @@ def test_process_renew_config_initialization(setup_connection_manager):
     assert connection_manager.statistics.requests["total"] == 10
 
     # Check that the return value is correct
-    assert result["routes"] == list(connection_manager.routes)
+    assert result["routes"] == dict(connection_manager.routes.routes)
     assert result["endpoints"] == connection_manager.conf.endpoints
     assert result["bypassed_ips"] == connection_manager.conf.bypassed_ips
     assert result["blocked_uids"] == connection_manager.conf.blocked_uids
@@ -109,7 +109,7 @@ def test_process_renew_config_existing_route(setup_connection_manager):
     assert connection_manager.statistics.requests["total"] == 20  # 5 + 15
 
     # Check that the return value is correct
-    assert result["routes"] == list(connection_manager.routes)
+    assert result["routes"] == dict(connection_manager.routes.routes)
 
 
 def test_process_renew_config_no_routes(setup_connection_manager):
