@@ -25,16 +25,6 @@ jobs:
         python -m pip install --upgrade pip
         make install
 
-    # quart-postgres-uvicorn
-    - name: Restart mock server
-      run: docker restart mock_core
-    - name: Start quart-postgres-uvicorn
-      working-directory: ./sample-apps/quart-postgres-uvicorn
-      run: |
-        docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
-    - name: Run end2end tests for quart-postgres-uvicorn
-      run: sleep 10 && poetry run pytest ./end2end/quart_postgres_uvicorn_test.py
-
     # django-mysql
     - name: Start django-mysql
       working-directory: ./sample-apps/django-mysql
@@ -116,6 +106,16 @@ jobs:
         poetry run pytest ./end2end/flask_postgres_xml_test.py
         docker restart mock_core
         poetry run pytest ./end2end/flask_postgres_xml_lxml_test.py
+
+    # quart-postgres-uvicorn
+    - name: Restart mock server
+      run: docker restart mock_core
+    - name: Start quart-postgres-uvicorn
+      working-directory: ./sample-apps/quart-postgres-uvicorn
+      run: |
+        docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
+    - name: Run end2end tests for quart-postgres-uvicorn
+      run: sleep 5 && poetry run pytest ./end2end/quart_postgres_uvicorn_test.py
 
     # starlette-postgres-uvicorn
     - name: Restart mock server
