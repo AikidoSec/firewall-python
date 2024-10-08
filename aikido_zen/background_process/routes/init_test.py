@@ -50,18 +50,21 @@ def test_get_route():
         "method": "GET",
         "path": "/api/resource1",
         "hits": 1,
+        "hits_delta_since_sync": 1,
         "apispec": {},
     }
     assert routes.get(gen_route_metadata(method="POST", route="/api/resource2")) == {
         "method": "POST",
         "path": "/api/resource2",
         "hits": 1,
+        "hits_delta_since_sync": 1,
         "apispec": {},
     }
     assert routes.get(gen_route_metadata(method="PUT", route="/api/resource3")) == {
         "method": "PUT",
         "path": "/api/resource3",
         "hits": 1,
+        "hits_delta_since_sync": 1,
         "apispec": {},
     }
     assert routes.get(gen_route_metadata(method="GE", route="/api/resource1")) == None
@@ -141,18 +144,21 @@ def test_iterable():
         "method": "GET",
         "path": "/api/resource1",
         "hits": 0,
+        "hits_delta_since_sync": 0,
         "apispec": {},
     } in routes_list
     assert {
         "method": "POST",
         "path": "/api/resource2",
         "hits": 0,
+        "hits_delta_since_sync": 0,
         "apispec": {},
     } in routes_list
     assert {
         "method": "PUT",
         "path": "/api/resource3",
         "hits": 0,
+        "hits_delta_since_sync": 0,
         "apispec": {},
     } in routes_list
 
@@ -190,6 +196,7 @@ def test_api_discovery_for_new_routes(monkeypatch):
         "method": "GET",
         "path": "/api/resource1",
         "hits": 0,
+        "hits_delta_since_sync": 0,
         "apispec": {},
     } in routes_list
 
@@ -204,6 +211,7 @@ def test_api_discovery_for_new_routes(monkeypatch):
         "method": "GET",
         "path": "/api/resource1",
         "hits": 0,
+        "hits_delta_since_sync": 0,
         "apispec": apispec,
     } in routes_list
 
@@ -221,6 +229,7 @@ def test_api_discovery_existing_route_empty(monkeypatch):
         "method": "GET",
         "path": "/api/resource1",
         "hits": 0,
+        "hits_delta_since_sync": 0,
         "apispec": {},
     } in routes_list
 
@@ -244,6 +253,7 @@ def test_api_discovery_existing_route_empty(monkeypatch):
         "method": "GET",
         "path": "/api/resource1",
         "hits": 1,
+        "hits_delta_since_sync": 1,
         "apispec": {
             "body": {
                 "schema": {
@@ -305,6 +315,7 @@ def test_api_discovery_merge_routes(monkeypatch):
         "method": "GET",
         "path": "/api/resource1",
         "hits": 2,
+        "hits_delta_since_sync": 2,
         "apispec": {
             "body": {
                 "schema": {
@@ -346,6 +357,7 @@ def test_merge_body_schema(monkeypatch):
             "method": "POST",
             "path": "/body",
             "hits": 1,
+            "hits_delta_since_sync": 1,
             "apispec": {},
         },
     ]
@@ -363,6 +375,7 @@ def test_merge_body_schema(monkeypatch):
             "method": "POST",
             "path": "/body",
             "hits": 2,
+            "hits_delta_since_sync": 2,
             "apispec": {
                 "body": {
                     "type": "form-urlencoded",
@@ -402,6 +415,7 @@ def test_merge_body_schema(monkeypatch):
             "method": "POST",
             "path": "/body",
             "hits": 4,
+            "hits_delta_since_sync": 4,
             "apispec": {
                 "body": {
                     "type": "form-urlencoded",
@@ -446,6 +460,7 @@ def test_add_query_schema(monkeypatch):
             "method": "GET",
             "path": "/query",
             "hits": 0,
+            "hits_delta_since_sync": 0,
             "apispec": {
                 "body": None,
                 "auth": None,
@@ -474,6 +489,7 @@ def test_merge_query_schema(monkeypatch):
             "method": "GET",
             "path": "/query",
             "hits": 1,
+            "hits_delta_since_sync": 1,
             "apispec": {},
         },
     ]
@@ -493,6 +509,7 @@ def test_merge_query_schema(monkeypatch):
             "method": "GET",
             "path": "/query",
             "hits": 4,
+            "hits_delta_since_sync": 4,
             "apispec": {
                 "query": {
                     "type": "object",
@@ -531,6 +548,7 @@ def test_add_auth_schema(monkeypatch):
             "method": "GET",
             "path": "/auth",
             "hits": 0,
+            "hits_delta_since_sync": 0,
             "apispec": {
                 "body": None,
                 "query": None,
@@ -541,6 +559,7 @@ def test_add_auth_schema(monkeypatch):
             "method": "GET",
             "path": "/auth2",
             "hits": 0,
+            "hits_delta_since_sync": 0,
             "apispec": {
                 "body": None,
                 "query": None,
@@ -551,6 +570,7 @@ def test_add_auth_schema(monkeypatch):
             "method": "GET",
             "path": "/auth3",
             "hits": 0,
+            "hits_delta_since_sync": 0,
             "apispec": {
                 "body": None,
                 "query": None,
@@ -587,6 +607,7 @@ def test_merge_auth_schema(monkeypatch):
         "method": "GET",
         "path": "/auth",
         "hits": 5,
+        "hits_delta_since_sync": 5,
         "apispec": {
             "auth": [
                 {"type": "http", "scheme": "bearer"},

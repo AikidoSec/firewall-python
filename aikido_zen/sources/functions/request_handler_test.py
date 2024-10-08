@@ -38,7 +38,7 @@ def test_post_response_useful_route(mock_get_comms, mock_context):
             "hits": 1,
             "method": "GET",
             "path": "/test/route",
-            "thread_hits": 1,
+            "hits_delta_since_sync": 1,
         }
     }
 

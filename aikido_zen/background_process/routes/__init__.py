@@ -13,10 +13,9 @@ class Routes:
     Stores all routes
     """
 
-    def __init__(self, max_size=1000, in_thread=False):
+    def __init__(self, max_size=1000):
         self.max_size = max_size
         self.routes = {}
-        self.in_thread = in_thread
 
     def initialize_route(self, route_metadata):
         """
@@ -32,8 +31,8 @@ class Routes:
             "hits": 0,
             "apispec": {},
         }
-        if self.in_thread:
-            self.routes[key]["thread_hits"] = 0
+        # This field counts the difference in hits in between synchronisation for threads :
+        self.routes[key]["hits_delta_since_sync"] = 0
 
     def increment_route(self, route_metadata):
         """
@@ -46,10 +45,7 @@ class Routes:
         # Add a hit to the route :
         route = self.routes.get(key)
         route["hits"] += 1
-        if self.in_thread:
-            if not route.get("thread_hits"):
-                route["thread_hits"] = 0
-            route["thread_hits"] += 1
+        route["hits_delta_since_sync"] += 1
 
     def update_route_with_apispec(self, route_metadata, apispec):
         """

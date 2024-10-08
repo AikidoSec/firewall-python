@@ -19,8 +19,8 @@ def process_sync_data(connection_manager, data, conn, queue=None):
         existing_route = routes.get(route_metadata)
 
         # Update hit count :
-        thread_hits = int(route.get("thread_hits", 0))
-        existing_route["hits"] += thread_hits
+        hits_delta_since_sync = int(route.get("hits_delta_since_sync", 0))
+        existing_route["hits"] += hits_delta_since_sync
 
         # Update API Spec :
         update_route_info(route["apispec"], existing_route)

@@ -52,7 +52,7 @@ class ThreadCache:
 
     def reset(self):
         """Empties out all values of the cache"""
-        self.routes = Routes(max_size=1000, in_thread=True)
+        self.routes = Routes(max_size=1000)
         self.bypassed_ips = set()
         self.endpoints = []
         self.blocked_uids = set()

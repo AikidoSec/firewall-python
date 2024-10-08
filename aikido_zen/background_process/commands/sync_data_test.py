@@ -24,13 +24,13 @@ def test_process_sync_data_initialization(setup_connection_manager):
             "route1": {
                 "method": "GET",
                 "path": "/api/v1/resource",
-                "thread_hits": 5,
+                "hits_delta_since_sync": 5,
                 "apispec": {"info": "API spec for resource"},
             },
             "route2": {
                 "method": "POST",
                 "path": "/api/v1/resource",
-                "thread_hits": 3,
+                "hits_delta_since_sync": 3,
                 "apispec": {"info": "API spec for resource"},
             },
         },
@@ -72,7 +72,7 @@ def test_process_sync_data_existing_route(setup_connection_manager):
             "route1": {
                 "method": "GET",
                 "path": "/api/v1/resource",
-                "thread_hits": 5,
+                "hits_delta_since_sync": 5,
                 "apispec": {"info": "API spec for resource"},
             }
         },
@@ -88,7 +88,7 @@ def test_process_sync_data_existing_route(setup_connection_manager):
             "route1": {
                 "method": "GET",
                 "path": "/api/v1/resource",
-                "thread_hits": 10,
+                "hits_delta_since_sync": 10,
                 "apispec": {"info": "Updated API spec for resource"},
             }
         },
