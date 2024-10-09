@@ -3,9 +3,6 @@ import subprocess
 import sys
 import time
 
-CURRENT_ACCEPTABLE_PERCENTAGE = 55
-
-
 def generate_wrk_command_for_url(url):
     # Define the command with awk included
     return "wrk -t12 -c400 -d15s " + url
@@ -25,7 +22,7 @@ def extract_requests_and_latency_tuple(output):
         print(output.stderr.strip())
         sys.exit(1)
 
-def run_benchmark(route1, route2, descriptor):
+def run_benchmark(route1, route2, descriptor, percentage_limit, ms_limit):
 
     output_nofw = subprocess.run(
         generate_wrk_command_for_url(route2),
@@ -54,20 +51,25 @@ def run_benchmark(route1, route2, descriptor):
 
         delta_in_ms = round(result_fw[1] - result_nofw[1], 2)
         print(f"-> Delta in ms: {delta_in_ms}ms after running load test on {descriptor}")
-
+        if delta_in_ms > ms_limit:
+            sys.exit(1)
         delay_percentage = round(
             (result_nofw[0] - result_fw[0]) / result_nofw[0] * 100
         )
         print(
             f"-> {delay_percentage}% decrease in throughput after running load test on {descriptor} \n"
         )
-        if delay_percentage > CURRENT_ACCEPTABLE_PERCENTAGE:
+        if delay_percentage > percentage_limit:
             sys.exit(1)
 
 # Run benchmarks :
 run_benchmark(
     "http://localhost:8102/delayed_route", 
     "http://localhost:8103/delayed_route", 
-    "a non empty route which makes a simulated request to a database"
+    "a non empty route which makes a simulated request to a database",
+    percentage_limit=15, ms_limit=20
 )
-run_benchmark("http://localhost:8102/just", "http://localhost:8103/just", "an empty route")
+run_benchmark(
+    "http://localhost:8102/just", "http://localhost:8103/just", "an empty route",
+    percentage_limit=30, ms_limit=25
+)

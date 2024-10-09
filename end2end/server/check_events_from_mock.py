@@ -17,4 +17,5 @@ def validate_started_event(event, stack, dry_mode=False, serverless=False, os_na
     assert event["agent"]["os"]["name"] == os_name
     assert event["agent"]["platform"]["name"] == platform
     assert event["agent"]["serverless"] ==  serverless
-    assert set(event["agent"]["stack"]) == set(stack)
+    if stack is not None:
+        assert set(event["agent"]["stack"]) == set(stack)
