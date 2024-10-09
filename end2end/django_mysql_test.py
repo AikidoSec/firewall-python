@@ -1,7 +1,7 @@
 import time
 import pytest
 import requests
-from .server.check_events_from_mock import fetch_events_from_mock, validate_started_event, filter_on_event_type
+from .server.check_events_from_mock import fetch_events_from_mock, validate_started_event, filter_on_event_type, validate_heartbeat
 
 # e2e tests for django_mysql sample app
 post_url_fw = "http://localhost:8080/app/create"
@@ -50,3 +50,18 @@ def test_dangerous_response_without_firewall():
     res = requests.post(post_url_nofw, data={'dog_name': dog_name})
     assert res.status_code == 200
 
+def test_initial_heartbeat():
+    time.sleep(55) # Sleep 5 + 55 seconds for heartbeat
+    events = fetch_events_from_mock("http://localhost:5000")
+    heartbeat_events = filter_on_event_type(events, "heartbeat")
+    assert len(heartbeat_events) == 1
+    validate_heartbeat(heartbeat_events[0], 
+        [{
+            "apispec": {},
+            "hits": 1,
+            "hits_delta_since_sync": 1,
+            "method": "POST",
+            "path": "/app/create"
+        }], 
+        {"aborted":0,"attacksDetected":{"blocked":1,"total":1},"total":0}
+    )

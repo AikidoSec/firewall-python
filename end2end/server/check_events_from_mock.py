@@ -19,3 +19,8 @@ def validate_started_event(event, stack, dry_mode=False, serverless=False, os_na
     assert event["agent"]["serverless"] ==  serverless
     if stack is not None:
         assert set(event["agent"]["stack"]) == set(stack)
+
+def validate_heartbeat(event, routes, req_stats):
+    assert event["type"] == "heartbeat"
+    assert event["routes"] == routes
+    assert event["stats"]["requests"] == req_stats
