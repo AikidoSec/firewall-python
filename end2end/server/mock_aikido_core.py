@@ -7,7 +7,10 @@ import time
 app = Flask(__name__)
 
 responses = {
-    "config": {},
+    "config": {
+        "receivedAnyStats": False,
+        "success": True
+    },
     "configUpdatedAt": {},
 }
 
