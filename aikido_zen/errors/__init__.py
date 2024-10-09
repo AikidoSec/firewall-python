@@ -61,3 +61,9 @@ class AikidoSSRF(AikidoException):
     """Exception because of SSRF"""
 
     kind = "ssrf"
+
+
+class AikidoCodeInjection(AikidoException):
+    """Exception because of Code Injection (e.g. Use of eval(..))"""
+
+    kind = "code_injection"

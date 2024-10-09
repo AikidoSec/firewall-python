@@ -68,14 +68,15 @@ def test_cursor_executemany(database_conn):
         cursor.executemany(query, params)
 
         # Check the last call to run_vulnerability_scan
-        called_with = mock_run_vulnerability_scan.call_args[1]
+        called_with_list = mock_run_vulnerability_scan.call_args_list
+        called_with1 = called_with_list[0][1]
         assert (
-            called_with["args"][0]
+            called_with1["args"][0]
             == "INSERT INTO dogs (dog_name, isadmin) VALUES (%s, %s)"
         )
-        assert isinstance(called_with["args"][1], Postgres)
-        assert called_with["op"] == "psycopg.Cursor.executemany"
-        assert called_with["kind"] == "sql_injection"
+        assert isinstance(called_with1["args"][1], Postgres)
+        assert called_with1["op"] == "psycopg.Cursor.executemany"
+        assert called_with1["kind"] == "sql_injection"
         mock_run_vulnerability_scan.assert_called()
 
     database_conn.commit()

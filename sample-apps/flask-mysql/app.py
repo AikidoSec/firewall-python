@@ -87,3 +87,13 @@ def make_request():
     url = request.form['url']
     res = requests.get(url)
     return str(res)
+
+@app.route("/code_exec", methods=['GET'])
+def show_code_exec():
+    return render_template('code_exec.html')
+
+@app.route("/code_exec", methods=['POST'])
+def make_code_exec():
+    code = request.form['code']
+    res = eval(code)
+    return str(res)
