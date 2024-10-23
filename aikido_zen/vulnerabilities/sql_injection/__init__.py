@@ -31,7 +31,7 @@ def detect_sql_injection(query, user_input, dialect):
 
     # This means that an error occurred in the library
     if (c_int_res == 2):
-        logger.error("Unable to check for SQL Injection, an error occurred in the library")
+        logger.debug("Unable to check for SQL Injection, an error occurred in the library")
         return False
 
     return bool(c_int_res)
