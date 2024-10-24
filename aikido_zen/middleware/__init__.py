@@ -24,7 +24,6 @@ def should_block_request():
         )
         context.set_as_current_context()
 
-        # agent.onMiddlewareExecuted
 
         # Blocked users:
         if context.user and cache.is_user_blocked(context.user["id"]):
