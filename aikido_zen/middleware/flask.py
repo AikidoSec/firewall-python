@@ -1,8 +1,10 @@
+"""Exports ratelimiting and user blocking middleware for Flask"""
 from aikido_zen.helpers.logging import logger
 from werkzeug.wrappers import Response
 from . import should_block_request
 
 class AikidoMiddleware:
+    """Ratelimiting and user blocking middleware for Flask"""
     def __init__(self, app):
         self.app = app
 
