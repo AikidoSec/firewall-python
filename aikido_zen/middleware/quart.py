@@ -19,9 +19,11 @@ class AikidoMiddleware:
             message = "You are rate limited by Zen."
             if result["trigger"] == "ip" and result["ip"]:
                 message += " (Your IP: " + result["ip"] + ")"
-            send_status_code_and_text(send, (message, 429))
+            return await send_status_code_and_text(send, (message, 429))
         elif result["type"] == "blocked":
-            send_status_code_and_text(send, ("You are blocked by Zen.", 403))
+            return await send_status_code_and_text(
+                send, ("You are blocked by Zen.", 403)
+            )
 
         logger.debug("Unknown type for blocking request: %s", result["type"])
         return await self.app(scope, receive, send)
