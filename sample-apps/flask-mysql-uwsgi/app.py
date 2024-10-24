@@ -9,8 +9,32 @@ if firewall_disabled is not None:
 
 from flask import Flask, render_template, request
 from flaskext.mysql import MySQL
+from werkzeug.wrappers import Request, Response, ResponseStream
+from aikido_zen import set_user, should_block_request
+from aikido_zen.middleware.flask import AikidoMiddleware
+class SimpleMiddleware():
+    def __init__(self, app):
+        self.app = app
+
+    def __call__(self, environ, start_response):
+        print("SimpleMiddleware called")
+        return self.app(environ, start_response)
+class SetUserMiddleware():
+    def __init__(self, app):
+        self.app = app
+
+    def __call__(self, environ, start_response):
+        set_user({"id": "userid1234", "name": "User"})
+        return self.app(environ, start_response)
 
 app = Flask(__name__)
+app.wsgi_app = AikidoMiddleware(app.wsgi_app)
+app.wsgi_app = SimpleMiddleware(app.wsgi_app)
+app.wsgi_app = SimpleMiddleware(app.wsgi_app)
+app.wsgi_app = SetUserMiddleware(app.wsgi_app)
+app.wsgi_app = SimpleMiddleware(app.wsgi_app)
+
+
 if __name__ == '__main__':
     app.run()
 mysql = MySQL()
