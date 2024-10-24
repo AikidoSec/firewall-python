@@ -1,9 +1,12 @@
 """Exports ratelimiting and user blocking middleware for Quart"""
+
 from aikido_zen.helpers.logging import logger
 from . import should_block_request
 
+
 class AikidoMiddleware:
     """Ratelimiting and user blocking middleware for Quart"""
+
     def __init__(self, app):
         self.app = app
 
@@ -22,6 +25,7 @@ class AikidoMiddleware:
 
         logger.debug("Unknown type for blocking request: %s", result["type"])
         return await self.app(scope, receive, send)
+
 
 async def send_status_code_and_text(send, pre_response):
     """Sends a status code and text"""
