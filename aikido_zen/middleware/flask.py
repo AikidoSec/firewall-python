@@ -1,6 +1,6 @@
-from . import should_block_request
+from aikido_zen.helpers.logging import logger
 from werkzeug.wrappers import Response
-
+from . import should_block_request
 
 class AikidoMiddleware:
     def __init__(self, app):
@@ -19,5 +19,6 @@ class AikidoMiddleware:
             return res(environ, start_response)
         elif result["type"] == "blocked":
             res = Response("You are blocked by Zen.", mimetype="text/plain", status=403)
-
+            return res(environ, start_response)
+        logger.debug("Unknown type for blocking request: %s", result["type"])
         return self.app(environ, start_response)

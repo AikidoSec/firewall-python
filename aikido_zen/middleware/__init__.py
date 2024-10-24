@@ -1,7 +1,7 @@
 """
 Exports should_block_request function
 """
-
+from aikido_zen.helpers.logging import logger
 from aikido_zen.context import get_current_context
 from aikido_zen.thread.thread_cache import get_cache
 from aikido_zen.background_process.comms import get_comms
@@ -48,6 +48,6 @@ def should_block_request():
                 "trigger": ratelimit_res["data"]["trigger"],
                 "ip": context.remote_address,
             }
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Exception occured in should_block_request: %s", e)
     return {"block": False}
