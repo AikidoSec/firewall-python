@@ -45,6 +45,7 @@ def test_wsgi_context_1():
         "parsed_userinput": {},
         "xml": {},
         "outgoing_req_redirects": [],
+        "executed_middleware": False,
     }
 
 
@@ -84,6 +85,7 @@ def test_wsgi_context_2():
         "parsed_userinput": {},
         "xml": {},
         "outgoing_req_redirects": [],
+        "executed_middleware": False,
     }
 
 
