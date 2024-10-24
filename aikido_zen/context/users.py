@@ -20,6 +20,12 @@ def set_user(user):
     if not context:
         logger.debug("No context set, returning")
         return
+    if context.executed_middleware is True:
+        # Middleware to rate-limit/check for users ran already. Could be misconfiguration.
+        logger.warning(
+            "set_user(...) must be called before the Zen middleware is executed."
+        )
+
     validated_user["lastIpAddress"] = context.remote_address
     context.user = validated_user
 

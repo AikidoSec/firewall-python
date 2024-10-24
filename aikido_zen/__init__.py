@@ -6,8 +6,9 @@ Aggregates from the different modules
 
 from dotenv import load_dotenv
 
-# Re-export set_current_user :
+# Re-export functions :
 from aikido_zen.context.users import set_user
+from aikido_zen.middleware import should_block_request
 
 # Import logger
 from aikido_zen.helpers.logging import logger
