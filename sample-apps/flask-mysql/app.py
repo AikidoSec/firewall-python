@@ -1,5 +1,6 @@
 import os
 firewall_disabled = os.getenv("FIREWALL_DISABLED")
+dont_add_middleware = os.getenv("DONT_ADD_MIDDLEWARE")
 if firewall_disabled is not None:
     if firewall_disabled.lower() != "1":
         import aikido_zen # Aikido package import
@@ -13,7 +14,8 @@ import subprocess
 
 app = Flask(__name__)
 if firewall_disabled is not None:
-    if firewall_disabled.lower() != "1":
+    if firewall_disabled.lower() != "1" and (dont_add_middleware is None or dont_add_middleware.lower() != "1"):
+        # Use DONT_ADD_MIDDLEWARE so we don't add this middleware during e.g. benchmarks.
         import aikido_zen
         from aikido_zen.middleware import AikidoFlaskMiddleware
         class SetUserMiddleware:
