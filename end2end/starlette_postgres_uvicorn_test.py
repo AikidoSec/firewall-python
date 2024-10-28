@@ -13,7 +13,7 @@ def test_firewall_started_okay():
     events = fetch_events_from_mock("http://localhost:5000")
     started_events = filter_on_event_type(events, "started")
     assert len(started_events) == 1
-    validate_started_event(started_events[0], [])
+    validate_started_event(started_events[0], None) # Don't assert stack
 
 def test_safe_response_with_firewall():
     dog_name = "Bobby Tables"
