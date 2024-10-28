@@ -1,11 +1,11 @@
-"""Exports ratelimiting and user blocking middleware for Quart"""
+"""Exports ratelimiting and user blocking middleware for ASGI"""
 
 from aikido_zen.helpers.logging import logger
 from .should_block_request import should_block_request
 
 
 class AikidoASGIMiddleware:
-    """Ratelimiting and user blocking middleware for Quart"""
+    """Ratelimiting and user blocking middleware for ASGI"""
 
     def __init__(self, app):
         self.app = app
