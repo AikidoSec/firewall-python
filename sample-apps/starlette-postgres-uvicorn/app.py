@@ -85,8 +85,7 @@ if firewall_disabled is not None:
 
 
 
-
-app = Starlette(routes=[
+routes = [
     Route("/", homepage),
     Route("/dogpage/{dog_id:int}", get_dogpage),
     Route("/create", show_create_dog_form, methods=["GET"]),
@@ -94,4 +93,9 @@ app = Starlette(routes=[
     Route("/sync_route", sync_route),
     Route("/just", just,  methods=["GET"]),
     Route("/delayed_route", delayed_route, methods=["GET"])
-], middleware=middleware)
+]
+if len(middleware) != 0:
+    app = Starlette(routes=routes, middleware=middleware)
+else:
+    app = Starlette(routes=routes)
+
