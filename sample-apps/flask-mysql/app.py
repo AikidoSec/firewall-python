@@ -12,6 +12,21 @@ import requests
 import subprocess
 
 app = Flask(__name__)
+if firewall_disabled is not None:
+    if firewall_disabled.lower() != "1":
+        import aikido_zen
+        from aikido_zen.middleware import AikidoFlaskMiddleware
+        class SetUserMiddleware:
+            def __init__(self, app):
+                self.app = app
+            def __call__(self, environ, start_response):
+                aikido_zen.set_user({"id": "123", "name": "John Doe"})
+                return self.app(environ, start_response)
+        app.wsgi_app = AikidoFlaskMiddleware(app.wsgi_app)
+        app.wsgi_app = SetUserMiddleware(app.wsgi_app)
+
+                
+
 if __name__ == '__main__':
     app.run()
 mysql = MySQL()
