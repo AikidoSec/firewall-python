@@ -13,6 +13,7 @@ from starlette.responses import HTMLResponse, JSONResponse
 from starlette.routing import Route
 from starlette.templating import Jinja2Templates
 from starlette.requests import Request
+from starlette.middleware import Middleware
 
 templates = Jinja2Templates(directory="templates")
 
@@ -65,6 +66,11 @@ async def delayed_route(request: Request):
 def sync_route(request):
     data = {"message": "This is a non-async route!"}
     return JSONResponse(data)
+middleware = []
+if firewall_disabled is not None:
+    if firewall_disabled.lower() != "1":
+        from aikido_zen.middleware import AikidoStarletteMiddleware  # Aikido package import
+        middleware.append(Middleware(AikidoStarletteMiddleware))
 
 app = Starlette(routes=[
     Route("/", homepage),
@@ -74,4 +80,4 @@ app = Starlette(routes=[
     Route("/sync_route", sync_route),
     Route("/just", just,  methods=["GET"]),
     Route("/delayed_route", delayed_route, methods=["GET"])
-])
+], middleware=middleware)
