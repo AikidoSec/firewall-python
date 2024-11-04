@@ -12,15 +12,13 @@ def call_module_hooks(module):
     if name in registry:
         mod = registry[name](module)
         if mod is not None:
-            module = mod
+            sys.modules[name] = mod
 
     # If we have a global hook in the registry, then call it now
     if None in registry:
         mod = registry[None](module)
         if mod is not None:
-            module = mod
-
-    sys.modules[name] = module
+            sys.modules[name] = mod
 
 
 class HookLoader(Loader):
