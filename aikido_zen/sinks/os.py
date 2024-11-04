@@ -27,9 +27,10 @@ OS_FILE_FUNCTIONS = [
 
 # os.path.func(...) functions, can have a filename and destination.
 OS_PATH_FUNCTIONS = [
-    "realpath",
     "getsize",
+    "abspath",
 ]
+# os.path.realpath is not wrapped, since it uses os.path.abspath
 # os.path.join(path, *paths) is not wrapped
 # os.makedirs() is not wrapped since it uses os.mkdir() which we wrap
 # os.path.exists() and functions alike are not wrapped for performance reasons.
