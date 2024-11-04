@@ -13,7 +13,7 @@ def test_ospath_commands():
         import os
 
         os.path.realpath("test/test2")
-        op = "os.path.realpath"
+        op = "os.path.abspath"
         args = ("test/test2",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
@@ -24,14 +24,33 @@ def test_ospath_commands():
             mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
         os.path.realpath(b"te2st/test2")
-        op = "os.path.realpath"
+        op = "os.path.abspath"
         args = (b"te2st/test2",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
         path1 = Path("./test", "test2", "test3")
-        os.path.realpath(path1)
+        os.path.abspath(path1)
 
-        op = "os.path.realpath"
+        op = "os.path.abspath"
+        args = (path1,)
+        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
+
+def test_ospath_command_absolute_path():
+    with patch(
+        "aikido_zen.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        import os
+
+        os.path.abspath("../test/test2")
+        op = "os.path.abspath"
+        args = ("../test/test2",)
+        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
+        path1 = Path("./test", "test2", "test3")
+        os.path.abspath(path1)
+
+        op = "os.path.abspath"
         args = (path1,)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
