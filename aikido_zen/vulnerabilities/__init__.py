@@ -2,7 +2,7 @@
 Exports `run_vulnerability_scan` function
 """
 
-import json
+from aikido_zen.helpers.serialize_to_json import serialize_to_json
 from aikido_zen.context import get_current_context
 from aikido_zen.errors import (
     AikidoException,
@@ -97,7 +97,7 @@ def run_vulnerability_scan(kind, op, args):
         logger.debug("Exception occured in run_vulnerability_scan : %s", e)
 
     if injection_results:
-        logger.debug("Injection results : %s", json.dumps(injection_results))
+        logger.debug("Injection results : %s", serialize_to_json(injection_results))
         blocked = is_blocking_enabled()
         stack = get_clean_stacktrace()
         if comms:
