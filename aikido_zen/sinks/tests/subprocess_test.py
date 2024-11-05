@@ -11,7 +11,7 @@ def test_subprocess_call():
     ) as mock_run_vulnerability_scan:
         import subprocess
 
-        op = "subprocess.call"
+        op = "subprocess.Popen"
 
         subprocess.call(["ls", "-la"], shell=True)
         args = ("ls -la",)
@@ -51,7 +51,7 @@ def test_subprocess_run():
     ) as mock_run_vulnerability_scan:
         import subprocess
 
-        op = "subprocess.run"
+        op = "subprocess.Popen"
 
         subprocess.run(["ls", "-la"], shell=True)
         args = ("ls -la",)
@@ -85,7 +85,7 @@ def test_subprocess_check_call():
     ) as mock_run_vulnerability_scan:
         import subprocess
 
-        op = "subprocess.check_call"
+        op = "subprocess.Popen"
 
         subprocess.check_call(["ls", "-la"], shell=True)
         args = ("ls -la",)
@@ -134,9 +134,12 @@ def test_subprocess_popen():
         args = ("ls -la",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
-        subprocess.Popen(args="ls -la", shell=True)
+        process = subprocess.Popen(args="ls -la", shell=True)
         args = ("ls -la",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
+        process.kill()  # Test class functions
+        process.pid  # Access a class attribute
 
 
 def test_subprocess_popen_not_called():
