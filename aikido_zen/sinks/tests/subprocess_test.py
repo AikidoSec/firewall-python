@@ -1,7 +1,6 @@
 import pytest
 from unittest.mock import patch
 import aikido_zen.sinks.subprocess
-import aikido_zen.sinks.os
 
 kind = "shell_injection"
 
