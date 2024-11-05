@@ -25,15 +25,13 @@ OS_FILE_FUNCTIONS = [
     "open",
 ]
 
-# os.path.func(...) functions, can have a filename and destination.
+# os.path.realpath, os.path.abspath, os.path.expanduser, os.path.expandvars is not wrapped,
+# since it uses os.path.join
 OS_PATH_FUNCTIONS = [
     "getsize",
-    "abspath",
-    "expanduser",
-    "expandvars",
+    "join",
 ]
-# os.path.realpath is not wrapped, since it uses os.path.abspath
-# os.path.join(path, *paths) is not wrapped
+
 # os.makedirs() is not wrapped since it uses os.mkdir() which we wrap
 # os.path.exists() and functions alike are not wrapped for performance reasons.
 # We also don't wrap the stat library : https://docs.python.org/3/library/stat.html
@@ -46,18 +44,11 @@ def generate_aikido_function(op, former_func):
     """
 
     def aikido_new_func(*args, op=op, former_func=former_func, **kwargs):
-        if len(args) > 0 and isinstance(
-            args[0], (str, bytes, PurePath)
-        ):  #  args[0] : filename
-            vulns.run_vulnerability_scan(
-                kind="path_traversal", op=f"os.{op}", args=(args[0],)
-            )
-        if len(args) > 1 and isinstance(
-            args[1], (str, bytes, PurePath)
-        ):  # args[1] : Could be dst folder
-            vulns.run_vulnerability_scan(
-                kind="path_traversal", op=f"os.{op}", args=(args[1],)
-            )
+        for arg in args:
+            if isinstance(arg, (str, bytes, PurePath)):
+                vulns.run_vulnerability_scan(
+                    kind="path_traversal", op=f"os.{op}", args=(arg,)
+                )
         return former_func(*args, **kwargs)
 
     return aikido_new_func
