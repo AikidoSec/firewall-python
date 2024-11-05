@@ -84,14 +84,16 @@ def test_ospath_expandvars():
         os.path.expandvars("../test/test2")
         op = "os.path.expandvars"
         args = ("../test/test2",)
-        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+        # Need to use assert_any_call, since python 3.12 it uses os.path.join
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
 
         path1 = Path("./test", "test2", "test3")
         os.path.expandvars(path1)
 
         op = "os.path.expandvars"
         args = (path1,)
-        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+        # Need to use assert_any_call, since python 3.12 it uses os.path.join
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
 
 
 def test_ospath_join():
