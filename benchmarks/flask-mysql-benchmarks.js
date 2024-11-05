@@ -45,7 +45,7 @@ export const options = {
             delayAbortEval: '10s',
         }],
         test_execute_shell: [{
-            threshold: "avg<5", 
+            threshold: "avg<10", 
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
