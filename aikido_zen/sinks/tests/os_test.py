@@ -19,9 +19,10 @@ def test_ospath_commands():
 
         with pytest.raises(FileNotFoundError):
             os.path.getsize("aqkqjefbkqlleq_qkvfjksaicuaviel")
-            op = "os.path.getsize"
-            args = ("aqkqjefbkqlleq_qkvfjksaicuaviel",)
-            mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+        op = "os.path.getsize"
+        args = ("aqkqjefbkqlleq_qkvfjksaicuaviel",)
+        # Need to use assert_any_call, since python 3.12 it uses os.path.join
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
 
         os.path.realpath(b"te2st/test2")
         op = "os.path.join"
@@ -34,7 +35,8 @@ def test_ospath_commands():
 
         op = "os.path.getsize"
         args = (path1,)
-        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+        # Need to use assert_any_call, since python 3.12 it uses os.path.join
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
 
 
 def test_ospath_command_absolute_path():
@@ -65,14 +67,16 @@ def test_ospath_expanduser():
         os.path.expanduser("../test/test2")
         op = "os.path.expanduser"
         args = ("../test/test2",)
-        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+        # Need to use assert_any_call, since python 3.12 it uses os.path.join
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
 
         path1 = Path("./test", "test2", "test3")
         os.path.expanduser(path1)
 
         op = "os.path.expanduser"
         args = (path1,)
-        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+        # Need to use assert_any_call, since python 3.12 it uses os.path.join
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
 
 
 def test_ospath_expandvars():
