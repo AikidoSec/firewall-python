@@ -55,6 +55,43 @@ def test_ospath_command_absolute_path():
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
 
+
+def test_ospath_expanduser():
+    with patch(
+        "aikido_zen.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        import os
+
+        os.path.expanduser("../test/test2")
+        op = "os.path.expanduser"
+        args = ("../test/test2",)
+        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
+        path1 = Path("./test", "test2", "test3")
+        os.path.expanduser(path1)
+
+        op = "os.path.expanduser"
+        args = (path1,)
+        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
+def test_ospath_expandvars():
+    with patch(
+        "aikido_zen.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        import os
+
+        os.path.expandvars("../test/test2")
+        op = "os.path.expandvars"
+        args = ("../test/test2",)
+        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
+        path1 = Path("./test", "test2", "test3")
+        os.path.expandvars(path1)
+
+        op = "os.path.expandvars"
+        args = (path1,)
+        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
 def test_os_commands():
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
