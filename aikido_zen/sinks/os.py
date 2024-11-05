@@ -29,6 +29,8 @@ OS_FILE_FUNCTIONS = [
 OS_PATH_FUNCTIONS = [
     "getsize",
     "abspath",
+    "expanduser",
+    "expandvars",
 ]
 # os.path.realpath is not wrapped, since it uses os.path.abspath
 # os.path.join(path, *paths) is not wrapped
