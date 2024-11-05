@@ -138,7 +138,8 @@ def test_subprocess_popen():
         args = ("ls -la",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
-        process.kill()  # Test class functions
+        subprocess.Popen.kill(process)  # Test class static functions
+        process.kill() # Test function as a property
         process.pid  # Access a class attribute
 
 
