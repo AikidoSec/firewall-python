@@ -34,13 +34,15 @@ def test_open():
         with pytest.raises(FileNotFoundError):
             open(path)
         args = (path,)
-        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+        # Need to use assert_any_call, since python 3.12 it uses os.path.join
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
 
         path2 = PurePath("./test", "/test.py")
         with pytest.raises(FileNotFoundError):
             open(path2)
         args = (path2,)
-        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+        # Need to use assert_any_call, since python 3.12 it uses os.path.join
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
 
 
 def test_open_with_builtins_import():
