@@ -25,12 +25,8 @@ OS_FILE_FUNCTIONS = [
     "open",
 ]
 
-# os.path.realpath, os.path.abspath, os.path.expanduser, os.path.expandvars is not wrapped,
-# since it uses os.path.join
-OS_PATH_FUNCTIONS = [
-    "getsize",
-    "join",
-]
+# os.path.realpath, os.path.abspath aren't wrapped, since they use os.path.join
+OS_PATH_FUNCTIONS = ["getsize", "join", "expanduser", "expandvars"]
 
 # os.makedirs() is not wrapped since it uses os.mkdir() which we wrap
 # os.path.exists() and functions alike are not wrapped for performance reasons.

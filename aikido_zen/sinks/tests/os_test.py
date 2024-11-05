@@ -56,7 +56,6 @@ def test_ospath_command_absolute_path():
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
 
-
 def test_ospath_expanduser():
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
@@ -75,6 +74,7 @@ def test_ospath_expanduser():
         args = (path1,)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
+
 def test_ospath_expandvars():
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
@@ -92,6 +92,7 @@ def test_ospath_expandvars():
         op = "os.path.expandvars"
         args = (path1,)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
 
 def test_ospath_join():
     with patch(
