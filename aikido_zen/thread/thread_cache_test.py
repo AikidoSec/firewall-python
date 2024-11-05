@@ -3,13 +3,21 @@ from unittest.mock import patch, MagicMock
 from aikido_zen.background_process.routes import Routes
 from aikido_zen.background_process.comms import get_comms
 from aikido_zen.helpers.get_current_unixtime_ms import get_unixtime_ms
-from .thread_cache import ThreadCache, THREAD_CONFIG_TTL_MS
+from .thread_cache import ThreadCache, THREAD_CONFIG_TTL_MS, threadlocal_storage
 
 
 @pytest.fixture
 def thread_cache():
     """Fixture to create a ThreadCache instance."""
     return ThreadCache()
+
+
+@pytest.fixture(autouse=True)
+def run_around_tests():
+    yield
+    # Make sure to reset thread cache after every test so it does not
+    # interfere with other tests
+    setattr(threadlocal_storage, "cache", None)
 
 
 def test_initialization(thread_cache):
