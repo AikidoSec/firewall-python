@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import patch
 import aikido_zen.sinks.subprocess
+import aikido_zen.sinks.os
 
 kind = "shell_injection"
 
@@ -33,13 +34,16 @@ def test_subprocess_call_not_called():
         import subprocess
 
         subprocess.call(["ls", "-la"])
-        mock_run_vulnerability_scan.assert_not_called()
 
         subprocess.call(["pwd"], shell=False)
-        mock_run_vulnerability_scan.assert_not_called()
 
         subprocess.call("ls")
-        mock_run_vulnerability_scan.assert_not_called()
+
+        # Make sure there is no call regarding shell injection:
+        assert (
+            list(filter(is_shell_injection, mock_run_vulnerability_scan.call_args_list))
+            == []
+        )
 
 
 def test_subprocess_run():
@@ -66,10 +70,14 @@ def test_subprocess_run_not_called():
         import subprocess
 
         subprocess.run(["ls", "-la"])
-        mock_run_vulnerability_scan.assert_not_called()
 
         subprocess.run(["pwd"], shell=False)
-        mock_run_vulnerability_scan.assert_not_called()
+
+        # Make sure there is no call regarding shell injection:
+        assert (
+            list(filter(is_shell_injection, mock_run_vulnerability_scan.call_args_list))
+            == []
+        )
 
 
 def test_subprocess_check_call():
@@ -97,10 +105,14 @@ def test_subprocess_check_call_not_called():
         import subprocess
 
         subprocess.check_call(["ls", "-la"], shell=False)
-        mock_run_vulnerability_scan.assert_not_called()
 
         subprocess.check_call(["whoami"])
-        mock_run_vulnerability_scan.assert_not_called()
+
+        # Make sure there is no call regarding shell injection:
+        assert (
+            list(filter(is_shell_injection, mock_run_vulnerability_scan.call_args_list))
+            == []
+        )
 
 
 def test_subprocess_popen():
@@ -135,19 +147,20 @@ def test_subprocess_popen_not_called():
         import subprocess
 
         subprocess.Popen(["ls", "-la"])
-        mock_run_vulnerability_scan.assert_not_called()
 
         subprocess.Popen(["whoami"], shell=False)
-        mock_run_vulnerability_scan.assert_not_called()
 
         subprocess.Popen("pwd", shell=False)
-        mock_run_vulnerability_scan.assert_not_called()
 
         subprocess.Popen(args="pwd", shell=False)
-        mock_run_vulnerability_scan.assert_not_called()
 
         subprocess.Popen(args="pwd")
-        mock_run_vulnerability_scan.assert_not_called()
+
+        # Make sure there is no call regarding shell injection:
+        assert (
+            list(filter(is_shell_injection, mock_run_vulnerability_scan.call_args_list))
+            == []
+        )
 
 
 def test_subprocess_check_output():
@@ -190,23 +203,24 @@ def test_subprocess_check_output():
         import subprocess
 
         subprocess.check_output(["ls", "-la"], shell=False)
-        mock_run_vulnerability_scan.assert_not_called()
 
         with pytest.raises(FileNotFoundError):
             subprocess.check_output(["cfsknflks"])
-        mock_run_vulnerability_scan.assert_not_called()
 
         with pytest.raises(FileNotFoundError):
             subprocess.check_output(("tuple", "command"), shell=False)
-        mock_run_vulnerability_scan.assert_not_called()
 
         with pytest.raises(FileNotFoundError):
             subprocess.check_output({"key": "value"})
-        mock_run_vulnerability_scan.assert_not_called()
 
         with pytest.raises(FileNotFoundError):
             subprocess.check_output({"ke": "value", "key2": "value2"}, shell=False)
-        mock_run_vulnerability_scan.assert_not_called()
+
+        # Make sure there is no call regarding shell injection:
+        assert (
+            list(filter(is_shell_injection, mock_run_vulnerability_scan.call_args_list))
+            == []
+        )
 
 
 def test_subprocess_invalid_input():
@@ -237,3 +251,7 @@ def test_subprocess_invalid_input():
         with pytest.raises(TypeError):
             subprocess.call(True, shell=True)
         mock_run_vulnerability_scan.assert_not_called()  # Ensure it was not called
+
+
+def is_shell_injection(args):
+    return args[1]["kind"] == "shell_injection"
