@@ -18,6 +18,8 @@ def run_init_stage(request):
         if len(body) == 0:
             # E.g. XML Data
             body = request.body
+        if isinstance(body, bytes):
+            body = str(body, "utf-8")
 
         context = None
         if hasattr(request, "scope"):  # This request is an ASGI request
