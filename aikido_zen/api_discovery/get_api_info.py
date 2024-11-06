@@ -10,9 +10,6 @@ from .get_auth_types import get_auth_types
 def get_api_info(context):
     """Generates an apispec based on the context passed along"""
     try:
-        # Check if feature flag COLLECT_API_SCHEMA is enabled
-        if not is_feature_enabled("COLLECT_API_SCHEMA"):
-            return {}
         body_info = get_body_info(context)
         query_info = get_query_info(context)
         auth_info = get_auth_types(context)
