@@ -65,7 +65,7 @@ def show_shell_form():
 @app.route("/shell", methods=['POST'])
 def execute_command():
     command = request.form['command']
-    result = subprocess.run(command.split(), capture_output=True, text=True)
+    result = subprocess.run(command, capture_output=True, text=True, shell=True)
     return str(result.stdout)
 
 @app.route("/open_file", methods=['GET'])
@@ -87,3 +87,8 @@ def make_request():
     url = request.form['url']
     res = requests.get(url)
     return str(res)
+
+@app.route("/shell/<string:command>", methods=['GET'])
+def execute_command_get(command):
+    result = subprocess.run(command, capture_output=True, text=True, shell=True)
+    return str(result.stdout)

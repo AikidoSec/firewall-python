@@ -50,8 +50,12 @@ def extract_and_save_data_from_flask_request(req):
                 context.body = req.form
             else:
                 context.body = req.data.decode("utf-8")
+
+            if getattr(req, "view_args"):
+                context.route_params = dict(req.view_args)
             context.cookies = req.cookies.to_dict()
             context.set_as_current_context()
+
     except Exception as e:
         logger.debug("Exception occured whilst extracting flask body data: %s", e)
 

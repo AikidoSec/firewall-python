@@ -42,6 +42,7 @@ def get_context():
         body={"test_input_sql": "doggoss2', TRUE"},
         source="flask",
     )
+    context.route_params = {"test_input2": "cattss2', TRUE"}
     return context
 
 
@@ -98,6 +99,20 @@ def test_sql_injection(caplog, get_context, monkeypatch):
             kind="sql_injection",
             op="test_op",
             args=("INSERT * INTO VALUES ('doggoss2', TRUE);", MySQL()),
+        )
+
+
+def test_sql_injection_with_route_params(caplog, get_context, monkeypatch):
+    from aikido_zen.vulnerabilities.sql_injection.dialects import MySQL
+
+    get_context.set_as_current_context()
+    cache = ThreadCache()
+    monkeypatch.setenv("AIKIDO_BLOCKING", "1")
+    with pytest.raises(AikidoSQLInjection):
+        run_vulnerability_scan(
+            kind="sql_injection",
+            op="test_op",
+            args=("INSERT * INTO VALUES ('cattss2', TRUE);", MySQL()),
         )
 
 

