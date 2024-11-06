@@ -18,8 +18,11 @@ def run_init_stage(request):
         if len(body) == 0:
             # E.g. XML Data
             body = request.body
-        if isinstance(body, bytes):
-            body = str(body, "utf-8")
+        if len(body) == 0:
+            # During a GET request, django leaves the body as an empty byte string (e.g. `b''`).
+            # When an attack is detected, this body needs to be serialized which would fail.
+            # So a byte string gets converted into a string to stop that from happening.
+            body = ""; # Set body to an empty string.
 
         context = None
         if hasattr(request, "scope"):  # This request is an ASGI request
