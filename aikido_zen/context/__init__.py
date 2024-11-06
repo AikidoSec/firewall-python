@@ -11,7 +11,7 @@ from aikido_zen.helpers.logging import logger
 from .wsgi import set_wsgi_attributes_on_context
 from .asgi import set_asgi_attributes_on_context
 
-UINPUT_SOURCES = ["body", "cookies", "query", "headers", "xml"]
+UINPUT_SOURCES = ["body", "cookies", "query", "headers", "xml", "route_params"]
 current_context = contextvars.ContextVar("current_context", default=None)
 
 WSGI_SOURCES = ["django", "flask"]
@@ -41,6 +41,7 @@ class Context:
         self.source = source
         self.user = None
         self.parsed_userinput = {}
+        self.route_params = {}
         self.xml = {}
         self.outgoing_req_redirects = []
         self.body = body
@@ -76,6 +77,7 @@ class Context:
                     "user": self.user,
                     "xml": self.xml,
                     "outgoing_req_redirects": self.outgoing_req_redirects,
+                    "route_params": self.route_params,
                 },
                 None,
                 None,
