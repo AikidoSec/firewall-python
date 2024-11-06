@@ -21,8 +21,11 @@ def extract_route_params(url):
             elif replace_url_segment_with_param(segment) is not segment:
                 results.append(segment)  # Might be a secret, a hash, ...
 
-        if len(path) > 1:
+        if len(results) > 0 or "." in unquote(path):
+            # There are already phishy parts of the url OR
+            # urldecoded path contains dots, which is uncommon and could point to path traversal.
             results.append(path[1:])  # Add path after slash as user input
+
     except Exception:
         pass
     return results
