@@ -2,7 +2,7 @@
 
 from aikido_zen.helpers.logging import logger
 from aikido_zen.helpers.get_current_unixtime_ms import get_unixtime_ms
-from ..service_config import ServiceConfig
+from aikido_zen.storage.service_config import ServiceConfig
 
 
 def update_service_config(connection_manager, res):

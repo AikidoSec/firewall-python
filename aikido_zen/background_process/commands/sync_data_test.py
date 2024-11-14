@@ -11,7 +11,7 @@ def setup_connection_manager():
     connection_manager.routes = Routes()
     connection_manager.conf.endpoints = ["endpoint1", "endpoint2"]
     connection_manager.conf.bypassed_ips = ["192.168.1.1"]
-    connection_manager.conf.blocked_uids = ["user1", "user2"]
+    connection_manager.conf.blocked_user_ids = ["user1", "user2"]
     connection_manager.statistics.requests = {"total": 0}  # Initialize total requests
     return connection_manager
 
@@ -61,7 +61,7 @@ def test_process_sync_data_initialization(setup_connection_manager):
     assert result["routes"] == dict(connection_manager.routes.routes)
     assert result["endpoints"] == connection_manager.conf.endpoints
     assert result["bypassed_ips"] == connection_manager.conf.bypassed_ips
-    assert result["blocked_uids"] == connection_manager.conf.blocked_uids
+    assert result["blocked_uids"] == connection_manager.conf.blocked_user_ids
 
 
 def test_process_sync_data_existing_route(setup_connection_manager):

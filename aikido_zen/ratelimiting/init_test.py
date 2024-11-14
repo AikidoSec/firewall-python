@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock
-from aikido_zen.background_process.service_config import ServiceConfig
+from aikido_zen.storage.service_config import ServiceConfig
 from aikido_zen.ratelimiting.rate_limiter import RateLimiter
 from . import should_ratelimit_request
 
@@ -312,9 +312,6 @@ def test_does_not_ratelimit_bypassed_ip_with_user():
 
 def test_works_with_setuser_after_first_ratelimit():
     pass
-
-
-import pytest
 
 
 def test_rate_limiting_bypassed_ip_with_user():
