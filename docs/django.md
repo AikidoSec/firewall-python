@@ -34,6 +34,18 @@ AIKIDO_BLOCKING=true
 
 It's recommended to enable this on your staging environment for a considerable amount of time before enabling it on your production environment (e.g. one week).
 
+## Rate limiting and user blocking
+If you want to add the rate limiting feature to your app, modify your code like this:
+```py
+# settings.py file : 
+
+MIDDLEWARE = [
+    # ...
+    "aikido_zen.middleware.AikidoDjangoMiddleware",
+    # ...
+]
+```
+
 ## Debug mode
 
 If you need to debug the firewall, you can run your code with the environment variable `AIKIDO_DEBUG` set to `true`:
