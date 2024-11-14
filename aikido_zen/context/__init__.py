@@ -3,6 +3,7 @@ Provides all the functionality for contexts
 """
 
 import contextvars
+import json
 from urllib.parse import parse_qs
 
 from aikido_zen.helpers.build_route_from_url import build_route_from_url
@@ -44,7 +45,7 @@ class Context:
         self.parsed_userinput = {}
         self.xml = {}
         self.outgoing_req_redirects = []
-        self.body = body
+        self.set_body(body)
 
         # Parse WSGI/ASGI/... request :
         self.cookies = self.method = self.remote_address = self.query = self.headers = (
@@ -90,6 +91,14 @@ class Context:
         Set the current context
         """
         current_context.set(self)
+
+    def set_body(self, body):
+        """Sets the body, and verifies the body is okay"""
+        try:
+            json.dumps(body)
+            self.body = body
+        except (TypeError, OverflowError):
+            self.body = None
 
     def get_route_metadata(self):
         """Returns a route_metadata object"""
