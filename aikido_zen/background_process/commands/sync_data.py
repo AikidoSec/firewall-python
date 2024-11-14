@@ -28,5 +28,5 @@ def process_sync_data(connection_manager, data, conn, queue=None):
     connection_manager.statistics.requests["total"] += data.get("reqs", 0)
     return {
         "routes": dict(connection_manager.routes.routes),
-        "service_config": connection_manager.conf
+        "service_config": connection_manager.conf,
     }
