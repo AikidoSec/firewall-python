@@ -26,10 +26,12 @@ def process_sync_data(connection_manager, data, conn, queue=None):
         update_route_info(route["apispec"], existing_route)
 
     connection_manager.statistics.requests["total"] += data.get("reqs", 0)
-
-    return {
-        "routes": dict(connection_manager.routes.routes),
-        "endpoints": connection_manager.conf.endpoints,
-        "bypassed_ips": connection_manager.conf.bypassed_ips,
-        "blocked_uids": connection_manager.conf.blocked_uids,
-    }
+    if connection_manager.conf.last_updated_at > 0:
+        # Only report data if the config has been fetched.
+        return {
+            "routes": dict(connection_manager.routes.routes),
+            "endpoints": connection_manager.conf.endpoints,
+            "bypassed_ips": connection_manager.conf.bypassed_ips,
+            "blocked_uids": connection_manager.conf.blocked_uids,
+        }
+    return {}
