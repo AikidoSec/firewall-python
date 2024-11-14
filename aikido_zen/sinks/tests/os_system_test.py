@@ -78,12 +78,12 @@ def test_osdotpopen_commands():
         os.popen("Test command")
 
         args = ("Test command",)
-        mock_run_vulnerability_scan.assert_called_with(
+        mock_run_vulnerability_scan.assert_any_call(
             kind=kind, op="subprocess.Popen", args=args
         )
 
         os.popen("ls -la | grep 'test'")
         args = ("ls -la | grep 'test'",)
-        mock_run_vulnerability_scan.assert_called_with(
+        mock_run_vulnerability_scan.assert_any_call(
             kind=kind, op="subprocess.Popen", args=args
         )

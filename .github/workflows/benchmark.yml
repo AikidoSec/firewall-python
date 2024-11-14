@@ -65,11 +65,8 @@ jobs:
           docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
       - name: Install wrk
         run: |
-          sudo apt-get install build-essential libssl-dev git -y
-          git clone https://github.com/wg/wrk.git wrk
-          cd wrk
-          sudo make
-          sudo cp wrk /usr/local/bin
+          sudo apt-get update
+          sudo apt-get install -y wrk
       - name: Set up Python 3.9
         uses: actions/setup-python@v2
         with:

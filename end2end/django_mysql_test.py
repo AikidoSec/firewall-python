@@ -4,8 +4,8 @@ import requests
 from .server.check_events_from_mock import fetch_events_from_mock, validate_started_event, filter_on_event_type, validate_heartbeat
 
 # e2e tests for django_mysql sample app
-post_url_fw = "http://localhost:8080/app/create"
-post_url_nofw = "http://localhost:8081/app/create"
+base_url_fw = "http://localhost:8080/app"
+base_url_nofw = "http://localhost:8081/app"
 
 def test_firewall_started_okay():
     events = fetch_events_from_mock("http://localhost:5000")
@@ -15,18 +15,18 @@ def test_firewall_started_okay():
 
 def test_safe_response_with_firewall():
     dog_name = "Bobby Tables"
-    res = requests.post(post_url_fw, data={'dog_name': dog_name})
+    res = requests.post(base_url_fw + "/create", data={'dog_name': dog_name})
     assert res.status_code == 200
 
 def test_safe_response_without_firewall():
     dog_name = "Bobby Tables"
-    res = requests.post(post_url_nofw, data={'dog_name': dog_name})
+    res = requests.post(base_url_nofw + "/create", data={'dog_name': dog_name})
     assert res.status_code == 200
 
 
 def test_dangerous_response_with_firewall():
     dog_name = 'Dangerous bobby", 1); -- '
-    res = requests.post(post_url_fw, data={'dog_name': dog_name})
+    res = requests.post(base_url_fw + "/create", data={'dog_name': dog_name})
     assert res.status_code == 500
     time.sleep(5) # Wait for attack to be reported
     events = fetch_events_from_mock("http://localhost:5000")
@@ -45,9 +45,31 @@ def test_dangerous_response_with_firewall():
         'user': None
     }
 
+def test_dangerous_response_with_firewall_shell():
+    dog_name = 'Dangerous bobby", 1); -- '
+    res = requests.get(base_url_fw + "/shell/ls -la")
+    assert res.status_code == 500
+    time.sleep(5) # Wait for attack to be reported
+    events = fetch_events_from_mock("http://localhost:5000")
+    attacks = filter_on_event_type(events, "detected_attack")
+    
+    assert len(attacks) == 2
+    del attacks[0] # Previous attack
+    del attacks[0]["attack"]["stack"]
+    assert attacks[0]["attack"] == {
+        "blocked": True,
+        "kind": "shell_injection",
+        'metadata': {'command': 'ls -la'},
+        'operation': 'subprocess.Popen',
+        'pathToPayload': '.[0]',
+        'payload': '"ls -la"',
+        'source': "route_params",
+        'user': None
+    }
+
 def test_dangerous_response_without_firewall():
     dog_name = 'Dangerous bobby", 1); -- '
-    res = requests.post(post_url_nofw, data={'dog_name': dog_name})
+    res = requests.post(base_url_nofw + "/create", data={'dog_name': dog_name})
     assert res.status_code == 200
 
 def test_initial_heartbeat():
@@ -63,5 +85,5 @@ def test_initial_heartbeat():
             "method": "POST",
             "path": "/app/create"
         }], 
-        {"aborted":0,"attacksDetected":{"blocked":1,"total":1},"total":0}
+        {"aborted":0,"attacksDetected":{"blocked":2,"total":2},"total":0}
     )

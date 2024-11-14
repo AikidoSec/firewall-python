@@ -6,6 +6,15 @@ from aikido_zen.errors import AikidoSQLInjection
 from aikido_zen.thread.thread_cache import ThreadCache, threadlocal_storage
 
 
+@pytest.fixture(autouse=True)
+def run_around_tests():
+    yield
+    # Make sure to reset context and cache after every test so it does not
+    # interfere with other tests
+    current_context.set(None)
+    setattr(threadlocal_storage, "cache", None)
+
+
 @pytest.fixture
 def mock_comms():
     """Fixture to mock the get_comms function."""
@@ -33,6 +42,7 @@ def get_context():
         body={"test_input_sql": "doggoss2', TRUE"},
         source="flask",
     )
+    context.route_params = {"test_input2": "cattss2', TRUE"}
     return context
 
 
@@ -92,6 +102,20 @@ def test_sql_injection(caplog, get_context, monkeypatch):
         )
 
 
+def test_sql_injection_with_route_params(caplog, get_context, monkeypatch):
+    from aikido_zen.vulnerabilities.sql_injection.dialects import MySQL
+
+    get_context.set_as_current_context()
+    cache = ThreadCache()
+    monkeypatch.setenv("AIKIDO_BLOCKING", "1")
+    with pytest.raises(AikidoSQLInjection):
+        run_vulnerability_scan(
+            kind="sql_injection",
+            op="test_op",
+            args=("INSERT * INTO VALUES ('cattss2', TRUE);", MySQL()),
+        )
+
+
 def test_sql_injection_with_comms(caplog, get_context, monkeypatch):
     from aikido_zen.vulnerabilities.sql_injection.dialects import MySQL
 
@@ -133,7 +157,6 @@ def test_ssrf_with_comms_hostnames_add(caplog, get_context, monkeypatch):
             op="test_op",
             args=([], "test-hostname", 8097),
         )
-        mock_comms.send_data_to_bg_process.assert_called_once()
-        call_args = mock_comms.send_data_to_bg_process.call_args[0]
-        assert call_args[0] == "HOSTNAMES_ADD"
-        assert call_args[1] == ("test-hostname", 8097)
+        mock_comms.send_data_to_bg_process.assert_any_call(
+            "HOSTNAMES_ADD", ("test-hostname", 8097)
+        )

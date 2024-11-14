@@ -1,7 +1,15 @@
 import pytest
 import pickle
 import json
-from aikido_zen.context import Context, get_current_context
+from aikido_zen.context import Context, get_current_context, current_context
+
+
+@pytest.fixture(autouse=True)
+def run_around_tests():
+    yield
+    # Make sure to reset context after every test so it does not
+    # interfere with other tests
+    current_context.set(None)
 
 
 def test_get_current_context_no_context():
@@ -46,6 +54,7 @@ def test_wsgi_context_1():
         "xml": {},
         "outgoing_req_redirects": [],
         "executed_middleware": False,
+        "route_params": [],
     }
 
 
@@ -86,6 +95,7 @@ def test_wsgi_context_2():
         "xml": {},
         "outgoing_req_redirects": [],
         "executed_middleware": False,
+        "route_params": [],
     }
 
 

@@ -13,27 +13,158 @@ def test_ospath_commands():
         import os
 
         os.path.realpath("test/test2")
-        op = "os.path.realpath"
+        op = "os.path.join"
         args = ("test/test2",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
         with pytest.raises(FileNotFoundError):
             os.path.getsize("aqkqjefbkqlleq_qkvfjksaicuaviel")
-            op = "os.path.getsize"
-            args = ("aqkqjefbkqlleq_qkvfjksaicuaviel",)
-            mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+        op = "os.path.getsize"
+        args = ("aqkqjefbkqlleq_qkvfjksaicuaviel",)
+        # Need to use assert_any_call, since python 3.12 it uses os.path.join
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
 
         os.path.realpath(b"te2st/test2")
-        op = "os.path.realpath"
+        op = "os.path.join"
         args = (b"te2st/test2",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
-        path1 = Path("./test", "test2", "test3")
-        os.path.realpath(path1)
+        path1 = Path("./", "../", "test/../test2")
+        with pytest.raises(FileNotFoundError):
+            os.path.getsize(path1)
 
-        op = "os.path.realpath"
+        op = "os.path.getsize"
         args = (path1,)
+        # Need to use assert_any_call, since python 3.12 it uses os.path.join
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
+
+
+def test_ospath_command_absolute_path():
+    with patch(
+        "aikido_zen.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        import os
+
+        os.path.abspath("../test/test2")
+        op = "os.path.join"
+        args = ("../test/test2",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
+        path1 = Path("./test", "test2", "test3")
+        os.path.abspath(path1)
+
+        op = "os.path.join"
+        args = ("test/test2/test3",)
+        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
+
+def test_ospath_expanduser():
+    with patch(
+        "aikido_zen.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        import os
+
+        os.path.expanduser("../test/test2")
+        op = "os.path.expanduser"
+        args = ("../test/test2",)
+        # Need to use assert_any_call, since python 3.12 it uses os.path.join
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
+
+        path1 = Path("./test", "test2", "test3")
+        os.path.expanduser(path1)
+
+        op = "os.path.expanduser"
+        args = (path1,)
+        # Need to use assert_any_call, since python 3.12 it uses os.path.join
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
+
+
+def test_ospath_expandvars():
+    with patch(
+        "aikido_zen.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        import os
+
+        os.path.expandvars("../test/test2")
+        op = "os.path.expandvars"
+        args = ("../test/test2",)
+        # Need to use assert_any_call, since python 3.12 it uses os.path.join
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
+
+        path1 = Path("./test", "test2", "test3")
+        os.path.expandvars(path1)
+
+        op = "os.path.expandvars"
+        args = (path1,)
+        # Need to use assert_any_call, since python 3.12 it uses os.path.join
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
+
+
+def test_ospath_join():
+    with patch(
+        "aikido_zen.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        import os
+
+        os.path.join("../", "/etc/passwd", "..")
+        op = "os.path.join"
+        args1 = ("../",)
+        args2 = ("/etc/passwd",)
+        args3 = ("..",)
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args1)
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args2)
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args3)
+
+
+@patch("aikido_zen.vulnerabilities.run_vulnerability_scan")
+def test_ospath_join_bytes(mock_run_vulnerability_scan):
+    import os
+
+    op = "os.path.join"
+
+    # Test with bytes arguments
+    os.path.join(b"../", b"/etc/passwd", b"..")
+    args1 = (b"../",)
+    args2 = (b"/etc/passwd",)
+    args3 = (b"..",)
+
+    mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args1)
+    mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args2)
+    mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args3)
+
+
+@patch("aikido_zen.vulnerabilities.run_vulnerability_scan")
+def test_ospath_join_path_objects(mock_run_vulnerability_scan):
+    import os
+
+    op = "os.path.join"
+
+    # Test with Path objects
+    os.path.join(Path("../"), Path("/etc/passwd"), Path(".."))
+    args1 = (Path("../"),)
+    args2 = (Path("/etc/passwd"),)
+    args3 = (Path(".."),)
+
+    mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args1)
+    mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args2)
+    mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args3)
+
+
+@patch("aikido_zen.vulnerabilities.run_vulnerability_scan")
+def test_ospath_join_mixed_paths(mock_run_vulnerability_scan):
+    import os
+
+    op = "os.path.join"
+
+    # Test with mixed strings and Path objects
+    os.path.join("../", Path("/etc/passwd"), "..")
+    args1 = ("../",)
+    args2 = (Path("/etc/passwd"),)
+    args3 = ("..",)
+
+    mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args1)
+    mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args2)
+    mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args3)
 
 
 def test_os_commands():

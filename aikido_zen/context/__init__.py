@@ -10,8 +10,9 @@ from aikido_zen.helpers.get_subdomains_from_url import get_subdomains_from_url
 from aikido_zen.helpers.logging import logger
 from .wsgi import set_wsgi_attributes_on_context
 from .asgi import set_asgi_attributes_on_context
+from .extract_route_params import extract_route_params
 
-UINPUT_SOURCES = ["body", "cookies", "query", "headers", "xml"]
+UINPUT_SOURCES = ["body", "cookies", "query", "headers", "xml", "route_params"]
 current_context = contextvars.ContextVar("current_context", default=None)
 
 WSGI_SOURCES = ["django", "flask"]
@@ -56,6 +57,7 @@ class Context:
 
         # Define variables using parsed request :
         self.route = build_route_from_url(self.url)
+        self.route_params = extract_route_params(self.url)
         self.subdomains = get_subdomains_from_url(self.url)
 
         self.executed_middleware = False
@@ -79,6 +81,7 @@ class Context:
                     "xml": self.xml,
                     "outgoing_req_redirects": self.outgoing_req_redirects,
                     "executed_middleware": self.executed_middleware,
+                    "route_params": self.route_params,
                 },
                 None,
                 None,
