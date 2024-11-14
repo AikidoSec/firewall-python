@@ -20,7 +20,7 @@ def create_connection_manager(endpoints=[], bypassed_ips=[]):
     cm.conf = ServiceConfig(
         endpoints=endpoints,
         last_updated_at=1,
-        blocked_uids=[],
+        blocked_user_ids=[],
         bypassed_ips=bypassed_ips,
         received_any_stats=True,
     )

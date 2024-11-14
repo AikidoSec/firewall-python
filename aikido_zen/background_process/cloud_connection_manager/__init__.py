@@ -35,7 +35,7 @@ class CloudConnectionManager:
         self.conf = ServiceConfig(
             endpoints=[],
             last_updated_at=get_unixtime_ms(),
-            blocked_uids=[],
+            blocked_user_ids=[],
             bypassed_ips=[],
             received_any_stats=True,
         )

@@ -19,7 +19,7 @@ def update_service_config(connection_manager, res):
     connection_manager.conf = ServiceConfig(
         endpoints=res.get("endpoints", []),
         last_updated_at=res.get("configUpdatedAt", get_unixtime_ms()),
-        blocked_uids=res.get("blockedUserIds", []),
+        blocked_user_ids=res.get("blockedUserIds", []),
         bypassed_ips=res.get("allowedIPAddresses", []),
         received_any_stats=res.get("receivedAnyStats", True),
     )
