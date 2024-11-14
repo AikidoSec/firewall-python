@@ -36,7 +36,7 @@ class CloudConnectionManager:
         self.hostnames = Hostnames(200)
         self.conf = ServiceConfig(
             endpoints=[],
-            last_updated_at=-1, # Has not been updated yet
+            last_updated_at=-1,  # Has not been updated yet
             blocked_uids=[],
             bypassed_ips=[],
             received_any_stats=True,
