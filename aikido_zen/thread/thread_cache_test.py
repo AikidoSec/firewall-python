@@ -25,7 +25,7 @@ def test_initialization(thread_cache):
     assert isinstance(thread_cache.routes, Routes)
     assert thread_cache.bypassed_ips == set()
     assert thread_cache.endpoints == []
-    assert thread_cache.blocked_uids == set()
+    assert thread_cache.blocked_user_ids == set()
     assert thread_cache.reqs == 0
     assert thread_cache.last_renewal == 0
 
@@ -39,7 +39,7 @@ def test_is_bypassed_ip(thread_cache):
 
 def test_is_user_blocked(thread_cache):
     """Test checking if a user ID is blocked."""
-    thread_cache.blocked_uids.add("user123")
+    thread_cache.blocked_user_ids.add("user123")
     assert thread_cache.is_user_blocked("user123") is True
     assert thread_cache.is_user_blocked("user456") is False
 
@@ -65,7 +65,7 @@ def test_renew_if_ttl_expired(mock_get_unixtime_ms, mock_get_comms, thread_cache
     thread_cache.renew_if_ttl_expired()
     assert thread_cache.bypassed_ips == {"192.168.1.1"}
     assert thread_cache.endpoints == ["endpoint1"]
-    assert thread_cache.blocked_uids == {"user123"}
+    assert thread_cache.blocked_user_ids == {"user123"}
     assert thread_cache.last_renewal > 0
 
 
@@ -83,11 +83,11 @@ def test_renew_if_ttl_not_expired(mock_get_unixtime_ms, mock_get_comms, thread_c
 def test_reset(thread_cache):
     """Test that reset empties the cache."""
     thread_cache.bypassed_ips.add("192.168.1.1")
-    thread_cache.blocked_uids.add("user123")
+    thread_cache.blocked_user_ids.add("user123")
     thread_cache.reset()
 
     assert thread_cache.bypassed_ips == set()
-    assert thread_cache.blocked_uids == set()
+    assert thread_cache.blocked_user_ids == set()
     assert thread_cache.reqs == 0
     assert thread_cache.last_renewal == 0
 
@@ -107,7 +107,7 @@ def test_renew_with_no_comms(thread_cache):
         thread_cache.renew()
         assert thread_cache.bypassed_ips == set()
         assert thread_cache.endpoints == []
-        assert thread_cache.blocked_uids == set()
+        assert thread_cache.blocked_user_ids == set()
         assert thread_cache.reqs == 0
         assert thread_cache.last_renewal == 0
 
@@ -129,7 +129,7 @@ def test_renew_with_invalid_response(mock_get_comms, thread_cache):
     thread_cache.renew()
     assert thread_cache.bypassed_ips == set()
     assert thread_cache.endpoints == []
-    assert thread_cache.blocked_uids == set()
+    assert thread_cache.blocked_user_ids == set()
     assert thread_cache.last_renewal > 0  # Should update last_renewal
 
 
@@ -181,14 +181,14 @@ def test_renew_if_ttl_expired_multiple_times(
     thread_cache.renew_if_ttl_expired()
     assert thread_cache.bypassed_ips == {"192.168.1.1"}
     assert thread_cache.endpoints == ["endpoint1"]
-    assert thread_cache.blocked_uids == {"user123"}
+    assert thread_cache.blocked_user_ids == {"user123"}
 
     # Simulate another TTL expiration
     mock_get_unixtime_ms.return_value += THREAD_CONFIG_TTL_MS + 1
     thread_cache.renew_if_ttl_expired()
     assert thread_cache.bypassed_ips == {"192.168.1.1"}
     assert thread_cache.endpoints == ["endpoint1"]
-    assert thread_cache.blocked_uids == {"user123"}  # Should remain the same
+    assert thread_cache.blocked_user_ids == {"user123"}  # Should remain the same
 
 
 @patch("aikido_zen.background_process.comms.get_comms")
@@ -228,7 +228,7 @@ def test_parses_routes_correctly(mock_get_unixtime_ms, mock_get_comms, thread_ca
     thread_cache.renew_if_ttl_expired()
     assert thread_cache.bypassed_ips == {"192.168.1.1"}
     assert thread_cache.endpoints == ["endpoint1"]
-    assert thread_cache.blocked_uids == {"user123"}
+    assert thread_cache.blocked_user_ids == {"user123"}
     assert list(thread_cache.routes) == [
         {
             "method": "POST",

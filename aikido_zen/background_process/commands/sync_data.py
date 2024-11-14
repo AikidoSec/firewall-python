@@ -31,5 +31,5 @@ def process_sync_data(connection_manager, data, conn, queue=None):
         "routes": dict(connection_manager.routes.routes),
         "endpoints": connection_manager.conf.endpoints,
         "bypassed_ips": connection_manager.conf.bypassed_ips,
-        "blocked_uids": connection_manager.conf.blocked_uids,
+        "blocked_uids": connection_manager.conf.blocked_user_ids,
     }
