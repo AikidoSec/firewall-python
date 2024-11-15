@@ -75,6 +75,7 @@ cryptography = "^43.0.0"
 motor = "^3.5.1"
 flask = "^3.0.3"
 pygments = "^2.18.0"
+ddtrace = "^2.16.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
