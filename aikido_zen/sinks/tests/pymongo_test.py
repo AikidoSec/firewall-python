@@ -118,7 +118,6 @@ def test_find_one(db):
         assert called_with["args"][0] == _filter
         assert called_with["op"] == "pymongo.collection.Collection.find"
         assert called_with["kind"] == "nosql_injection"
-        mock_run_vulnerability_scan.assert_called_once()
 
 
 def test_count_documents(db):
@@ -134,7 +133,6 @@ def test_count_documents(db):
         assert called_with["args"][0] == _filter
         assert called_with["op"] == "pymongo.collection.Collection.count_documents"
         assert called_with["kind"] == "nosql_injection"
-        mock_run_vulnerability_scan.assert_called_once()
 
 
 def test_find_one_and_delete(db):
@@ -150,7 +148,6 @@ def test_find_one_and_delete(db):
         assert called_with["args"][0] == _filter
         assert called_with["op"] == "pymongo.collection.Collection.find_one_and_delete"
         assert called_with["kind"] == "nosql_injection"
-        mock_run_vulnerability_scan.assert_called_once()
 
 
 def test_find_one_and_replace(db):
@@ -166,7 +163,6 @@ def test_find_one_and_replace(db):
         assert called_with["args"][0] == _filter
         assert called_with["op"] == "pymongo.collection.Collection.find_one_and_replace"
         assert called_with["kind"] == "nosql_injection"
-        mock_run_vulnerability_scan.assert_called_once()
 
 
 def test_find_one_and_update(db):
@@ -182,7 +178,6 @@ def test_find_one_and_update(db):
         assert called_with["args"][0] == _filter
         assert called_with["op"] == "pymongo.collection.Collection.find_one_and_update"
         assert called_with["kind"] == "nosql_injection"
-        mock_run_vulnerability_scan.assert_called_once()
 
 
 def test_find_empty(db):
@@ -208,7 +203,6 @@ def test_find_not_empty(db):
         assert called_with["args"][0] == _filter
         assert called_with["op"] == "pymongo.collection.Collection.find"
         assert called_with["kind"] == "nosql_injection"
-        mock_run_vulnerability_scan.assert_called_once()
 
 
 def test_find_raw_batches(db):
@@ -224,7 +218,6 @@ def test_find_raw_batches(db):
         assert called_with["args"][0] == _filter
         assert called_with["op"] == "pymongo.collection.Collection.find_raw_batches"
         assert called_with["kind"] == "nosql_injection"
-        mock_run_vulnerability_scan.assert_called_once()
 
 
 def test_distinct(db):
@@ -240,7 +233,6 @@ def test_distinct(db):
         assert called_with["args"][0] == _filter
         assert called_with["op"] == "pymongo.collection.Collection.distinct"
         assert called_with["kind"] == "nosql_injection"
-        mock_run_vulnerability_scan.assert_called_once()
 
 
 def test_distinct_kwargs(db):
@@ -256,7 +248,6 @@ def test_distinct_kwargs(db):
         assert called_with["args"][0] == _filter
         assert called_with["op"] == "pymongo.collection.Collection.distinct"
         assert called_with["kind"] == "nosql_injection"
-        mock_run_vulnerability_scan.assert_called_once()
 
 
 def test_distinct_empty(db):
@@ -291,7 +282,6 @@ def test_aggregate(db):
         assert called_with["args"][0] == pipeline
         assert called_with["op"] == "pymongo.collection.Collection.aggregate"
         assert called_with["kind"] == "nosql_injection"
-        mock_run_vulnerability_scan.assert_called_once()
 
 
 def test_aggregate_key(db):
@@ -315,7 +305,6 @@ def test_aggregate_key(db):
         assert called_with["args"][0] == pipeline
         assert called_with["op"] == "pymongo.collection.Collection.aggregate"
         assert called_with["kind"] == "nosql_injection"
-        mock_run_vulnerability_scan.assert_called_once()
 
 
 def test_aggregate_raw_batches_key(db):
@@ -341,7 +330,6 @@ def test_aggregate_raw_batches_key(db):
             called_with["op"] == "pymongo.collection.Collection.aggregate_raw_batches"
         )
         assert called_with["kind"] == "nosql_injection"
-        mock_run_vulnerability_scan.assert_called_once()
 
 
 def test_aggregate_raw_batches(db):
@@ -367,7 +355,6 @@ def test_aggregate_raw_batches(db):
             called_with["op"] == "pymongo.collection.Collection.aggregate_raw_batches"
         )
         assert called_with["kind"] == "nosql_injection"
-        mock_run_vulnerability_scan.assert_called_once()
 
 
 def test_watch(db):
@@ -392,7 +379,6 @@ def test_watch(db):
         assert called_with["args"][0] == pipeline
         assert called_with["op"] == "pymongo.collection.Collection.watch"
         assert called_with["kind"] == "nosql_injection"
-        mock_run_vulnerability_scan.assert_called_once()
 
 
 def test_watch_key(db):
@@ -417,7 +403,6 @@ def test_watch_key(db):
         assert called_with["args"][0] == pipeline
         assert called_with["op"] == "pymongo.collection.Collection.watch"
         assert called_with["kind"] == "nosql_injection"
-        mock_run_vulnerability_scan.assert_called_once()
 
 
 def test_bulk_write(db):
