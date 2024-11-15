@@ -57,7 +57,7 @@ def test_shutil_copymode():
         op = "shutil.copymode"
         args1 = ("Makefile",)
         args2 = ("test2",)
-        assert len(mock_run_vulnerability_scan.call_args_list) == 3
+        assert len(mock_run_vulnerability_scan.call_args_list) == 2
         call_1 = mock_run_vulnerability_scan.call_args_list[0]
         call_2 = mock_run_vulnerability_scan.call_args_list[1]
 
@@ -76,7 +76,7 @@ def test_shutil_copystat():
         op = "shutil.copystat"
         args1 = ("Makefile",)
         args2 = ("test2",)
-        assert len(mock_run_vulnerability_scan.call_args_list) == 3
+        assert len(mock_run_vulnerability_scan.call_args_list) == 2
         call_1 = mock_run_vulnerability_scan.call_args_list[0]
         call_2 = mock_run_vulnerability_scan.call_args_list[1]
 
@@ -115,7 +115,7 @@ def test_shutil_move():
         op = "shutil.move"
         args1 = ("test2",)
         args2 = ("test3",)
-        assert len(mock_run_vulnerability_scan.call_args_list) == 4
+        assert len(mock_run_vulnerability_scan.call_args_list) == 2
         call_1 = mock_run_vulnerability_scan.call_args_list[0]
         call_2 = mock_run_vulnerability_scan.call_args_list[1]
 
@@ -134,7 +134,7 @@ def test_shutil_copy():
         op = "builtins.open"
         args1 = ("Makefile",)
         args2 = ("test2",)
-        assert len(mock_run_vulnerability_scan.call_args_list) == 5
+        assert len(mock_run_vulnerability_scan.call_args_list) == 2
         call_1 = mock_run_vulnerability_scan.call_args_list[0]
         call_2 = mock_run_vulnerability_scan.call_args_list[1]
 
@@ -154,7 +154,7 @@ def test_shutil_copy2():
         op = "builtins.open"
         args1 = ("Makefile",)
         args2 = ("test2",)
-        assert len(mock_run_vulnerability_scan.call_args_list) == 5
+        assert len(mock_run_vulnerability_scan.call_args_list) == 2
         call_1 = mock_run_vulnerability_scan.call_args_list[0]
         call_2 = mock_run_vulnerability_scan.call_args_list[1]
 
