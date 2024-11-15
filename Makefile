@@ -24,15 +24,15 @@ dev_install:
 
 .PHONY: test
 test:
-	poetry run pytest aikido_zen/
+	poetry run ddtrace-run pytest aikido_zen/
 
 .PHONY: end2end
 end2end:
-	poetry run pytest end2end/ 	
+	poetry run pytest end2end/
 
 .PHONY: cov
 cov:
-	poetry run pytest aikido_zen/ --cov=aikido_zen --cov-report=xml
+	poetry run ddtrace-run pytest aikido_zen/ --cov=aikido_zen --cov-report=xml
 
 .PHONY: benchmark
 benchmark:
