@@ -58,11 +58,11 @@ def test_flask_all_3_func():
             "CONTENT_TYPE": "application/x-www-form-urlencoded",
         }
         calls = mock_request_handler.call_args_list
-        assert len(calls) == 3
+        assert len(calls) == 5
         assert calls[0][1]["stage"] == "init"
         assert calls[1][1]["stage"] == "pre_response"
-        assert calls[2][1]["stage"] == "post_response"
-        assert calls[2][1]["status_code"] == 404
+        assert calls[3][1]["stage"] == "post_response"
+        assert calls[3][1]["status_code"] == 404
 
 
 def test_startup_flask():

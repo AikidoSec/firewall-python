@@ -244,7 +244,7 @@ def test_distinct_kwargs(db):
         _filter = {"dog_name": "test", "pswd": "pswd"}
         dogs.distinct(key="pswd", filter=_filter)
 
-        called_with = mock_run_vulnerability_scan.call_args[1]
+        called_with = mock_run_vulnerability_scan.call_args_list[0][1]
         assert called_with["args"][0] == _filter
         assert called_with["op"] == "pymongo.collection.Collection.distinct"
         assert called_with["kind"] == "nosql_injection"
