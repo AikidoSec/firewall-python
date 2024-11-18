@@ -1,3 +1,4 @@
 flask==2.3.3
 Flask-PyMongo
 cryptography
+ddtrace-run
