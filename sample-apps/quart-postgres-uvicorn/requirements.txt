@@ -1,4 +1,4 @@
-quart==0.17.0
+quart==0.19.7
 asyncpg==0.27.0
 cryptography==39.0.1
 uvicorn==0.22.0
