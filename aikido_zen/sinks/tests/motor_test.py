@@ -334,7 +334,7 @@ async def test_aggregate_raw_batches_key(db):
         async for doc in dogs.aggregate_raw_batches(pipeline=pipeline):
             pass
 
-        called_with = mock_run_vulnerability_scan.call_args[1]
+        called_with = mock_run_vulnerability_scan.call_args_list[0][1]
         assert called_with["args"][0] == pipeline
         assert (
             called_with["op"] == "pymongo.collection.Collection.aggregate_raw_batches"
