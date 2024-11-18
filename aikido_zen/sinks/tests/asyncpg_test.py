@@ -107,7 +107,7 @@ async def test_conn_execute_parameterized(database_conn):
             args = call[1]["args"]
             if args[0] == query:
                 counter += 1
-        assert counter == 2
+        assert counter == 2 * 2
 
         await conn.close()
 

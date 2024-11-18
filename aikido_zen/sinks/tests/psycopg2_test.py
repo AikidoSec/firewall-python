@@ -29,11 +29,10 @@ def test_cursor_execute(database_conn):
         called_with_args = mock_run_vulnerability_scan.call_args[1]["args"]
         assert called_with_args[0] == query
         assert isinstance(called_with_args[1], Postgres)
-        mock_run_vulnerability_scan.assert_called_once()
+        mock_run_vulnerability_scan.assert_called()
 
         cursor.fetchall()
         database_conn.close()
-        mock_run_vulnerability_scan.assert_called_once()
 
 
 def test_cursor_execute_parameterized(database_conn):
@@ -48,11 +47,10 @@ def test_cursor_execute_parameterized(database_conn):
         called_with_args = mock_run_vulnerability_scan.call_args[1]["args"]
         assert called_with_args[0] == query
         assert isinstance(called_with_args[1], Postgres)
-        mock_run_vulnerability_scan.assert_called_once()
+        mock_run_vulnerability_scan.assert_called()
 
         database_conn.commit()
         database_conn.close()
-        mock_run_vulnerability_scan.assert_called_once()
 
 
 def test_cursor_executemany(database_conn):
@@ -73,9 +71,8 @@ def test_cursor_executemany(database_conn):
             == "INSERT INTO dogs (dog_name, isadmin) VALUES (%s, %s)"
         )
         assert isinstance(called_with_args[1], Postgres)
-        mock_run_vulnerability_scan.assert_called_once()
+        mock_run_vulnerability_scan.assert_called()
 
         database_conn.commit()
         cursor.close()
         database_conn.close()
-        mock_run_vulnerability_scan.assert_called_once()

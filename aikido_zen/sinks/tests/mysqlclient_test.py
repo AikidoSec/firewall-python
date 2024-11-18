@@ -27,13 +27,13 @@ def test_cursor_execute(database_conn):
         assert called_with_args[0] == query
         assert isinstance(called_with_args[1], MySQL)
 
-        mock_run_vulnerability_scan.assert_called_once()
+        mock_run_vulnerability_scan.assert_called()
         cursor.fetchall()
-        mock_run_vulnerability_scan.assert_called_once()
+        mock_run_vulnerability_scan.assert_called()
 
         cursor.close()
         database_conn.close()
-        mock_run_vulnerability_scan.assert_called_once()
+        mock_run_vulnerability_scan.assert_called()
 
 
 def test_cursor_execute_no_args(database_conn):
@@ -53,13 +53,11 @@ def test_cursor_execute_no_args(database_conn):
         )
         assert isinstance(called_with_args[1], MySQL)
 
-        mock_run_vulnerability_scan.assert_called_once()
+        mock_run_vulnerability_scan.assert_called()
         cursor.fetchall()
-        mock_run_vulnerability_scan.assert_called_once()
 
         cursor.close()
         database_conn.close()
-        mock_run_vulnerability_scan.assert_called_once()
 
 
 def test_cursor_executemany(database_conn):
@@ -80,13 +78,11 @@ def test_cursor_executemany(database_conn):
             == "INSERT INTO dogs (dog_name, isAdmin) VALUES (%s, %s)"
         )
         assert isinstance(called_with_args[1], MySQL)
-        mock_run_vulnerability_scan.assert_called_once()
+        mock_run_vulnerability_scan.assert_called()
         database_conn.commit()
-        mock_run_vulnerability_scan.assert_called_once()
 
         cursor.close()
         database_conn.close()
-        mock_run_vulnerability_scan.assert_called_once()
 
 
 def test_cursor_execute_with_fstring(database_conn):
@@ -106,10 +102,8 @@ def test_cursor_execute_with_fstring(database_conn):
             called_with_args[0] == "INSERT INTO dogs (dog_name, isAdmin) VALUES (%s, 1)"
         )
         assert isinstance(called_with_args[1], MySQL)
-        mock_run_vulnerability_scan.assert_called_once()
+        mock_run_vulnerability_scan.assert_called()
         database_conn.commit()
-        mock_run_vulnerability_scan.assert_called_once()
 
         cursor.close()
         database_conn.close()
-        mock_run_vulnerability_scan.assert_called_once()

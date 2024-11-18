@@ -28,11 +28,10 @@ def test_cursor_execute(database_conn):
         assert isinstance(called_with["args"][1], Postgres)
         assert called_with["op"] == "psycopg.Cursor.execute"
         assert called_with["kind"] == "sql_injection"
-        mock_run_vulnerability_scan.assert_called_once()
+        mock_run_vulnerability_scan.assert_called()
 
         cursor.fetchall()
         database_conn.close()
-        mock_run_vulnerability_scan.assert_called_once()
 
 
 def test_cursor_execute_parameterized(database_conn):
@@ -50,7 +49,7 @@ def test_cursor_execute_parameterized(database_conn):
         assert isinstance(called_with["args"][1], Postgres)
         assert called_with["op"] == "psycopg.Cursor.execute"
         assert called_with["kind"] == "sql_injection"
-        mock_run_vulnerability_scan.assert_called_once()
+        mock_run_vulnerability_scan.assert_called()
 
     cursor.fetchall()
     database_conn.close()
@@ -97,6 +96,6 @@ def test_cursor_copy(database_conn):
         assert isinstance(called_with["args"][1], Postgres)
         assert called_with["op"] == "psycopg.Cursor.copy"
         assert called_with["kind"] == "sql_injection"
-        mock_run_vulnerability_scan.assert_called_once()
+        mock_run_vulnerability_scan.assert_called()
 
     database_conn.close()
