@@ -156,7 +156,7 @@ async def test_find_one_and_replace(db):
             filter=_filter, replacement={"dog_name": "test2"}
         )
 
-        called_with = mock_run_vulnerability_scan.call_args[1]
+        called_with = mock_run_vulnerability_scan.call_args_list[0][1]
         assert called_with["args"][0] == _filter
         assert called_with["op"] == "pymongo.collection.Collection.find_one_and_replace"
         assert called_with["kind"] == "nosql_injection"

@@ -23,7 +23,7 @@ def test_cursor_execute(database_conn):
         query = "SELECT * FROM dogs"
         cursor.execute(query)
 
-        called_with = mock_run_vulnerability_scan.call_args[1]
+        called_with = mock_run_vulnerability_scan.call_args_list[0][1]
         assert called_with["args"][0] == query
         assert isinstance(called_with["args"][1], Postgres)
         assert called_with["op"] == "psycopg.Cursor.execute"
