@@ -78,3 +78,22 @@ def test_dangerous_response_without_firewall():
     res = requests.post(base_url_nofw + "/create", data={'dog_name': dog_name})
     assert res.status_code == 200
 
+def test_ratelimiting_1_route():
+    # First request :
+    res = requests.get(base_url_fw + "/test_ratelimiting_1")
+    assert res.status_code == 200
+    # Second request :
+    res = requests.get(base_url_fw + "/test_ratelimiting_1")
+    assert res.status_code == 200
+    # Third request :
+    res = requests.get(base_url_fw + "/test_ratelimiting_1")
+    assert res.status_code == 429
+    # Fourth request :
+    res = requests.get(base_url_fw + "/test_ratelimiting_1")
+    assert res.status_code == 429
+
+    time.sleep(5) # Wait until window expires
+    
+    # Fifth request :
+    res = requests.get(base_url_fw + "/test_ratelimiting_1")
+    assert res.status_code == 200
