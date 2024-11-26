@@ -2,41 +2,42 @@
 SQL Injection algorithm
 """
 
-import os
 import re
 import ctypes
 from aikido_zen.helpers.logging import logger
 from .map_dialect_to_rust_int import map_dialect_to_rust_int
-
-current_dir = os.path.dirname(os.path.abspath(__file__))
-lib_path = os.path.join(current_dir, "../../lib", "libzen_internals.so")
-internals_lib = ctypes.CDLL(lib_path)
+from .get_lib_path import get_binary_path
 
 
 def detect_sql_injection(query, user_input, dialect):
     """
     Execute this to check if the query is actually a SQL injection
     """
-    query_l = query.lower()
-    userinput_l = user_input.lower()
-    if should_return_early(query_l, userinput_l):
-        return False
+    try:
+        internals_lib = ctypes.CDLL(get_binary_path())
+        query_l = query.lower()
+        userinput_l = user_input.lower()
+        if should_return_early(query_l, userinput_l):
+            return False
 
-    query_bytes = query_l.encode("utf-8")
-    userinput_bytes = userinput_l.encode("utf-8")
-    dialect_int = map_dialect_to_rust_int(dialect)
-    c_int_res = internals_lib.detect_sql_injection(
-        query_bytes, userinput_bytes, dialect_int
-    )
-
-    # This means that an error occurred in the library
-    if c_int_res == 2:
-        logger.debug(
-            "Unable to check for SQL Injection, an error occurred in the library"
+        query_bytes = query_l.encode("utf-8")
+        userinput_bytes = userinput_l.encode("utf-8")
+        dialect_int = map_dialect_to_rust_int(dialect)
+        c_int_res = internals_lib.detect_sql_injection(
+            query_bytes, userinput_bytes, dialect_int
         )
-        return False
 
-    return bool(c_int_res)
+        # This means that an error occurred in the library
+        if c_int_res == 2:
+            logger.debug(
+                "Unable to check for SQL Injection, an error occurred in the library"
+            )
+            return False
+
+        return bool(c_int_res)
+    except Exception as e:
+        logger.debug("Exception in SQL algo: %s", e)
+    return False
 
 
 def should_return_early(query, user_input):
