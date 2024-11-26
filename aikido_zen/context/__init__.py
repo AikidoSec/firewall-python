@@ -4,6 +4,7 @@ Provides all the functionality for contexts
 
 import contextvars
 import json
+from json import JSONDecodeError
 from urllib.parse import parse_qs
 
 from aikido_zen.helpers.build_route_from_url import build_route_from_url
@@ -99,6 +100,12 @@ class Context:
             self.body = body
         except (TypeError, OverflowError):
             self.body = None
+        if isinstance(self.body, str) and self.body.startswith("{"):
+            # Might be JSON:
+            try:
+                self.body = json.loads(self.body)
+            except JSONDecodeError:
+                pass
 
     def get_route_metadata(self):
         """Returns a route_metadata object"""

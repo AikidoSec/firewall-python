@@ -166,3 +166,29 @@ def test_set_bytestring():
 def test_set_none():
     context = Context(req=basic_wsgi_req, body=None, source="flask")
     assert context.body is None
+
+
+def test_set_valid_nested_json_string():
+    context = Context(req=basic_wsgi_req, body=None, source="flask")
+    context.set_body('{"key": {"nested_key": "nested_value"}}')
+    assert context.body == {"key": {"nested_key": "nested_value"}}
+
+
+def test_set_invalid_json_with_unmatched_quotes():
+    context = Context(req=basic_wsgi_req, body=None, source="flask")
+
+    context.set_body('{"key": "value\'s}')
+    assert context.body == '{"key": "value\'s}'  # Should remain as string
+
+
+def test_set_valid_json_with_array():
+    context = Context(req=basic_wsgi_req, body=None, source="flask")
+
+    context.set_body('{"key": [1, 2, 3]}')
+    assert context.body == {"key": [1, 2, 3]}
+
+
+def test_set_valid_json_with_special_characters():
+    context = Context(req=basic_wsgi_req, body=None, source="flask")
+    context.set_body('{"key": "value with special characters !@#$%^&*()"}')
+    assert context.body == {"key": "value with special characters !@#$%^&*()"}
