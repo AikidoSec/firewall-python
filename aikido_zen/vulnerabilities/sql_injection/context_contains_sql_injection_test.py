@@ -1,7 +1,6 @@
 import pytest
 from aikido_zen.context import Context
 from .context_contains_sql_injection import context_contains_sql_injection
-from .dialects import MySQL
 
 
 class Context2(Context):
@@ -44,6 +43,6 @@ def test_doesnt_crash_with_invalid_sql(invalid_input):
         sql=invalid_input,
         operation="mysqlclient.query",
         context=context,
-        dialect=MySQL(),
+        dialect="mysql",
     )
     assert result == {}

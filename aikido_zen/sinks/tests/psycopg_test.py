@@ -2,7 +2,6 @@ import pytest
 from unittest.mock import patch
 import aikido_zen.sinks.psycopg
 from aikido_zen.background_process.comms import reset_comms
-from aikido_zen.vulnerabilities.sql_injection.dialects import Postgres
 
 
 @pytest.fixture
@@ -25,7 +24,7 @@ def test_cursor_execute(database_conn):
 
         called_with = mock_run_vulnerability_scan.call_args[1]
         assert called_with["args"][0] == query
-        assert isinstance(called_with["args"][1], Postgres)
+        assert called_with["args"][1] == "postgres"
         assert called_with["op"] == "psycopg.Cursor.execute"
         assert called_with["kind"] == "sql_injection"
         mock_run_vulnerability_scan.assert_called_once()
@@ -47,7 +46,7 @@ def test_cursor_execute_parameterized(database_conn):
 
         called_with = mock_run_vulnerability_scan.call_args[1]
         assert called_with["args"][0] == "SELECT * FROM dogs WHERE dog_name = %s"
-        assert isinstance(called_with["args"][1], Postgres)
+        assert called_with["args"][1] == "postgres"
         assert called_with["op"] == "psycopg.Cursor.execute"
         assert called_with["kind"] == "sql_injection"
         mock_run_vulnerability_scan.assert_called_once()
@@ -73,7 +72,7 @@ def test_cursor_executemany(database_conn):
             called_with["args"][0]
             == "INSERT INTO dogs (dog_name, isadmin) VALUES (%s, %s)"
         )
-        assert isinstance(called_with["args"][1], Postgres)
+        assert called_with["args"][1] == "postgres"
         assert called_with["op"] == "psycopg.Cursor.executemany"
         assert called_with["kind"] == "sql_injection"
         mock_run_vulnerability_scan.assert_called()
@@ -94,7 +93,7 @@ def test_cursor_copy(database_conn):
 
         called_with = mock_run_vulnerability_scan.call_args[1]
         assert called_with["args"][0] == query
-        assert isinstance(called_with["args"][1], Postgres)
+        assert called_with["args"][1] == "postgres"
         assert called_with["op"] == "psycopg.Cursor.copy"
         assert called_with["kind"] == "sql_injection"
         mock_run_vulnerability_scan.assert_called_once()
