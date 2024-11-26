@@ -24,7 +24,7 @@ def wrap_cursor_factory(cursor_factory):
             )
             if former_cursor_factory and hasattr(former_cursor_factory, "execute"):
                 return former_cursor_factory.execute(self, *args, **kwargs)
-            return super().execute(*args, **kwargs)
+            return ext.cursor.execute(self, *args, **kwargs)
 
         def executemany(self, *args, **kwargs):
             """Aikido's wrapped executemany function"""
@@ -36,7 +36,7 @@ def wrap_cursor_factory(cursor_factory):
             )
             if former_cursor_factory and hasattr(former_cursor_factory, "executemany"):
                 return former_cursor_factory.executemany(self, *args, **kwargs)
-            return super().executemany(*args, **kwargs)
+            return ext.cursor.executemany(self, *args, **kwargs)
 
     return AikidoWrappedCursor
 

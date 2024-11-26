@@ -16,8 +16,8 @@ from aikido_zen.helpers.logging import logger
 from aikido_zen.background_process import start_background_process
 
 # Load environment variables and constants
-# Load environment variables and constants
 from aikido_zen.config import PKG_VERSION
+from aikido_zen.helpers.aikido_disabled_flag_active import aikido_disabled_flag_active
 
 load_dotenv()
 
@@ -30,6 +30,9 @@ def protect(mode="daemon"):
     - daemon_disabled : This will import sinks/sources but won't start a background process
     Protect user's application
     """
+    if aikido_disabled_flag_active():
+        # Do not run any aikido code when the disabled flag is on
+        return
     if mode in ("daemon", "daemon_only"):
         start_background_process()
     if mode == "daemon_only":
@@ -67,4 +70,4 @@ def protect(mode="daemon"):
     import aikido_zen.sinks.os_system
     import aikido_zen.sinks.subprocess
 
-    logger.info("Aikido python firewall v%s starting.", PKG_VERSION)
+    logger.info("Zen by Aikido v%s starting.", PKG_VERSION)

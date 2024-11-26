@@ -3,7 +3,7 @@ init.py file for the module to detect NoSQL Injections
 """
 
 import json
-from aikido_zen.helpers.is_plain_object import is_plain_object
+from aikido_zen.helpers.is_mapping import is_mapping
 from aikido_zen.helpers.build_path_to_payload import build_path_to_payload
 from aikido_zen.helpers.try_decode_as_jwt import try_decode_as_jwt
 from aikido_zen.context import UINPUT_SOURCES
@@ -22,7 +22,7 @@ def match_filter_part_in_user(user_input, filter_part, path_to_payload=None):
                 jwt[1], filter_part, path_to_payload + [{"type": "jwt"}]
             )
 
-    if is_plain_object(user_input):
+    if is_mapping(user_input):
         filtered_input = remove_keys_that_dont_start_with_dollar_sign(user_input)
         if filtered_input == filter_part:
             return {
@@ -61,7 +61,7 @@ def find_filter_part_with_operators(user_input, part_of_filter):
     """
     This looks for parts in the filter that have NSQL operators (e.g. $)
     """
-    if is_plain_object(part_of_filter):
+    if is_mapping(part_of_filter):
         obj = remove_keys_that_dont_start_with_dollar_sign(part_of_filter)
         if len(obj) > 0:
             result = match_filter_part_in_user(user_input, obj)
@@ -100,7 +100,7 @@ def detect_nosql_injection(request, _filter):
     Give a context object and a nosql filter and this function
     checks if there is a NoSQL injection
     """
-    if not is_plain_object(_filter) and not isinstance(_filter, list):
+    if not is_mapping(_filter) and not isinstance(_filter, list):
         return {}
 
     for source in UINPUT_SOURCES:

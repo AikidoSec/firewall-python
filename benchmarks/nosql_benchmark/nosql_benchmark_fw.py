@@ -44,10 +44,10 @@ def run_nosql_find(query, MongoClient):
 
 def set_context(context_json):
     from aikido_zen.context import Context
-    from aikido_zen.background_process.ipc_lifecycle_cache import IPCLifecycleCache
+    from aikido_zen.thread.thread_cache import ThreadCache
     context = Context(context_obj=context_json)
     context.set_as_current_context()
-    IPCLifecycleCache(context)
+    ThreadCache()
 
 def benchmark():
     import aikido_zen.sinks.pymongo

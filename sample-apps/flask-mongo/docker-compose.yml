@@ -6,7 +6,7 @@ services:
       context: ./../../
       dockerfile: ./sample-apps/flask-mongo/Dockerfile
     container_name: flask_mongo_backend
-    command: sh -c "flask --app app run --debug --host=0.0.0.0"
+    command: sh -c "ddtrace-run flask --app app run --debug --host=0.0.0.0"
     restart: always
     volumes:
       - .:/app

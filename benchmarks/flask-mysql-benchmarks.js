@@ -10,42 +10,42 @@ export const options = {
     vus: 1, // Number of virtual users
     thresholds: {
         test_40mb_payload: [{
-            threshold: "avg<2000", // Temporary exagurated threshold until optimizations are finished 
+            threshold: "avg<15", // This is a higher threshold due to the data being processed
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
         test_multiple_queries: [{
-            threshold: "avg<2000", 
+            threshold: "avg<5", 
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
         test_multiple_queries_with_big_body: [{
-            threshold: "avg<2000", 
+            threshold: "avg<5", 
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
         test_create_with_big_body: [{
-            threshold: "avg<2000", 
+            threshold: "avg<5", 
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
         test_normal_route: [{
-            threshold: "avg<2000", 
+            threshold: "avg<5", 
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
         test_id_route: [{
-            threshold: "avg<2000", 
+            threshold: "avg<5", 
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
         test_open_file: [{
-            threshold: "avg<2000", 
+            threshold: "avg<5", 
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
         test_execute_shell: [{
-            threshold: "avg<2000", 
+            threshold: "avg<10", 
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
@@ -105,7 +105,7 @@ export function handleSummary(data) {
             continue
         }
         let values = metricValue.values
-        console.log(`\x1b[35m 🚅 ${metricName}\x1b[0m: ΔAverage is \x1b[4m${values.avg.toFixed(2)}ms\x1b[0m | ΔMedian is \x1b[4m${values.med.toFixed(2)}ms\x1b[0m`);
+        console.log(`🚅 ${metricName}: ΔAverage is ${values.avg.toFixed(2)}ms | ΔMedian is ${values.med.toFixed(2)}ms.`);
     }
     return {stdout: ""};
 }

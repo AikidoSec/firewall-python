@@ -3,6 +3,7 @@ Helper function file, see funtion definition
 """
 
 from aikido_zen.helpers.try_decode_as_jwt import try_decode_as_jwt
+from aikido_zen.helpers.is_mapping import is_mapping
 from aikido_zen.helpers.build_path_to_payload import build_path_to_payload
 import aikido_zen.context as ctx
 
@@ -33,7 +34,7 @@ def extract_strings_from_user_input(obj, path_to_payload=None):
 
     results = {}
 
-    if isinstance(obj, dict):
+    if is_mapping(obj):
         #  Stringifying the dict and adding it as user input is resource intensive
         #  And in most cases shouldn't be necessary.
         for key, value in obj.items():

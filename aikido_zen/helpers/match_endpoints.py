@@ -6,7 +6,7 @@ import regex as re
 from .try_parse_url_path import try_parse_url_path
 
 
-def match_endpoint(route_metadata, endpoints, multi=False):
+def match_endpoints(route_metadata, endpoints):
     """
     Based on the context's url this tries to find a match in the list of endpoints
     """
@@ -20,22 +20,9 @@ def match_endpoint(route_metadata, endpoints, multi=False):
     ]
     results = []
 
-    if not multi:
-        endpoint = next(
-            (
-                endpoint
-                for endpoint in possible
-                if endpoint["route"] == route_metadata["route"]
-            ),
-            None,
-        )
-
-        if endpoint:
-            return {"endpoint": endpoint, "route": endpoint["route"]}
-    else:
-        for endpoint in possible:
-            if endpoint["route"] == route_metadata["route"]:
-                results.append({"endpoint": endpoint, "route": endpoint["route"]})
+    for endpoint in possible:
+        if endpoint["route"] == route_metadata["route"]:
+            results.append(endpoint)
 
     if not route_metadata["url"]:
         return None
@@ -56,9 +43,7 @@ def match_endpoint(route_metadata, endpoints, multi=False):
         regex = re.compile(f"^{route.replace('*', '(.*)')}\/?$", re.IGNORECASE)
 
         if regex.match(path):
-            if not multi:
-                return {"endpoint": wildcard, "route": route}
-            results.append({"endpoint": wildcard, "route": route})
+            results.append(wildcard)
     if len(results) > 0:
         return results
     return None

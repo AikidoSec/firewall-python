@@ -80,8 +80,3 @@ def test_initialization(service_config):
     assert service_config.last_updated_at == "2023-10-01T00:00:00Z"
     assert service_config.bypassed_ips == {"192.168.1.1", "10.0.0.1"}
     assert service_config.blocked_uids == {"user1", "user2"}
-
-
-def test_is_user_blocked(service_config):
-    assert service_config.is_user_blocked("user1") is True
-    assert service_config.is_user_blocked("user3") is False

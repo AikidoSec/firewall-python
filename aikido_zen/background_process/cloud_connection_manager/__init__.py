@@ -71,8 +71,11 @@ class CloudConnectionManager:
         This is run 1m after startup, and checks if we should send out
         a preliminary heartbeat with some stats.
         """
-        should_report_initial_stats = not (
-            self.statistics.is_empty() or self.conf.received_any_stats
+        data_is_available = not (
+            self.statistics.is_empty() and len(self.routes.routes) <= 0
+        )
+        should_report_initial_stats = (
+            data_is_available and not self.conf.received_any_stats
         )
         if should_report_initial_stats:
             self.send_heartbeat()

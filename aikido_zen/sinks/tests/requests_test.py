@@ -1,7 +1,7 @@
 import os
 import pytest
-from aikido_zen.context import Context
-from aikido_zen.background_process.ipc_lifecycle_cache import IPCLifecycleCache
+from aikido_zen.context import Context, current_context
+from aikido_zen.thread.thread_cache import ThreadCache, threadlocal_storage
 from aikido_zen.errors import AikidoSSRF
 from aikido_zen.background_process.comms import reset_comms
 import aikido_zen.sinks.socket
@@ -15,6 +15,15 @@ SSRF_TEST_DOMAIN_TWICE = "http://ssrf-redirects.testssandbox.com/ssrf-test-domai
 
 CROSS_DOMAIN_TEST = "http://firewallssrfredirects-env-2.eba-7ifve22q.eu-north-1.elasticbeanstalk.com/ssrf-test"
 CROSS_DOMAIN_TEST_DOMAIN_TWICE = "http://firewallssrfredirects-env-2.eba-7ifve22q.eu-north-1.elasticbeanstalk.com/ssrf-test-domain-twice"
+
+
+@pytest.fixture(autouse=True)
+def run_around_tests():
+    yield
+    # Make sure to reset context and cache after every test so it does not
+    # interfere with other tests
+    current_context.set(None)
+    setattr(threadlocal_storage, "cache", None)
 
 
 def set_context_and_lifecycle(url):
@@ -39,7 +48,7 @@ def set_context_and_lifecycle(url):
         source="flask",
     )
     context.set_as_current_context()
-    IPCLifecycleCache(context)
+    ThreadCache()
 
 
 def test_srrf_test(monkeypatch):
