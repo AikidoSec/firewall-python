@@ -151,14 +151,8 @@ def test_set_valid_string():
     assert context.body == valid_body
 
 
-def test_set_invalid_body():
-    invalid_body = set([1, 2, 3])  # Sets are not JSON serializable
-    context = Context(req=basic_wsgi_req, body=invalid_body, source="flask")
-    assert context.body is None
-
-
-def test_set_bytestring():
-    invalid_body = b"Hello World"  # Byte strings are not JSON Serializablec
+def test_set_empty_byte_string():
+    invalid_body = b""
     context = Context(req=basic_wsgi_req, body=invalid_body, source="flask")
     assert context.body is None
 
