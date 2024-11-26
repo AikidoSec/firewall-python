@@ -1,3 +1,4 @@
+import json
 import time
 import pytest
 import requests
@@ -98,3 +99,30 @@ def test_dangerous_auth_nofw():
     assert res.ok
     assert res.text == "Dog with name bobby_tables authenticated successfully"
     assert res.status_code == 200
+
+
+def test_dangerous_auth_fw_force():
+    dog_name = "bobby_tables"
+    pswd = {"$ne": ""}
+    json_data = json.dumps({'dog_name': dog_name, "pswd": pswd})
+    res = requests.post(post_json_url_fw + "_force", data=json_data)
+
+    assert not res.ok
+    assert res.status_code == 500
+
+    time.sleep(5)  # Wait for attack to be reported
+    events = fetch_events_from_mock("http://localhost:5000")
+    attacks = filter_on_event_type(events, "detected_attack")
+
+    assert len(attacks) == 2
+    del attacks[0]["attack"]["stack"]
+    assert attacks[0]["attack"] == {
+        "blocked": True,
+        "kind": "nosql_injection",
+        'metadata': {'filter': '{"dog_name": "bobby_tables", "pswd": {"$ne": ""}}'},
+        'operation': "pymongo.collection.Collection.find",
+        'pathToPayload': ".pswd",
+        'payload': '{"$ne": ""}',
+        'source': "body",
+        'user': None
+    }

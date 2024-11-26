@@ -59,3 +59,17 @@ def post_auth():
         return f'Dog with name {dog_name} authenticated successfully'
     else:
         return f'Auth failed'
+
+@app.route("/auth_force", methods=['POST'])
+def post_auth():
+    data = request.get_json(force=True)
+    dog_info = {
+        'dog_name': data.get('dog_name'),
+        'pswd': data.get('pswd')
+    }
+    dog = mongo.db.dogs.find_one(dog_info)
+    if dog:
+        dog_name = dog["dog_name"]
+        return f'Dog with name {dog_name} authenticated successfully'
+    else:
+        return f'Auth failed'
