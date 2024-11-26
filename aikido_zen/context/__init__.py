@@ -101,7 +101,7 @@ class Context:
             # Make sure that empty bodies like b"" don't get sent.
             self.body = None
         if isinstance(self.body, str) and self.body.startswith("{"):
-            # Might be JSON
+            # Might be JSON, but might not have been parsed correctly by server because of wrong headers
             try:
                 # Check if body is JSON :
                 parsed_body = json.loads(self.body)
