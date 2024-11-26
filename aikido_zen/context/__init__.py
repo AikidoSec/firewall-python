@@ -107,6 +107,7 @@ class Context:
             except JSONDecodeError:
                 pass
 
+
     def get_route_metadata(self):
         """Returns a route_metadata object"""
         return {
