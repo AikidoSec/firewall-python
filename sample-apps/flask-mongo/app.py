@@ -61,7 +61,7 @@ def post_auth():
         return f'Auth failed'
 
 @app.route("/auth_force", methods=['POST'])
-def post_auth():
+def post_auth2():
     data = request.get_json(force=True)
     dog_info = {
         'dog_name': data.get('dog_name'),
