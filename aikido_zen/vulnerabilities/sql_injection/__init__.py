@@ -14,12 +14,12 @@ def detect_sql_injection(query, user_input, dialect):
     Execute this to check if the query is actually a SQL injection
     """
     try:
-        internals_lib = ctypes.CDLL(get_binary_path())
         query_l = query.lower()
         userinput_l = user_input.lower()
         if should_return_early(query_l, userinput_l):
             return False
 
+        internals_lib = ctypes.CDLL(get_binary_path())
         query_bytes = query_l.encode("utf-8")
         userinput_bytes = userinput_l.encode("utf-8")
         dialect_int = map_dialect_to_rust_int(dialect)
