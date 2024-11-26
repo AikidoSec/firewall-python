@@ -13,11 +13,13 @@ def match_endpoints(route_metadata, endpoints):
     if not route_metadata["method"]:
         return None
 
-    possible = [
-        endpoint
-        for endpoint in endpoints
-        if endpoint["method"] == "*" or endpoint["method"] == route_metadata["method"]
-    ]
+    possible = []
+    for endpoint in endpoints:
+        if endpoint["method"] == route_metadata["method"]:
+            possible.insert(0, endpoint)  # Insert exact match in front
+        elif endpoint["method"] == "*":
+            possible.append(endpoint)
+
     results = []
 
     for endpoint in possible:
