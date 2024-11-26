@@ -13,14 +13,15 @@ def match_endpoints(route_metadata, endpoints):
     if not route_metadata["method"]:
         return None
 
+    exact_method_match = []
     possible = []
-    i = 0
     for endpoint in endpoints:
         if endpoint["method"] == route_metadata["method"]:
-            possible.insert(i, endpoint)  # Add match to first part of array
-            i += 1
+            exact_method_match.append(endpoint)
         elif endpoint["method"] == "*":
             possible.append(endpoint)
+    # Make sure the exact matches come first:
+    possible = exact_method_match + possible
 
     results = []
 
