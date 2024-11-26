@@ -4,6 +4,7 @@ from threading import local
 import aikido_zen.background_process.comms as comms
 import aikido_zen.helpers.get_current_unixtime_ms as t
 from aikido_zen.background_process.routes import Routes
+from aikido_zen.helpers.logging import logger
 
 THREAD_CONFIG_TTL_MS = 60 * 1000  # Time-To-Live is 60 seconds for the thread cache
 
@@ -72,18 +73,19 @@ class ThreadCache:
         )
 
         self.reset()
-        if res["success"]:
-            if isinstance(res["data"]["bypassed_ips"], set):
+        if res["success"] and res["data"]:
+            if isinstance(res["data"].get("bypassed_ips"), set):
                 self.bypassed_ips = res["data"]["bypassed_ips"]
-            if isinstance(res["data"]["endpoints"], list):
+            if isinstance(res["data"].get("endpoints"), list):
                 self.endpoints = res["data"]["endpoints"]
-            if isinstance(res["data"]["routes"], dict):
+            if isinstance(res["data"].get("routes"), dict):
                 self.routes.routes = res["data"]["routes"]
                 for route in self.routes.routes.values():
                     route["hits_delta_since_sync"] = 0
-            if isinstance(res["data"]["blocked_uids"], set):
+            if isinstance(res["data"].get("blocked_uids"), set):
                 self.blocked_uids = res["data"]["blocked_uids"]
             self.last_renewal = t.get_unixtime_ms(monotonic=True)
+            logger.debug("Renewed thread cache")
 
     def increment_stats(self):
         """Increments the requests"""
