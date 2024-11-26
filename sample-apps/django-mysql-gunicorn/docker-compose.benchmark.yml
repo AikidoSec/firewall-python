@@ -2,7 +2,7 @@ version: "3"
 services:
   backend_firewall_disabled:
     image: sample_django_mysql_gunicorn
-    command: sh -c "python manage.py migrate && gunicorn -c gunicorn_config.py --workers 4 --threads 2 --log-level debug --access-logfile '-' --error-logfile '-' --bind 0.0.0.0:8000 sample-django-mysql-gunicorn-app.wsgi"
+    command: sh -c "python manage.py migrate && ddtrace-run gunicorn -c gunicorn_config.py --workers 4 --threads 2 --log-level debug --access-logfile '-' --error-logfile '-' --bind 0.0.0.0:8000 sample-django-mysql-gunicorn-app.wsgi"
     restart: always
     volumes:
       - .:/app

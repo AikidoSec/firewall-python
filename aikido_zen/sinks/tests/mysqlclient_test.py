@@ -2,7 +2,6 @@ import pytest
 from unittest.mock import patch
 import aikido_zen.sinks.mysqlclient
 from aikido_zen.background_process.comms import reset_comms
-from aikido_zen.vulnerabilities.sql_injection.dialects import MySQL
 
 kind = "sql_injection"
 op = "MySQLdb.connections.query"
@@ -25,7 +24,7 @@ def test_cursor_execute(database_conn):
         cursor.execute(query)
         called_with_args = mock_run_vulnerability_scan.call_args[1]["args"]
         assert called_with_args[0] == query
-        assert isinstance(called_with_args[1], MySQL)
+        assert called_with_args[1] == "mysql"
 
         mock_run_vulnerability_scan.assert_called_once()
         cursor.fetchall()
@@ -51,7 +50,7 @@ def test_cursor_execute_no_args(database_conn):
             called_with_args[0]
             == 'INSERT INTO dogs (dog_name, isAdmin) VALUES ("Doggo", TRUE)'
         )
-        assert isinstance(called_with_args[1], MySQL)
+        assert called_with_args[1] == "mysql"
 
         mock_run_vulnerability_scan.assert_called_once()
         cursor.fetchall()
@@ -79,7 +78,7 @@ def test_cursor_executemany(database_conn):
             called_with_args[0]
             == "INSERT INTO dogs (dog_name, isAdmin) VALUES (%s, %s)"
         )
-        assert isinstance(called_with_args[1], MySQL)
+        assert called_with_args[1] == "mysql"
         mock_run_vulnerability_scan.assert_called_once()
         database_conn.commit()
         mock_run_vulnerability_scan.assert_called_once()
@@ -105,7 +104,7 @@ def test_cursor_execute_with_fstring(database_conn):
         assert (
             called_with_args[0] == "INSERT INTO dogs (dog_name, isAdmin) VALUES (%s, 1)"
         )
-        assert isinstance(called_with_args[1], MySQL)
+        assert called_with_args[1] == "mysql"
         mock_run_vulnerability_scan.assert_called_once()
         database_conn.commit()
         mock_run_vulnerability_scan.assert_called_once()

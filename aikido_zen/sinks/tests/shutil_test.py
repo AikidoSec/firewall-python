@@ -1,7 +1,8 @@
 import pytest
 from unittest.mock import patch
-import aikido_zen.sinks.builtins
-import aikido_zen.sinks.shutil
+import aikido_zen
+
+aikido_zen.protect("daemon_disabled")
 
 
 kind = "path_traversal"
@@ -134,7 +135,7 @@ def test_shutil_copy():
         op = "builtins.open"
         args1 = ("Makefile",)
         args2 = ("test2",)
-        assert len(mock_run_vulnerability_scan.call_args_list) == 5
+        assert len(mock_run_vulnerability_scan.call_args_list) == 3
         call_1 = mock_run_vulnerability_scan.call_args_list[0]
         call_2 = mock_run_vulnerability_scan.call_args_list[1]
 
@@ -154,7 +155,7 @@ def test_shutil_copy2():
         op = "builtins.open"
         args1 = ("Makefile",)
         args2 = ("test2",)
-        assert len(mock_run_vulnerability_scan.call_args_list) == 5
+        assert len(mock_run_vulnerability_scan.call_args_list) == 3
         call_1 = mock_run_vulnerability_scan.call_args_list[0]
         call_2 = mock_run_vulnerability_scan.call_args_list[1]
 
