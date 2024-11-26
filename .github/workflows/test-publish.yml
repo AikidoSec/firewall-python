@@ -49,6 +49,8 @@ jobs:
     - uses: actions/checkout@v4
     - name: Install poetry
       run: pip install poetry
+    - name: Download binaries
+      run: make binaries
     - name: Install dependencies
       run: poetry install
 
