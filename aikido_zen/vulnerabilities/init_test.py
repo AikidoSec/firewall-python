@@ -102,8 +102,6 @@ def test_sql_injection(caplog, get_context, monkeypatch):
 
 
 def test_sql_injection_with_route_params(caplog, get_context, monkeypatch):
-    from aikido_zen.vulnerabilities.sql_injection.dialects import MySQL
-
     get_context.set_as_current_context()
     cache = ThreadCache()
     monkeypatch.setenv("AIKIDO_BLOCKING", "1")
@@ -111,7 +109,7 @@ def test_sql_injection_with_route_params(caplog, get_context, monkeypatch):
         run_vulnerability_scan(
             kind="sql_injection",
             op="test_op",
-            args=("INSERT * INTO VALUES ('cattss2', TRUE);", MySQL()),
+            args=("INSERT * INTO VALUES ('cattss2', TRUE);", "mysql"),
         )
 
 
