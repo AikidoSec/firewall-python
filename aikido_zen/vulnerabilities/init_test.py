@@ -89,7 +89,6 @@ def test_lifecycle_cache_bypassed_ip(caplog, get_context):
 
 
 def test_sql_injection(caplog, get_context, monkeypatch):
-    from aikido_zen.vulnerabilities.sql_injection.dialects import MySQL
 
     get_context.set_as_current_context()
     cache = ThreadCache()
@@ -98,13 +97,11 @@ def test_sql_injection(caplog, get_context, monkeypatch):
         run_vulnerability_scan(
             kind="sql_injection",
             op="test_op",
-            args=("INSERT * INTO VALUES ('doggoss2', TRUE);", MySQL()),
+            args=("INSERT * INTO VALUES ('doggoss2', TRUE);", "mysql"),
         )
 
 
 def test_sql_injection_with_route_params(caplog, get_context, monkeypatch):
-    from aikido_zen.vulnerabilities.sql_injection.dialects import MySQL
-
     get_context.set_as_current_context()
     cache = ThreadCache()
     monkeypatch.setenv("AIKIDO_BLOCKING", "1")
@@ -112,12 +109,11 @@ def test_sql_injection_with_route_params(caplog, get_context, monkeypatch):
         run_vulnerability_scan(
             kind="sql_injection",
             op="test_op",
-            args=("INSERT * INTO VALUES ('cattss2', TRUE);", MySQL()),
+            args=("INSERT * INTO VALUES ('cattss2', TRUE);", "mysql"),
         )
 
 
 def test_sql_injection_with_comms(caplog, get_context, monkeypatch):
-    from aikido_zen.vulnerabilities.sql_injection.dialects import MySQL
 
     get_context.set_as_current_context()
     cache = ThreadCache()
@@ -131,7 +127,7 @@ def test_sql_injection_with_comms(caplog, get_context, monkeypatch):
             run_vulnerability_scan(
                 kind="sql_injection",
                 op="test_op",
-                args=("INSERT * INTO VALUES ('doggoss2', TRUE);", MySQL()),
+                args=("INSERT * INTO VALUES ('doggoss2', TRUE);", "mysql"),
             )
         mock_comms.send_data_to_bg_process.assert_called_once()
         call_args = mock_comms.send_data_to_bg_process.call_args[0]
@@ -144,7 +140,6 @@ def test_sql_injection_with_comms(caplog, get_context, monkeypatch):
 
 
 def test_ssrf_with_comms_hostnames_add(caplog, get_context, monkeypatch):
-    from aikido_zen.vulnerabilities.sql_injection.dialects import MySQL
 
     get_context.set_as_current_context()
     monkeypatch.setenv("AIKIDO_BLOCKING", "1")
