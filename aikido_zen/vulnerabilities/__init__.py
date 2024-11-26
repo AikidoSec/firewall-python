@@ -65,7 +65,7 @@ def run_vulnerability_scan(kind, op, args):
                 sql=args[0], dialect=args[1], operation=op, context=context
             )
             error_type = AikidoSQLInjection
-            error_args = (type(args[1]).__name__,)  # Pass along the dialect
+            error_args = (args[1],)  # Pass along the dialect
         elif kind == "nosql_injection":
             injection_results = check_context_for_nosql_injection(
                 context=context, op=op, _filter=args[0]
