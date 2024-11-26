@@ -11,7 +11,7 @@ lint:
 	poetry run black aikido_zen/
 	poetry run pylint aikido_zen/
 
-install: internals_lib_install _install
+install: binaries _install
 _install:
 	pip install poetry
 	poetry install
