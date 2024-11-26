@@ -44,9 +44,7 @@ def extract_and_save_data_from_flask_request(req):
     try:
         context = get_current_context()
         if context:
-            if req.is_json:
-                context.set_body(req.get_json())
-            elif req.form:
+            if req.form:
                 context.set_body(req.form)
             else:
                 context.set_body(req.data.decode("utf-8"))
