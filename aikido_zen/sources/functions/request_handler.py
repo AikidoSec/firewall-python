@@ -53,7 +53,9 @@ def pre_response():
         return
 
     # IP Allowlist/Blocklist:
-    ip_check_result = check_if_ip_blocked(context, matched_endpoints)
+    ip_check_result = check_if_ip_blocked(
+        context, matched_endpoints, get_cache().config
+    )
     if ip_check_result:
         return ip_check_result
 
