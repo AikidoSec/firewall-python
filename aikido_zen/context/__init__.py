@@ -3,6 +3,9 @@ Provides all the functionality for contexts
 """
 
 import contextvars
+import json
+from json import JSONDecodeError
+from time import sleep
 from urllib.parse import parse_qs
 
 from aikido_zen.helpers.build_route_from_url import build_route_from_url
@@ -44,7 +47,7 @@ class Context:
         self.parsed_userinput = {}
         self.xml = {}
         self.outgoing_req_redirects = []
-        self.body = body
+        self.set_body(body)
 
         # Parse WSGI/ASGI/... request :
         self.cookies = self.method = self.remote_address = self.query = self.headers = (
@@ -93,6 +96,22 @@ class Context:
         Set the current context
         """
         current_context.set(self)
+
+    def set_body(self, body):
+        """Sets the body and checks if it's possibly JSON"""
+        self.body = body
+        if isinstance(body, bytes) and len(body) == 0:
+            # Make sure that empty bodies like b"" don't get sent.
+            self.body = None
+        if isinstance(self.body, str) and self.body.startswith("{"):
+            # Might be JSON, but might not have been parsed correctly by server because of wrong headers
+            try:
+                # Check if body is JSON :
+                parsed_body = json.loads(self.body)
+                if parsed_body:
+                    self.body = parsed_body
+            except JSONDecodeError:
+                pass
 
     def get_route_metadata(self):
         """Returns a route_metadata object"""

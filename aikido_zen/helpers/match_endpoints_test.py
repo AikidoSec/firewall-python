@@ -259,3 +259,89 @@ def test_it_prefers_specific_route_over_wildcard():
             },
         },
     ]
+
+
+def test_it_prefers_specific_method_over_wildcard_first_case():
+    result = match_endpoints(
+        sample_route_metadata(
+            url="http://localhost:4000/api/test", route="/api/test", method="POST"
+        ),
+        [
+            {
+                "method": "*",
+                "route": "/api/test",
+                "forceProtectionOff": False,
+                "rateLimiting": {
+                    "enabled": True,
+                    "maxRequests": 20,
+                    "windowSizeInMS": 60000,
+                },
+            },
+            {
+                "method": "POST",
+                "route": "/api/test",
+                "forceProtectionOff": False,
+                "rateLimiting": {
+                    "enabled": True,
+                    "maxRequests": 100,
+                    "windowSizeInMS": 60000,
+                },
+            },
+        ],
+    )
+
+    expected = {
+        "method": "POST",
+        "route": "/api/test",
+        "forceProtectionOff": False,
+        "rateLimiting": {
+            "enabled": True,
+            "maxRequests": 100,
+            "windowSizeInMS": 60000,
+        },
+    }
+
+    assert result[0] == expected
+
+
+def test_it_prefers_specific_method_over_wildcard_second_case():
+    result = match_endpoints(
+        sample_route_metadata(
+            url="http://localhost:4000/api/test", route="/api/test", method="POST"
+        ),
+        [
+            {
+                "method": "POST",
+                "route": "/api/test",
+                "forceProtectionOff": False,
+                "rateLimiting": {
+                    "enabled": True,
+                    "maxRequests": 100,
+                    "windowSizeInMS": 60000,
+                },
+            },
+            {
+                "method": "*",
+                "route": "/api/test",
+                "forceProtectionOff": False,
+                "rateLimiting": {
+                    "enabled": True,
+                    "maxRequests": 20,
+                    "windowSizeInMS": 60000,
+                },
+            },
+        ],
+    )
+
+    expected = {
+        "method": "POST",
+        "route": "/api/test",
+        "forceProtectionOff": False,
+        "rateLimiting": {
+            "enabled": True,
+            "maxRequests": 100,
+            "windowSizeInMS": 60000,
+        },
+    }
+
+    assert result[0] == expected

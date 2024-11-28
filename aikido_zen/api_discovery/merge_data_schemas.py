@@ -1,23 +1,22 @@
 """Exports function merge_data_schemas"""
 
 import copy
+from .is_same_type import is_same_type
+from .merge_types import merge_types
 
 
 def merge_data_schemas(first, second):
     """
-    Merge two data schemas into one, getting all properties from both schemas to capture optional properties.
-    If the types are different, a merge is not possible and the first schema is returned.
-    The first schema is preferred over the second schema.
-    If the types are the same, the properties of the second schema are merged into the first schema.
+    Merge two data schemas into one, getting all properties from both schemas to capture
+    optional properties. If the types are different, only primitive types are merged.
+    Merging of arrays with objects or objects / arrays with primitive types is not supported.
+    In this case the first schema is preferred over the second schema because it can already
+    contain multiple merged schemas.
     """
     result = copy.deepcopy(first)
 
-    # Cannot merge different types
-    if first.get("type") != second.get("type"):
-        # Prefer non-null type
-        if first.get("type") == "null":
-            return copy.deepcopy(second)
-        return result
+    if not is_same_type(first.get("type"), second.get("type")):
+        return merge_types(first, second)
 
     if first.get("properties") is not None and second.get("properties") is not None:
         result["properties"] = first.get("properties")

@@ -11,7 +11,7 @@ async def extract_data_from_request(request):
 
     # Parse data
     try:
-        context.body = await request.json()
+        context.set_body(await request.json())
     except ValueError:
         # Throws error if the body is not json
         pass
@@ -19,8 +19,8 @@ async def extract_data_from_request(request):
         form_data = await request.form()
         if form_data:
             # Convert to dict object :
-            context.body = {key: value for key, value in form_data.items()}
+            context.set_body({key: value for key, value in form_data.items()})
     if not context.body:
-        context.body = await request.body()
+        context.set_body(await request.body())
 
     context.set_as_current_context()
