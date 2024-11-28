@@ -106,12 +106,12 @@ def test_ip_blocking():
         ],
     )
 
-    assert config.is_blocked_ip("1.2.3.4") is True
+    assert config.is_blocked_ip("1.2.3.4") is "description"
     assert config.is_blocked_ip("2.3.4.5") is False
-    assert config.is_blocked_ip("192.168.2.2") is True
-    assert config.is_blocked_ip("fd00:1234:5678:9abc::1") is True
+    assert config.is_blocked_ip("192.168.2.2") is "description"
+    assert config.is_blocked_ip("fd00:1234:5678:9abc::1") is "description"
     assert config.is_blocked_ip("fd00:1234:5678:9abc::2") is False
-    assert config.is_blocked_ip("fd00:3234:5678:9abc::1") is True
-    assert config.is_blocked_ip("fd00:3234:5678:9abc::2") is True
-    assert config.is_blocked_ip("5.6.7.8") is True
+    assert config.is_blocked_ip("fd00:3234:5678:9abc::1") is "description"
+    assert config.is_blocked_ip("fd00:3234:5678:9abc::2") is "description"
+    assert config.is_blocked_ip("5.6.7.8") is "description"
     assert config.is_blocked_ip("1.2") is False

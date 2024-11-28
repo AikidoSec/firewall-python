@@ -2,9 +2,7 @@
 Exports update_blocked_ip_addresses
 """
 
-from aikido_zen.helpers.add_ip_address_to_blocklist import add_ip_address_to_blocklist
-from aikido_zen.helpers.blocklist import BlockList
-from aikido_zen.sinks.pymysql import logger
+from aikido_zen.helpers.logging import logger
 
 
 def update_blocked_ip_addresses(connection_manager):

@@ -47,9 +47,9 @@ def test_with_context_with_cache():
             "executed_middleware": False,
         }
     ).set_as_current_context()
-    threadCache = ThreadCache()
+    thread_cache = ThreadCache()
 
-    threadCache.blocked_uids = ["123"]
+    thread_cache.config.blocked_uids = ["123"]
     assert get_current_context().executed_middleware == False
     assert should_block_request() == {
         "block": True,
@@ -58,9 +58,9 @@ def test_with_context_with_cache():
     }
     assert get_current_context().executed_middleware == True
 
-    threadCache.blocked_uids = []
+    thread_cache.config.blocked_uids = []
     assert should_block_request() == {"block": False}
 
-    threadCache.blocked_uids = ["23", "234", "456"]
+    thread_cache.config.blocked_uids = ["23", "234", "456"]
     assert should_block_request() == {"block": False}
     assert get_current_context().executed_middleware == True

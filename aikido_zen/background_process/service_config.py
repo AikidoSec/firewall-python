@@ -5,6 +5,7 @@ Exports ServiceConfig class
 from aikido_zen.helpers.add_ip_address_to_blocklist import add_ip_address_to_blocklist
 from aikido_zen.helpers.match_endpoints import match_endpoints
 from aikido_zen.helpers.blocklist import BlockList
+from aikido_zen.helpers.logging import logger
 
 
 class ServiceConfig:
@@ -40,9 +41,11 @@ class ServiceConfig:
         return ip in self.bypassed_ips
 
     def is_blocked_ip(self, ip):
+        logger.debug("Checking if IP is blocked: %s", ip)
+        logger.debug(self.blocked_ips)
         for entry in self.blocked_ips:
             if entry["blocklist"].is_blocked(ip):
-                return True
+                return entry["description"]
         return False
 
     def set_blocked_ips(self, blocked_ip_entries):
