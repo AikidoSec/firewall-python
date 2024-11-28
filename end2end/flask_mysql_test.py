@@ -95,3 +95,17 @@ def test_ratelimiting_1_route():
     # Fifth request :
     res = requests.get(base_url_fw + "/test_ratelimiting_1")
     assert res.status_code == 200
+
+
+def test_set_ip_forwarded_for():
+    # IP allowed :
+    res = requests.get(base_url_fw + "/", headers={
+        "X-Forwarded-For": "1.1.1.1"
+    })
+    assert res.status_code == 200
+    # IP Geo-blocked :
+    res = requests.get(base_url_fw + "/", headers={
+        "X-Forwarded-For": "1.2.3.4"
+    })
+    assert res.status_code == 403
+    assert res.text == "Your IP address is blocked due to geo restrictions (Your IP: 1.2.3.4)"

@@ -1,4 +1,6 @@
-from flask import Flask, request, jsonify
+import gzip
+
+from flask import Flask, request, jsonify, Response
 import sys
 import os
 import json
@@ -25,6 +27,16 @@ responses = {
         ],
         "blockedUserIds": [],
     },
+    "lists": {
+        "success": True,
+        "blockedIPAddresses": [
+            {
+                "source": "geoip",
+                "description": "geo restrictions",
+                "ips": ["1.2.3.4"]
+            }
+        ],
+    },
     "configUpdatedAt": {},
 }
 
@@ -40,6 +52,14 @@ def get_config():
 def get_runtime_config():
     return jsonify(responses["config"])
 
+@app.route('/api/runtime/firewall/lists', methods=['GET'])
+def get_fw_lists():
+    json_data = json.dumps(responses["lists"])
+    compressed_data = gzip.compress(json_data.encode('utf-8'))
+
+    response = Response(compressed_data, content_type='application/json')
+    response.headers['Content-Encoding'] = 'gzip'
+    return response
 
 @app.route('/api/runtime/events', methods=['POST'])
 def post_events():
