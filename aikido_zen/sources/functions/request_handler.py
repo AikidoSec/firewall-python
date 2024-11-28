@@ -9,6 +9,7 @@ from aikido_zen.helpers.logging import logger
 from aikido_zen.thread.thread_cache import get_cache
 from aikido_zen.ratelimiting.get_ratelimited_endpoint import get_ratelimited_endpoint
 from aikido_zen.helpers.match_endpoints import match_endpoints
+from .check_if_ip_blocked import check_if_ip_blocked
 from .ip_allowed_to_access_route import ip_allowed_to_access_route
 
 
@@ -51,14 +52,10 @@ def pre_response():
     if not matched_endpoints:
         return
 
-    # IP Allowlist:
-    if not ip_allowed_to_access_route(
-        context.remote_address, route_metadata, matched_endpoints
-    ):
-        message = "Your IP address is not allowed to access this resource."
-        if context.remote_address:
-            message += f" (Your IP: {context.remote_address})"
-        return (message, 403)
+    # IP Allowlist/Blocklist:
+    ip_check_result = check_if_ip_blocked(context, matched_endpoints)
+    if ip_check_result:
+        return ip_check_result
 
 
 def post_response(status_code):
