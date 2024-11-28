@@ -9,7 +9,21 @@ app = Flask(__name__)
 responses = {
     "config": {
         "receivedAnyStats": False,
-        "success": True
+        "success": True,
+        "endpoints": [
+            {
+                "route": "/test_ratelimiting_1",
+                "method": "*",
+                "forceProtectionOff": False,
+                "rateLimiting": {
+                    "enabled": True,
+                    "maxRequests": 2,
+                    "windowSizeInMS": 1000 * 5,
+                },
+                "graphql": False,
+            }
+        ],
+        "blockedUserIds": [],
     },
     "configUpdatedAt": {},
 }

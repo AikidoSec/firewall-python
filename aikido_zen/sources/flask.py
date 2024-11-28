@@ -44,12 +44,10 @@ def extract_and_save_data_from_flask_request(req):
     try:
         context = get_current_context()
         if context:
-            if req.is_json:
-                context.body = req.get_json()
-            elif req.form:
-                context.body = req.form
+            if req.form:
+                context.set_body(req.form)
             else:
-                context.body = req.data.decode("utf-8")
+                context.set_body(req.data.decode("utf-8"))
 
             if getattr(req, "view_args"):
                 context.route_params = dict(req.view_args)

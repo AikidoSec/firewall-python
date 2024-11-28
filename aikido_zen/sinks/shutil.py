@@ -18,24 +18,22 @@ SHUTIL_SRC_DST_FUNCTIONS = [
 # shutil.copy2(src, dst, *, **) => builtins.open
 
 
-def generate_aikido_function(op, former_func):
+def generate_aikido_function(aik_op, func):
     """
     Returns a generated aikido function given an operation
     and the previous function
     """
 
-    def aikido_new_func(
-        src, dst, *args, aik_op=op, aik_former_func=former_func, **kwargs
-    ):
+    def wrapper(src, dst, *args, **kwargs):
         kind = "path_traversal"
         op = f"shutil.{aik_op}"
         if src:
             vulns.run_vulnerability_scan(kind, op, args=(src,))
         if dst:
             vulns.run_vulnerability_scan(kind, op, args=(dst,))
-        return former_func(src, dst, *args, **kwargs)
+        return func(src, dst, *args, **kwargs)
 
-    return aikido_new_func
+    return wrapper
 
 
 @importhook.on_import("shutil")
@@ -48,9 +46,7 @@ def on_shutil_import(shutil):
     modified_shutil = importhook.copy_module(shutil)
     for op in SHUTIL_SRC_DST_FUNCTIONS:
         # Wrap shutil. functions
-        former_func = copy.deepcopy(getattr(shutil, op))
-        aikido_new_func = generate_aikido_function(op, former_func)
-        setattr(shutil, op, aikido_new_func)
+        aikido_new_func = generate_aikido_function(op, getattr(shutil, op))
         setattr(modified_shutil, op, aikido_new_func)
 
     return modified_shutil

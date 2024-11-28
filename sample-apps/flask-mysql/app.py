@@ -109,3 +109,8 @@ def make_request():
 def execute_command_get(command):
     result = subprocess.run(command, capture_output=True, text=True, shell=True)
     return str(result.stdout)
+
+# End2End Test route :
+@app.route("/test_ratelimiting_1", methods=["GET"])
+def test_ratelimiting_1():
+    return "OK"

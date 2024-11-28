@@ -20,6 +20,8 @@ def on_start(connection_manager):
         connection_manager.timeout_in_sec,
     )
     if not res.get("success", True):
+        # Update config time even in failure :
+        connection_manager.conf.last_updated_at = get_unixtime_ms()
         logger.error("Failed to communicate with Aikido Server : %s", res["error"])
     else:
         connection_manager.update_service_config(res)
