@@ -26,3 +26,6 @@ class ReportingApi:
 
     def report(self, token, event, timeout_in_sec):
         """Report event to aikido server"""
+
+    def fetch_blocked_ips(self, token):
+        """Fetches blocked IPs from aikido server"""
