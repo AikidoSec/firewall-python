@@ -48,6 +48,14 @@ app = Starlette(routes=[
 ])
 ```
 
+You can set a user using the following function :
+```py
+from aikido_zen import set_user
+
+# Set a user (presumably in middleware) :
+set_user({"id": "123", "name": "John Doe"})
+```
+
 ## Debug mode
 
 If you need to debug the firewall, you can run your code with the environment variable `AIKIDO_DEBUG` set to `true`:
