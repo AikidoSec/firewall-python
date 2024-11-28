@@ -26,9 +26,7 @@ class ServiceConfig:
         self.bypassed_ips = set(bypassed_ips)
         self.blocked_uids = set(blocked_uids)
         self.received_any_stats = bool(received_any_stats)
-        self.blocked_ips = BlockList()
-        for blocked_ip in blocked_ips:
-            add_ip_address_to_blocklist(blocked_ip, self.blocked_ips)
+        self.set_blocked_ips(blocked_ips)
 
     def get_endpoints(self, route_metadata):
         """
@@ -42,4 +40,24 @@ class ServiceConfig:
         return ip in self.bypassed_ips
 
     def is_blocked_ip(self, ip):
-        return self.blocked_ips.is_blocked(ip)
+        for entry in self.blocked_ips:
+            if entry["blocklist"].is_blocked(ip):
+                return True
+        return False
+
+    def set_blocked_ips(self, blocked_ip_entries):
+        self.blocked_ips = list()
+        # Go over entries : {"source": "example", "description": "Example description", "ips": []}
+        for entry in blocked_ip_entries:
+            # Create a blocklist of the ip addresses and ip ranges :
+            blocklist = BlockList()
+            for ip in entry["ips"]:
+                add_ip_address_to_blocklist(ip, blocklist)
+
+            self.blocked_ips.append(
+                {
+                    "source": entry.get("source"),
+                    "description": entry.get("description"),
+                    "blocklist": blocklist,
+                }
+            )

@@ -92,11 +92,17 @@ def test_ip_blocking():
         bypassed_ips=["192.168.1.1", "10.0.0.1"],
         received_any_stats=True,
         blocked_ips=[
-            "1.2.3.4",
-            "192.168.2.1/24",
-            "fd00:1234:5678:9abc::1",
-            "fd00:3234:5678:9abc::1/64",
-            "5.6.7.8/32",
+            {
+                "source": "geoip",
+                "description": "description",
+                "ips": [
+                    "1.2.3.4",
+                    "192.168.2.1/24",
+                    "fd00:1234:5678:9abc::1",
+                    "fd00:3234:5678:9abc::1/64",
+                    "5.6.7.8/32",
+                ],
+            }
         ],
     )
 

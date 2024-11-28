@@ -62,9 +62,7 @@ def test_process_sync_data_initialization(setup_connection_manager):
 
     # Check that the return value is correct
     assert result["routes"] == dict(connection_manager.routes.routes)
-    assert result["endpoints"] == connection_manager.conf.endpoints
-    assert result["bypassed_ips"] == connection_manager.conf.bypassed_ips
-    assert result["blocked_uids"] == connection_manager.conf.blocked_uids
+    assert result["config"] == connection_manager.conf
 
 
 def test_process_sync_data_with_last_updated_at_below_zero(setup_connection_manager):
