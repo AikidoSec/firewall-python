@@ -27,7 +27,7 @@ def should_block_request():
             return {"block": True, "type": "blocked", "trigger": "user"}
 
         route_metadata = context.get_route_metadata()
-        endpoints = getattr(cache, "endpoints", None)
+        endpoints = cache.get_endpoints()
         comms = c.get_comms()
         if not comms or not endpoints:
             return {"block": False}
