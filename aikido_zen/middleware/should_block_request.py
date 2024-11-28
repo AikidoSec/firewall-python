@@ -3,7 +3,7 @@
 from aikido_zen.helpers.logging import logger
 from aikido_zen.context import get_current_context
 from aikido_zen.thread.thread_cache import get_cache
-from aikido_zen.background_process.comms import get_comms
+import aikido_zen.background_process.comms as c
 from aikido_zen.ratelimiting.get_ratelimited_endpoint import get_ratelimited_endpoint
 from aikido_zen.helpers.match_endpoints import match_endpoints
 
@@ -28,7 +28,7 @@ def should_block_request():
 
         route_metadata = context.get_route_metadata()
         endpoints = getattr(cache, "endpoints", None)
-        comms = get_comms()
+        comms = c.get_comms()
         if not comms or not endpoints:
             return {"block": False}
         matched_endpoints = match_endpoints(route_metadata, endpoints)
