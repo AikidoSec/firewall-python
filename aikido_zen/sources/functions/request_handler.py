@@ -46,16 +46,9 @@ def pre_response():
     # Fetch endpoints for IP Allowlist :
     route_metadata = context.get_route_metadata()
     endpoints = getattr(get_cache(), "endpoints", None)
-    if not endpoints:
-        return
-    matched_endpoints = match_endpoints(route_metadata, endpoints)
-    if not matched_endpoints:
-        return
 
     # IP Allowlist/Blocklist:
-    ip_check_result = check_if_ip_blocked(
-        context, matched_endpoints, get_cache().config
-    )
+    ip_check_result = check_if_ip_blocked(context, endpoints, get_cache().config)
     if ip_check_result:
         return ip_check_result
 

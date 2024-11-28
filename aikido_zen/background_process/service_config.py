@@ -41,8 +41,6 @@ class ServiceConfig:
         return ip in self.bypassed_ips
 
     def is_blocked_ip(self, ip):
-        logger.debug("Checking if IP is blocked: %s", ip)
-        logger.debug(self.blocked_ips)
         for entry in self.blocked_ips:
             if entry["blocklist"].is_blocked(ip):
                 return entry["description"]
