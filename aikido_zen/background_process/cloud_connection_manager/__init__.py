@@ -7,6 +7,7 @@ from aikido_zen.background_process.heartbeats import send_heartbeats_every_x_sec
 from aikido_zen.background_process.routes import Routes
 from aikido_zen.ratelimiting.rate_limiter import RateLimiter
 from aikido_zen.helpers.logging import logger
+from .update_blocked_ip_addresses import update_blocked_ip_addresses
 from ..service_config import ServiceConfig
 from ..users import Users
 from ..hostnames import Hostnames
@@ -100,3 +101,7 @@ class CloudConnectionManager:
     def update_service_config(self, res):
         """Update configuration based on the server's response"""
         return update_service_config(self, res)
+
+    def update_blocked_ip_addresses(self):
+        """Will update service config with blocklist of IP addresses"""
+        return update_blocked_ip_addresses(self)
