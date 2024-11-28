@@ -60,17 +60,15 @@ def test_dangerous_response_with_firewall_route_params():
     
     assert len(attacks) == 2
     del attacks[0]
-    del attacks[0]["attack"]["stack"]
-    assert attacks[0]["attack"] == {
-        "blocked": True,
-        "kind": "shell_injection",
-        'metadata': {'command': 'ls -la'},
-        'operation': 'subprocess.Popen',
-        'pathToPayload': '.command',
-        'payload': '"ls -la"',
-        'source': "route_params",
-        'user': None
-    }
+    assert attacks[0]["attack"]["blocked"] == True
+    assert attacks[0]["attack"]["kind"] == "shell_injection"
+    assert attacks[0]["attack"]['metadata']['command'] == 'ls -la'
+    assert attacks[0]["attack"]["operation"] == 'subprocess.Popen'
+    assert attacks[0]["attack"]["pathToPayload"] == '.command'
+    assert attacks[0]["attack"]["payload"] == '"ls -la"'
+    assert attacks[0]["attack"]["source"] == "route_params"
+    assert attacks[0]["attack"]["user"]["id"] == "123"
+    assert attacks[0]["attack"]["user"]["name"] == "John Doe"
 
 
 def test_dangerous_response_without_firewall():
