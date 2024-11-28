@@ -33,7 +33,7 @@ class ReportingApiHTTP(ReportingApi):
         """Fetches blocked IPs from aikido server"""
         try:
             res = requests.get(
-                self.reporting_url + "api/runtime/events",
+                self.reporting_url + "api/runtime/firewall/lists",
                 timeout=20,
                 headers={
                     # We need to set the Accept-Encoding header to "gzip" to receive the response in gzip format

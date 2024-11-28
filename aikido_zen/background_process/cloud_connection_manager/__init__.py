@@ -8,6 +8,7 @@ from aikido_zen.background_process.routes import Routes
 from aikido_zen.ratelimiting.rate_limiter import RateLimiter
 from aikido_zen.helpers.logging import logger
 from .update_blocked_ip_addresses import update_blocked_ip_addresses
+from ..api.http_api import ReportingApiHTTP
 from ..service_config import ServiceConfig
 from ..users import Users
 from ..hostnames import Hostnames
@@ -31,7 +32,7 @@ class CloudConnectionManager:
 
     def __init__(self, block, api, token, serverless):
         self.block = block
-        self.api = api
+        self.api: ReportingApiHTTP = api
         self.token = token  # Should be instance of the Token class!
         self.routes = Routes(200)
         self.hostnames = Hostnames(200)
