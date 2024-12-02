@@ -22,4 +22,5 @@ def update_service_config(connection_manager, res):
         blocked_uids=res.get("blockedUserIds", []),
         bypassed_ips=res.get("allowedIPAddresses", []),
         received_any_stats=res.get("receivedAnyStats", True),
+        blocked_ips=res.get("blockedIPAddresses", []),
     )

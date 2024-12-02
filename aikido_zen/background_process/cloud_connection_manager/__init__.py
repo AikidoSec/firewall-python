@@ -7,6 +7,8 @@ from aikido_zen.background_process.heartbeats import send_heartbeats_every_x_sec
 from aikido_zen.background_process.routes import Routes
 from aikido_zen.ratelimiting.rate_limiter import RateLimiter
 from aikido_zen.helpers.logging import logger
+from .update_blocked_ip_addresses import update_blocked_ip_addresses
+from ..api.http_api import ReportingApiHTTP
 from ..service_config import ServiceConfig
 from ..users import Users
 from ..hostnames import Hostnames
@@ -30,7 +32,7 @@ class CloudConnectionManager:
 
     def __init__(self, block, api, token, serverless):
         self.block = block
-        self.api = api
+        self.api: ReportingApiHTTP = api
         self.token = token  # Should be instance of the Token class!
         self.routes = Routes(200)
         self.hostnames = Hostnames(200)
@@ -40,6 +42,7 @@ class CloudConnectionManager:
             blocked_uids=[],
             bypassed_ips=[],
             received_any_stats=True,
+            blocked_ips=[],
         )
         self.rate_limiter = RateLimiter(
             max_items=5000, time_to_live_in_ms=120 * 60 * 1000  # 120 minutes
@@ -99,3 +102,7 @@ class CloudConnectionManager:
     def update_service_config(self, res):
         """Update configuration based on the server's response"""
         return update_service_config(self, res)
+
+    def update_blocked_ip_addresses(self):
+        """Will update service config with blocklist of IP addresses"""
+        return update_blocked_ip_addresses(self)

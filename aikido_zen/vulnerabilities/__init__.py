@@ -49,7 +49,9 @@ def run_vulnerability_scan(kind, op, args):
         logger.debug("Not running scans, thread cache not found; %s : %s", kind, op)
         return
     if thread_cache and context:
-        if protection_forced_off(context.get_route_metadata(), thread_cache.endpoints):
+        if protection_forced_off(
+            context.get_route_metadata(), thread_cache.get_endpoints()
+        ):
             #  The client turned protection off for this route, not scanning
             return
         if thread_cache.is_bypassed_ip(context.remote_address):

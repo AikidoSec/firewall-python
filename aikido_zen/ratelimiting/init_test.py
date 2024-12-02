@@ -23,6 +23,7 @@ def create_connection_manager(endpoints=[], bypassed_ips=[]):
         blocked_uids=[],
         bypassed_ips=bypassed_ips,
         received_any_stats=True,
+        blocked_ips=[],
     )
     cm.rate_limiter = RateLimiter(
         max_items=5000, time_to_live_in_ms=120 * 60 * 1000  # 120 minutes

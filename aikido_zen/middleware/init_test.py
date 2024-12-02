@@ -52,9 +52,9 @@ def test_with_context_without_cache():
 
 def test_with_context_with_cache():
     set_context(user={"id": "123"})
-    threadCache = MyThreadCache()
+    thread_cache = MyThreadCache()
 
-    threadCache.blocked_uids = ["123"]
+    thread_cache.config.blocked_uids = ["123"]
     assert get_current_context().executed_middleware == False
     assert should_block_request() == {
         "block": True,
@@ -63,19 +63,19 @@ def test_with_context_with_cache():
     }
     assert get_current_context().executed_middleware == True
 
-    threadCache.blocked_uids = []
+    thread_cache.config.blocked_uids = []
     assert should_block_request() == {"block": False}
 
-    threadCache.blocked_uids = ["23", "234", "456"]
+    thread_cache.config.blocked_uids = ["23", "234", "456"]
     assert should_block_request() == {"block": False}
     assert get_current_context().executed_middleware == True
 
 
 def test_cache_comms_with_endpoints():
     set_context(user={"id": "456"})
-    threadCache = MyThreadCache()
-    threadCache.blocked_uids = ["123"]
-    threadCache.endpoints = [
+    thread_cache = MyThreadCache()
+    thread_cache.config.blocked_uids = ["123"]
+    thread_cache.config.endpoints = [
         {
             "method": "POST",
             "route": "/login",
@@ -102,7 +102,7 @@ def test_cache_comms_with_endpoints():
         assert should_block_request() == {"block": False}
         mock_comms.send_data_to_bg_process.assert_not_called()
 
-    threadCache.endpoints.append(
+    thread_cache.config.endpoints.append(
         {
             "method": "POST",
             "route": "/posts/:id",
@@ -124,7 +124,7 @@ def test_cache_comms_with_endpoints():
         mock_comms.send_data_to_bg_process.assert_not_called()
 
     # Enable ratelimiting
-    threadCache.endpoints[1]["rateLimiting"]["enabled"] = True
+    thread_cache.config.endpoints[1]["rateLimiting"]["enabled"] = True
 
     with patch("aikido_zen.background_process.comms.get_comms") as mock_get_comms:
         mock_comms = MagicMock()
