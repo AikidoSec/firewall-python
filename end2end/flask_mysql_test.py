@@ -37,16 +37,16 @@ def test_dangerous_response_with_firewall():
     
     assert len(attacks) == 1
     del attacks[0]["attack"]["stack"]
-    assert attacks[0]["attack"] == {
-        "blocked": True,
-        "kind": "sql_injection",
-        'metadata': {'sql': 'INSERT INTO dogs (dog_name, isAdmin) VALUES ("Dangerous bobby", 1); -- ", 0)'},
-        'operation': 'pymysql.Cursor.execute',
-        'pathToPayload': '.dog_name',
-        'payload': '"Dangerous bobby\\", 1); -- "',
-        'source': "body",
-        'user': None
-    }
+    assert attacks[0]["attack"]["blocked"] == True
+    assert attacks[0]["attack"]["kind"] == "sql_injection"
+    assert attacks[0]["attack"]["metadata"]["sql"] == 'INSERT INTO dogs (dog_name, isAdmin) VALUES ("Dangerous bobby", 1); -- ", 0)'
+    assert attacks[0]["attack"]["operation"] == 'pymysql.Cursor.execute'
+    assert attacks[0]["attack"]["pathToPayload"] == '.dog_name'
+    assert attacks[0]["attack"]["payload"] == '"Dangerous bobby\\", 1); -- "'
+    assert attacks[0]["attack"]["source"] == "body"
+    assert attacks[0]["attack"]["user"]["id"] == "123"
+    assert attacks[0]["attack"]["user"]["name"] == "John Doe"
+
 
 def test_dangerous_response_with_firewall_route_params():
     events = fetch_events_from_mock("http://localhost:5000")
@@ -60,17 +60,15 @@ def test_dangerous_response_with_firewall_route_params():
     
     assert len(attacks) == 2
     del attacks[0]
-    del attacks[0]["attack"]["stack"]
-    assert attacks[0]["attack"] == {
-        "blocked": True,
-        "kind": "shell_injection",
-        'metadata': {'command': 'ls -la'},
-        'operation': 'subprocess.Popen',
-        'pathToPayload': '.command',
-        'payload': '"ls -la"',
-        'source': "route_params",
-        'user': None
-    }
+    assert attacks[0]["attack"]["blocked"] == True
+    assert attacks[0]["attack"]["kind"] == "shell_injection"
+    assert attacks[0]["attack"]['metadata']['command'] == 'ls -la'
+    assert attacks[0]["attack"]["operation"] == 'subprocess.Popen'
+    assert attacks[0]["attack"]["pathToPayload"] == '.command'
+    assert attacks[0]["attack"]["payload"] == '"ls -la"'
+    assert attacks[0]["attack"]["source"] == "route_params"
+    assert attacks[0]["attack"]["user"]["id"] == "123"
+    assert attacks[0]["attack"]["user"]["name"] == "John Doe"
 
 
 def test_dangerous_response_without_firewall():

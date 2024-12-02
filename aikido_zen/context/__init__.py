@@ -63,6 +63,8 @@ class Context:
         self.route_params = extract_route_params(self.url)
         self.subdomains = get_subdomains_from_url(self.url)
 
+        self.executed_middleware = False
+
     def __reduce__(self):
         return (
             self.__class__,
@@ -81,6 +83,7 @@ class Context:
                     "user": self.user,
                     "xml": self.xml,
                     "outgoing_req_redirects": self.outgoing_req_redirects,
+                    "executed_middleware": self.executed_middleware,
                     "route_params": self.route_params,
                 },
                 None,

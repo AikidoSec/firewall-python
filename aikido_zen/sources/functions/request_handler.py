@@ -35,8 +35,6 @@ def pre_response():
     """
     This is executed at the end of the middleware chain before a response is present
     - IP Allowlist
-    - Blocked users
-    - Ratelimiting
     """
     context = ctx.get_current_context()
     comms = communications.get_comms()
@@ -44,11 +42,7 @@ def pre_response():
         logger.debug("Request was not complete, not running any pre_response code")
         return
 
-    # Blocked users:
-    if context.user and get_cache() and get_cache().is_user_blocked(context.user["id"]):
-        return ("You are blocked by Aikido Firewall.", 403)
-
-    # Fetch endpoints for IP Allowlist and ratelimiting :
+    # Fetch endpoints for IP Allowlist :
     route_metadata = context.get_route_metadata()
     endpoints = getattr(get_cache(), "endpoints", None)
     if not endpoints:
@@ -65,24 +59,6 @@ def pre_response():
         if context.remote_address:
             message += f" (Your IP: {context.remote_address})"
         return (message, 403)
-
-    # Ratelimiting :
-    if get_ratelimited_endpoint(matched_endpoints, context.route):
-        # As an optimization check if the route is rate limited before sending over IPC
-        ratelimit_res = comms.send_data_to_bg_process(
-            action="SHOULD_RATELIMIT",
-            obj={
-                "route_metadata": route_metadata,
-                "user": context.user,
-                "remote_address": context.remote_address,
-            },
-            receive=True,
-        )
-        if ratelimit_res["success"] and ratelimit_res["data"]["block"]:
-            message = "You are rate limited by Zen"
-            if ratelimit_res["data"]["trigger"] == "ip":
-                message += f" (Your IP: {context.remote_address})"
-            return (message, 429)
 
 
 def post_response(status_code):

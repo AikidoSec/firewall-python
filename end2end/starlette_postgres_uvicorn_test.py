@@ -13,7 +13,7 @@ def test_firewall_started_okay():
     events = fetch_events_from_mock("http://localhost:5000")
     started_events = filter_on_event_type(events, "started")
     assert len(started_events) == 1
-    validate_started_event(started_events[0], [])
+    validate_started_event(started_events[0], None) # Don't assert stack
 
 def test_safe_response_with_firewall():
     dog_name = "Bobby Tables"
@@ -37,16 +37,16 @@ def test_dangerous_response_with_firewall():
     
     assert len(attacks) == 1
     del attacks[0]["attack"]["stack"]
-    assert attacks[0]["attack"] == {
-        "blocked": True,
-        "kind": "sql_injection",
-        'metadata': {'sql': "INSERT INTO dogs (dog_name, isAdmin) VALUES ('Dangerous Bobby', TRUE); -- ', FALSE)"},
-        'operation': "asyncpg.connection.Connection.execute",
-        'pathToPayload': '.dog_name',
-        'payload':  "\"Dangerous Bobby', TRUE); -- \"",
-        'source': "body",
-        'user': None
-    }
+    assert attacks[0]["attack"]["blocked"] == True
+    assert attacks[0]["attack"]["kind"] == "sql_injection"
+    assert attacks[0]["attack"]["metadata"]["sql"] == "INSERT INTO dogs (dog_name, isAdmin) VALUES ('Dangerous Bobby', TRUE); -- ', FALSE)"
+    assert attacks[0]["attack"]["operation"] == "asyncpg.connection.Connection.execute"
+    assert attacks[0]["attack"]["pathToPayload"] == ".dog_name"
+    assert attacks[0]["attack"]["payload"] == "\"Dangerous Bobby', TRUE); -- \""
+    assert attacks[0]["attack"]["source"] == "body"
+    assert attacks[0]["attack"]["user"]["id"] == "user123"
+    assert attacks[0]["attack"]["user"]["name"] == "John Doe"
+
 
 def test_dangerous_response_without_firewall():
     dog_name = "Dangerous Bobby', TRUE); -- "
