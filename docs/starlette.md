@@ -48,7 +48,7 @@ app = Starlette(routes=[
 ])
 ```
 
-You can set a user using the following function :
+As soon as you identify the user in you authorization middleware, pass the identity info to Aikido. 
 ```py
 from aikido_zen import set_user
 
