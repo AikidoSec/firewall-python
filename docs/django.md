@@ -40,7 +40,7 @@ If you want to add the rate limiting feature to your app, modify your code like 
 # settings.py file : 
 
 MIDDLEWARE = [
-    # ...
+    # Authorization middleware here (Make sure aikido middleware runs after this)
     "aikido_zen.middleware.AikidoDjangoMiddleware",
     # ...
 ]
