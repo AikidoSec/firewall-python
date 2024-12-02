@@ -42,10 +42,10 @@ app = Flask(__name__)
 # ...
 app.wsgi_app = AikidoFlaskMiddleware(app.wsgi_app)
 # ...
-# set user in middleware
+# Authorization middleware here (Make sure aikido middleware runs after this)
 # ...
 ```
-You can set a user using the following function :
+As soon as you identify the user in you authorization middleware, pass the identity info to Aikido. 
 ```py
 from aikido_zen import set_user
 

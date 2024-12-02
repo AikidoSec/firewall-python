@@ -56,10 +56,10 @@ from aikido_zen.middleware import AikidoQuartMiddleware
 
 app = Quart(__name__)
 app.asgi_app = AikidoQuartMiddleware(app.asgi_app)
-# Set user in middleware somewhere here
+# Authorization middleware here (Make sure aikido middleware runs after this)
 ```
 
-You can set a user using the following function :
+As soon as you identify the user in you authorization middleware, pass the identity info to Aikido. 
 ```py
 from aikido_zen import set_user
 
