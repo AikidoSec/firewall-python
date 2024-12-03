@@ -29,7 +29,11 @@ def aik_full_dispatch_request(*args, former_full_dispatch_request=None, **kwargs
         return former_full_dispatch_request(*args, **kwargs)
 
     req = request_ctx.request
-    extract_and_save_data_from_flask_request(req)
+
+    extract_cookies_from_flask_request_and_save_data(req)
+    extract_form_data_from_flask_request_and_save_data(req)
+    extract_view_args_from_flask_request_and_save_data(req)
+
     pre_response = funcs.request_handler(stage="pre_response")
     if pre_response:
         # This happens when a route is rate limited, a user blocked, etc...
@@ -39,23 +43,42 @@ def aik_full_dispatch_request(*args, former_full_dispatch_request=None, **kwargs
     return res
 
 
-def extract_and_save_data_from_flask_request(req):
-    """Extract form, json, data, ... from flask request"""
+def extract_view_args_from_flask_request_and_save_data(req):
+    """Extract view args from flask request"""
+    context = get_current_context()
+
     try:
-        context = get_current_context()
+        if getattr(req, "view_args"):
+            context.route_params = dict(req.view_args)
+            context.set_as_current_context()
+    except Exception as e:
+        logger.debug("Exception occured whilst extracting flask view args data: %s", e)
+
+
+def extract_form_data_from_flask_request_and_save_data(req):
+    """Extract form data from flask request"""
+    context = get_current_context()
+    try:
         if context:
             if req.form:
                 context.set_body(req.form)
             else:
                 context.set_body(req.data.decode("utf-8"))
 
-            if getattr(req, "view_args"):
-                context.route_params = dict(req.view_args)
-            context.cookies = req.cookies.to_dict()
-            context.set_as_current_context()
+        context.set_as_current_context()
 
     except Exception as e:
         logger.debug("Exception occured whilst extracting flask body data: %s", e)
+
+
+def extract_cookies_from_flask_request_and_save_data(req):
+    """Extract cookies from flask request"""
+    context = get_current_context()
+    try:
+        context.cookies = req.cookies.to_dict()
+        context.set_as_current_context()
+    except Exception as e:
+        logger.debug("Exception occured whilst extracting flask cookie data: %s", e)
 
 
 def aikido___call__(flask_app, environ, start_response):
