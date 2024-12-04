@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aikido_zen"
-version = "1.1.1"
+version = "1.1.2-beta"
 description = "Aikido Zen for Python"
 authors = ["Aikido Security <help@aikido.dev>"]
 readme = "README.md"
