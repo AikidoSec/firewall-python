@@ -52,6 +52,7 @@ class CloudConnectionManager:
         self.statistics = Statistics(
             max_perf_samples_in_mem=5000, max_compressed_stats_in_mem=100
         )
+        self.middleware_installed = False
 
         if isinstance(serverless, str) and len(serverless) == 0:
             raise ValueError("Serverless cannot be an empty string")

@@ -16,6 +16,7 @@ def setup_connection_manager():
     connection_manager.conf.blocked_uids = ["user1", "user2"]
     connection_manager.conf.last_updated_at = 200
     connection_manager.statistics.requests = {"total": 0}  # Initialize total requests
+    connection_manager.middleware_installed = False
     return connection_manager
 
 
@@ -38,6 +39,7 @@ def test_process_sync_data_initialization(setup_connection_manager):
             },
         },
         "reqs": 10,  # Total requests to be added
+        "middleware_installed": False,
     }
 
     result = process_sync_data(connection_manager, data, None)
@@ -63,6 +65,7 @@ def test_process_sync_data_initialization(setup_connection_manager):
     # Check that the return value is correct
     assert result["routes"] == dict(connection_manager.routes.routes)
     assert result["config"] == connection_manager.conf
+    assert connection_manager.middleware_installed == False
 
 
 def test_process_sync_data_with_last_updated_at_below_zero(setup_connection_manager):
@@ -85,6 +88,7 @@ def test_process_sync_data_with_last_updated_at_below_zero(setup_connection_mana
             },
         },
         "reqs": 10,  # Total requests to be added
+        "middleware_installed": True,
     }
 
     result = process_sync_data(connection_manager, data, None)
@@ -106,7 +110,7 @@ def test_process_sync_data_with_last_updated_at_below_zero(setup_connection_mana
 
     # Check that the total requests were updated
     assert connection_manager.statistics.requests["total"] == 10
-
+    assert connection_manager.middleware_installed == True
     # Check that the return value is correct
     assert result == {}
 
@@ -154,6 +158,7 @@ def test_process_sync_data_existing_route(setup_connection_manager):
 
     # Check that the total requests were updated
     assert connection_manager.statistics.requests["total"] == 20  # 5 + 15
+    assert connection_manager.middleware_installed == False
 
     # Check that the return value is correct
     assert result["routes"] == dict(connection_manager.routes.routes)
