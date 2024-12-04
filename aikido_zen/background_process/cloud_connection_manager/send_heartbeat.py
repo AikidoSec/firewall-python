@@ -30,6 +30,7 @@ def send_heartbeat(connection_manager):
             "hostnames": outgoing_domains,
             "routes": routes,
             "users": users,
+            "middlewareInstalled": connection_manager.middleware_installed,
         },
         connection_manager.timeout_in_sec,
     )

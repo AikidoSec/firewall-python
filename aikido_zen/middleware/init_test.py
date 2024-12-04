@@ -56,12 +56,14 @@ def test_with_context_with_cache():
 
     thread_cache.config.blocked_uids = ["123"]
     assert get_current_context().executed_middleware == False
+    assert thread_cache.middleware_installed == False
     assert should_block_request() == {
         "block": True,
         "trigger": "user",
         "type": "blocked",
     }
     assert get_current_context().executed_middleware == True
+    assert thread_cache.middleware_installed == True
 
     thread_cache.config.blocked_uids = []
     assert should_block_request() == {"block": False}
@@ -69,6 +71,7 @@ def test_with_context_with_cache():
     thread_cache.config.blocked_uids = ["23", "234", "456"]
     assert should_block_request() == {"block": False}
     assert get_current_context().executed_middleware == True
+    assert thread_cache.middleware_installed == True
 
 
 def test_cache_comms_with_endpoints():
@@ -88,11 +91,13 @@ def test_cache_comms_with_endpoints():
         }
     ]
     assert get_current_context().executed_middleware == False
+    assert thread_cache.middleware_installed == False
 
     with patch("aikido_zen.background_process.comms.get_comms") as mock_get_comms:
         mock_get_comms.return_value = None  # Set the return value of get_comms
         assert should_block_request() == {"block": False}
     assert get_current_context().executed_middleware == True
+    assert thread_cache.middleware_installed == True
 
     with patch("aikido_zen.background_process.comms.get_comms") as mock_get_comms:
         mock_comms = MagicMock()
