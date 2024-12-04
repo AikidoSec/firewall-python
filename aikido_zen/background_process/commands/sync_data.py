@@ -25,7 +25,12 @@ def process_sync_data(connection_manager, data, conn, queue=None):
         # Update API Spec :
         update_route_info(route["apispec"], existing_route)
 
+    # Save request data :
     connection_manager.statistics.requests["total"] += data.get("reqs", 0)
+
+    # Save middleware installed :
+    if data.get("middleware_installed", False):
+        connection_manager.middleware_installed = True
     if connection_manager.conf.last_updated_at > 0:
         # Only report data if the config has been fetched.
         return {
