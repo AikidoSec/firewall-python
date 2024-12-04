@@ -50,9 +50,9 @@ class Context:
         self.set_body(body)
 
         # Parse WSGI/ASGI/... request :
-        self.cookies = self.method = self.remote_address = self.query = self.headers = (
-            self.url
-        ) = None
+        self.cookies = (
+            self.method
+        ) = self.remote_address = self.query = self.headers = self.url = None
         if source in WSGI_SOURCES:
             set_wsgi_attributes_on_context(self, req)
         elif source in ASGI_SOURCES:
