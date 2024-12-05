@@ -29,7 +29,7 @@ sample_environ_malformed_json = {
     "HTTP_HOST": "example.com",
     "PATH_INFO": "/hello",
     "body": '{"asd": 1invalidjson}',
-    "QUERY_STRING": 'user=JohnDoe',
+    "QUERY_STRING": "user=JohnDoe",
     "CONTENT_TYPE": "application/json",
     "REMOTE_ADDR": "198.51.100.23",
 }
