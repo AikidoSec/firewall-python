@@ -2,7 +2,6 @@
 Helper function file, see funtion definition
 """
 
-from inspect import signature
 from aikido_zen.helpers.try_decode_as_jwt import try_decode_as_jwt
 from aikido_zen.helpers.is_mapping import is_mapping
 from aikido_zen.helpers.build_path_to_payload import build_path_to_payload
@@ -39,11 +38,8 @@ def extract_strings_from_user_input(obj, path_to_payload=None):
         #  Stringifying the dict and adding it as user input is resource intensive
         #  And in most cases shouldn't be necessary.
 
-        if (
-            hasattr(obj, "to_dict")
-            and callable(obj.to_dict)
-            and "flat" in signature(obj.to_dict).parameters
-        ):
+        is_multidict = hasattr(obj, "getlist") and hasattr(obj, "to_dict")
+        if is_multidict:
             # Extract MultiDict with flat=False :
             return extract_strings_from_user_input(
                 obj.to_dict(flat=False), path_to_payload
