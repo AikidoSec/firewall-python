@@ -5,6 +5,7 @@ from aikido_zen.helpers.extract_strings_from_user_input import (
     extract_strings_from_user_input_cached,
 )
 from collections import OrderedDict, ChainMap
+from werkzeug.datastructures import MultiDict, ImmutableMultiDict
 
 
 def from_obj(obj):
@@ -183,6 +184,63 @@ def test_extracts_strings_from_mixed_array_containing_array():
             "test345": ".arr.[4].test.[1]",
             "['test123', 'test345']": ".arr.[4].test",
             "['1', 2, True, None, {'test': ['test123', 'test345']}]": ".arr",
+        }
+    )
+
+
+def test_extracts_strings_from_multidict():
+    multi_dict_input = MultiDict({"arr": ["1", "2", "3"]})
+    assert extract_strings_from_user_input(multi_dict_input) == from_obj(
+        {
+            "arr": ".",
+            "1": ".arr",
+            "2": ".arr",
+            "3": ".arr",
+        }
+    )
+
+
+def test_extracts_strings_from_immutable_multidict():
+    immutable_multi_dict_input = ImmutableMultiDict(
+        {"arr": ["1", 2, True, None, {"test": "test"}]}
+    )
+    assert extract_strings_from_user_input(immutable_multi_dict_input) == from_obj(
+        {
+            "arr": ".",
+            "1": ".arr",
+            "test": ".arr.test",
+        }
+    )
+
+
+def test_extracts_strings_from_multidict_with_mixed_types():
+    multi_dict_input = MultiDict(
+        {"arr": ["1", 2, True, None, {"test": ["test123", "test345"]}]}
+    )
+    assert extract_strings_from_user_input(multi_dict_input) == from_obj(
+        {
+            "arr": ".",
+            "1": ".arr",
+            "test": ".arr",
+            "test123": ".arr.test.[0]",
+            "test345": ".arr.test.[1]",
+            "['test123', 'test345']": ".arr.test",
+        }
+    )
+
+
+def test_extracts_strings_from_immutable_multidict_with_mixed_types():
+    immutable_multi_dict_input = ImmutableMultiDict(
+        {"arr": ["1", 2, True, None, {"test": ["test123", "test345"]}]}
+    )
+    assert extract_strings_from_user_input(immutable_multi_dict_input) == from_obj(
+        {
+            "arr": ".",
+            "1": ".arr",
+            "test": ".arr",
+            "test123": ".arr.test.[0]",
+            "test345": ".arr.test.[1]",
+            "['test123', 'test345']": ".arr.test",
         }
     )
 

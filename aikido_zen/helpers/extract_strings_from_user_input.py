@@ -37,7 +37,16 @@ def extract_strings_from_user_input(obj, path_to_payload=None):
     if is_mapping(obj):
         #  Stringifying the dict and adding it as user input is resource intensive
         #  And in most cases shouldn't be necessary.
-        for key, value in obj.items():
+
+        key_value_pairs = None
+        try:
+            # Try with multi=True (I.e. ImmutableMultiDicts) :
+            key_value_pairs = obj.items(multi=True)
+        except TypeError:
+            # Just use regular method :
+            key_value_pairs = obj.items()
+
+        for key, value in key_value_pairs:
             results[key] = build_path_to_payload(path_to_payload)
             for k, v in extract_strings_from_user_input(
                 value, path_to_payload + [{"type": "object", "key": key}]
