@@ -2,6 +2,7 @@
 Helper function file, see funtion definition
 """
 
+from inspect import signature
 from aikido_zen.helpers.try_decode_as_jwt import try_decode_as_jwt
 from aikido_zen.helpers.is_mapping import is_mapping
 from aikido_zen.helpers.build_path_to_payload import build_path_to_payload
@@ -38,15 +39,17 @@ def extract_strings_from_user_input(obj, path_to_payload=None):
         #  Stringifying the dict and adding it as user input is resource intensive
         #  And in most cases shouldn't be necessary.
 
-        key_value_pairs = None
-        try:
-            # Try with multi=True (I.e. ImmutableMultiDicts) :
-            key_value_pairs = obj.items(multi=True)
-        except TypeError:
-            # Just use regular method :
-            key_value_pairs = obj.items()
+        if (
+            hasattr(obj, "to_dict")
+            and callable(obj.to_dict)
+            and "flat" in signature(obj.to_dict).parameters
+        ):
+            # Extract MultiDict with flat=False :
+            return extract_strings_from_user_input(
+                obj.to_dict(flat=False), path_to_payload
+            )
 
-        for key, value in key_value_pairs:
+        for key, value in obj.items():
             results[key] = build_path_to_payload(path_to_payload)
             for k, v in extract_strings_from_user_input(
                 value, path_to_payload + [{"type": "object", "key": key}]

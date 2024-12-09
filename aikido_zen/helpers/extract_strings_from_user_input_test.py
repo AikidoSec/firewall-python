@@ -193,9 +193,10 @@ def test_extracts_strings_from_multidict():
     assert extract_strings_from_user_input(multi_dict_input) == from_obj(
         {
             "arr": ".",
-            "1": ".arr",
-            "2": ".arr",
-            "3": ".arr",
+            "1": ".arr.[0]",
+            "2": ".arr.[1]",
+            "3": ".arr.[2]",
+            "['1', '2', '3']": ".arr",
         }
     )
 
@@ -207,8 +208,9 @@ def test_extracts_strings_from_immutable_multidict():
     assert extract_strings_from_user_input(immutable_multi_dict_input) == from_obj(
         {
             "arr": ".",
-            "1": ".arr",
-            "test": ".arr.test",
+            "1": ".arr.[0]",
+            "test": ".arr.[4].test",
+            "['1', 2, True, None, {'test': 'test'}]": ".arr",
         }
     )
 
@@ -220,11 +222,12 @@ def test_extracts_strings_from_multidict_with_mixed_types():
     assert extract_strings_from_user_input(multi_dict_input) == from_obj(
         {
             "arr": ".",
-            "1": ".arr",
-            "test": ".arr",
-            "test123": ".arr.test.[0]",
-            "test345": ".arr.test.[1]",
-            "['test123', 'test345']": ".arr.test",
+            "1": ".arr.[0]",
+            "test": ".arr.[4]",
+            "test123": ".arr.[4].test.[0]",
+            "test345": ".arr.[4].test.[1]",
+            "['test123', 'test345']": ".arr.[4].test",
+            "['1', 2, True, None, {'test': ['test123', 'test345']}]": ".arr",
         }
     )
 
@@ -236,11 +239,12 @@ def test_extracts_strings_from_immutable_multidict_with_mixed_types():
     assert extract_strings_from_user_input(immutable_multi_dict_input) == from_obj(
         {
             "arr": ".",
-            "1": ".arr",
-            "test": ".arr",
-            "test123": ".arr.test.[0]",
-            "test345": ".arr.test.[1]",
-            "['test123', 'test345']": ".arr.test",
+            "1": ".arr.[0]",
+            "test": ".arr.[4]",
+            "test123": ".arr.[4].test.[0]",
+            "test345": ".arr.[4].test.[1]",
+            "['test123', 'test345']": ".arr.[4].test",
+            "['1', 2, True, None, {'test': ['test123', 'test345']}]": ".arr",
         }
     )
 
