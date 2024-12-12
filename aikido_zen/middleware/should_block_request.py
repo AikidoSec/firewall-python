@@ -17,10 +17,14 @@ def should_block_request():
         cache = get_cache()
         if not context or not cache:
             return {"block": False}
+
         context.executed_middleware = (
             True  # Update context with middleware execution set to true
         )
         context.set_as_current_context()
+
+        # Make sure we set middleware installed to true (reports back to core) :
+        cache.middleware_installed = True
 
         # Blocked users:
         if context.user and cache.is_user_blocked(context.user["id"]):

@@ -68,6 +68,7 @@ class ThreadCache:
         )
         self.reqs = 0
         self.last_renewal = 0
+        self.middleware_installed = False
 
     def renew(self):
         """
@@ -77,7 +78,11 @@ class ThreadCache:
             return
         res = comms.get_comms().send_data_to_bg_process(
             action="SYNC_DATA",
-            obj={"current_routes": dict(self.routes.routes), "reqs": self.reqs},
+            obj={
+                "current_routes": dict(self.routes.routes),
+                "reqs": self.reqs,
+                "middleware_installed": self.middleware_installed,
+            },
             receive=True,
         )
 
