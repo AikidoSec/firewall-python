@@ -36,7 +36,7 @@ cov:
 benchmark:
 	k6 run -q ./benchmarks/flask-mysql-benchmarks.js
 
-BASE_URL = https://github.com/AikidoSec/zen-internals/releases/download/v0.1.31
+BASE_URL = https://github.com/AikidoSec/zen-internals/releases/download/v0.1.33
 FILES = \
     libzen_internals_aarch64-apple-darwin.dylib \
     libzen_internals_aarch64-apple-darwin.dylib.sha256sum \
