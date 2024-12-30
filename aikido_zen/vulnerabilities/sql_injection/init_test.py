@@ -273,8 +273,14 @@ def test_user_input_is_multiline():
 def test_user_input_is_longer_than_query():
     is_not_sql_injection("SELECT * FROM users", "SELECT * FROM users WHERE id = 'a'")
 
+
 def test_sqlite_dollar_placeholder():
-    is_sql_injection("SELECT * FROM users WHERE id = '1' OR $$ IS NULL -- '", "1' OR $$ IS NULL -- ", "sqlite")
+    is_sql_injection(
+        "SELECT * FROM users WHERE id = '1' OR $$ IS NULL -- '",
+        "1' OR $$ IS NULL -- ",
+        "sqlite",
+    )
+
 
 def test_multiline_queries():
     is_sql_injection(
