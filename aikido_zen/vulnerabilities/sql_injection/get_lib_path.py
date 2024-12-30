@@ -15,9 +15,10 @@ def get_file_name():
     """Gives you the file name for the binary based on platform info"""
     os_name = platform.system().lower()
     architecture = platform.architecture()[0].lower()
+    machine = platform.machine().lower()
     file_name = "libzen_internals_"
 
-    if "aarch64" in architecture:
+    if "aarch64" in architecture or "arm64" in machine:
         file_name += "aarch64-"
     elif "64" in architecture:
         file_name += "x86_64-"
