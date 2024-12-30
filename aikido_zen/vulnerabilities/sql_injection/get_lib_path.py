@@ -14,14 +14,17 @@ def get_binary_path():
 def get_file_name():
     """Gives you the file name for the binary based on platform info"""
     os_name = platform.system().lower()
-    architecture = platform.architecture()[0].lower()
     machine = platform.machine().lower()
     file_name = "libzen_internals_"
 
-    if "aarch64" in architecture or "arm64" in machine:
+    # On macOS, platform.machine() returns "arm64" for Apple Silicon
+    # On Linux, platform.machine() returns "aarch64" for ARM64
+    if "arm64" in machine or "aarch64" in machine:
         file_name += "aarch64-"
-    elif "64" in architecture:
-        file_name += "x86_64-"
+    # On macOS, platform.machine() returns "x86_64" for Intel
+    # On Linux, platform.machine() returns "x86_64" for AMD64
+    elif "x86_64" in machine or "amd64" in machine:
+        file_name += "x86_64-"  # x86_64 or AMD64
 
     if os_name == "windows":
         file_name += "pc-windows-gnu.dll"  # Windows
