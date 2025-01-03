@@ -40,9 +40,8 @@ from aikido_zen.middleware import AikidoFlaskMiddleware
 
 app = Flask(__name__)
 # ...
-app.wsgi_app = AikidoFlaskMiddleware(app.wsgi_app)
-# ...
 # Authorization middleware here (Make sure aikido middleware runs after this)
+app.wsgi_app = AikidoFlaskMiddleware(app.wsgi_app)
 # ...
 ```
 As soon as you identify the user in you authorization middleware, pass the identity info to Aikido. 
