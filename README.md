@@ -20,7 +20,7 @@ Zen will autonomously protect your Python applications from the inside against:
 * 🛡️ [NoSQL injection attacks](https://www.aikido.dev/blog/web-application-security-vulnerabilities)
 * 🛡️ [SQL injection attacks](https://www.aikido.dev/blog/the-state-of-sql-injections)
 * 🛡️ [Command injection attacks](https://www.aikido.dev/blog/command-injection-in-2024-unpacked)
-* 🛡️ [Path traversal attacks](https://owasp.org/www-community/attacks/Path_Traversal)
+* 🛡️ [Path traversal attacks]( https://www.aikido.dev/blog/path-traversal-in-2024-the-year-unpacked)
 * 🛡️ [Server-side request forgery (SSRF)](./docs/ssrf.md)
 
 Zen operates autonomously on the same server as your Python app to:
