@@ -3,6 +3,9 @@ Provides all the functionality for contexts
 """
 
 import contextvars
+import json
+from json import JSONDecodeError
+from time import sleep
 from urllib.parse import parse_qs
 
 from aikido_zen.helpers.build_route_from_url import build_route_from_url
@@ -10,8 +13,9 @@ from aikido_zen.helpers.get_subdomains_from_url import get_subdomains_from_url
 from aikido_zen.helpers.logging import logger
 from .wsgi import set_wsgi_attributes_on_context
 from .asgi import set_asgi_attributes_on_context
+from .extract_route_params import extract_route_params
 
-UINPUT_SOURCES = ["body", "cookies", "query", "headers", "xml"]
+UINPUT_SOURCES = ["body", "cookies", "query", "headers", "xml", "route_params"]
 current_context = contextvars.ContextVar("current_context", default=None)
 
 WSGI_SOURCES = ["django", "flask"]
@@ -43,7 +47,7 @@ class Context:
         self.parsed_userinput = {}
         self.xml = {}
         self.outgoing_req_redirects = []
-        self.body = body
+        self.set_body(body)
 
         # Parse WSGI/ASGI/... request :
         self.cookies = self.method = self.remote_address = self.query = self.headers = (
@@ -56,7 +60,10 @@ class Context:
 
         # Define variables using parsed request :
         self.route = build_route_from_url(self.url)
+        self.route_params = extract_route_params(self.url)
         self.subdomains = get_subdomains_from_url(self.url)
+
+        self.executed_middleware = False
 
     def __reduce__(self):
         return (
@@ -76,6 +83,8 @@ class Context:
                     "user": self.user,
                     "xml": self.xml,
                     "outgoing_req_redirects": self.outgoing_req_redirects,
+                    "executed_middleware": self.executed_middleware,
+                    "route_params": self.route_params,
                 },
                 None,
                 None,
@@ -87,6 +96,22 @@ class Context:
         Set the current context
         """
         current_context.set(self)
+
+    def set_body(self, body):
+        """Sets the body and checks if it's possibly JSON"""
+        self.body = body
+        if isinstance(body, bytes) and len(body) == 0:
+            # Make sure that empty bodies like b"" don't get sent.
+            self.body = None
+        if isinstance(self.body, str) and self.body.startswith("{"):
+            # Might be JSON, but might not have been parsed correctly by server because of wrong headers
+            try:
+                # Check if body is JSON :
+                parsed_body = json.loads(self.body)
+                if parsed_body:
+                    self.body = parsed_body
+            except JSONDecodeError:
+                pass
 
     def get_route_metadata(self):
         """Returns a route_metadata object"""

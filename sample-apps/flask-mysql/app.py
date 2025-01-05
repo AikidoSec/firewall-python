@@ -1,5 +1,6 @@
 import os
 firewall_disabled = os.getenv("FIREWALL_DISABLED")
+dont_add_middleware = os.getenv("DONT_ADD_MIDDLEWARE")
 if firewall_disabled is not None:
     if firewall_disabled.lower() != "1":
         import aikido_zen # Aikido package import
@@ -12,6 +13,22 @@ import requests
 import subprocess
 
 app = Flask(__name__)
+if firewall_disabled is not None:
+    if firewall_disabled.lower() != "1" and (dont_add_middleware is None or dont_add_middleware.lower() != "1"):
+        # Use DONT_ADD_MIDDLEWARE so we don't add this middleware during e.g. benchmarks.
+        import aikido_zen
+        from aikido_zen.middleware import AikidoFlaskMiddleware
+        class SetUserMiddleware:
+            def __init__(self, app):
+                self.app = app
+            def __call__(self, environ, start_response):
+                aikido_zen.set_user({"id": "123", "name": "John Doe"})
+                return self.app(environ, start_response)
+        app.wsgi_app = AikidoFlaskMiddleware(app.wsgi_app)
+        app.wsgi_app = SetUserMiddleware(app.wsgi_app)
+
+                
+
 if __name__ == '__main__':
     app.run()
 mysql = MySQL()
@@ -65,7 +82,7 @@ def show_shell_form():
 @app.route("/shell", methods=['POST'])
 def execute_command():
     command = request.form['command']
-    result = subprocess.run(command.split(), capture_output=True, text=True)
+    result = subprocess.run(command, capture_output=True, text=True, shell=True)
     return str(result.stdout)
 
 @app.route("/open_file", methods=['GET'])
@@ -97,3 +114,13 @@ def make_code_exec():
     code = request.form['code']
     res = eval(code)
     return str(res)
+
+@app.route("/shell/<string:command>", methods=['GET'])
+def execute_command_get(command):
+    result = subprocess.run(command, capture_output=True, text=True, shell=True)
+    return str(result.stdout)
+
+# End2End Test route :
+@app.route("/test_ratelimiting_1", methods=["GET"])
+def test_ratelimiting_1():
+    return "OK"

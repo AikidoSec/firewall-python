@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
-
+import os
 from pathlib import Path
 from decouple import config
 
@@ -57,6 +57,11 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+firewall_disabled = os.getenv("FIREWALL_DISABLED")
+if firewall_disabled is not None:
+    if firewall_disabled.lower() != "1":
+        MIDDLEWARE = ["aikido_zen.middleware.AikidoDjangoMiddleware"] + MIDDLEWARE
 
 ROOT_URLCONF = 'sample-django-mysql-app.urls'
 

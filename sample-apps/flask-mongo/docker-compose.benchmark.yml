@@ -2,7 +2,7 @@ version: "3"
 services:
   backend_firewall_disabled:
     image: sample_flask_mongo
-    command: sh -c "flask --app app run --debug --host=0.0.0.0"
+    command: sh -c "ddtrace-run flask --app app run --debug --host=0.0.0.0"
     restart: always
     volumes:
       - .:/app
@@ -14,7 +14,4 @@ services:
     environment:
       - FIREWALL_DISABLED=1
   backend:
-    environment:
-      - AIKIDO_TOKEN="test_aikido_token"
-      - AIKIDO_BLOCKING=1
-
+    env_file: .env.example

@@ -25,9 +25,11 @@ async def test_replace_one(db):
         await dogs.replace_one(filter, repl)
 
         called_with = mock_run_vulnerability_scan.call_args[1]
-        assert called_with["args"][0] == filter
-        assert called_with["op"] == "pymongo.collection.Collection.replace_one"
-        assert called_with["kind"] == "nosql_injection"
+        mock_run_vulnerability_scan.assert_any_call(
+            args=({"dog_name": "test"},),
+            op="pymongo.collection.Collection.replace_one",
+            kind="nosql_injection",
+        )
 
 
 @pytest.mark.asyncio

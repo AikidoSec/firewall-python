@@ -4,7 +4,6 @@ Sink module for `mysqlclient`
 
 import copy
 import aikido_zen.importhook as importhook
-from aikido_zen.vulnerabilities.sql_injection.dialects import MySQL
 from aikido_zen.background_process.packages import pkg_compat_check
 from aikido_zen.helpers.logging import logger
 import aikido_zen.vulnerabilities as vulns
@@ -31,13 +30,13 @@ def on_mysqlclient_import(mysql):
             logger.debug("Query is bytearray, normally comes from executemany.")
             return prev_execute_func(self, query, args)
         vulns.run_vulnerability_scan(
-            kind="sql_injection", op="MySQLdb.Cursor.execute", args=(query, MySQL())
+            kind="sql_injection", op="MySQLdb.Cursor.execute", args=(query, "mysql")
         )
         return prev_execute_func(self, query, args)
 
     def aikido_new_executemany(self, query, args):
         op = "MySQLdb.Cursor.executemany"
-        vulns.run_vulnerability_scan(kind="sql_injection", op=op, args=(query, MySQL()))
+        vulns.run_vulnerability_scan(kind="sql_injection", op=op, args=(query, "mysql"))
         return prev_executemany_func(self, query, args)
 
     setattr(mysql.Cursor, "execute", aikido_new_execute)

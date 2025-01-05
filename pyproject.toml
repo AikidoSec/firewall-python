@@ -1,11 +1,13 @@
 [tool.poetry]
 name = "aikido_zen"
-version = "1.0.10"
+version = "1.1.1"
 description = "Aikido Zen for Python"
 authors = ["Aikido Security <help@aikido.dev>"]
 readme = "README.md"
 license = "AGPL-3.0-or-later"
-include = ["docs/*"]
+include = [
+    "docs/*", "aikido_zen/lib/*"
+]
 keywords = [
     "web application firewall",
     "WAF",
@@ -74,6 +76,7 @@ pymongo = "^4.8.0"
 cryptography = "^43.0.0"
 motor = "^3.5.1"
 flask = "^3.0.3"
+pygments = "^2.18.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

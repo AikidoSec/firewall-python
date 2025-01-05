@@ -7,7 +7,7 @@ from aikido_zen.context import get_current_context
 from aikido_zen.helpers.logging import logger
 from aikido_zen.errors import AikidoSSRF
 from aikido_zen.helpers.blocking_enabled import is_blocking_enabled
-from aikido_zen.background_process.ipc_lifecycle_cache import get_cache
+from aikido_zen.thread.thread_cache import get_cache
 from .imds import resolves_to_imds_ip
 from .is_private_ip import is_private_ip
 from .find_hostname_in_context import find_hostname_in_context
@@ -28,7 +28,7 @@ def inspect_getaddrinfo_result(dns_results, hostname, port):
         return
 
     if not context or not get_cache():
-        # Context and lifecycle cache should be set for the following code
+        # Context and thread cache should be set for the following code
         return
     if get_cache().is_bypassed_ip(context.remote_address):
         # We check for bypassed ip's here since it is not checked for us

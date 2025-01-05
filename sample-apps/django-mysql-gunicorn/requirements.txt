@@ -3,3 +3,4 @@ mysqlclient
 python-decouple
 cryptography
 gunicorn
+ddtrace

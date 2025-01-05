@@ -2,41 +2,69 @@
 SQL Injection algorithm
 """
 
-from aikido_zen.vulnerabilities.sql_injection.dialects import MySQL
-from aikido_zen.vulnerabilities.sql_injection.query_contains_user_input import (
-    query_contains_user_input,
-)
-from aikido_zen.vulnerabilities.sql_injection.userinput_contains_sql_syntax import (
-    userinput_contains_sqlsyntax,
-)
-from aikido_zen.vulnerabilities.sql_injection.uinput_occ_safely_encapsulated import (
-    uinput_occ_safely_encapsulated,
-)
+import re
+import ctypes
 from aikido_zen.helpers.logging import logger
+from .map_dialect_to_rust_int import map_dialect_to_rust_int
+from .get_lib_path import get_binary_path
 
 
 def detect_sql_injection(query, user_input, dialect):
     """
     Execute this to check if the query is actually a SQL injection
     """
-    if len(user_input) <= 1:
-        # We ignore single characters since they are only able to crash the SQL Server,
-        # And don't pose a big threat.
-        return False
+    try:
+        query_l = query.lower()
+        userinput_l = user_input.lower()
+        if should_return_early(query_l, userinput_l):
+            return False
 
-    if len(user_input) > len(query):
-        # We ignore cases where the user input is longer than the query.
-        # Because the user input can't be part of the query.
-        return False
+        internals_lib = ctypes.CDLL(get_binary_path())
+        query_bytes = query_l.encode("utf-8")
+        userinput_bytes = userinput_l.encode("utf-8")
+        dialect_int = map_dialect_to_rust_int(dialect)
+        c_int_res = internals_lib.detect_sql_injection(
+            query_bytes, userinput_bytes, dialect_int
+        )
 
-    if not query_contains_user_input(query, user_input):
-        # If the user input is not part of the query, return false (No need to check)
-        return False
+        # This means that an error occurred in the library
+        if c_int_res == 2:
+            logger.debug(
+                "Unable to check for SQL Injection, an error occurred in the library"
+            )
+            return False
 
-    if uinput_occ_safely_encapsulated(query, user_input):
-        return False
-    # Executing our final check with the massive RegEx
-    logger.debug(
-        "detect_sql_injection : No reason to return false with : %s", user_input
-    )
-    return userinput_contains_sqlsyntax(user_input, dialect)
+        return bool(c_int_res)
+    except Exception as e:
+        logger.debug("Exception in SQL algo: %s", e)
+    return False
+
+
+def should_return_early(query, user_input):
+    """
+    Input : Lowercased query and user_input.
+    Returns true if the detect_sql_injection algo should return early :
+    - user_input is <= 1 char or user input larger than query
+    - user_input not in query
+    - user_input is alphanumerical
+    - user_input is an array of integers
+    """
+    if len(user_input) <= 1 or len(query) < len(user_input):
+        # User input too small or larger than query, returning
+        return True
+
+    if user_input not in query:
+        # User input not in query, returning
+        return True
+
+    if user_input.replace("_", "").isalnum():
+        # User input is alphanumerical (with underscores), returning
+        return True
+
+    cleaned_input_for_list = user_input.replace(" ", "").replace(",", "")
+    is_valid_comma_seperated_number_list = re.match(r"^\d+$", cleaned_input_for_list)
+    if is_valid_comma_seperated_number_list:
+        # E.g. 1, 24028, 828, 4, 1
+        return True
+
+    return False

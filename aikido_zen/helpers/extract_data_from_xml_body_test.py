@@ -14,6 +14,17 @@ def mock_context():
     return mock_ctx
 
 
+def test_does_not_crash_when_context_none(mock_context):
+    with patch("aikido_zen.context.get_current_context", return_value=None):
+        user_input = "valid_input"
+        root_element = [
+            {"attr1": "value1", "attr2": "value2"},
+            {"attr1": "value3", "attr3": "value4"},
+        ]
+
+        extract_data_from_xml_body(user_input, root_element)
+
+
 def test_extract_data_from_xml_body_valid_input(mock_context):
     with patch("aikido_zen.context.get_current_context", return_value=mock_context):
         user_input = "valid_input"

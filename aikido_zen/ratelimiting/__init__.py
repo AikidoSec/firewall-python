@@ -17,20 +17,10 @@ def should_ratelimit_request(route_metadata, remote_address, user, connection_ma
 
     max_requests = int(endpoint["rateLimiting"]["maxRequests"])
     windows_size_in_ms = int(endpoint["rateLimiting"]["windowSizeInMS"])
-
     is_bypassed_ip = connection_manager.conf.is_bypassed_ip(remote_address)
-    if remote_address and not is_bypassed_ip:
-        method = endpoint.get("method")
-        route = endpoint.get("route")
 
-        allowed = connection_manager.rate_limiter.is_allowed(
-            f"{method}:{route}:ip:{remote_address}",
-            windows_size_in_ms,
-            max_requests,
-        )
-        if not allowed:
-            return {"block": True, "trigger": "ip"}
-
+    if is_bypassed_ip:
+        return {"block": False}
     if user:
         uid = user["id"]
         method = endpoint.get("method")
@@ -43,5 +33,19 @@ def should_ratelimit_request(route_metadata, remote_address, user, connection_ma
         )
         if not allowed:
             return {"block": True, "trigger": "user"}
+        # Do not check IP rate limit if user is set
+        return {"block": False}
+
+    if remote_address:
+        method = endpoint.get("method")
+        route = endpoint.get("route")
+
+        allowed = connection_manager.rate_limiter.is_allowed(
+            f"{method}:{route}:ip:{remote_address}",
+            windows_size_in_ms,
+            max_requests,
+        )
+        if not allowed:
+            return {"block": True, "trigger": "ip"}
 
     return {"block": False}

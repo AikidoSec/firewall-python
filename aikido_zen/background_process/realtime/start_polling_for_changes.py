@@ -26,14 +26,19 @@ def start_polling_for_changes(connection_manager, event_scheduler):
 
     # Start the interval by booting the first settimeout
     poll_for_changes(
-        on_config_update=connection_manager.update_service_config,
+        connection_manager=connection_manager,
         token=connection_manager.token,
         former_last_updated=connection_manager.conf.last_updated_at,
         event_scheduler=event_scheduler,
     )
 
 
-def poll_for_changes(on_config_update, token, former_last_updated, event_scheduler):
+def poll_for_changes(
+    connection_manager,
+    token,
+    former_last_updated,
+    event_scheduler,
+):
     """
     Actually performs the check if the config was updated or not
     """
@@ -49,7 +54,8 @@ def poll_for_changes(on_config_update, token, former_last_updated, event_schedul
             #  The config changed
             logger.debug("According to realtime: Config changed")
             config = realtime.get_config(token)
-            on_config_update({**config, "success": True})
+            connection_manager.update_service_config({**config, "success": True})
+            connection_manager.update_blocked_ip_addresses()
     except Exception as e:
         logger.error("Failed to check for config updates due to error : %s", e)
 
@@ -59,5 +65,5 @@ def poll_for_changes(on_config_update, token, former_last_updated, event_schedul
         POLL_FOR_CONFIG_CHANGES_INTERVAL,
         1,
         poll_for_changes,
-        (on_config_update, token, last_updated, event_scheduler),
+        (connection_manager, token, last_updated, event_scheduler),
     )

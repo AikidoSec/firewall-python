@@ -1,6 +1,6 @@
 """ Exports `check_context_for_nosql_injection`"""
 
-import json
+from aikido_zen.helpers.serialize_to_json import serialize_to_json
 from . import detect_nosql_injection
 
 
@@ -14,6 +14,6 @@ def check_context_for_nosql_injection(context, op, _filter):
         "kind": "nosql_injection",
         "source": results["source"],
         "pathToPayload": results["pathToPayload"],
-        "metadata": {"filter": json.dumps(_filter)},
+        "metadata": {"filter": serialize_to_json(_filter)},
         "payload": results["payload"],
     }

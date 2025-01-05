@@ -45,6 +45,7 @@ def test_service_config_initialization():
         ["0", "0", "1", "5"],
         ["5", "1", "2", "1", "5"],
         True,
+        [],
     )
 
     # Check that non-GraphQL endpoints are correctly filtered
@@ -72,6 +73,7 @@ def service_config():
         blocked_uids=["user1", "user2"],
         bypassed_ips=["192.168.1.1", "10.0.0.1"],
         received_any_stats=True,
+        blocked_ips=[],
     )
 
 
@@ -82,6 +84,34 @@ def test_initialization(service_config):
     assert service_config.blocked_uids == {"user1", "user2"}
 
 
-def test_is_user_blocked(service_config):
-    assert service_config.is_user_blocked("user1") is True
-    assert service_config.is_user_blocked("user3") is False
+def test_ip_blocking():
+    config = ServiceConfig(
+        endpoints=sample_endpoints,
+        last_updated_at="2023-10-01T00:00:00Z",
+        blocked_uids=["user1", "user2"],
+        bypassed_ips=["192.168.1.1", "10.0.0.1"],
+        received_any_stats=True,
+        blocked_ips=[
+            {
+                "source": "geoip",
+                "description": "description",
+                "ips": [
+                    "1.2.3.4",
+                    "192.168.2.1/24",
+                    "fd00:1234:5678:9abc::1",
+                    "fd00:3234:5678:9abc::1/64",
+                    "5.6.7.8/32",
+                ],
+            }
+        ],
+    )
+
+    assert config.is_blocked_ip("1.2.3.4") is "description"
+    assert config.is_blocked_ip("2.3.4.5") is False
+    assert config.is_blocked_ip("192.168.2.2") is "description"
+    assert config.is_blocked_ip("fd00:1234:5678:9abc::1") is "description"
+    assert config.is_blocked_ip("fd00:1234:5678:9abc::2") is False
+    assert config.is_blocked_ip("fd00:3234:5678:9abc::1") is "description"
+    assert config.is_blocked_ip("fd00:3234:5678:9abc::2") is "description"
+    assert config.is_blocked_ip("5.6.7.8") is "description"
+    assert config.is_blocked_ip("1.2") is False

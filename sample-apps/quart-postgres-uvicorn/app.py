@@ -11,6 +11,20 @@ if firewall_disabled is not None:
         aikido_zen.protect()
 
 app = Quart(__name__)
+if firewall_disabled is not None:
+    if firewall_disabled.lower() != "1":
+        import aikido_zen  # Aikido package import
+        from aikido_zen.middleware import AikidoQuartMiddleware
+        class SetUserMiddleware:
+            def __init__(self, app):
+                self.app = app
+
+            async def __call__(self, scope, receive, send):
+                aikido_zen.set_user({"id": "user123", "name": "John Doe"})
+                return await self.app(scope, receive, send)
+
+        app.asgi_app = AikidoQuartMiddleware(app.asgi_app)
+        app.asgi_app = SetUserMiddleware(app.asgi_app)
 
 async def get_db_connection():
     return await asyncpg.connect(

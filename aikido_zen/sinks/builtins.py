@@ -3,9 +3,22 @@ Sink module for `builtins`, python's built-in function
 """
 
 from pathlib import PurePath
-import copy
 import aikido_zen.importhook as importhook
 import aikido_zen.vulnerabilities as vulns
+
+
+def aikido_open_decorator(func):
+    """Decorator for open(...)"""
+
+    def wrapper(*args, **kwargs):
+        #  args[0] is thefunc_name filename
+        if len(args) > 0 and isinstance(args[0], (str, bytes, PurePath)):
+            vulns.run_vulnerability_scan(
+                kind="path_traversal", op="builtins.open", args=(args[0],)
+            )
+        return func(*args, **kwargs)
+
+    return wrapper
 
 
 @importhook.on_import("builtins")
@@ -17,19 +30,9 @@ def on_builtins_import(builtins):
     """
     modified_builtins = importhook.copy_module(builtins)
 
-    former_open = copy.deepcopy(builtins.open)
     former_eval = copy.deepcopy(builtins.eval)
     former_exec = copy.deepcopy(builtins.exec)
     former_compile = copy.deepcopy(builtins.compile)
-
-    # Path Traversal :
-    def aikido_new_open(*args, **kwargs):
-        #  args[0] is the filename
-        if len(args) > 0 and isinstance(args[0], (str, bytes, PurePath)):
-            vulns.run_vulnerability_scan(
-                kind="path_traversal", op="builtins.open", args=(args[0],)
-            )
-        return former_open(*args, **kwargs)
 
     # Code injection :
     def aikido_new_eval(expression, *args, **kwargs):
@@ -57,8 +60,8 @@ def on_builtins_import(builtins):
         return former_compile(source, *args, **kwargs)
 
     # pylint: disable=no-member
-    setattr(builtins, "open", aikido_new_open)
-    setattr(modified_builtins, "open", aikido_new_open)
+    setattr(builtins, "open", aikido_open_decorator(builtins.open))
+    setattr(modified_builtins, "open", aikido_open_decorator(builtins.open))
     setattr(builtins, "eval", aikido_new_eval)
     setattr(modified_builtins, "eval", aikido_new_eval)
     setattr(builtins, "exec", aikido_new_exec)

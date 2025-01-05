@@ -23,6 +23,7 @@ def create_connection_manager(endpoints=[], bypassed_ips=[]):
         blocked_uids=[],
         bypassed_ips=bypassed_ips,
         received_any_stats=True,
+        blocked_ips=[],
     )
     cm.rate_limiter = RateLimiter(
         max_items=5000, time_to_live_in_ms=120 * 60 * 1000  # 120 minutes
@@ -191,4 +192,160 @@ def test_rate_limiting_with_wildcard2():
     assert should_ratelimit_request(metadata, "1.2.3.4", None, cm) == {
         "block": True,
         "trigger": "ip",
+    }
+
+
+def test_rate_limiting_by_user_with_same_ip():
+    cm = create_connection_manager(
+        [
+            {
+                "method": "POST",
+                "route": "/login",
+                "forceProtectionOff": False,
+                "rateLimiting": {
+                    "enabled": True,
+                    "maxRequests": 3,
+                    "windowSizeInMS": 1000,
+                },
+            },
+        ]
+    )
+
+    # First three requests should not be blocked
+    metadata = create_route_metadata(route="/login", method="POST")
+    assert should_ratelimit_request(metadata, "1.2.3.4", {"id": "123"}, cm) == {
+        "block": False
+    }
+    assert should_ratelimit_request(metadata, "1.2.3.4", {"id": "123"}, cm) == {
+        "block": False
+    }
+    assert should_ratelimit_request(metadata, "1.2.3.4", {"id": "123"}, cm) == {
+        "block": False
+    }
+
+    # This request should trigger the rate limit
+    assert should_ratelimit_request(metadata, "1.2.3.4", {"id": "123"}, cm) == {
+        "block": True,
+        "trigger": "user",
+    }
+
+
+def test_rate_limiting_by_user_with_different_ips():
+    cm = create_connection_manager(
+        [
+            {
+                "method": "POST",
+                "route": "/login",
+                "forceProtectionOff": False,
+                "rateLimiting": {
+                    "enabled": True,
+                    "maxRequests": 3,
+                    "windowSizeInMS": 1000,
+                },
+            },
+        ]
+    )
+
+    # First request from first IP
+    metadata = create_route_metadata(route="/login", method="POST")
+    assert should_ratelimit_request(metadata, "1.2.3.4", {"id": "123"}, cm) == {
+        "block": False
+    }
+
+    # First request from second IP
+    assert should_ratelimit_request(metadata, "4.3.2.1", {"id": "123"}, cm) == {
+        "block": False
+    }
+
+    # Second request from first IP
+    assert should_ratelimit_request(metadata, "1.2.3.4", {"id": "123"}, cm) == {
+        "block": False
+    }
+
+    # This request from second IP should trigger the rate limit
+    assert should_ratelimit_request(metadata, "4.3.2.1", {"id": "123"}, cm) == {
+        "block": True,
+        "trigger": "user",
+    }
+
+
+def test_rate_limiting_same_ip_different_users():
+    cm = create_connection_manager(
+        [
+            {
+                "method": "POST",
+                "route": "/login",
+                "forceProtectionOff": False,
+                "rateLimiting": {
+                    "enabled": True,
+                    "maxRequests": 3,
+                    "windowSizeInMS": 1000,
+                },
+            },
+        ]
+    )
+
+    # First request from user 1
+    metadata = create_route_metadata(route="/login", method="POST")
+    assert should_ratelimit_request(metadata, "1.2.3.4", {"id": "123"}, cm) == {
+        "block": False
+    }
+
+    # First request from user 2
+    assert should_ratelimit_request(metadata, "1.2.3.4", {"id": "123456"}, cm) == {
+        "block": False
+    }
+
+    # Second request from user 1
+    assert should_ratelimit_request(metadata, "1.2.3.4", {"id": "123"}, cm) == {
+        "block": False
+    }
+
+    # Second request from user 2
+    assert should_ratelimit_request(metadata, "1.2.3.4", {"id": "123456"}, cm) == {
+        "block": False
+    }
+
+
+def test_does_not_ratelimit_bypassed_ip_with_user():
+    pass  # Really?
+
+
+def test_works_with_setuser_after_first_ratelimit():
+    pass
+
+
+import pytest
+
+
+def test_rate_limiting_bypassed_ip_with_user():
+    cm = create_connection_manager(
+        [
+            {
+                "method": "POST",
+                "route": "/login",
+                "forceProtectionOff": False,
+                "rateLimiting": {
+                    "enabled": True,
+                    "maxRequests": 3,
+                    "windowSizeInMS": 1000,
+                },
+            },
+        ],
+        ["1.2.3.4"],
+    )
+
+    # All requests from the bypassed IP should not be blocked
+    metadata = create_route_metadata(route="/login", method="POST")
+    assert should_ratelimit_request(metadata, "1.2.3.4", {"id": "123"}, cm) == {
+        "block": False
+    }
+    assert should_ratelimit_request(metadata, "1.2.3.4", {"id": "123"}, cm) == {
+        "block": False
+    }
+    assert should_ratelimit_request(metadata, "1.2.3.4", {"id": "123"}, cm) == {
+        "block": False
+    }
+    assert should_ratelimit_request(metadata, "1.2.3.4", {"id": "123"}, cm) == {
+        "block": False
     }
