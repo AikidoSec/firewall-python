@@ -7,6 +7,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        # macos-latest-xlarge is ARM-based
+        # macos-latest-large is x86-based
         os: [ubuntu-latest, windows-latest, macos-latest-large, macos-latest-xlarge]
     continue-on-error: true # Allows all jobs to run even if one fails
     steps:
