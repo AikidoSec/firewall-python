@@ -19,11 +19,11 @@ jobs:
           python-version: 3.12
 
       - name: Install pkg-config
-        if: runner.os == 'macos-latest'
+        if: runner.os == 'macOS'
         run: brew install pkgconf
 
       - name: Install mysql
-        if: runner.os == 'macos-latest'
+        if: runner.os == 'macOS'
         run: brew install mysql
 
       - name: Install dependencies
