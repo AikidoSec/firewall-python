@@ -45,6 +45,7 @@ jobs:
         docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
 
     - name: Run end2end tests
+      working-directory: ./sample-apps/${{ matrix.app.name }}
       run: |
-        sleep 5
+        sleep 5 && docker-compose logs -f & cd ../../
         poetry run pytest ./end2end/${{ matrix.app.test_file }}

@@ -40,7 +40,6 @@ def run_vulnerability_scan(kind, op, args):
     if not context and kind != "ssrf":
         # Make a special exception for SSRF, which checks itself if context is set.
         # This is because some scans/tests for SSRF do not require a context to be set.
-        logger.debug("Not running scans, context not found; %s : %s", kind, op)
         return
 
     if not thread_cache and kind != "ssrf":

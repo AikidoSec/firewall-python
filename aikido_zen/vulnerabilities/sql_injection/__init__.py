@@ -36,7 +36,7 @@ def detect_sql_injection(query, user_input, dialect):
 
         return bool(c_int_res)
     except Exception as e:
-        logger.debug("Exception in SQL algo: %s", e)
+        logger.info("Exception in SQL algo: %s", e)
     return False
 
 
