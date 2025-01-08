@@ -9,8 +9,12 @@ jobs:
       matrix:
         # macos-14 is ARM-based
         # macos-14-large is x86-based
+        # Ubuntu is not included because the full test suite runs on Ubuntu
         os: [windows-latest, macos-14, macos-14-large]
-    continue-on-error: true # Allows all jobs to run even if one fails
+
+    # Allows all jobs to run even if one fails
+    continue-on-error: true
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
