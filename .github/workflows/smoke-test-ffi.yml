@@ -4,18 +4,18 @@ on: [pull_request]
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: {{ matrix.os }}
     strategy:
       matrix:
-        python-version: ["3.12"]
+        os: [ubuntu-latest, ubuntu-latest-arm, windows-latest, windows-latest-arm, macos-latest]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: 3.12
 
       - name: Install dependencies
         run: make install
