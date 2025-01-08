@@ -113,3 +113,27 @@ def test_decode_raises_exception_if_iat_is_not_int():
 
     assert result == (True, {'iat': 'not-an-int'})  # Assuming the function handles iat checks internally
 
+def test_decodes_valid_es256_jwt():
+    example_payload = {"hello": "world"}
+    example_jwt = (
+        "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9."
+        "eyJoZWxsbyI6IndvcmxkIn0."
+        "TORyNQab_MoXM7DvNKaTwbrJr4UYd2SsX8hhlnWelQFmPFSf_JzC2EbLnar92t-bXsDovzxp25ExazrVHkfPkQ"
+    )
+
+    result = try_decode_as_jwt(example_jwt)
+
+    assert result == (True, example_payload)  # Assuming the function handles decoding correctly
+
+def test_decodes_valid_rs384_jwt():
+    example_payload = {"hello": "world"}
+    example_jwt = (
+        "eyJhbGciOiJSUzM4NCIsInR5cCI6IkpXVCJ9."
+        "eyJoZWxsbyI6IndvcmxkIn0."
+        "yNQ3nI9vEDs7lEh-Cp81McPuiQ4ZRv6FL4evTYYAh1XlRTTR3Cz8pPA9Stgso8Ra9xGB4X3rlra1c8Jz10nTUjuO06OMm7oXdrnxp1KIiAJDerWHkQ7l3dlizIk1bmMA457W2fNzNfHViuED5ISM081dgf_a71qBwJ_yShMMrSOfxDx"
+        "mX9c4DjRogRJG8SM5PvpLqI_Cm9iQPGMvmYK7gzcq2cJurHRJDJHTqIdpLWXkY7zVikeen6FhuGyn060Dz9gYq9tuwmrtSWCBUjiN8sqJ00CDgycxKqHfUndZbEAOjcCAhBrqWW3mSVivUfubsYbwUdUG3fSRPjaUPcpe8A"
+    )
+
+    result = try_decode_as_jwt(example_jwt)
+
+    assert result == (True, example_payload)  # Assuming the function handles decoding correctly
