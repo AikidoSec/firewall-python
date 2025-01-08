@@ -29,12 +29,14 @@ def test_returns_decoded_JWT_for_valid_JWT_with_bearer_prefix():
         "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwidXNlcm5hbWUiOnsiJG5lIjpudWxsfSwiaWF0IjoxNTE2MjM5MDIyfQ._jhGJw9WzB6gHKPSozTFHDo9NOHs3CNOlvJ8rWy6VrQ"
     ) == (True, {"sub": "1234567890", "username": {"$ne": None}, "iat": 1516239022})
 
+
 def test_decodes_valid_jwt():
     example_payload = {"hello": "world"}
     example_jwt = "eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJoZWxsbyI6ICJ3b3JsZCJ9.tvagLDLoaiJKxOKqpBXSEGy7SYSifZhjntgm9ctpyj8"
     decoded_payload = try_decode_as_jwt(example_jwt)[1]
 
     assert decoded_payload == example_payload
+
 
 def test_decodes_complete_valid_jwt():
     example_payload = {"hello": "world"}
@@ -44,6 +46,7 @@ def test_decodes_complete_valid_jwt():
     assert decoded[0] is True
     assert decoded[1] == {"hello": "world"}
 
+
 def test_load_verify_valid_jwt():
     example_payload = {"hello": "world"}
     example_jwt = "eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJoZWxsbyI6ICJ3b3JsZCJ9.tvagLDLoaiJKxOKqpBXSEGy7SYSifZhjntgm9ctpyj8"
@@ -52,12 +55,14 @@ def test_load_verify_valid_jwt():
 
     assert decoded_payload == example_payload
 
+
 def test_decode_invalid_payload_string():
     example_jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.aGVsbG8gd29ybGQ.SIr03zM64awWRdPrAM_61QWsZchAtgDV3pphfHPPWkI"
 
     result = try_decode_as_jwt(example_jwt)
 
     assert result == (False, None)
+
 
 def test_decode_with_non_mapping_payload_throws_exception():
     example_jwt = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.MQ.Abcd"  # Invalid payload
@@ -66,19 +71,22 @@ def test_decode_with_non_mapping_payload_throws_exception():
 
     assert result == (True, 1)
 
+
 def test_decode_with_invalid_audience_param_throws_exception():
     example_jwt = "eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJoZWxsbyI6ICJ3b3JsZCJ9.tvagLDLoaiJKxOKqpBXSEGy7SYSifZhjntgm9ctpyj8"
 
     result = try_decode_as_jwt(example_jwt)
 
-    assert result == (True, {'hello': 'world'})
+    assert result == (True, {"hello": "world"})
+
 
 def test_decode_with_nonlist_aud_claim_throws_exception():
     example_jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJoZWxsbyI6IndvcmxkIiwiYXVkIjoxfQ.Rof08LBSwbm8Z_bhA2N3DFY-utZR1Gi9rbIS5Zthnnc"
 
     result = try_decode_as_jwt(example_jwt)
 
-    assert result == (True, {'hello': 'world', 'aud': 1})
+    assert result == (True, {"hello": "world", "aud": 1})
+
 
 def test_decode_with_invalid_aud_list_member_throws_exception():
     example_jwt = (
@@ -89,7 +97,11 @@ def test_decode_with_invalid_aud_list_member_throws_exception():
 
     result = try_decode_as_jwt(example_jwt)
 
-    assert result == (True, {'hello': 'world', 'aud': [1]})  # Assuming the function handles audience checks internally
+    assert result == (
+        True,
+        {"hello": "world", "aud": [1]},
+    )  # Assuming the function handles audience checks internally
+
 
 def test_decode_raises_exception_if_exp_is_not_int():
     example_jwt = (
@@ -100,7 +112,11 @@ def test_decode_raises_exception_if_exp_is_not_int():
 
     result = try_decode_as_jwt(example_jwt)
 
-    assert result == (True, {'exp': 'not-an-int'})  # Assuming the function handles exp checks internally
+    assert result == (
+        True,
+        {"exp": "not-an-int"},
+    )  # Assuming the function handles exp checks internally
+
 
 def test_decode_raises_exception_if_iat_is_not_int():
     example_jwt = (
@@ -111,7 +127,11 @@ def test_decode_raises_exception_if_iat_is_not_int():
 
     result = try_decode_as_jwt(example_jwt)
 
-    assert result == (True, {'iat': 'not-an-int'})  # Assuming the function handles iat checks internally
+    assert result == (
+        True,
+        {"iat": "not-an-int"},
+    )  # Assuming the function handles iat checks internally
+
 
 def test_decodes_valid_es256_jwt():
     example_payload = {"hello": "world"}
@@ -123,7 +143,11 @@ def test_decodes_valid_es256_jwt():
 
     result = try_decode_as_jwt(example_jwt)
 
-    assert result == (True, example_payload)  # Assuming the function handles decoding correctly
+    assert result == (
+        True,
+        example_payload,
+    )  # Assuming the function handles decoding correctly
+
 
 def test_decodes_valid_rs384_jwt():
     example_payload = {"hello": "world"}
@@ -136,11 +160,18 @@ def test_decodes_valid_rs384_jwt():
 
     result = try_decode_as_jwt(example_jwt)
 
-    assert result == (True, example_payload)  # Assuming the function handles decoding correctly
+    assert result == (
+        True,
+        example_payload,
+    )  # Assuming the function handles decoding correctly
+
 
 def test_with_urlsafe_parts():
-    example_payload = {'test': '??????', 'username': {'$regex': '.*'}}
+    example_payload = {"test": "??????", "username": {"$regex": ".*"}}
     example_jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZXN0IjoiPz8_Pz8_IiwidXNlcm5hbWUiOnsiJHJlZ2V4IjoiLioifX0.DTGfM7dmKjAByZzeugmtUSpV1v9RbIsDCld2M9DlMvk"
     result = try_decode_as_jwt(example_jwt)
 
-    assert result == (True, example_payload)  # Assuming the function handles decoding correctly
+    assert result == (
+        True,
+        example_payload,
+    )  # Assuming the function handles decoding correctly
