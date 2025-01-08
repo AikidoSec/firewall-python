@@ -20,6 +20,11 @@ jobs:
         with:
           python-version: 3.12
 
+      - name: Display system info
+        run: |
+          python -c "import platform; print(f'Machine architecture: {platform.machine()}')"
+          python -c "import platform; print(f'OS: {platform.system()}')"
+
       - name: Install mysql
         if: runner.os == 'macOS'
         run: brew install mysql
