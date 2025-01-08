@@ -137,3 +137,10 @@ def test_decodes_valid_rs384_jwt():
     result = try_decode_as_jwt(example_jwt)
 
     assert result == (True, example_payload)  # Assuming the function handles decoding correctly
+
+def test_with_urlsafe_parts():
+    example_payload = {'test': '??????', 'username': {'$regex': '.*'}}
+    example_jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZXN0IjoiPz8_Pz8_IiwidXNlcm5hbWUiOnsiJHJlZ2V4IjoiLioifX0.DTGfM7dmKjAByZzeugmtUSpV1v9RbIsDCld2M9DlMvk"
+    result = try_decode_as_jwt(example_jwt)
+
+    assert result == (True, example_payload)  # Assuming the function handles decoding correctly
