@@ -7,7 +7,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, ubuntu-latest-arm, windows-latest, windows-latest-arm, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest-large, macos-latest-xlarge]
     continue-on-error: true # Allows all jobs to run even if one fails
     steps:
       - name: Checkout code
