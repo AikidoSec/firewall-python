@@ -3,8 +3,22 @@ name: End-to-End tests
 on: [pull_request]
 
 jobs:
-  test:
+  end2end-test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app:
+          - { name: "django-mysql", test_file: "django_mysql_test.py" }
+          - { name: "django-mysql-gunicorn", test_file: "django_mysql_gunicorn_test.py" }
+          - { name: "django-postgres-gunicorn", test_file: "django_postgres_gunicorn_test.py" }
+          - { name: "flask-mongo", test_file: "flask_mongo_test.py" }
+          - { name: "flask-mysql", test_file: "flask_mysql_test.py" }
+          - { name: "flask-mysql-uwsgi", test_file: "flask_mysql_uwsgi_test.py" }
+          - { name: "flask-postgres", test_file: "flask_postgres_test.py" }
+          - { name: "flask-postgres-xml", test_file: "flask_postgres_xml_test.py" }
+          - { name: "flask-postgres-xml", test_file: "flask_postgres_xml_lxml_test.py" }
+          - { name: "quart-postgres-uvicorn", test_file: "quart_postgres_uvicorn_test.py" }
+          - { name: "starlette-postgres-uvicorn", test_file: "starlette_postgres_uvicorn_test.py" }
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
@@ -25,104 +39,12 @@ jobs:
         python -m pip install --upgrade pip
         make install
 
-    # django-mysql
-    - name: Start django-mysql
-      working-directory: ./sample-apps/django-mysql
+    - name: Start application
+      working-directory: ./sample-apps/${{ matrix.app.name }}
       run: |
         docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
-    - name: Run end2end tests for django-mysql
-      run: sleep 5 && poetry run pytest ./end2end/django_mysql_test.py
 
-    # django-mysql-gunicorn
-    - name: Restart mock server
-      run: docker restart mock_core
-    - name: Start django-mysql-gunicorn
-      working-directory: ./sample-apps/django-mysql-gunicorn
+    - name: Run end2end tests
       run: |
-        docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
-    - name: Run end2end tests for django-mysql-gunicorn
-      run: sleep 5 && poetry run pytest ./end2end/django_mysql_gunicorn_test.py
-
-    # django-postgres-gunicorn
-    - name: Restart mock server
-      run: docker restart mock_core
-    - name: Start django-postgres-gunicorn
-      working-directory: ./sample-apps/django-postgres-gunicorn
-      run: |
-        docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
-    - name: Run end2end tests for django-postgres-gunicorn
-      run: sleep 5 && poetry run pytest ./end2end/django_postgres_gunicorn_test.py
-
-    # flask-mongo
-    - name: Restart mock server
-      run: docker restart mock_core
-    - name: Start flask-mongo
-      working-directory: ./sample-apps/flask-mongo
-      run: |
-        docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
-    - name: Run end2end tests for flask-mongo
-      run: sleep 5 && poetry run pytest ./end2end/flask_mongo_test.py
-
-    # flask-mysql
-    - name: Restart mock server
-      run: docker restart mock_core
-    - name: Start flask-mysql
-      working-directory: ./sample-apps/flask-mysql
-      run: |
-        docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
-    - name: Run end2end tests for flask-mysql
-      run: sleep 5 && poetry run pytest ./end2end/flask_mysql_test.py
-    
-    # flask-mysql-uwsgi
-    - name: Restart mock server
-      run: docker restart mock_core
-    - name: Start flask-mysql-uwsgi
-      working-directory: ./sample-apps/flask-mysql-uwsgi
-      run: |
-        docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
-    - name: Run end2end tests for flask-mysql-uwsgi
-      run: sleep 5 && poetry run pytest ./end2end/flask_mysql_uwsgi_test.py
-
-    # flask-postgres
-    - name: Restart mock server
-      run: docker restart mock_core
-    - name: Start flask-postgres
-      working-directory: ./sample-apps/flask-postgres
-      run: |
-        docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
-    - name: Run end2end tests for flask-postgres
-      run: sleep 5 && poetry run pytest ./end2end/flask_postgres_test.py
-
-    # flask-postgres-xml
-    - name: Restart mock server
-      run: docker restart mock_core
-    - name: Start flask-postgres-xml
-      working-directory: ./sample-apps/flask-postgres-xml
-      run: |
-        docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
-    - name: Run end2end tests for flask-postgres-xml
-      run: | 
         sleep 5
-        poetry run pytest ./end2end/flask_postgres_xml_test.py
-        docker restart mock_core
-        poetry run pytest ./end2end/flask_postgres_xml_lxml_test.py
-
-    # quart-postgres-uvicorn
-    - name: Restart mock server
-      run: docker restart mock_core
-    - name: Start quart-postgres-uvicorn
-      working-directory: ./sample-apps/quart-postgres-uvicorn
-      run: |
-        docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
-    - name: Run end2end tests for quart-postgres-uvicorn
-      run: sleep 5 && poetry run pytest ./end2end/quart_postgres_uvicorn_test.py
-
-    # starlette-postgres-uvicorn
-    - name: Restart mock server
-      run: docker restart mock_core
-    - name: Start starlette-postgres-uvicorn
-      working-directory: ./sample-apps/starlette-postgres-uvicorn
-      run: |
-        docker compose -f docker-compose.yml -f docker-compose.benchmark.yml up --build -d
-    - name: Run end2end tests for starlette-postgres-uvicorn
-      run: sleep 5 && poetry run pytest ./end2end/starlette_postgres_uvicorn_test.py
+        poetry run pytest ./end2end/${{ matrix.app.test_file }}
