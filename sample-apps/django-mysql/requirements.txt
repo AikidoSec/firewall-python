@@ -1,4 +1,4 @@
-django
+django==5.1.3
 mysqlclient
 python-decouple
 cryptography
