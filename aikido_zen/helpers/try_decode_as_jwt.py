@@ -19,7 +19,8 @@ def try_decode_as_jwt(jwt):
         return (False, None)
 
     try:
-        jwt = json.loads(base64.b64decode(str.encode(parts[1]) + b"==").decode("utf-8"))
+        base64_decoded = base64.urlsafe_b64decode(str.encode(parts[1]) + b"==")
+        jwt = json.loads(base64_decoded.decode("utf-8"))
         return (True, jwt)
     except Exception:
         return (False, None)
