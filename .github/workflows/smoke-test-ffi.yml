@@ -18,10 +18,6 @@ jobs:
         with:
           python-version: 3.12
 
-      - name: Install pkg-config
-        if: runner.os == 'macOS'
-        run: brew install pkgconf
-
       - name: Install mysql
         if: runner.os == 'macOS'
         run: brew install mysql
