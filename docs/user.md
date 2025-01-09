@@ -9,7 +9,7 @@ from aikido_zen import set_user
 set_user({"id": "123", "name": "John Doe"})
 ```
 
-Using `setUser` has the following benefits:
+Using `set_user` has the following benefits:
 
 - The user ID is used for more accurate rate limiting (you can change IP addresses, but you can't change your user ID).
 - Whenever attacks are detected, the user will be included in the report to Aikido.
