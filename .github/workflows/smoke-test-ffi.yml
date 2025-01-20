@@ -29,9 +29,13 @@ jobs:
           python -c "import platform; print(f'Machine architecture: {platform.machine()}')"
           python -c "import platform; print(f'OS: {platform.system()}')"
 
-      - name: Install mysql
+      - name: Install MySQL
         if: runner.os == 'macOS'
         run: brew install mysql
+
+      - name: Install MySQL
+        if: runner.os == 'Linux'
+        run: apt-get install libmysqlclient-dev
 
       - name: Install dependencies
         run: make install
