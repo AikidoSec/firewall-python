@@ -35,7 +35,7 @@ jobs:
 
       - name: Install MySQL
         if: runner.os == 'Linux'
-        run: apt-get install libmysqlclient-dev
+        run: sudo apt-get install libmysqlclient-dev
 
       - name: Install dependencies
         run: make install
