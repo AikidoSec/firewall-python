@@ -41,14 +41,19 @@ benchmark:
 	k6 run -q ./benchmarks/flask-mysql-benchmarks.js
 
 # Mock server :
-mock_init:
-	docker kill mock_core && docker rm mock_core
+mock_init: mock_stop
 	cd end2end/server && docker build -t mock_core .
 	docker run --name mock_core -d -p 5000:5000 mock_core
 mock_restart:
 	docker restart mock_core
 mock_stop:
-	docker kill mock_core && docker rm mock_core
+	if [ "$(docker ps -aq -f name=mock_core)" ]; then
+		# Kill and remove the container
+		docker kill mock_core
+		docker rm mock_core
+	else
+		echo "Container 'mock_core' does not exist."
+	fi
 
 
 # Binaries cache :
