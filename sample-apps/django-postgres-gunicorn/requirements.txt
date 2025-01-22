@@ -1,6 +1,0 @@
-django==5.0.8
-python-decouple
-cryptography
-psycopg2-binary==2.9.9
-gunicorn==20.1.0
-ddtrace

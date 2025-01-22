@@ -1,11 +1,5 @@
-from dotenv import load_dotenv
-import os
-load_dotenv()
-firewall_disabled = os.getenv("FIREWALL_DISABLED")
-if firewall_disabled is not None:
-    if firewall_disabled.lower() != "1":
-        import aikido_zen # Aikido package import
-        aikido_zen.protect()
+import aikido_zen # Aikido package import
+aikido_zen.protect()
 
 from flask import Flask, render_template, request
 from flaskext.mysql import MySQL
@@ -17,7 +11,7 @@ if __name__ == '__main__':
     app.run()
 mysql = MySQL()
 
-app.config['MYSQL_DATABASE_HOST'] = 'host.docker.internal'
+app.config['MYSQL_DATABASE_HOST'] = '127.0.0.1'
 app.config['MYSQL_DATABASE_USER'] = 'user'
 app.config['MYSQL_DATABASE_PASSWORD'] = 'password'
 app.config['MYSQL_DATABASE_DB'] = 'db'

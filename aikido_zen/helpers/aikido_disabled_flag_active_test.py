@@ -3,35 +3,35 @@ from .aikido_disabled_flag_active import aikido_disabled_flag_active
 
 
 def test_aikido_disabled_flag_does_not_exist(monkeypatch):
-    monkeypatch.setenv("AIKIDO_DISABLED", None)
+    monkeypatch.setenv("AIKIDO_DISABLE", None)
     assert aikido_disabled_flag_active() == False
 
 
 def test_aikido_disabled_flag_exists_but_invalid(monkeypatch):
-    monkeypatch.setenv("AIKIDO_DISABLED", "token")
+    monkeypatch.setenv("AIKIDO_DISABLE", "token")
     assert aikido_disabled_flag_active() == False
 
 
 def test_aikido_disabled_flag_exists_and_off(monkeypatch):
-    monkeypatch.setenv("AIKIDO_DISABLED", "0")
+    monkeypatch.setenv("AIKIDO_DISABLE", "0")
     assert aikido_disabled_flag_active() == False
 
-    monkeypatch.setenv("AIKIDO_DISABLED", "false")
+    monkeypatch.setenv("AIKIDO_DISABLE", "false")
     assert aikido_disabled_flag_active() == False
 
-    monkeypatch.setenv("AIKIDO_DISABLED", "False")
+    monkeypatch.setenv("AIKIDO_DISABLE", "False")
     assert aikido_disabled_flag_active() == False
 
 
 def test_aikido_disabled_flag_exists_and_on(monkeypatch):
-    monkeypatch.setenv("AIKIDO_DISABLED", "1")
+    monkeypatch.setenv("AIKIDO_DISABLE", "1")
     assert aikido_disabled_flag_active() == True
 
-    monkeypatch.setenv("AIKIDO_DISABLED", "True")
+    monkeypatch.setenv("AIKIDO_DISABLE", "True")
     assert aikido_disabled_flag_active() == True
 
-    monkeypatch.setenv("AIKIDO_DISABLED", "TRUE")
+    monkeypatch.setenv("AIKIDO_DISABLE", "TRUE")
     assert aikido_disabled_flag_active() == True
 
-    monkeypatch.setenv("AIKIDO_DISABLED", "true")
+    monkeypatch.setenv("AIKIDO_DISABLE", "true")
     assert aikido_disabled_flag_active() == True

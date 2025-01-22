@@ -2,9 +2,11 @@
 it runs 4 processes, called workers, (**multi-process**) which handle requests using 2 threads (**multi-threaded**)
 
 ## Getting started
-With docker-compose installed run
+Run :
 ```bash
-docker-compose up --build
+sudo dnf install python3-devel mysql-devel
+make run # Runs app with zen
+make runZenDisabled # Runs app with zen disabled.
 ```
 This will expose a Django web server at [localhost:8082](http://localhost:8082)
 

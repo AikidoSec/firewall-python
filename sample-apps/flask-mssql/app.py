@@ -1,9 +1,6 @@
 import os
-firewall_disabled = os.getenv("FIREWALL_DISABLED")
-if firewall_disabled is not None:
-    if firewall_disabled.lower() != "1":
-        import aikido_zen # Aikido package import
-        aikido_zen.protect()
+import aikido_zen # Aikido package import
+aikido_zen.protect()
 
 from flask import Flask, render_template, request
 import pymssql
@@ -11,7 +8,7 @@ import pymssql
 app = Flask(__name__)
 
 # Database configuration
-DB_HOST = 'host.docker.internal'
+DB_HOST = 'localhost'
 DB_USER = 'sa'
 DB_PASSWORD = 'Strong!Passw0rd'
 DB_NAME = 'db'

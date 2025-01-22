@@ -49,11 +49,10 @@ jobs:
     - uses: actions/checkout@v4
     - name: Install poetry
       run: pip install poetry
-    - name: Download binaries
-      run: make binaries
     - name: Install dependencies
       run: poetry install
-
+    - name: Download binaries & build
+      run: make build
     - name: Publish to TestPyPI
       env:
         POETRY_HTTP_BASIC_PYPI_USERNAME: __token__

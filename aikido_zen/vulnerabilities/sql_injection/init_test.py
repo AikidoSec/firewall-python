@@ -72,6 +72,11 @@ def is_sql_injection(sql, input, dialect="all"):
         assert (
             result == True
         ), f"Expected SQL injection for SQL: {sql} and input: {input}"
+    if dialect == "sqlite" or dialect == "all":
+        result = detect_sql_injection(sql, input, "sqlite")
+        assert (
+            result == True
+        ), f"Expected SQL injection for SQL: {sql} and input: {input}"
 
 
 def is_not_sql_injection(sql, input, dialect="all"):
@@ -82,6 +87,11 @@ def is_not_sql_injection(sql, input, dialect="all"):
         ), f"Expected no SQL injection for SQL: {sql} and input: {input}"
     if dialect == "postgres" or dialect == "all":
         result = detect_sql_injection(sql, input, "postgres")
+        assert (
+            result == False
+        ), f"Expected no SQL injection for SQL: {sql} and input: {input}"
+    if dialect == "sqlite" or dialect == "all":
+        result = detect_sql_injection(sql, input, "sqlite")
         assert (
             result == False
         ), f"Expected no SQL injection for SQL: {sql} and input: {input}"
@@ -164,7 +174,7 @@ def test_is_not_injection():
 
 
 """
-Moved : 
+Moved :
 is_sql_injection("SELECT * FROM users WHERE id = 'users\\'", "users\\")
 is_sql_injection("SELECT * FROM users WHERE id = 'users\\\\'", "users\\\\")
 to is_not_sql_injection. Reason : Invalid SQL.
@@ -262,6 +272,14 @@ def test_user_input_is_multiline():
 
 def test_user_input_is_longer_than_query():
     is_not_sql_injection("SELECT * FROM users", "SELECT * FROM users WHERE id = 'a'")
+
+
+def test_sqlite_dollar_placeholder():
+    is_sql_injection(
+        "SELECT * FROM users WHERE id = '1' OR $$ IS NULL -- '",
+        "1' OR $$ IS NULL -- ",
+        "sqlite",
+    )
 
 
 def test_multiline_queries():

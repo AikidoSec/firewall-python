@@ -2,9 +2,10 @@
 It runs **multi-threaded**
 
 ## Getting started
-Run (with docker-compose installed) :
+Run :
 ```bash
-docker-compose up --build
+make run # Runs app with zen
+make runZenDisabled # Runs app with zen disabled.
 ```
 
 - You'll be able to access the Flask Server at : [localhost:8090](http://localhost:8090)
