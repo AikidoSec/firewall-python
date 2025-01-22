@@ -1,23 +1,17 @@
-from dotenv import load_dotenv
 import os
 import json
-load_dotenv()
-firewall_disabled = os.getenv("FIREWALL_DISABLED")
-if firewall_disabled is not None:
-    if firewall_disabled.lower() != "1":
-        import aikido_zen # Aikido package import
-        aikido_zen.protect()
+
+import aikido_zen # Aikido package import
+aikido_zen.protect()
 
 from flask import Flask, render_template, request
 import psycopg2
 
 app = Flask(__name__)
-if __name__ == '__main__':
-    app.run(threaded=True) # Run threaded so we can test how our bg process works
 
 def get_db_connection():
     return psycopg2.connect(
-        host="host.docker.internal",
+        host="localhost",
         database="db",
         user="user",
         password="password")

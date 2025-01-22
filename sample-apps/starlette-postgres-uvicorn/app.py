@@ -1,12 +1,8 @@
-from dotenv import load_dotenv
+import aikido_zen  # Aikido package import
+aikido_zen.protect()
 import os
-load_dotenv()
-firewall_disabled = os.getenv("FIREWALL_DISABLED")
+
 dont_add_middleware = os.getenv("DONT_ADD_MIDDLEWARE")
-if firewall_disabled is not None:
-    if firewall_disabled.lower() != "1":
-        import aikido_zen  # Aikido package import
-        aikido_zen.protect()
 import time
 import asyncpg
 from starlette.applications import Starlette
@@ -20,7 +16,7 @@ templates = Jinja2Templates(directory="templates")
 
 async def get_db_connection():
     return await asyncpg.connect(
-        host="host.docker.internal",
+        host="localhost",
         database="db",
         user="user",
         password="password"
@@ -68,20 +64,19 @@ def sync_route(request):
     data = {"message": "This is a non-async route!"}
     return JSONResponse(data)
 middleware = []
-if firewall_disabled is not None:
-    if firewall_disabled.lower() != "1" and (dont_add_middleware is None or dont_add_middleware.lower() != "1"):
-        # Use DONT_ADD_MIDDLEWARE so we don't add this middleware during e.g. benchmarks.
-        import aikido_zen
-        from aikido_zen.middleware import AikidoStarletteMiddleware  # Aikido package import
-        class SetUserMiddleware:
-            def __init__(self, app):
-                self.app = app
+if dont_add_middleware is None or dont_add_middleware.lower() != "1":
+    # Use DONT_ADD_MIDDLEWARE so we don't add this middleware during e.g. benchmarks.
+    import aikido_zen
+    from aikido_zen.middleware import AikidoStarletteMiddleware  # Aikido package import
+    class SetUserMiddleware:
+        def __init__(self, app):
+            self.app = app
 
-            async def __call__(self, scope, receive, send):
-                aikido_zen.set_user({"id": "user123", "name": "John Doe"})
-                return await self.app(scope, receive, send)
-        middleware.append(Middleware(SetUserMiddleware))
-        middleware.append(Middleware(AikidoStarletteMiddleware))
+        async def __call__(self, scope, receive, send):
+            aikido_zen.set_user({"id": "user123", "name": "John Doe"})
+            return await self.app(scope, receive, send)
+    middleware.append(Middleware(SetUserMiddleware))
+    middleware.append(Middleware(AikidoStarletteMiddleware))
 
 
 

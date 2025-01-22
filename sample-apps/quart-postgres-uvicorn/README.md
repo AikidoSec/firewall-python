@@ -2,9 +2,10 @@
 It runs **multi-threaded** and **async**
 
 ## Getting started
-Run (with docker-compose installed) :
+Run :
 ```bash
-docker-compose up --build
+make run # Runs app with zen
+make runZenDisabled # Runs app with zen disabled.
 ```
 
 - You'll be able to access the Quart Server at : [localhost:8096](http://localhost:8096)
