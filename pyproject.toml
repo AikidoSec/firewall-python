@@ -6,7 +6,8 @@ authors = ["Aikido Security <help@aikido.dev>"]
 readme = "README.md"
 license = "AGPL-3.0-or-later"
 include = [
-    "docs/*", "aikido_zen/lib/*"
+    "docs/*",
+    { path = "aikido_zen/libs/*", format = ["sdist", "wheel"] }
 ]
 keywords = [
     "web application firewall",

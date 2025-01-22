@@ -83,6 +83,10 @@ To block requests, set the `AIKIDO_BLOCKING` environment variable to `true`.
 
 See [Reporting to Aikido](#reporting-to-your-aikido-security-dashboard) to learn how to send events to Aikido.
 
+## Additional configuration
+
+[Configure Zen using environment variables for authentication, mode settings, debugging, and more.](https://help.aikido.dev/doc/configuration-via-env-vars/docrSItUkeR9)
+
 ## Benchmarks 
 The following table summarizes the performance of both a typical SQL Query and a typical NoSQL Query with and without the Zen, measured in milliseconds :
 | Operation | Avg. time w/o Zen | Avg. time w/ Zen | Delta | Delta in % |
