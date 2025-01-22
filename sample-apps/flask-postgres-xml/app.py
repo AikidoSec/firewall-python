@@ -1,11 +1,6 @@
-from dotenv import load_dotenv
 import os
-load_dotenv()
-firewall_disabled = os.getenv("FIREWALL_DISABLED")
-if firewall_disabled is not None:
-    if firewall_disabled.lower() != "1":
-        import aikido_zen # Aikido package import
-        aikido_zen.protect()
+import aikido_zen # Aikido package import
+aikido_zen.protect()
 
 from flask import Flask, render_template, request
 import psycopg2
@@ -18,7 +13,7 @@ if __name__ == '__main__':
 
 def get_db_connection():
     return psycopg2.connect(
-        host="host.docker.internal",
+        host="localhost",
         database="db",
         user="user",
         password="password")
