@@ -67,4 +67,4 @@ jobs:
           nohup make run > output.log & tail -f output.log & sleep 10
           nohup make runZenDisabled & sleep 20
       - name: Run end2end tests for application
-        run: tail -f output.log & poetry run pytest ./${{ matrix.app.testfile }}
+        run: tail -f  ./sample-apps/${{ matrix.app.name }}/output.log & poetry run pytest ./${{ matrix.app.testfile }}
