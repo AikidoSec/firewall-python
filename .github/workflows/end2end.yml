@@ -20,6 +20,7 @@ jobs:
   end2end-test:
     runs-on: ubuntu-latest
     continue-on-error: true
+    needs: build
     strategy:
       matrix:
         app:
