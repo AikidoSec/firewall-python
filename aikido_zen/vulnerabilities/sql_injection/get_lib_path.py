@@ -7,7 +7,7 @@ import os
 def get_binary_path():
     """Returns an absolute path for Rust binary file"""
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    lib_path = os.path.join(current_dir, "../../lib", get_file_name())
+    lib_path = os.path.join(current_dir, "../../libs", get_file_name())
     return lib_path
 
 

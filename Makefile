@@ -6,13 +6,14 @@ BUILD_DIR := dist/
 build: check_binaries
 	@echo "Building using poetry, creates $(BUILD_DIR) folder."
 	@echo "Copying binaries from $(CACHE_DIR) folder : "
-	cp -r .cache/binaries aikido_zen/lib
+	cp -r .cache/binaries/* aikido_zen/libs
 	poetry build
 .PHONY: clean
 clean:
-	@echo "Cleaning up: Removing build and cache directories."
+	@echo "Cleaning up: Removing build and cache directories, remove poetry env"
 	rm -rf $(BUILD_DIR)
 	rm -rf $(CACHE_DIR)
+	@poetry env remove $(shell poetry env list | grep 'Activated' | awk '{print $$1}')
 .PHONY: lint
 lint:
 	poetry run black aikido_zen/
