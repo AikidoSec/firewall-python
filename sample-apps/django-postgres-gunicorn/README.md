@@ -2,9 +2,10 @@
 It runs **multi-threaded** and with **multiple cores**
 
 ## Getting started
-With docker-compose installed run
+Run :
 ```bash
-docker-compose up --build
+make run # Runs app with zen
+make runZenDisabled # Runs app with zen disabled.
 ```
 This will expose a Django web server at [localhost:8100](http://localhost:8100)
 
