@@ -16,7 +16,7 @@ templates = Jinja2Templates(directory="templates")
 
 async def get_db_connection():
     return await asyncpg.connect(
-        host="host.docker.internal",
+        host="localhost",
         database="db",
         user="user",
         password="password"
