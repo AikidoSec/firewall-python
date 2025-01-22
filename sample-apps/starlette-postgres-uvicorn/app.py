@@ -12,6 +12,10 @@ from starlette.templating import Jinja2Templates
 from starlette.requests import Request
 from starlette.middleware import Middleware
 
+# Set log levels : 
+import logging
+logging.basicConfig(level=logging.WARNING)
+
 templates = Jinja2Templates(directory="templates")
 
 async def get_db_connection():
