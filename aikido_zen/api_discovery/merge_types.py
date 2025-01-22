@@ -11,7 +11,7 @@ def merge_types(first, second):
     first_primitive = only_contains_primitive_types(first["type"])
     second_primitive = only_contains_primitive_types(second["type"])
     if not first_primitive or not second_primitive:
-        if first["type"] is "null":  # Prefer non-null type
+        if first["type"] == "null":  # Prefer non-null type
             return second
         return first
     first["type"] = merge_type_arrays(first["type"], second["type"])
