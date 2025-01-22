@@ -8,7 +8,7 @@ from bson import ObjectId
 app = Quart(__name__)
 
 # MongoDB Connection :
-client = AsyncIOMotorClient("mongodb://admin:password@host.docker.internal:27017")
+client = AsyncIOMotorClient("mongodb://admin:password@localhost:27017")
 db = client["my_database"]
 dogs = db["dogs"]
 
