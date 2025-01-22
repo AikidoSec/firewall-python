@@ -35,7 +35,7 @@ jobs:
           - { name: flask-postgres-xml, testfile: end2end/flask_postgres_xml_lxml_test.py }
           - { name: quart-postgres-uvicorn, testfile: end2end/quart_postgres_uvicorn_test.py }
           - { name: starlette-postgres-uvicorn, testfile: end2end/starlette_postgres_uvicorn_test.py }
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12"]
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
