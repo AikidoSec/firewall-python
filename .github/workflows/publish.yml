@@ -48,8 +48,8 @@ jobs:
     - uses: actions/checkout@v4
     - name: Install poetry
       run: pip install poetry
-    - name: Download binaries
-      run: make binaries
+    - name: Download binaries & build
+      run: make build
     - name: Publish to PyPI
       env:
         POETRY_HTTP_BASIC_PYPI_USERNAME: __token__

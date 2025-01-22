@@ -28,13 +28,13 @@ dev_install: install
 
 # Testing/Benchmarks :
 .PHONY: test
-test:
+test: build
 	poetry run pytest aikido_zen/
 .PHONY: end2end
 end2end:
 	poetry run pytest end2end/
 .PHONY: cov
-cov:
+cov: build
 	poetry run pytest aikido_zen/ --cov=aikido_zen --cov-report=xml
 .PHONY: benchmark
 benchmark:
