@@ -37,8 +37,8 @@ jobs:
           - { name: starlette-postgres-uvicorn, testfile: end2end/starlette_postgres_uvicorn_test.py }
         python-version: ["3.10", "3.11", "3.12"]
     steps:
-      - Install packages:
-          run: apt update && apt install python-dev libmysqlclient-dev
+      - name: Install packages
+        run: apt update && apt install python-dev libmysqlclient-dev
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
