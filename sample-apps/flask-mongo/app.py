@@ -1,11 +1,5 @@
-from dotenv import load_dotenv
-import os
-load_dotenv()
-firewall_disabled = os.getenv("FIREWALL_DISABLED")
-if firewall_disabled is not None:
-    if firewall_disabled.lower() != "1":
-        import aikido_zen # Aikido package import
-        aikido_zen.protect()
+import aikido_zen # Aikido package import
+aikido_zen.protect()
 
 import json
 from flask import Flask, render_template, request
@@ -15,7 +9,7 @@ from bson import ObjectId
 app = Flask(__name__)
 if __name__ == '__main__':
     app.run(threaded=True) # Run threaded so we can test how our bg process works
-app.config["MONGO_URI"] = "mongodb://admin:password@host.docker.internal:27017/my_database?authSource=admin"
+app.config["MONGO_URI"] = "mongodb://admin:password@localhost:27017/my_database?authSource=admin"
 mongo = PyMongo(app)
 
 @app.route("/")
