@@ -16,16 +16,16 @@ from decouple import config
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = config('SECRET_KEY')
+SECRET_KEY = 'secret_key'
 
 # Database
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',  # Change to PostgreSQL
-        'NAME': config('DB_NAME'),              # Use the environment variable for DB name
-        'USER': config('DB_USER'),              # Use the environment variable for username
-        'PASSWORD': config('DB_PASSWORD'),          # Use the environment variable for password
-        'HOST': config('DB_HOST', 'host.docker.internal'),        # Use 'db' as default if not set
+        'NAME': 'db',              # Use the environment variable for DB name
+        'USER': 'user',              # Use the environment variable for username
+        'PASSWORD': 'password',          # Use the environment variable for password
+        'HOST': 'localhost',        # Use 'db' as default if not set
         'PORT': config('DB_PORT', '5432'),          # Use '5432' as default for PostgreSQL
     }
 }
