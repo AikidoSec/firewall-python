@@ -63,6 +63,6 @@ jobs:
 
       - name: Start application
         working-directory: ./sample-apps/${{ matrix.app.name }}
-        run: make install && nohup make run > output.log & nohup make runZenDisabled & sleep 15
+        run: nohup make run > output.log & sleep 15 && nohup make runZenDisabled & sleep 15
       - name: Run end2end tests for application
         run: tail -f output.log & poetry run pytest ./${{ matrix.app.testfile }}
