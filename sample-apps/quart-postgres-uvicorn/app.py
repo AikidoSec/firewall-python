@@ -1,14 +1,8 @@
-from dotenv import load_dotenv
-import os
+import aikido_zen  # Aikido package import
+aikido_zen.protect()
+
 import asyncpg
 from quart import Quart, render_template, request, jsonify
-
-load_dotenv()
-firewall_disabled = os.getenv("FIREWALL_DISABLED")
-if firewall_disabled is not None:
-    if firewall_disabled.lower() != "1":
-        import aikido_zen  # Aikido package import
-        aikido_zen.protect()
 
 app = Quart(__name__)
 if firewall_disabled is not None:
