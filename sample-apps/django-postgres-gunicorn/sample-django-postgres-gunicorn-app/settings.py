@@ -25,7 +25,7 @@ DATABASES = {
         'NAME': 'db',              # Use the environment variable for DB name
         'USER': 'user',              # Use the environment variable for username
         'PASSWORD': 'password',          # Use the environment variable for password
-        'HOST': 'localhost',        # Use 'db' as default if not set
+        'HOST': '127.0.0.1',        # Use 'db' as default if not set
         'PORT': config('DB_PORT', '5432'),          # Use '5432' as default for PostgreSQL
     }
 }
