@@ -1,7 +1,7 @@
 [project]
-name = "flask-mssql"
+name = "flask-mongo"
 version = "0.1.0"
-description = "Sample app Flask MySQL"
+description = "Sample app Flask Mongo"
 requires-python = ">3.9.1,<4.0"
 dependencies = [
     "flask (>=3.1.0,<4.0.0)",
