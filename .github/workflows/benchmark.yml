@@ -54,9 +54,17 @@ jobs:
   benchmark_with_starlette_app:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    continue-on-error: true
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12" ]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
       - name: Start databases
         working-directory:  ./sample-apps/databases
         run: docker compose up --build -d
@@ -66,14 +74,10 @@ jobs:
           make install && make build
       - name: Start starlette
         working-directory: ./sample-apps/starlette-postgres-uvicorn
-        run: nohup make runBenchmark & nohup make runZenDisabled &
+        run: nohup make runBenchmark > output.log & nohup make runZenDisabled &
       - name: Install wrk
         run: |
           sudo apt-get update
           sudo apt-get install -y wrk
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.9
       - name: Run benchmark
-        run: python ./benchmarks/starlette_benchmark.py
+        run: tail -f ./sample-apps/starlette-postgres-uvicorn/output.log & python ./benchmarks/starlette_benchmark.py
