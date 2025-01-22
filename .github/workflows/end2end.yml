@@ -65,4 +65,4 @@ jobs:
         working-directory: ./sample-apps/${{ matrix.app.name }}
         run: nohup make run & nohup make runZenDisabled &
       - name: Run end2end tests for application
-        run: sleep 5 && poetry run pytest ./${{ matrix.app.testfile }}
+        run: sleep 15 && poetry run pytest ./${{ matrix.app.testfile }}

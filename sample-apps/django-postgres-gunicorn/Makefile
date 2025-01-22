@@ -4,7 +4,7 @@ clean:
 
 .PHONY: install
 install: clean
-	poetry install
+	poetry install --quiet
 
 .PHONY: run
 run: install
@@ -22,4 +22,4 @@ runZenDisabled: install
 	@echo "Running sample app django-postgres-gunicorn without Zen on port 8101"
 	poetry run python manage.py migrate
 	AIKIDO_DISABLE=1 \
-	poetry run ddtrace-run gunicorn -c gunicorn_config.py --workers 4 --threads 2 --log-level debug --access-logfile '-' --error-logfile '-' --bind 0.0.0.0:8101 sample-django-postgres-gunicorn-app.wsgi
+	poetry run gunicorn -c gunicorn_config.py --workers 4 --threads 2 --log-level debug --access-logfile '-' --error-logfile '-' --bind 0.0.0.0:8101 sample-django-postgres-gunicorn-app.wsgi
