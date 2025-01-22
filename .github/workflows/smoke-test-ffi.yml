@@ -1,0 +1,44 @@
+name: Smoke Test for FFI
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        # macos-14 is ARM-based
+        # macos-14-large is x86-based
+        # ubuntu-latest (x86) is not included because the full test suite runs on it
+        os: [windows-latest, macos-14, macos-14-large, ubuntu-22.04-arm]
+
+    # Allows all jobs to run even if one fails
+    continue-on-error: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.12
+
+      - name: Display system info
+        run: |
+          python -c "import platform; print(f'Machine architecture: {platform.machine()}')"
+          python -c "import platform; print(f'OS: {platform.system()}')"
+
+      - name: Install MySQL
+        if: runner.os == 'macOS'
+        run: brew install mysql
+
+      - name: Install MySQL
+        if: runner.os == 'Linux'
+        run: sudo apt-get install libmysqlclient-dev
+
+      - name: Install dependencies
+        run: make install && cp -r .cache/binaries/* aikido_zen/libs
+
+      - name: Run tests
+        run: poetry run pytest aikido_zen/vulnerabilities/sql_injection/init_test.py

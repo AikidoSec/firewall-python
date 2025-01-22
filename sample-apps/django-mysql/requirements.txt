@@ -1,4 +1,0 @@
-django==5.0.10
-mysqlclient==2.2.5
-python-decouple
-cryptography
