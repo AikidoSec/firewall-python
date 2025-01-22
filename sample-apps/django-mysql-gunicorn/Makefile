@@ -4,7 +4,7 @@ clean:
 
 .PHONY: install
 install: clean
-	poetry install
+	poetry install --quiet
 
 .PHONY: run
 run: install
