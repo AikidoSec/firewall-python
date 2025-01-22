@@ -4,6 +4,7 @@ It runs **multi-threaded**
 ## Getting started
 Run :
 ```bash
+sudo dnf install python3-devel mysql-devel
 make run # Runs app with zen
 make runZenDisabled # Runs app with zen disabled.
 ```
