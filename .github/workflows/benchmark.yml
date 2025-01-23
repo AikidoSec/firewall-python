@@ -47,7 +47,7 @@ jobs:
         working-directory: ./sample-apps/flask-mysql
         run: nohup make runBenchmark & nohup make runZenDisabled &
       - name: Install K6
-        uses: grafana/setup-k6-action@v1
+        uses: grafana/setup-k6-action@ffe7d7290dfa715e48c2ccc924d068444c94bde2 # v1
       - name: Run flask-mysql k6 Benchmark
         run: |
           k6 run -q ./benchmarks/flask-mysql-benchmarks.js
