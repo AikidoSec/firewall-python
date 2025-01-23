@@ -3,7 +3,8 @@ name: Publish Python 🐍 distribution 📦 to PyPI
 on:
   release:
     types: [created]
-
+permissions:
+  id-token: write
 jobs:
   tests:
     name: Linting and running tests
