@@ -1,10 +1,7 @@
 import os
-firewall_disabled = os.getenv("FIREWALL_DISABLED")
 dont_add_middleware = os.getenv("DONT_ADD_MIDDLEWARE")
-if firewall_disabled is not None:
-    if firewall_disabled.lower() != "1":
-        import aikido_zen # Aikido package import
-        aikido_zen.protect()
+import aikido_zen # Aikido package import
+aikido_zen.protect()
 
 import subprocess
 from flask import Flask, render_template, request
@@ -13,27 +10,21 @@ import requests
 import subprocess
 
 app = Flask(__name__)
-if firewall_disabled is not None:
-    if firewall_disabled.lower() != "1" and (dont_add_middleware is None or dont_add_middleware.lower() != "1"):
-        # Use DONT_ADD_MIDDLEWARE so we don't add this middleware during e.g. benchmarks.
-        import aikido_zen
-        from aikido_zen.middleware import AikidoFlaskMiddleware
-        class SetUserMiddleware:
-            def __init__(self, app):
-                self.app = app
-            def __call__(self, environ, start_response):
-                aikido_zen.set_user({"id": "123", "name": "John Doe"})
-                return self.app(environ, start_response)
-        app.wsgi_app = AikidoFlaskMiddleware(app.wsgi_app)
-        app.wsgi_app = SetUserMiddleware(app.wsgi_app)
+if dont_add_middleware is None or dont_add_middleware.lower() != "1":
+    # Use DONT_ADD_MIDDLEWARE so we don't add this middleware during e.g. benchmarks.
+    import aikido_zen
+    from aikido_zen.middleware import AikidoFlaskMiddleware
+    class SetUserMiddleware:
+        def __init__(self, app):
+            self.app = app
+        def __call__(self, environ, start_response):
+            aikido_zen.set_user({"id": "123", "name": "John Doe"})
+            return self.app(environ, start_response)
+    app.wsgi_app = AikidoFlaskMiddleware(app.wsgi_app)
+    app.wsgi_app = SetUserMiddleware(app.wsgi_app)
 
-                
-
-if __name__ == '__main__':
-    app.run()
 mysql = MySQL()
-
-app.config['MYSQL_DATABASE_HOST'] = 'host.docker.internal'
+app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 app.config['MYSQL_DATABASE_USER'] = 'user'
 app.config['MYSQL_DATABASE_PASSWORD'] = 'password'
 app.config['MYSQL_DATABASE_DB'] = 'db'

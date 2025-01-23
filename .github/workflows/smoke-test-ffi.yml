@@ -38,7 +38,7 @@ jobs:
         run: sudo apt-get install libmysqlclient-dev
 
       - name: Install dependencies
-        run: make install
+        run: make install && cp -r .cache/binaries/* aikido_zen/libs
 
       - name: Run tests
         run: poetry run pytest aikido_zen/vulnerabilities/sql_injection/init_test.py

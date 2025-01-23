@@ -1,5 +1,6 @@
-from dotenv import load_dotenv
-import os
+import aikido_zen  # Aikido package import
+aikido_zen.protect()
+
 import time
 import asyncpg
 from fastapi import FastAPI, Request, HTTPException
@@ -7,12 +8,6 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 
-load_dotenv()
-firewall_disabled = os.getenv("FIREWALL_DISABLED")
-if firewall_disabled is not None:
-    if firewall_disabled.lower() != "1":
-        import aikido_zen  # Aikido package import
-        aikido_zen.protect()
 
 templates = Jinja2Templates(directory="templates")
 
@@ -29,7 +24,7 @@ app.add_middleware(
 
 async def get_db_connection():
     return await asyncpg.connect(
-        host="host.docker.internal",
+        host="localhost",
         database="db",
         user="user",
         password="password"

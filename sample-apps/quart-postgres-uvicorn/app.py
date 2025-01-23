@@ -1,34 +1,25 @@
-from dotenv import load_dotenv
-import os
+import aikido_zen  # Aikido package import
+aikido_zen.protect()
+
 import asyncpg
 from quart import Quart, render_template, request, jsonify
-
-load_dotenv()
-firewall_disabled = os.getenv("FIREWALL_DISABLED")
-if firewall_disabled is not None:
-    if firewall_disabled.lower() != "1":
-        import aikido_zen  # Aikido package import
-        aikido_zen.protect()
+from aikido_zen.middleware import AikidoQuartMiddleware
 
 app = Quart(__name__)
-if firewall_disabled is not None:
-    if firewall_disabled.lower() != "1":
-        import aikido_zen  # Aikido package import
-        from aikido_zen.middleware import AikidoQuartMiddleware
-        class SetUserMiddleware:
-            def __init__(self, app):
-                self.app = app
+class SetUserMiddleware:
+    def __init__(self, app):
+        self.app = app
 
-            async def __call__(self, scope, receive, send):
-                aikido_zen.set_user({"id": "user123", "name": "John Doe"})
-                return await self.app(scope, receive, send)
+    async def __call__(self, scope, receive, send):
+        aikido_zen.set_user({"id": "user123", "name": "John Doe"})
+        return await self.app(scope, receive, send)
 
-        app.asgi_app = AikidoQuartMiddleware(app.asgi_app)
-        app.asgi_app = SetUserMiddleware(app.asgi_app)
+app.asgi_app = AikidoQuartMiddleware(app.asgi_app)
+app.asgi_app = SetUserMiddleware(app.asgi_app)
 
 async def get_db_connection():
     return await asyncpg.connect(
-        host="host.docker.internal",
+        host="localhost",
         database="db",
         user="user",
         password="password"

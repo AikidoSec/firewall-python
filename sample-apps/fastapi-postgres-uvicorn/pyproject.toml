@@ -1,0 +1,24 @@
+[project]
+name = "fastapi-postgres-uvicorn"
+version = "0.1.0"
+description = "Sample FastAPI app with Postgres"
+requires-python = ">3.9.1,<4.0"
+dependencies = [
+    "aikido_zen",
+    "fastapi (>=0.115.6,<0.116.0)",
+    "jinja2 (>=3.1.5,<4.0.0)",
+    "asyncpg (>=0.30.0,<0.31.0)",
+    "cryptography (>=44.0.0,<45.0.0)",
+    "uvicorn (>=0.34.0,<0.35.0)",
+    "python-multipart (>=0.0.20,<0.0.21)",
+]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+package-mode = false
+
+[tool.poetry.dependencies]
+aikido_zen = { path = "../../" }
