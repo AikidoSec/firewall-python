@@ -54,13 +54,8 @@ jobs:
         make replace_version version=${TAG_NAME#v}
     - name: Download binaries & build
       run: make build
-    - name: Publish to PyPI
-      env:
-        POETRY_HTTP_BASIC_PYPI_USERNAME: __token__
-        POETRY_HTTP_BASIC_PYPI_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-      run: |
-        poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
-        poetry publish --build
+    - name: Publish package distributions to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
     - name: Store the distribution packages
       uses: actions/upload-artifact@v3
       with:
