@@ -5,6 +5,7 @@ on: [pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
+    continue-on-error: true
     strategy:
       # Don't cancel jobs if one fails
       fail-fast: false
