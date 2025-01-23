@@ -103,7 +103,9 @@ class Context:
         if isinstance(body, bytes) and len(body) == 0:
             # Make sure that empty bodies like b"" don't get sent.
             self.body = None
-        if isinstance(self.body, str) and self.body.startswith("{"):
+        if not isinstance(self.body, str):
+            return
+        if self.body.strip()[0] in ["{", "["]:
             # Might be JSON, but might not have been parsed correctly by server because of wrong headers
             try:
                 # Check if body is JSON :
