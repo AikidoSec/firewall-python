@@ -71,3 +71,16 @@ check_binaries:
 		echo "Directory $(CACHE_DIR) is empty. Running 'make binaries'..."; \
 		$(MAKE) binaries; \
 	fi
+
+
+# Replace version number automatically on publish :
+VERSION_FILES = ./build.gradle ./agent_api/src/main/java/dev/aikido/agent_api/Config.java
+replace_version:
+	@if [ -z "$(version)" ]; then \
+		echo "Error: No version specified. Use 'make replace_version version=<new_version>'."; \
+		exit 1; \
+	fi;
+
+	poetry version $(version)
+	sed -i.bak "s/1.0-REPLACE-VERSION/$$version/g" aikido_zen/config.py
+	rm aikido_zen/config.py.bak
