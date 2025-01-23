@@ -37,7 +37,7 @@ Zen for Python 3 is compatible with:
 * ✅ [Flask](docs/flask.md)
 * ✅ [Quart](docs/quart.md)
 * ✅ [Starlette](docs/starlette.md)
-* ✅ [FastAPI](docs/starlette.md) (via Starlette)
+* ✅ [FastAPI](docs/fastapi.md)
 
 
 ### WSGI servers

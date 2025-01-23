@@ -22,4 +22,4 @@ Using `set_user` has the following benefits:
 - [Flask](./flask.md#rate-limiting-and-user-blocking)
 - [Quart](./quart.md#rate-limiting-and-user-blocking)
 - [Starlette](./starlette.md#rate-limiting-and-user-blocking)
-- [FastAPI](./starlette.md#rate-limiting-and-user-blocking)
+- [FastAPI](./fastapi.md#rate-limiting-and-user-blocking)
