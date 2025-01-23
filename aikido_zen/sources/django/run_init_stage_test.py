@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock
 from .run_init_stage import run_init_stage
-from ...context import Context, get_current_context
+from ...context import Context, get_current_context, current_context
 
 
 @pytest.fixture
@@ -14,6 +14,12 @@ def mock_request():
     request.META = {}
     return request
 
+@pytest.fixture(autouse=True)
+def run_around_tests():
+    yield
+    # Make sure to reset context after every test so it does not
+    # interfere with other tests
+    current_context.set(None)
 
 def test_run_init_stage_with_json(mock_request):
     """Test run_init_stage with a JSON request."""
