@@ -56,7 +56,7 @@ jobs:
     - name: Download binaries & build
       run: make build
     - name: Publish package distributions to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
+      uses: pypa/gh-action-pypi-publish@67339c736fd9354cd4f8cb0b744f2b82a74b5c70 # release/v1
     - name: Store the distribution packages
       uses: actions/upload-artifact@v3
       with:
