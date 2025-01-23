@@ -209,6 +209,13 @@ def test_set_valid_json_with_complex_array():
     assert context.body == [{"hello": "world", "one": 123}, 2, "hiya"]
 
 
+def test_empty_string_becomes_none():
+    context = Context(req=basic_wsgi_req, body=None, source="flask")
+
+    context.set_body("")
+    assert context.body is None
+
+
 def test_set_valid_json_with_special_characters():
     context = Context(req=basic_wsgi_req, body=None, source="flask")
     context.set_body('{"key": "value with special characters !@#$%^&*()"}')
