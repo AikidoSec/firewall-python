@@ -100,7 +100,7 @@ class Context:
     def set_body(self, body):
         """Sets the body and checks if it's possibly JSON"""
         self.body = body
-        if isinstance(body, bytes) and len(body) == 0:
+        if isinstance(self.body, (str, bytes)) and len(body) == 0:
             # Make sure that empty bodies like b"" don't get sent.
             self.body = None
         if not isinstance(self.body, str):
