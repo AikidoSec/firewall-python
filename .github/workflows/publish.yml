@@ -17,11 +17,7 @@ jobs:
       run: |
           sudo echo "127.0.0.1 local.aikido.io" | sudo tee -a /etc/hosts
     - name: Installation
-      run: make install
-    - name: Set the version for this release
-      run: |
-        TAG_NAME=${GITHUB_REF##*/}
-        make replace_version version=${TAG_NAME#v}
+      run: make dev_install
     - name: Run Pylint
       run: |
         poetry run pylint --fail-under=9 --rcfile=.pylintrc aikido_zen/
@@ -52,6 +48,10 @@ jobs:
     - uses: actions/checkout@v4
     - name: Install poetry
       run: pip install poetry
+    - name: Set the version for this release
+      run: |
+        TAG_NAME=${GITHUB_REF##*/}
+        make replace_version version=${TAG_NAME#v}
     - name: Download binaries & build
       run: make build
     - name: Publish to PyPI
