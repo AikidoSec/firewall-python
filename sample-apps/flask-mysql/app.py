@@ -3,6 +3,13 @@ dont_add_middleware = os.getenv("DONT_ADD_MIDDLEWARE")
 import aikido_zen # Aikido package import
 aikido_zen.protect()
 
+# Sentry :
+import sentry_sdk
+sentry_sdk.init(
+    traces_sample_rate=1.0,
+    profiles_sample_rate=1.0,
+)
+
 import subprocess
 from flask import Flask, render_template, request
 from flaskext.mysql import MySQL
