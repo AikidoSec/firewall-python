@@ -1,5 +1,3 @@
-from lib2to3.fixes.fix_input import context
-
 import pytest
 
 from . import current_context, Context
