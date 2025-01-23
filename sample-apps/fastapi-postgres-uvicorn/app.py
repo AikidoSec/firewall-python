@@ -7,7 +7,7 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
-
+from aikido_zen.middleware import AikidoFastAPIMiddleware
 
 templates = Jinja2Templates(directory="templates")
 
@@ -21,6 +21,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(AikidoFastAPIMiddleware)
 
 async def get_db_connection():
     return await asyncpg.connect(
@@ -67,6 +68,10 @@ async def create_dog(request: Request):
     return JSONResponse({"message": f'Dog {dog_name} created successfully'}, status_code=201)
 
 @app.get("/just")
+async def just():
+    return JSONResponse({"message": "Empty Page"})
+
+@app.get("/test_ratelimiting_1")
 async def just():
     return JSONResponse({"message": "Empty Page"})
 
