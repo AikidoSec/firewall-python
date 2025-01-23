@@ -1,7 +1,7 @@
 [project]
-name = "flask-mssql"
+name = "fastapi-postgres-uvicorn"
 version = "0.1.0"
-description = "Sample app Flask MySQL"
+description = "Sample FastAPI app with Postgres"
 requires-python = ">3.9.1,<4.0"
 dependencies = [
     "aikido_zen",
