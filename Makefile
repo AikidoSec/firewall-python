@@ -42,7 +42,7 @@ benchmark:
 
 
 # Binaries cache :
-BASE_URL = https://github.com/AikidoSec/zen-internals/releases/download/v0.1.35
+BASE_URL = https://github.com/AikidoSec/zen-internals/releases/download/v0.1.36
 FILES = \
     libzen_internals_aarch64-apple-darwin.dylib \
     libzen_internals_aarch64-apple-darwin.dylib.sha256sum \
