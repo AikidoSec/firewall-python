@@ -26,4 +26,4 @@ AIKIDO_TOKEN="AIK_RUNTIME_YOUR_TOKEN_HERE"
 ```
 
 - Enabling extra debugging (optional): ```AIKIDO_DEBUG=1```
-- Enabling blocking using an env variable (optional): ```AIKIDO_BLOCKING=1```
+- Enabling blocking using an env variable (optional): ```AIKIDO_BLOCK=1```

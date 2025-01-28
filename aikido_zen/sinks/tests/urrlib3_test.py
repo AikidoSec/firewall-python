@@ -55,7 +55,7 @@ def test_srrf_test(monkeypatch):
     http = urllib3.PoolManager()
     reset_comms()
     set_context_and_lifecycle(SSRF_TEST)
-    monkeypatch.setenv("AIKIDO_BLOCKING", "1")
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
 
     with pytest.raises(AikidoSSRF):
         http.request("GET", SSRF_TEST)
@@ -64,7 +64,7 @@ def test_srrf_test(monkeypatch):
 def test_srrf_test_twice(monkeypatch):
     http = urllib3.PoolManager()
     set_context_and_lifecycle(SSRF_TEST_TWICE)
-    monkeypatch.setenv("AIKIDO_BLOCKING", "1")
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
     with pytest.raises(AikidoSSRF):
         http.request("GET", SSRF_TEST_TWICE)
 
@@ -72,7 +72,7 @@ def test_srrf_test_twice(monkeypatch):
 def test_srrf_test_domain(monkeypatch):
     http = urllib3.PoolManager()
     set_context_and_lifecycle(SSRF_TEST_DOMAIN)
-    monkeypatch.setenv("AIKIDO_BLOCKING", "1")
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
     with pytest.raises(AikidoSSRF):
         http.request("GET", SSRF_TEST_DOMAIN)
 
@@ -80,7 +80,7 @@ def test_srrf_test_domain(monkeypatch):
 def test_srrf_test_domain_twice(monkeypatch):
     http = urllib3.PoolManager()
     set_context_and_lifecycle(SSRF_TEST_DOMAIN_TWICE)
-    monkeypatch.setenv("AIKIDO_BLOCKING", "1")
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
     with pytest.raises(AikidoSSRF):
         http.request("GET", SSRF_TEST_DOMAIN_TWICE)
 
@@ -88,7 +88,7 @@ def test_srrf_test_domain_twice(monkeypatch):
 def test_cross_domain(monkeypatch):
     http = urllib3.PoolManager()
     set_context_and_lifecycle(CROSS_DOMAIN_TEST)
-    monkeypatch.setenv("AIKIDO_BLOCKING", "1")
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
     with pytest.raises(AikidoSSRF):
         http.request("GET", CROSS_DOMAIN_TEST)
 
@@ -96,7 +96,7 @@ def test_cross_domain(monkeypatch):
 def test_cross_domain_test_domain_twice(monkeypatch):
     http = urllib3.PoolManager()
     set_context_and_lifecycle(CROSS_DOMAIN_TEST_DOMAIN_TWICE)
-    monkeypatch.setenv("AIKIDO_BLOCKING", "1")
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
     with pytest.raises(AikidoSSRF):
         http.request("GET", CROSS_DOMAIN_TEST_DOMAIN_TWICE)
 
@@ -104,6 +104,6 @@ def test_cross_domain_test_domain_twice(monkeypatch):
 def test_no_raises_if_diff_url(monkeypatch):
     http = urllib3.PoolManager()
     set_context_and_lifecycle(CROSS_DOMAIN_TEST_DOMAIN_TWICE)
-    monkeypatch.setenv("AIKIDO_BLOCKING", "1")
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
     with pytest.raises(urllib3.exceptions.MaxRetryError):
         http.request("GET", SSRF_TEST_DOMAIN_TWICE)
