@@ -76,6 +76,12 @@ def test_srrf_test_domain(monkeypatch):
     with pytest.raises(AikidoSSRF):
         http.request("GET", SSRF_TEST_DOMAIN)
 
+def test_srrf_test_domain_with_aikido_blocking(monkeypatch):
+    http = urllib3.PoolManager()
+    set_context_and_lifecycle(SSRF_TEST_DOMAIN)
+    monkeypatch.setenv("AIKIDO_BLOCKING", "1")
+    with pytest.raises(AikidoSSRF):
+        http.request("GET", SSRF_TEST_DOMAIN)
 
 def test_srrf_test_domain_twice(monkeypatch):
     http = urllib3.PoolManager()
