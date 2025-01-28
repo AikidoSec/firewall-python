@@ -14,8 +14,11 @@ def should_block_request():
     """
     try:
         context = get_current_context()
+        if not context:
+            # First check context, if context is None it does not make sense to request thread cache.
+            return {"block": False}
         cache = get_cache()
-        if not context or not cache:
+        if not cache:
             return {"block": False}
 
         context.executed_middleware = (
