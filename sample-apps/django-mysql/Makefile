@@ -11,7 +11,7 @@ run: install
 	@echo "Running sample app django-mysql with Zen on port 8080"
 	poetry run python manage.py migrate || true
 
-	AIKIDO_DEBUG=true AIKIDO_BLOCKING=true AIKIDO_TOKEN="AIK_secret_token" \
+	AIKIDO_DEBUG=true AIKIDO_BLOCK=true AIKIDO_TOKEN="AIK_secret_token" \
 	AIKIDO_REALTIME_ENDPOINT="http://localhost:5000/" \
 	AIKIDO_ENDPOINT="http://localhost:5000/" AIKIDO_DISABLE=0 \
 	poetry run python manage.py runserver 0.0.0.0:8080

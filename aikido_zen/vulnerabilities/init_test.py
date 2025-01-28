@@ -91,7 +91,7 @@ def test_lifecycle_cache_bypassed_ip(caplog, get_context):
 def test_sql_injection(caplog, get_context, monkeypatch):
     get_context.set_as_current_context()
     cache = ThreadCache()
-    monkeypatch.setenv("AIKIDO_BLOCKING", "1")
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
     with pytest.raises(AikidoSQLInjection):
         run_vulnerability_scan(
             kind="sql_injection",
@@ -103,7 +103,7 @@ def test_sql_injection(caplog, get_context, monkeypatch):
 def test_sql_injection_with_route_params(caplog, get_context, monkeypatch):
     get_context.set_as_current_context()
     cache = ThreadCache()
-    monkeypatch.setenv("AIKIDO_BLOCKING", "1")
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
     with pytest.raises(AikidoSQLInjection):
         run_vulnerability_scan(
             kind="sql_injection",
@@ -116,7 +116,7 @@ def test_sql_injection_with_comms(caplog, get_context, monkeypatch):
     get_context.set_as_current_context()
     cache = ThreadCache()
     cache.last_renewal = 9999999999999999999999
-    monkeypatch.setenv("AIKIDO_BLOCKING", "1")
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
     with patch("aikido_zen.background_process.comms.get_comms") as mock_get_comms:
         # Create a mock comms object
         mock_comms = MagicMock()
@@ -139,7 +139,7 @@ def test_sql_injection_with_comms(caplog, get_context, monkeypatch):
 
 def test_ssrf_with_comms_hostnames_add(caplog, get_context, monkeypatch):
     get_context.set_as_current_context()
-    monkeypatch.setenv("AIKIDO_BLOCKING", "1")
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
     with patch("aikido_zen.background_process.comms.get_comms") as mock_get_comms:
         # Create a mock comms object
         mock_comms = MagicMock()
