@@ -3,6 +3,7 @@ Exports map_dialect_to_rust_int
 """
 
 DIALECTS = {
+    "generic": 0,
     "mysql": 8,
     "postgres": 9,
     "sqlite": 12,
