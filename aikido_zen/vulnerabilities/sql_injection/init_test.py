@@ -252,7 +252,8 @@ def test_input_occurs_in_comment():
 
 
 def test_user_input_is_multiline():
-    is_sql_injection("SELECT * FROM users WHERE id = 'a'\nOR 1=1#'", "a'\nOR 1=1#")
+    is_sql_injection("SELECT * FROM users WHERE id = 'a'\nOR 1=1#'", "a'\nOR 1=1#", "mysql")
+    is_sql_injection("SELECT * FROM users WHERE id = 'a'\nOR 1=1#'", "a'\nOR 1=1#", "generic")
     is_not_sql_injection("SELECT * FROM users WHERE id = 'a\nb\nc';", "a\nb\nc")
 
 
