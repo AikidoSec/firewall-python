@@ -207,7 +207,7 @@ def test_check_string_safely_escaped():
         "SELECT * FROM comments WHERE comment = 'I\"m writting you'", 'I"m writting you'
     )
     is_not_sql_injection(
-        'SELECT * FROM comments WHERE comment = "I\`m writting you"', "I`m writting you"
+        'SELECT * FROM comments WHERE comment = "I`m writting you"', "I`m writting you"
     )
     # Invalid query (strings don't terminate)
     is_not_sql_injection(
