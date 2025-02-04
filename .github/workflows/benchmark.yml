@@ -8,7 +8,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Start databases
         working-directory:  ./sample-apps/databases
         run: docker compose up --build -d
@@ -35,7 +35,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Start databases
         working-directory:  ./sample-apps/databases
         run: docker compose up --build -d
@@ -56,7 +56,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Start databases
         working-directory:  ./sample-apps/databases
         run: docker compose up --build -d
