@@ -56,10 +56,11 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
+      - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
           make install
+          python -m pip install -r end2end/requirements.txt
 
       - name: Start application
         working-directory: ./sample-apps/${{ matrix.app.name }}
@@ -67,4 +68,4 @@ jobs:
           nohup make run > output.log & tail -f output.log & sleep 20
           nohup make runZenDisabled & sleep 20
       - name: Run end2end tests for application
-        run: tail -f  ./sample-apps/${{ matrix.app.name }}/output.log & poetry run pytest ./${{ matrix.app.testfile }}
+        run: tail -f  ./sample-apps/${{ matrix.app.name }}/output.log & python ${{ matrix.app.testfile }}
