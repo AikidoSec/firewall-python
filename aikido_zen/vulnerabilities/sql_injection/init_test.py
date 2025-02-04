@@ -60,42 +60,28 @@ IS_INJECTION = [
     ["UNTER;", "UNTER;"],
 ]
 
+DIALECTS = [
+    "generic",
+    "mysql",
+    "postgres",
+    "sqlite",
+]
 
 def is_sql_injection(sql, input, dialect="all"):
-    if dialect == "mysql" or dialect == "all":
-        result = detect_sql_injection(sql, input, "mysql")
-        assert (
-            result == True
-        ), f"Expected SQL injection for SQL: {sql} and input: {input}"
-    if dialect == "postgres" or dialect == "all":
-        result = detect_sql_injection(sql, input, "postgres")
-        assert (
-            result == True
-        ), f"Expected SQL injection for SQL: {sql} and input: {input}"
-    if dialect == "sqlite" or dialect == "all":
-        result = detect_sql_injection(sql, input, "sqlite")
-        assert (
-            result == True
-        ), f"Expected SQL injection for SQL: {sql} and input: {input}"
-
+    for current in DIALECTS:
+        if dialect == "all" or dialect == current:
+            result = detect_sql_injection(sql, input, current)
+            assert (
+                result == True
+            ), f"Expected SQL injection for SQL: {sql} and input: {input} in {current} dialect"
 
 def is_not_sql_injection(sql, input, dialect="all"):
-    if dialect == "mysql" or dialect == "all":
-        result = detect_sql_injection(sql, input, "mysql")
-        assert (
-            result == False
-        ), f"Expected no SQL injection for SQL: {sql} and input: {input}"
-    if dialect == "postgres" or dialect == "all":
-        result = detect_sql_injection(sql, input, "postgres")
-        assert (
-            result == False
-        ), f"Expected no SQL injection for SQL: {sql} and input: {input}"
-    if dialect == "sqlite" or dialect == "all":
-        result = detect_sql_injection(sql, input, "sqlite")
-        assert (
-            result == False
-        ), f"Expected no SQL injection for SQL: {sql} and input: {input}"
-
+    for current in DIALECTS:
+        if dialect == "all" or dialect == current:
+            result = detect_sql_injection(sql, input, current)
+            assert (
+                result == False
+            ), f"Expected no SQL injection for SQL: {sql} and input: {input} in {current} dialect"
 
 def test_should_return_early():
     # Test cases where the function should return True
