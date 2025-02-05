@@ -67,6 +67,7 @@ DIALECTS = [
     "sqlite",
 ]
 
+
 def is_sql_injection(sql, input, dialect="all"):
     for current in DIALECTS:
         if dialect == "all" or dialect == current:
@@ -75,6 +76,7 @@ def is_sql_injection(sql, input, dialect="all"):
                 result == True
             ), f"Expected SQL injection for SQL: {sql} and input: {input} in {current} dialect"
 
+
 def is_not_sql_injection(sql, input, dialect="all"):
     for current in DIALECTS:
         if dialect == "all" or dialect == current:
@@ -82,6 +84,7 @@ def is_not_sql_injection(sql, input, dialect="all"):
             assert (
                 result == False
             ), f"Expected no SQL injection for SQL: {sql} and input: {input} in {current} dialect"
+
 
 def test_should_return_early():
     # Test cases where the function should return True
@@ -252,8 +255,12 @@ def test_input_occurs_in_comment():
 
 
 def test_user_input_is_multiline():
-    is_sql_injection("SELECT * FROM users WHERE id = 'a'\nOR 1=1#'", "a'\nOR 1=1#", "mysql")
-    is_sql_injection("SELECT * FROM users WHERE id = 'a'\nOR 1=1#'", "a'\nOR 1=1#", "generic")
+    is_sql_injection(
+        "SELECT * FROM users WHERE id = 'a'\nOR 1=1#'", "a'\nOR 1=1#", "mysql"
+    )
+    is_sql_injection(
+        "SELECT * FROM users WHERE id = 'a'\nOR 1=1#'", "a'\nOR 1=1#", "generic"
+    )
     is_not_sql_injection("SELECT * FROM users WHERE id = 'a\nb\nc';", "a\nb\nc")
 
 
