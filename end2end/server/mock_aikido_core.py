@@ -77,6 +77,9 @@ def mock_set_config():
     responses["configUpdatedAt"] = { "serviceId": 1, "configUpdatedAt": configUpdatedAt }
     return jsonify({})
 
+@app.route('/mock/reset', methods=['GET'])
+def mock_reset_events():
+    events.clear()
 
 @app.route('/mock/events', methods=['GET'])
 def mock_get_events():
