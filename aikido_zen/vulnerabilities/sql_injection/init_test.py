@@ -60,41 +60,30 @@ IS_INJECTION = [
     ["UNTER;", "UNTER;"],
 ]
 
+DIALECTS = [
+    "generic",
+    "mysql",
+    "postgres",
+    "sqlite",
+]
+
 
 def is_sql_injection(sql, input, dialect="all"):
-    if dialect == "mysql" or dialect == "all":
-        result = detect_sql_injection(sql, input, "mysql")
-        assert (
-            result == True
-        ), f"Expected SQL injection for SQL: {sql} and input: {input}"
-    if dialect == "postgres" or dialect == "all":
-        result = detect_sql_injection(sql, input, "postgres")
-        assert (
-            result == True
-        ), f"Expected SQL injection for SQL: {sql} and input: {input}"
-    if dialect == "sqlite" or dialect == "all":
-        result = detect_sql_injection(sql, input, "sqlite")
-        assert (
-            result == True
-        ), f"Expected SQL injection for SQL: {sql} and input: {input}"
+    for current in DIALECTS:
+        if dialect == "all" or dialect == current:
+            result = detect_sql_injection(sql, input, current)
+            assert (
+                result == True
+            ), f"Expected SQL injection for SQL: {sql} and input: {input} in {current} dialect"
 
 
 def is_not_sql_injection(sql, input, dialect="all"):
-    if dialect == "mysql" or dialect == "all":
-        result = detect_sql_injection(sql, input, "mysql")
-        assert (
-            result == False
-        ), f"Expected no SQL injection for SQL: {sql} and input: {input}"
-    if dialect == "postgres" or dialect == "all":
-        result = detect_sql_injection(sql, input, "postgres")
-        assert (
-            result == False
-        ), f"Expected no SQL injection for SQL: {sql} and input: {input}"
-    if dialect == "sqlite" or dialect == "all":
-        result = detect_sql_injection(sql, input, "sqlite")
-        assert (
-            result == False
-        ), f"Expected no SQL injection for SQL: {sql} and input: {input}"
+    for current in DIALECTS:
+        if dialect == "all" or dialect == current:
+            result = detect_sql_injection(sql, input, current)
+            assert (
+                result == False
+            ), f"Expected no SQL injection for SQL: {sql} and input: {input} in {current} dialect"
 
 
 def test_should_return_early():
@@ -221,7 +210,7 @@ def test_check_string_safely_escaped():
         "SELECT * FROM comments WHERE comment = 'I\"m writting you'", 'I"m writting you'
     )
     is_not_sql_injection(
-        'SELECT * FROM comments WHERE comment = "I\`m writting you"', "I`m writting you"
+        'SELECT * FROM comments WHERE comment = "I`m writting you"', "I`m writting you"
     )
     # Invalid query (strings don't terminate)
     is_not_sql_injection(
@@ -266,7 +255,12 @@ def test_input_occurs_in_comment():
 
 
 def test_user_input_is_multiline():
-    is_sql_injection("SELECT * FROM users WHERE id = 'a'\nOR 1=1#'", "a'\nOR 1=1#")
+    is_sql_injection(
+        "SELECT * FROM users WHERE id = 'a'\nOR 1=1#'", "a'\nOR 1=1#", "mysql"
+    )
+    is_sql_injection(
+        "SELECT * FROM users WHERE id = 'a'\nOR 1=1#'", "a'\nOR 1=1#", "generic"
+    )
     is_not_sql_injection("SELECT * FROM users WHERE id = 'a\nb\nc';", "a\nb\nc")
 
 

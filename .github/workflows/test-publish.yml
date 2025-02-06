@@ -65,8 +65,3 @@ jobs:
         poetry config repositories.test-pypi https://test.pypi.org/legacy/
         poetry config pypi-token.test-pypi ${{ secrets.TEST_PYPI_TOKEN }}
         poetry publish -r test-pypi --build
-    - name: Store the distribution packages
-      uses: actions/upload-artifact@v3
-      with:
-        name: python-package-distributions
-        path: dist/

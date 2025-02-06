@@ -184,6 +184,45 @@ def test_set_valid_json_with_array():
     assert context.body == {"key": [1, 2, 3]}
 
 
+def test_set_valid_json_with_spaces():
+    context = Context(req=basic_wsgi_req, body=None, source="flask")
+
+    context.set_body('               {"key": [1, 2, 3]}         ')
+    assert context.body == {"key": [1, 2, 3]}
+
+
+def test_set_valid_json_with_newlines():
+    context = Context(req=basic_wsgi_req, body=None, source="flask")
+
+    context.set_body('\r\n\r\n{"key": [1, 2, 3]}\r\n\r\n')
+    assert context.body == {"key": [1, 2, 3]}
+
+
+def test_set_valid_json_with_spaces_and_array():
+    context = Context(req=basic_wsgi_req, body=None, source="flask")
+
+    context.set_body("               [1, 2, 3]         ")
+    assert context.body == [1, 2, 3]
+    context.set_body("               (1, 2, 3)         ")
+    assert context.body == "               (1, 2, 3)         "
+
+
+def test_set_valid_json_with_complex_array():
+    context = Context(req=basic_wsgi_req, body=None, source="flask")
+
+    context.set_body(
+        '               [{"hello": "world", "one": 123}, 2, "hiya"]         '
+    )
+    assert context.body == [{"hello": "world", "one": 123}, 2, "hiya"]
+
+
+def test_empty_string_becomes_none():
+    context = Context(req=basic_wsgi_req, body=None, source="flask")
+
+    context.set_body("")
+    assert context.body is None
+
+
 def test_set_valid_json_with_special_characters():
     context = Context(req=basic_wsgi_req, body=None, source="flask")
     context.set_body('{"key": "value with special characters !@#$%^&*()"}')
