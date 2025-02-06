@@ -1,4 +1,4 @@
-from django_mysql.test_sql_attack import test_sql_attack
+from mysql.test_sql_attack import test_sql_attack
 from utils.EventHandler import EventHandler
 from utils.test_safe_vs_unsafe_payloads import test_safe_vs_unsafe_payloads
 
