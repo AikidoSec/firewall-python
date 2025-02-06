@@ -18,7 +18,11 @@ event_handler.reset()
 test_safe_vs_unsafe_payloads(payloads_sql, urls, route="/app/create/")
 print("✅ Tested safe/unsafe payloads on /app/create/")
 
-test_sql_attack(event_handler)
+test_sql_attack(
+    event_handler,
+    sql='INSERT INTO sample_app_dogs (dog_name, dog_boss) VALUES ("Dangerous bobby", 1); -- ", "N/A")',
+    sink="MySQLdb.Cursor.execute"
+)
 print("✅ Tested accurate reporting of an attack")
 
 """
