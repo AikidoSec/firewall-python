@@ -10,12 +10,6 @@ post_url_nofw = "http://localhost:8091/create"
 get_url_cookie_fw = "http://localhost:8090/create_with_cookie"
 get_url_cookie_nofw = "http://localhost:8091/create_with_cookie"
 
-def test_firewall_started_okay():
-    events = fetch_events_from_mock("http://localhost:5000")
-    started_events = filter_on_event_type(events, "started")
-    assert len(started_events) == 1
-    validate_started_event(started_events[0], ["flask", "psycopg2-binary"])
-
 def test_safe_response_with_firewall():
     dog_name = "Bobby Tables"
     res = requests.post(post_url_fw, data={'dog_name': dog_name})

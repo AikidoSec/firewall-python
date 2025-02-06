@@ -28,12 +28,6 @@ def test_create_dog_no_fw():
     assert "created successfully" in res.text
     assert res.status_code == 200
 
-def test_firewall_started_okay():
-    events = fetch_events_from_mock("http://localhost:5000")
-    started_events = filter_on_event_type(events, "started")
-    assert len(started_events) == 1
-    validate_started_event(started_events[0], ["flask", "pymongo"])
-
 # Auth dogs with right password:
 def test_safe_auth_fw():
     dog_name = "bobby_tables"

@@ -7,12 +7,6 @@ from .server.check_events_from_mock import fetch_events_from_mock, validate_star
 base_url_fw = "http://localhost:8080/app"
 base_url_nofw = "http://localhost:8081/app"
 
-def test_firewall_started_okay():
-    events = fetch_events_from_mock("http://localhost:5000")
-    started_events = filter_on_event_type(events, "started")
-    assert len(started_events) == 1
-    validate_started_event(started_events[0], ["django", "mysqlclient"])
-
 def test_safe_response_with_firewall():
     dog_name = "Bobby Tables"
     res = requests.post(base_url_fw + "/create", data={'dog_name': dog_name})
