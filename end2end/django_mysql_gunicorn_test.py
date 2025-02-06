@@ -15,8 +15,8 @@ urls = {
 
 event_handler = EventHandler()
 event_handler.reset()
-test_safe_vs_unsafe_payloads(payloads_sql, urls, route="/app/create")
-print("✅ Tested safe/unsafe payloads on /app/create")
+test_safe_vs_unsafe_payloads(payloads_sql, urls, route="/app/create/")
+print("✅ Tested safe/unsafe payloads on /app/create/")
 
 test_sql_attack(event_handler)
 print("✅ Tested accurate reporting of an attack")
