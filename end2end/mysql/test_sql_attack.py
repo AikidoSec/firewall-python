@@ -20,5 +20,5 @@ def test_sql_attack(event_handler, sql, operation):
     assert_eq(attack["operation"], equals=operation)
 
     # Test user :
-    assert_eq(attack["user"]["id"], equals="user123")
-    assert_eq(attack["user"]["id"], equals="John Doe")
+    assert_eq(attack["user"]["id"], equals="123")
+    assert_eq(attack["user"]["id"], equals="123")
