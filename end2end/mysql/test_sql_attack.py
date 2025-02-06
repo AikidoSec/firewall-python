@@ -18,3 +18,7 @@ def test_sql_attack(event_handler, sql, operation):
     assert_eq(val1=attack["payload"], equals='"Dangerous bobby\\", 1); -- "')
     assert_eq(val1=attack["source"], equals="body")
     assert_eq(attack["operation"], equals=operation)
+
+    # Test user :
+    assert_eq(attack["user"]["id"], equals="user123")
+    assert_eq(attack["user"]["id"], equals="John Doe")
