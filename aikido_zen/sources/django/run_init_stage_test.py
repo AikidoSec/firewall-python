@@ -106,7 +106,7 @@ def test_run_init_stage_with_empty_body(mock_request):
 
     # Assertions
     context: Context = get_current_context()
-    assert context.body is ""
+    assert context.body is None
 
 
 def test_run_init_stage_with_empty_body_string(mock_request):
@@ -117,7 +117,7 @@ def test_run_init_stage_with_empty_body_string(mock_request):
 
     # Assertions
     context: Context = get_current_context()
-    assert context.body is ""
+    assert context.body is None
 
 
 def test_run_init_stage_with_xml(mock_request):
