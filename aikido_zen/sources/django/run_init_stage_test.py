@@ -48,6 +48,7 @@ def run_around_tests():
     # Make sure to reset context after every test so it does not
     # interfere with other tests
     current_context.set(None)
+    ThreadCache()  # Reset thread cache
 
 
 def test_run_init_stage_with_json(mock_request):
