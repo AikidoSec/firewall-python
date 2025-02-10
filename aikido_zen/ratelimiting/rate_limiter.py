@@ -13,4 +13,5 @@ class RateLimiter(ABC):
         """
         Checks if the request is allowed given the history
         """
+
         pass
