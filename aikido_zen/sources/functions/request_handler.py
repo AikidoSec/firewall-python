@@ -7,10 +7,7 @@ from aikido_zen.api_discovery.update_route_info import update_route_info
 from aikido_zen.helpers.is_useful_route import is_useful_route
 from aikido_zen.helpers.logging import logger
 from aikido_zen.thread.thread_cache import get_cache
-from aikido_zen.ratelimiting.get_ratelimited_endpoint import get_ratelimited_endpoint
-from aikido_zen.helpers.match_endpoints import match_endpoints
 from .check_if_ip_blocked import check_if_ip_blocked
-from .ip_allowed_to_access_route import ip_allowed_to_access_route
 
 
 def request_handler(stage, status_code=0):
@@ -20,9 +17,13 @@ def request_handler(stage, status_code=0):
             #  This gets executed the first time a request get's intercepted
             context = ctx.get_current_context()
             thread_cache = get_cache()
-            if context and thread_cache:
-                thread_cache.increment_stats()  # Increment request statistics
+            if not context or not thread_cache:
+                return
 
+            thread_cache.increment_stats()  # Increment request statistics
+
+            if thread_cache.is_bypassed_ip(context.remote_address):
+                ctx.reset()  # Reset context object if it's a bypassed IP (no protection).
         if stage == "pre_response":
             return pre_response()
         if stage == "post_response":
