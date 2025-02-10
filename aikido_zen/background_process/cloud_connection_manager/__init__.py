@@ -5,7 +5,7 @@ from aikido_zen.helpers.token import Token
 from aikido_zen.helpers.get_current_unixtime_ms import get_unixtime_ms
 from aikido_zen.background_process.heartbeats import send_heartbeats_every_x_secs
 from aikido_zen.background_process.routes import Routes
-from aikido_zen.ratelimiting.rate_limiter import RateLimiter
+from aikido_zen.ratelimiting.fixed_window_rate_limiter import FixedWindowRateLimiter
 from aikido_zen.helpers.logging import logger
 from .update_blocked_ip_addresses import update_blocked_ip_addresses
 from ..api.http_api import ReportingApiHTTP
@@ -44,7 +44,7 @@ class CloudConnectionManager:
             received_any_stats=True,
             blocked_ips=[],
         )
-        self.rate_limiter = RateLimiter(
+        self.rate_limiter = FixedWindowRateLimiter(
             max_items=5000, time_to_live_in_ms=120 * 60 * 1000  # 120 minutes
         )
         self.users = Users(1000)
