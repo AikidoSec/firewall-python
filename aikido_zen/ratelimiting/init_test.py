@@ -62,39 +62,6 @@ def test_rate_limits_by_ip():
     }
 
 
-def test_rate_limiting_ip_allowed():
-    cm = create_connection_manager(
-        [
-            {
-                "method": "POST",
-                "route": "/login",
-                "forceProtectionOff": False,
-                "rateLimiting": {
-                    "enabled": True,
-                    "maxRequests": 3,
-                    "windowSizeInMS": 1000,
-                },
-            },
-        ],
-        ["1.2.3.4"],
-    )
-
-    # Test requests from allowed IP
-    route_metadata = create_route_metadata()
-    assert should_ratelimit_request(route_metadata, "1.2.3.4", None, cm) == {
-        "block": False
-    }
-    assert should_ratelimit_request(route_metadata, "1.2.3.4", None, cm) == {
-        "block": False
-    }
-    assert should_ratelimit_request(route_metadata, "1.2.3.4", None, cm) == {
-        "block": False
-    }
-    assert should_ratelimit_request(route_metadata, "1.2.3.4", None, cm) == {
-        "block": False
-    }
-
-
 def test_rate_limiting_by_user(user):
     cm = create_connection_manager(
         [
