@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import MagicMock
 from aikido_zen.background_process.service_config import ServiceConfig
 from . import should_ratelimit_request
-from .fixed_window_rate_limiter import FixedWindowRateLimiter
+from .sliding_window_rate_limiter import SlidingWindowRateLimiter
 
 
 def create_route_metadata(method="POST", route="/login"):
@@ -25,7 +25,7 @@ def create_connection_manager(endpoints=[], bypassed_ips=[]):
         received_any_stats=True,
         blocked_ips=[],
     )
-    cm.rate_limiter = FixedWindowRateLimiter(
+    cm.rate_limiter = SlidingWindowRateLimiter(
         max_items=5000, time_to_live_in_ms=120 * 60 * 1000  # 120 minutes
     )
     return cm

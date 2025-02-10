@@ -1,11 +1,7 @@
 """ This file simply exports the CloudConnectionManager class"""
 
-import time
-from aikido_zen.helpers.token import Token
-from aikido_zen.helpers.get_current_unixtime_ms import get_unixtime_ms
 from aikido_zen.background_process.heartbeats import send_heartbeats_every_x_secs
 from aikido_zen.background_process.routes import Routes
-from aikido_zen.ratelimiting.fixed_window_rate_limiter import FixedWindowRateLimiter
 from aikido_zen.helpers.logging import logger
 from .update_blocked_ip_addresses import update_blocked_ip_addresses
 from ..api.http_api import ReportingApiHTTP
@@ -22,6 +18,7 @@ from .update_service_config import update_service_config
 from .on_start import on_start
 from .send_heartbeat import send_heartbeat
 from ...ratelimiting.rate_limiter import RateLimiter
+from ...ratelimiting.sliding_window_rate_limiter import SlidingWindowRateLimiter
 
 
 class CloudConnectionManager:
@@ -45,7 +42,7 @@ class CloudConnectionManager:
             received_any_stats=True,
             blocked_ips=[],
         )
-        self.rate_limiter: RateLimiter = FixedWindowRateLimiter(
+        self.rate_limiter: RateLimiter = SlidingWindowRateLimiter(
             max_items=5000, time_to_live_in_ms=120 * 60 * 1000  # 120 minutes
         )
         self.users = Users(1000)

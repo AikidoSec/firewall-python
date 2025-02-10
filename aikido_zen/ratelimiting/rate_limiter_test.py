@@ -3,6 +3,8 @@ import time
 
 from .fixed_window_rate_limiter import FixedWindowRateLimiter
 from .rate_limiter import RateLimiter
+from .sliding_window_rate_limiter import SlidingWindowRateLimiter
+
 
 # Assuming the RateLimiter class is defined above
 
@@ -11,7 +13,7 @@ from .rate_limiter import RateLimiter
 def rate_limiter():
     max_amount = 5
     ttl = 500  # 0.5 seconds
-    return FixedWindowRateLimiter(max_amount, ttl)
+    return SlidingWindowRateLimiter(max_amount, ttl)
 
 
 def test_allow_up_to_max_amount_requests_within_ttl(rate_limiter):
