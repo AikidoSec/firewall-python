@@ -21,6 +21,7 @@ from .get_manager_info import get_manager_info
 from .update_service_config import update_service_config
 from .on_start import on_start
 from .send_heartbeat import send_heartbeat
+from ...ratelimiting.rate_limiter import RateLimiter
 
 
 class CloudConnectionManager:
@@ -44,7 +45,7 @@ class CloudConnectionManager:
             received_any_stats=True,
             blocked_ips=[],
         )
-        self.rate_limiter = FixedWindowRateLimiter(
+        self.rate_limiter: RateLimiter = FixedWindowRateLimiter(
             max_items=5000, time_to_live_in_ms=120 * 60 * 1000  # 120 minutes
         )
         self.users = Users(1000)
