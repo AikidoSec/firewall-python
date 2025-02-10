@@ -102,6 +102,7 @@ class Context:
             self.set_body_internal(body)
         except Exception as e:
             logger.debug("Exception occurred whilst setting body: %s", e)
+
     def set_body_internal(self, body):
         """Sets the body and checks if it's possibly JSON"""
         self.body = body
@@ -109,7 +110,7 @@ class Context:
             # Make sure that empty bodies like b"" don't get sent.
             self.body = None
         if isinstance(self.body, bytes):
-            self.body = self.body.decode('utf-8')  # Decode byte input to string.
+            self.body = self.body.decode("utf-8")  # Decode byte input to string.
         if not isinstance(self.body, str):
             return
         if self.body.strip()[0] in ["{", "["]:
