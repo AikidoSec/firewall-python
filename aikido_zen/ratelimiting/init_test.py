@@ -313,39 +313,3 @@ def test_does_not_ratelimit_bypassed_ip_with_user():
 
 def test_works_with_setuser_after_first_ratelimit():
     pass
-
-
-import pytest
-
-
-def test_rate_limiting_bypassed_ip_with_user():
-    cm = create_connection_manager(
-        [
-            {
-                "method": "POST",
-                "route": "/login",
-                "forceProtectionOff": False,
-                "rateLimiting": {
-                    "enabled": True,
-                    "maxRequests": 3,
-                    "windowSizeInMS": 1000,
-                },
-            },
-        ],
-        ["1.2.3.4"],
-    )
-
-    # All requests from the bypassed IP should not be blocked
-    metadata = create_route_metadata(route="/login", method="POST")
-    assert should_ratelimit_request(metadata, "1.2.3.4", {"id": "123"}, cm) == {
-        "block": False
-    }
-    assert should_ratelimit_request(metadata, "1.2.3.4", {"id": "123"}, cm) == {
-        "block": False
-    }
-    assert should_ratelimit_request(metadata, "1.2.3.4", {"id": "123"}, cm) == {
-        "block": False
-    }
-    assert should_ratelimit_request(metadata, "1.2.3.4", {"id": "123"}, cm) == {
-        "block": False
-    }
