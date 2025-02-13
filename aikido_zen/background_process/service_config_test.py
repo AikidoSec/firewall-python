@@ -1,6 +1,6 @@
 import pytest
 from .service_config import ServiceConfig
-
+from aikido_zen.helpers.blocklist import BlockList
 
 def test_service_config_initialization():
     endpoints = [
@@ -43,7 +43,7 @@ def test_service_config_initialization():
         endpoints,
         last_updated_at,
         ["0", "0", "1", "5"],
-        ["5", "1", "2", "1", "5"],
+        ["127.0.0.1", "123.1.2.0/24", "132.1.0.0/16"],
         True,
         [],
     )
@@ -53,7 +53,10 @@ def test_service_config_initialization():
     assert service_config.endpoints[0]["route"] == "/v1"
     assert service_config.endpoints[1]["route"] == "/v3"
     assert service_config.last_updated_at == last_updated_at
-    assert service_config.bypassed_ips == set(["1", "2", "5"])
+    assert isinstance(service_config.bypassed_ips, BlockList)
+    assert service_config.bypassed_ips.is_blocked("127.0.0.1")
+    assert service_config.bypassed_ips.is_blocked("123.1.2.2")
+    assert not service_config.bypassed_ips.is_blocked("1.1.1.1")
     assert service_config.blocked_uids == set(["1", "0", "5"])
 
 
@@ -80,7 +83,7 @@ def service_config():
 def test_initialization(service_config):
     assert len(service_config.endpoints) == 2  # Only non-graphql endpoints
     assert service_config.last_updated_at == "2023-10-01T00:00:00Z"
-    assert service_config.bypassed_ips == {"192.168.1.1", "10.0.0.1"}
+    assert isinstance(service_config.bypassed_ips, BlockList)
     assert service_config.blocked_uids == {"user1", "user2"}
 
 
@@ -89,7 +92,7 @@ def test_ip_blocking():
         endpoints=sample_endpoints,
         last_updated_at="2023-10-01T00:00:00Z",
         blocked_uids=["user1", "user2"],
-        bypassed_ips=["192.168.1.1", "10.0.0.1"],
+        bypassed_ips=["192.168.1.1", "10.0.0.0/16", "::1/128"],
         received_any_stats=True,
         blocked_ips=[
             {
@@ -115,3 +118,12 @@ def test_ip_blocking():
     assert config.is_blocked_ip("fd00:3234:5678:9abc::2") is "description"
     assert config.is_blocked_ip("5.6.7.8") is "description"
     assert config.is_blocked_ip("1.2") is False
+
+    assert config.is_bypassed_ip("192.168.1.1")
+    assert config.is_bypassed_ip("10.0.0.1")
+    assert config.is_bypassed_ip("10.0.1.2")
+    assert config.is_bypassed_ip("10.0.254.254")
+    assert config.is_bypassed_ip("::1")
+    assert not config.is_bypassed_ip("::2")
+    assert not config.is_bypassed_ip("1.1.1.1")
+    assert not config.is_bypassed_ip("10.1.0.0")

@@ -24,7 +24,10 @@ class ServiceConfig:
             endpoint for endpoint in endpoints if not endpoint.get("graphql")
         ]
         self.last_updated_at = last_updated_at
-        self.bypassed_ips = set(bypassed_ips)
+        self.bypassed_ips = BlockList()
+        for ip in bypassed_ips:
+            add_ip_address_to_blocklist(ip, self.bypassed_ips)
+        
         self.blocked_uids = set(blocked_uids)
         self.received_any_stats = bool(received_any_stats)
         self.set_blocked_ips(blocked_ips)
@@ -38,7 +41,7 @@ class ServiceConfig:
 
     def is_bypassed_ip(self, ip):
         """Checks if the IP is on the bypass list"""
-        return ip in self.bypassed_ips
+        return self.bypassed_ips.is_blocked(ip)
 
     def is_blocked_ip(self, ip):
         for entry in self.blocked_ips:
