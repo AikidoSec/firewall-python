@@ -2,6 +2,7 @@ import pytest
 from .service_config import ServiceConfig
 from aikido_zen.helpers.blocklist import BlockList
 
+
 def test_service_config_initialization():
     endpoints = [
         {
