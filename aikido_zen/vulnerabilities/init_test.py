@@ -4,6 +4,8 @@ from . import run_vulnerability_scan
 from aikido_zen.context import current_context, Context
 from aikido_zen.errors import AikidoSQLInjection
 from aikido_zen.thread.thread_cache import ThreadCache, threadlocal_storage
+from aikido_zen.helpers.blocklist import BlockList
+from aikido_zen.helpers.add_ip_address_to_blocklist import add_ip_address_to_blocklist
 
 
 @pytest.fixture(autouse=True)
@@ -82,7 +84,8 @@ def test_ssrf(caplog, get_context):
 def test_lifecycle_cache_bypassed_ip(caplog, get_context):
     get_context.set_as_current_context()
     cache = ThreadCache()
-    cache.config.bypassed_ips = {"198.51.100.23"}
+    cache.config.bypassed_ips = BlockList()
+    add_ip_address_to_blocklist("198.51.100.23", cache.config.bypassed_ips)
     assert cache.is_bypassed_ip("198.51.100.23")
     run_vulnerability_scan(kind="test", op="test", args=tuple())
     assert len(caplog.text) == 0

@@ -3,6 +3,8 @@ import pytest
 from aikido_zen.background_process.service_config import ServiceConfig
 from .check_if_ip_blocked import check_if_ip_blocked
 from ...context import Context
+from aikido_zen.helpers.add_ip_address_to_blocklist import add_ip_address_to_blocklist
+from aikido_zen.helpers.blocklist import BlockList
 
 
 # Helper function to set context
@@ -37,7 +39,7 @@ def create_service_config(blocked_ips=None):
         ],
         last_updated_at=None,
         blocked_uids=set(),
-        bypassed_ips=set(),
+        bypassed_ips=BlockList(),
         received_any_stats=False,
         blocked_ips=blocked_ips or [],
     )
@@ -113,7 +115,7 @@ def test_bypassed_ip():
         {"source": "test", "description": "Blocked for testing", "ips": ["192.168.1.1"]}
     ]
     config = create_service_config(blocked_ips)
-    config.bypassed_ips.add("1.1.1.1")  # Adding to bypass list
+    add_ip_address_to_blocklist("1.1.1.1", config.bypassed_ips)  # Adding to bypass list
 
     # Act
     result = check_if_ip_blocked(context, config.endpoints, config)
