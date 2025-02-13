@@ -27,7 +27,7 @@ class ServiceConfig:
         self.bypassed_ips = BlockList()
         for ip in bypassed_ips:
             add_ip_address_to_blocklist(ip, self.bypassed_ips)
-        
+
         self.blocked_uids = set(blocked_uids)
         self.received_any_stats = bool(received_any_stats)
         self.set_blocked_ips(blocked_ips)
