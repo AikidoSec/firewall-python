@@ -39,7 +39,7 @@ def create_service_config(blocked_ips=None):
         ],
         last_updated_at=None,
         blocked_uids=set(),
-        bypassed_ips=BlockList(),
+        bypassed_ips=[],
         received_any_stats=False,
         blocked_ips=blocked_ips or [],
     )
