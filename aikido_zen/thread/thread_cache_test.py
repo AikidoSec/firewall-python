@@ -76,7 +76,7 @@ def test_renew_if_ttl_expired(
                         "force_protection_off": False,
                     }
                 ],
-                bypassed_ips={"192.168.1.1"},
+                bypassed_ips=["192.168.1.1"],
                 blocked_uids={"user123"},
                 last_updated_at=-1,
                 received_any_stats=True,
@@ -216,7 +216,7 @@ def test_renew_if_ttl_expired_multiple_times(
                         "force_protection_off": False,
                     }
                 ],
-                bypassed_ips={"192.168.1.1"},
+                bypassed_ips=["192.168.1.1"],
                 blocked_uids={"user123"},
                 last_updated_at=-1,
                 received_any_stats=True,
@@ -285,7 +285,7 @@ def test_parses_routes_correctly(
                         "force_protection_off": False,
                     }
                 ],
-                bypassed_ips={"192.168.1.1"},
+                bypassed_ips=["192.168.1.1"],
                 blocked_uids={"user123"},
                 last_updated_at=-1,
                 received_any_stats=True,
