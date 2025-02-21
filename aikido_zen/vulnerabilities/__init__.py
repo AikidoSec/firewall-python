@@ -54,9 +54,6 @@ def run_vulnerability_scan(kind, op, args):
         ):
             #  The client turned protection off for this route, not scanning
             return
-        if thread_cache.is_bypassed_ip(context.remote_address):
-            #  This IP is on the bypass list, not scanning
-            return
 
     error_type = AikidoException  # Default error
     error_args = tuple()

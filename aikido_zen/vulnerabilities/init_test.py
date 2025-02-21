@@ -79,15 +79,6 @@ def test_ssrf(caplog, get_context):
     run_vulnerability_scan(kind="ssrf", op="test", args=tuple())
 
 
-def test_lifecycle_cache_bypassed_ip(caplog, get_context):
-    get_context.set_as_current_context()
-    cache = ThreadCache()
-    cache.config.bypassed_ips = {"198.51.100.23"}
-    assert cache.is_bypassed_ip("198.51.100.23")
-    run_vulnerability_scan(kind="test", op="test", args=tuple())
-    assert len(caplog.text) == 0
-
-
 def test_sql_injection(caplog, get_context, monkeypatch):
     get_context.set_as_current_context()
     cache = ThreadCache()

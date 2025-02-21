@@ -1,7 +1,7 @@
 import pytest
 import pickle
 import json
-from aikido_zen.context import Context, get_current_context, current_context
+from aikido_zen.context import Context, get_current_context, current_context, reset
 
 
 basic_wsgi_req = {
@@ -106,6 +106,15 @@ def test_set_as_current_context(mocker):
     context = Context(req=basic_wsgi_req, body=12, source="flask")
     context.set_as_current_context()
     assert get_current_context() == context
+
+
+def test_set_as_current_context_and_reset(mocker):
+    # Test set_as_current_context() method
+    context = Context(req=basic_wsgi_req, body=12, source="flask")
+    context.set_as_current_context()
+    assert get_current_context() == context
+    reset()
+    assert get_current_context() is None
 
 
 def test_get_current_context_with_context(mocker):
