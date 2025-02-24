@@ -21,7 +21,7 @@ def on_xml_import(eltree):
     copy_xml_parser = copy.deepcopy(eltree.XMLParser)
 
     class MutableAikidoXMLParser:
-        """Aikido's mutable connection class"""
+        """Mutable connection class used to instrument `xml` by Zen"""
 
         def __init__(self, *args, **kwargs):
             self._former_xml_parser = copy_xml_parser(*args, **kwargs)
@@ -48,5 +48,4 @@ def on_xml_import(eltree):
     setattr(eltree, "XMLParser", MutableAikidoXMLParser)
     setattr(modified_eltree, "XMLParser", MutableAikidoXMLParser)
 
-    logger.debug("Wrapped `xml` module")
     return modified_eltree

@@ -29,4 +29,3 @@ logger.addHandler(stdout)
 
 # Configure logger
 logger.setLevel(LOG_LEVEL)
-logger.debug("Created logger")

@@ -61,7 +61,7 @@ class AikidoIPCCommunications:
             return {"success": False, "error": "invalid_key"}
 
         # We want to make sure that sending out this data affects the process as little as possible
-        # So we run it inside a seperate thread with a timeout of 100ms
+        # So we run it inside a separate thread with a timeout of 100ms
         # If something goes wrong, it will also be encapsulated in the thread i.e. no crashes
         def target(address, key, receive, data, result_obj):
             try:
