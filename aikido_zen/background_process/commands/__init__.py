@@ -5,7 +5,6 @@ from .attack import process_attack
 from .read_property import process_read_property
 from .initialize_route import process_initialize_route
 from .user import process_user
-from .wrapped_package import process_wrapped_package
 from .should_ratelimit import process_should_ratelimit
 from .kill import process_kill
 from .hostnames_add import process_hostnames_add
@@ -25,7 +24,6 @@ commands_map = {
     # Commands that return data :
     "SYNC_DATA": (process_sync_data, True),
     "READ_PROPERTY": (process_read_property, True),
-    "WRAPPED_PACKAGE": (process_wrapped_package, True),
     "SHOULD_RATELIMIT": (process_should_ratelimit, True),
     "PING": (process_ping, True),
 }
