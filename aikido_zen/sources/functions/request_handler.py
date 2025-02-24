@@ -17,11 +17,11 @@ def request_handler(stage, status_code=0):
     """This will check for rate limiting, Allowed IP's, useful routes, etc."""
     try:
         if stage == "init":
-            #  This gets executed the first time a request get's intercepted
-            context = ctx.get_current_context()
+            # Initial stage of the request, called after context is stored.
             thread_cache = get_cache()
-            if context and thread_cache:
-                thread_cache.increment_stats()  # Increment request statistics
+            thread_cache.renew_if_ttl_expired()  # Only check TTL at the start of a request.
+            if ctx.get_current_context() and thread_cache:
+                thread_cache.increment_stats()  # Increment request statistics if a context exists.
 
         if stage == "pre_response":
             return pre_response()

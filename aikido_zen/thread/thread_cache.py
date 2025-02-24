@@ -16,8 +16,6 @@ threadlocal_storage = local()
 def get_cache():
     """Returns the current ThreadCache"""
     cache = getattr(threadlocal_storage, "cache", None)
-    if cache and isinstance(cache, ThreadCache):
-        cache.renew_if_ttl_expired()
     if not cache:
         return ThreadCache()
     return cache
