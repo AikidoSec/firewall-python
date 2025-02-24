@@ -27,7 +27,7 @@ def start_background_process():
     secret_key_bytes = str.encode(str(get_token_from_env()))
     if secret_key_bytes == b"None":
         logger.warning(
-            "You are running without AIKIDO_TOKEN set, not starting background process.."
+            "You are running without AIKIDO_TOKEN set, not starting background process."
         )
         return
 
@@ -39,9 +39,11 @@ def start_background_process():
         res = comms.send_data_to_bg_process(action="PING", obj=tuple(), receive=True)
         if res["success"] and res["data"] == "Received":
             # Ping is active, return.
-            logger.debug("UDS file exists and is live, returning.")
+            logger.debug(
+                "A background agent is already running, not starting a new background agent."
+            )
             return
-        # Ping must have failed, remove the existing file to ensure ther eis no corruption.
+        # Ping must have failed, remove the existing file to ensure there is no corruption.
         os.remove(uds_filename)
 
     logger.debug("Background process starting on UDS File : %s", uds_filename)
