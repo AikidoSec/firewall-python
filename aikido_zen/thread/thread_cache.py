@@ -3,6 +3,7 @@
 from threading import local
 import aikido_zen.background_process.comms as comms
 import aikido_zen.helpers.get_current_unixtime_ms as t
+from aikido_zen.context import get_current_context
 from aikido_zen.background_process.routes import Routes
 from aikido_zen.background_process.service_config import ServiceConfig
 from aikido_zen.helpers.logging import logger
@@ -74,8 +75,11 @@ class ThreadCache:
         """
         Makes an IPC call to store the amount of hits and requests and renew the config
         """
-        if not comms.get_comms():
+        # Don't try to fetch a thread cache if communications don't work or
+        # if we are not inside the context of a web request
+        if not comms.get_comms() or not get_current_context():
             return
+
         res = comms.get_comms().send_data_to_bg_process(
             action="SYNC_DATA",
             obj={
