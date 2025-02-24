@@ -36,6 +36,7 @@ def test_pkg_compat_check_success(mock_get_comms, mocker):
     # Call the function under test
     pkg_compat_check(pkg_name, ANY_VERSION)
 
+
 def test_pkg_compat_check_retry(mock_get_comms, mocker):
     """Test retry logic when sending data fails."""
     pkg_name = "example_package"
