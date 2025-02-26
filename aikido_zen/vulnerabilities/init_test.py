@@ -81,7 +81,6 @@ def test_ssrf(caplog, get_context):
     run_vulnerability_scan(kind="ssrf", op="test", args=tuple())
 
 
-
 def test_sql_injection(caplog, get_context, monkeypatch):
     get_context.set_as_current_context()
     cache = ThreadCache()
