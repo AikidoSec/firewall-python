@@ -14,12 +14,12 @@ def request_handler(stage, status_code=0):
     """This will check for rate limiting, Allowed IP's, useful routes, etc."""
     try:
         if stage == "init":
-            #  This gets executed the first time a request get's intercepted
-            context = ctx.get_current_context()
+            # Initial stage of the request, called after context is stored.
             thread_cache = get_cache()
+            context = ctx.get_current_context()
             if not context or not thread_cache:
                 return
-
+            thread_cache.renew_if_ttl_expired()  # Only check TTL at the start of a request.
             thread_cache.increment_stats()  # Increment request statistics
 
             if thread_cache.is_bypassed_ip(context.remote_address):

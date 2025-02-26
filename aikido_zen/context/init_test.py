@@ -168,6 +168,18 @@ def test_set_empty_byte_string():
     assert context.body is None
 
 
+def test_set_normal_byte_string():
+    body = b"Hello World!"
+    context = Context(req=basic_wsgi_req, body=body, source="flask")
+    assert context.body == "Hello World!"
+
+
+def test_set_byte_string_wrong_encoding():
+    body = "hello world! 😊".encode("utf-16")  # UTF-16 unique character
+    context = Context(req=basic_wsgi_req, body=body, source="flask")
+    assert context.body == body  # Body remains unchanged because utf-8 failed.
+
+
 def test_set_none():
     context = Context(req=basic_wsgi_req, body=None, source="flask")
     assert context.body is None
@@ -216,11 +228,29 @@ def test_set_valid_json_with_spaces_and_array():
     assert context.body == "               (1, 2, 3)         "
 
 
+def test_set_valid_json_with_spaces_and_array_bytes():
+    context = Context(req=basic_wsgi_req, body=None, source="flask")
+
+    context.set_body(b"               [1, 2, 3]         ")
+    assert context.body == [1, 2, 3]
+    context.set_body(b"               (1, 2, 3)         ")
+    assert context.body == "               (1, 2, 3)         "
+
+
 def test_set_valid_json_with_complex_array():
     context = Context(req=basic_wsgi_req, body=None, source="flask")
 
     context.set_body(
         '               [{"hello": "world", "one": 123}, 2, "hiya"]         '
+    )
+    assert context.body == [{"hello": "world", "one": 123}, 2, "hiya"]
+
+
+def test_set_valid_json_with_complex_array_bytes():
+    context = Context(req=basic_wsgi_req, body=None, source="flask")
+
+    context.set_body(
+        b'               [{"hello": "world", "one": 123}, 2, "hiya"]         '
     )
     assert context.body == [{"hello": "world", "one": 123}, 2, "hiya"]
 
@@ -235,4 +265,10 @@ def test_empty_string_becomes_none():
 def test_set_valid_json_with_special_characters():
     context = Context(req=basic_wsgi_req, body=None, source="flask")
     context.set_body('{"key": "value with special characters !@#$%^&*()"}')
+    assert context.body == {"key": "value with special characters !@#$%^&*()"}
+
+
+def test_set_valid_json_with_special_characters_bytes():
+    context = Context(req=basic_wsgi_req, body=None, source="flask")
+    context.set_body(b'{"key": "value with special characters !@#$%^&*()"}')
     assert context.body == {"key": "value with special characters !@#$%^&*()"}

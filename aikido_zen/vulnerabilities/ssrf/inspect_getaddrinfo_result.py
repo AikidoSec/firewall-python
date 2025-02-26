@@ -23,13 +23,12 @@ def inspect_getaddrinfo_result(dns_results, hostname, port):
         logger.debug("Hostname %s is actually an IP address, ignoring", hostname)
         return
 
-    context = get_current_context()
     if not inspect_dns_results(dns_results, hostname):
         return
 
-    if not context or not get_cache():
-        # Context and thread cache should be set for the following code
-        return
+    context = get_current_context()
+    if not context:
+        return  # Context should be set to check user input.
 
     # attack_findings is an object containing source, pathToPayload and payload.
     attack_findings = find_hostname_in_context(hostname, context, port)

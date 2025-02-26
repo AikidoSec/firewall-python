@@ -5,7 +5,7 @@ Main export is the is_useful_route function
 import os
 
 EXCLUDED_METHODS = ["OPTIONS", "HEAD"]
-IGNORE_EXTENSIONS = ["properties", "php", "asp", "aspx", "jsp", "config"]
+IGNORE_EXTENSIONS = ["properties", "config", "webmanifest"]
 IGNORE_STRINGS = ["cgi-bin"]
 
 

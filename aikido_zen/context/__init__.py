@@ -103,22 +103,26 @@ class Context:
         current_context.set(self)
 
     def set_body(self, body):
+        try:
+            self.set_body_internal(body)
+        except Exception as e:
+            logger.debug("Exception occurred whilst setting body: %s", e)
+
+    def set_body_internal(self, body):
         """Sets the body and checks if it's possibly JSON"""
         self.body = body
         if isinstance(self.body, (str, bytes)) and len(body) == 0:
             # Make sure that empty bodies like b"" don't get sent.
             self.body = None
+        if isinstance(self.body, bytes):
+            self.body = self.body.decode("utf-8")  # Decode byte input to string.
         if not isinstance(self.body, str):
             return
         if self.body.strip()[0] in ["{", "["]:
             # Might be JSON, but might not have been parsed correctly by server because of wrong headers
-            try:
-                # Check if body is JSON :
-                parsed_body = json.loads(self.body)
-                if parsed_body:
-                    self.body = parsed_body
-            except JSONDecodeError:
-                pass
+            parsed_body = json.loads(self.body)
+            if parsed_body:
+                self.body = parsed_body
 
     def get_route_metadata(self):
         """Returns a route_metadata object"""
