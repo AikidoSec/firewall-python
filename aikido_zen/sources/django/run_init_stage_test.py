@@ -2,6 +2,8 @@ import pytest
 from unittest.mock import MagicMock
 from .run_init_stage import run_init_stage
 from ...context import Context, get_current_context, current_context
+from ...helpers.add_ip_address_to_blocklist import add_ip_address_to_blocklist
+from ...helpers.blocklist import BlockList
 from ...thread.thread_cache import ThreadCache
 from ...thread.thread_cache_test import thread_cache
 
@@ -70,11 +72,18 @@ def test_run_init_stage_with_dict(mock_request):
     assert {"a": [1, 2], "b": [2, 3]} == context.body
 
 
+class MyThreadCache(ThreadCache):
+    def renew_if_ttl_expired(self):
+        return
+
+
 def test_run_init_stage_not_bypassed(mock_request):
     """Test run_init_stage with a JSON request."""
     mock_request.POST.dict.return_value = {"a": [1, 2], "b": [2, 3]}
-    thread_cache = ThreadCache()
-    thread_cache.config.bypassed_ips = set(["1.2.3.4", "5.6.7.8"])
+    thread_cache = MyThreadCache()
+    thread_cache.config.bypassed_ips = BlockList()
+    add_ip_address_to_blocklist("1.2.3.4", thread_cache.config.bypassed_ips)
+    add_ip_address_to_blocklist("5.6.7.8", thread_cache.config.bypassed_ips)
     assert thread_cache.reqs == 0
     run_init_stage(mock_request)
 
@@ -84,7 +93,10 @@ def test_run_init_stage_not_bypassed(mock_request):
     assert thread_cache.reqs == 1
 
     # Bypassed
-    thread_cache.config.bypassed_ips = set(["1.2.3.4", "5.6.7.8", "198.51.100.23"])
+    thread_cache.config.bypassed_ips = BlockList()
+    add_ip_address_to_blocklist("1.2.3.4", thread_cache.config.bypassed_ips)
+    add_ip_address_to_blocklist("5.6.7.8", thread_cache.config.bypassed_ips)
+    add_ip_address_to_blocklist("198.51.100.23", thread_cache.config.bypassed_ips)
     run_init_stage(mock_request)
     assert get_current_context() is None
     assert thread_cache.reqs == 2
