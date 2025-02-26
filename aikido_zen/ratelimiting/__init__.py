@@ -17,10 +17,7 @@ def should_ratelimit_request(route_metadata, remote_address, user, connection_ma
 
     max_requests = int(endpoint["rateLimiting"]["maxRequests"])
     windows_size_in_ms = int(endpoint["rateLimiting"]["windowSizeInMS"])
-    is_bypassed_ip = connection_manager.conf.is_bypassed_ip(remote_address)
 
-    if is_bypassed_ip:
-        return {"block": False}
     if user:
         uid = user["id"]
         method = endpoint.get("method")
