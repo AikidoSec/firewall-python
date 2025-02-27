@@ -1,6 +1,10 @@
 """
-Django Web Framework instrumentation
-
+Django Web Framework
+Instrumentation for django.core.handlers.base.BaseHandler.get_response(...),
+This invokes Django's middleware chain and returns the response. (For WSGI)
+---
+Django source code for get_response(...) :
+https://github.com/django/django/blob/5865ff5adcf64da03d306dc32b36e87ae6927c85/django/core/handlers/base.py#L136
 """
 
 import copy
@@ -17,13 +21,6 @@ from ... import logger
 
 @importhook.on_import("django.core.handlers.base")
 def django_get_response_instrumentation(django):
-    """
-    Instrumentation for django.core.handlers.base.BaseHandler.get_response(...),
-    This invokes Django's middleware chain and returns the response. (For WSGI)
-    ---
-    Django source code for get_response(...) :
-    https://github.com/django/django/blob/5865ff5adcf64da03d306dc32b36e87ae6927c85/django/core/handlers/base.py#L136
-    """
     if not pkg_compat_check("django", required_version=ANY_VERSION):
         return django
 
