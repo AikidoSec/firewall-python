@@ -92,7 +92,7 @@ def test_blocklist_overlapping_subnets():
     assert blocklist.matches("192.168.1.130") is True  # Inside both subnets
     assert blocklist.matches("192.168.1.0") is True  # Inside first subnet
     assert (
-            blocklist.matches("192.168.1.127") is True
+        blocklist.matches("192.168.1.127") is True
     )  # Inside first subnet, outside second
     assert blocklist.matches("192.168.1.255") is True  # Last address in both subnets
     assert blocklist.matches("192.168.2.1") is False  # Outside both subnets
@@ -107,7 +107,7 @@ def test_blocklist_mixed_address_types():
     assert blocklist.matches("2001:0db8:85a3:0000:0000:8a2e:0370:7334") is True
     assert blocklist.matches("192.168.1.2") is False  # Different IPv4
     assert (
-            blocklist.matches("2001:0db8:85a3:0000:0000:8a2e:0370:7335") is False
+        blocklist.matches("2001:0db8:85a3:0000:0000:8a2e:0370:7335") is False
     )  # Different IPv6
 
 
