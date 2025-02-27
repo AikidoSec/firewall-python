@@ -91,7 +91,7 @@ class ServiceConfig:
         return self.blocked_user_agent_regex.match(ua)
 
 
-def parse_ip_entries(self, ip_entries):
+def parse_ip_entries(ip_entries):
     """
     Converts ip entries: {"source": "example", "description": "Example description", "ips": []}
     """

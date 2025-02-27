@@ -38,7 +38,7 @@ def on_init_handler(context: Context):
         return BlockResult(True, message)
 
     # Global IP Allowlist (e.g. for geofencing)
-    if is_ip_allowed_by_allowlist(cache.config, context.remote_address):
+    if not is_ip_allowed_by_allowlist(cache.config, context.remote_address):
         message = "Your IP address is not allowed."
         message += " (Your IP: " + context.remote_address + ")"
         return BlockResult(True, message)
