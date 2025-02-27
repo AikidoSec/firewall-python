@@ -8,6 +8,7 @@ from aikido_zen.helpers.iplist import IPList
 from aikido_zen.helpers.logging import logger
 
 
+# noinspection PyAttributeOutsideInit
 class ServiceConfig:
     """Class holding the config of the connection_manager"""
 
@@ -18,14 +19,26 @@ class ServiceConfig:
         blocked_uids: set[str],
         bypassed_ips: set[str],
         received_any_stats: bool,
-        blocked_ips,
+    ):
+        # Init the class using update function :
+        self.update(
+            endpoints, last_updated_at, blocked_uids, bypassed_ips, received_any_stats
+        )
+        self.blocked_ips = IPList()  # Empty
+
+    def update(
+        self,
+        endpoints,
+        last_updated_at: int,
+        blocked_uids: set[str],
+        bypassed_ips: set[str],
+        received_any_stats: bool,
     ):
         self.last_updated_at = last_updated_at
         self.received_any_stats = bool(received_any_stats)
         self.blocked_uids = set(blocked_uids)
         self.set_endpoints(endpoints)
         self.set_bypassed_ips(bypassed_ips)
-        self.set_blocked_ips(blocked_ips)
 
     def set_endpoints(self, endpoints):
         """Sets non-graphql endpoints"""
