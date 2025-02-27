@@ -36,6 +36,8 @@ def test_dangerous_response_with_firewall():
     
     assert len(attacks) == 1
     del attacks[0]["attack"]["stack"]
+    assert attacks[0]["user"]["id"] == "100"
+    del attacks[0]["user"]
     assert attacks[0]["attack"] == {
         "blocked": True,
         "kind": "sql_injection",
@@ -44,7 +46,6 @@ def test_dangerous_response_with_firewall():
         'pathToPayload': '.dog_name',
         'payload': '"Dangerous bobby\\", 1); -- "',
         'source': "body",
-        'user': None
     }
 
 def test_dangerous_response_without_firewall():
