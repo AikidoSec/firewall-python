@@ -4,7 +4,7 @@ Exports ServiceConfig class
 
 from aikido_zen.helpers.add_ip_address_to_blocklist import add_ip_address_to_blocklist
 from aikido_zen.helpers.match_endpoints import match_endpoints
-from aikido_zen.helpers.blocklist import BlockList
+from aikido_zen.helpers.iplist import IPList
 from aikido_zen.helpers.logging import logger
 
 
@@ -24,7 +24,7 @@ class ServiceConfig:
             endpoint for endpoint in endpoints if not endpoint.get("graphql")
         ]
         self.last_updated_at = last_updated_at
-        self.bypassed_ips = BlockList()
+        self.bypassed_ips = IPList()
         for ip in bypassed_ips:
             add_ip_address_to_blocklist(ip, self.bypassed_ips)
 
@@ -41,11 +41,11 @@ class ServiceConfig:
 
     def is_bypassed_ip(self, ip):
         """Checks if the IP is on the bypass list"""
-        return self.bypassed_ips.is_blocked(ip)
+        return self.bypassed_ips.matches(ip)
 
     def is_blocked_ip(self, ip):
         for entry in self.blocked_ips:
-            if entry["blocklist"].is_blocked(ip):
+            if entry["blocklist"].matches(ip):
                 return entry["description"]
         return False
 
@@ -54,7 +54,7 @@ class ServiceConfig:
         # Go over entries : {"source": "example", "description": "Example description", "ips": []}
         for entry in blocked_ip_entries:
             # Create a blocklist of the ip addresses and ip ranges :
-            blocklist = BlockList()
+            blocklist = IPList()
             for ip in entry["ips"]:
                 add_ip_address_to_blocklist(ip, blocklist)
 
