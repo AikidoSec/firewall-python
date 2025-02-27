@@ -4,7 +4,7 @@ import copy
 import aikido_zen.importhook as importhook
 from aikido_zen.helpers.logging import logger
 from aikido_zen.context import Context
-from ..functions.request_handler import request_handler
+from ..functions.on_init_request import on_init_request
 
 
 @importhook.on_import("starlette.applications")
@@ -28,9 +28,7 @@ async def aik_call_wrapper(former_call, app, scope, receive, send):
     try:
         if scope["type"] != "http":
             return await former_call(app, scope, receive, send)
-        context1 = Context(req=scope, source="starlette")
-        context1.set_as_current_context()
-        request_handler(stage="init")
+        on_init_request(Context(req=scope, source="starlette"))
     except Exception as e:
         logger.debug("Exception on aikido __call__ function : %s", e)
     return await former_call(app, scope, receive, send)

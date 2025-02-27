@@ -2,9 +2,8 @@
 
 import copy
 import aikido_zen.importhook as importhook
-from aikido_zen.helpers.logging import logger
 from aikido_zen.background_process.packages import pkg_compat_check, ANY_VERSION
-from ..functions.request_handler import request_handler
+from ..functions.on_post_request import on_post_request
 from .run_init_stage import run_init_stage
 from .pre_response_middleware import pre_response_middleware
 
@@ -32,7 +31,7 @@ def on_django_gunicorn_import(django):
 
         res = former__get_response(self, request)
         if hasattr(res, "status_code"):
-            request_handler(stage="post_response", status_code=res.status_code)
+            on_post_request(status_code=res.status_code)
         return res
 
     # pylint: disable=no-member

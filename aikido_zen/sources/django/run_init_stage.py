@@ -3,11 +3,11 @@
 import json
 from aikido_zen.context import Context
 from aikido_zen.helpers.logging import logger
-from ..functions.request_handler import request_handler
+from ..functions.on_init_request import on_init_request
 
 
 def run_init_stage(request):
-    """Parse request and body, run "init" stage with request_handler"""
+    """Create a context object from the request"""
     body = None
     try:
         # try-catch loading of form parameters, this is to fix issue with DATA_UPLOAD_MAX_NUMBER_FIELDS :
@@ -44,11 +44,6 @@ def run_init_stage(request):
             context = Context(req=request.scope, body=body, source="django_async")
         elif hasattr(request, "META") and request.META is not None:  # WSGI request
             context = Context(req=request.META, body=body, source="django")
-        else:
-            return
-        context.set_as_current_context()
-
-        # Init stage needs to be run with context already set :
-        request_handler(stage="init")
+        on_init_request(context)
     except Exception as e:
         logger.debug("Error occurred in run_init_stage function (Django): %s", e)

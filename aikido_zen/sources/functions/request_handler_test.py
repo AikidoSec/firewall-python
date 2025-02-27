@@ -1,9 +1,6 @@
 import pytest
 from unittest.mock import patch, MagicMock
-from aikido_zen.background_process import get_comms
-from aikido_zen.helpers.logging import logger
-from aikido_zen.thread.thread_cache import get_cache, ThreadCache
-from .request_handler import request_handler, post_response
+from aikido_zen.thread.thread_cache import ThreadCache
 
 
 @pytest.fixture

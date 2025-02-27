@@ -8,7 +8,11 @@ import copy
 import aikido_zen.importhook as importhook
 from aikido_zen.helpers.logging import logger
 from .extract_data_from_request import extract_data_from_request
-from ..functions.request_handler import request_handler
+from ..functions.check_if_request_is_blocked import (
+    check_if_request_is_blocked,
+    BlockResult,
+)
+from ..functions.on_post_request import request_handler, on_post_request
 
 
 @importhook.on_import("starlette.routing")
@@ -33,17 +37,17 @@ def aik_route_func_wrapper(func):
     """Aikido's __call__ wrapper"""
 
     async def aikido_route_func(*args, **kwargs):
-        # Code before response (pre_response stage)
+        # Check if request is blocked :
         try:
             req = args[0]
             if not req:
                 return
             await extract_data_from_request(req)
-            pre_response_results = request_handler(stage="pre_response")
-            if pre_response_results:
-                response = create_starlette_response(pre_response_results)
+            block_result = check_if_request_is_blocked()
+            if block_result.blocking:
+                response = create_starlette_response(block_result)
                 if response:
-                    # Make sure to not return when an error occured or there is an invalid response
+                    # Make sure to not return when an error occurred or there is an invalid response
                     return response
         except Exception as e:
             logger.debug("Exception occured in pre_response stage starlette : %s", e)
@@ -65,16 +69,15 @@ def aik_route_func_wrapper(func):
             # there are no compatibility issues and the behaviour remains unchanged.
             res = await functools.partial(run_in_threadpool, func)(*args, **kwargs)
 
-        # Code after response (post_response stage)
-        request_handler(stage="post_response", status_code=res.status_code)
+        # Report status code for route discovery, api discovery, etc.
+        on_post_request(status_code=res.status_code)
         return res
 
     return aikido_route_func
 
 
-def create_starlette_response(pre_response):
+def create_starlette_response(block_result: BlockResult):
     """Tries to import PlainTextResponse and generates starlette plain text response"""
-    text, status_code = pre_response
     try:
         from starlette.responses import PlainTextResponse
     except ImportError:
@@ -82,4 +85,4 @@ def create_starlette_response(pre_response):
             "Ensure `starlette` install is valid, failed to import starlette.responses"
         )
         return None
-    return PlainTextResponse(text, status_code)
+    return PlainTextResponse(block_result.message, block_result.status_code)

@@ -7,7 +7,12 @@ import aikido_zen.importhook as importhook
 from aikido_zen.helpers.logging import logger
 from aikido_zen.context import Context, get_current_context
 from aikido_zen.background_process.packages import pkg_compat_check, ANY_VERSION
-from .functions.request_handler import request_handler
+from .functions.check_if_request_is_blocked import (
+    BlockResult,
+    check_if_request_is_blocked,
+)
+from .functions.on_init_request import on_init_request
+from .functions.on_post_request import on_post_request
 
 
 async def aikido___call___wrapper(former_call, quart_app, scope, receive, send):
@@ -17,10 +22,7 @@ async def aikido___call___wrapper(former_call, quart_app, scope, receive, send):
     try:
         if scope["type"] != "http":
             return await former_call(quart_app, scope, receive, send)
-        context1 = Context(req=scope, source="quart")
-        context1.set_as_current_context()
-
-        request_handler(stage="init")
+        on_init_request(Context(req=scope, source="quart"))
     except Exception as e:
         logger.debug("Exception on aikido __call__ function : %s", e)
     return await former_call(quart_app, scope, receive, send)
@@ -49,33 +51,33 @@ async def handle_request_wrapper(former_handle_request, quart_app, req):
     except Exception as e:
         logger.debug("Exception in handle_request : %s", e)
 
-    # Fetch response and run post_response handler :
+    # Fetch response and report status code so we can check for route discovery, api discovery, etc.
     # pylint:disable=import-outside-toplevel # We don't want to install this by default
     from werkzeug.exceptions import HTTPException
 
     try:
         response = await former_handle_request(quart_app, req)
         status_code = response.status_code
-        request_handler(stage="post_response", status_code=status_code)
+        on_post_request(status_code=status_code)
         return response
     except HTTPException as e:
-        request_handler(stage="post_response", status_code=e.code)
+        on_post_request(status_code=e.code)
         raise e
 
 
-async def send_status_code_and_text(send, pre_response):
+async def send_status_code_and_text(send, block_result: BlockResult):
     """Sends a status code and text"""
     await send(
         {
             "type": "http.response.start",
-            "status": pre_response[1],
+            "status": block_result.status_code,
             "headers": [(b"content-type", b"text/plain")],
         }
     )
     await send(
         {
             "type": "http.response.body",
-            "body": pre_response[0].encode("utf-8"),
+            "body": block_result.message.encode("utf-8"),
             "more_body": False,
         }
     )
@@ -106,9 +108,9 @@ def on_quart_import(quart):
     async def aikido_asgi_app(quart_app, scope, receive=None, send=None):
         if scope["type"] == "http":
             # Run pre_response code :
-            pre_response = request_handler(stage="pre_response")
-            if pre_response:
-                return await send_status_code_and_text(send, pre_response)
+            block_result = check_if_request_is_blocked()
+            if block_result.blocking:
+                return await send_status_code_and_text(send, block_result)
         return await former_asgi_app(quart_app, scope, receive, send)
 
     # pylint:disable=no-member # Pylint has issues with the wrapping

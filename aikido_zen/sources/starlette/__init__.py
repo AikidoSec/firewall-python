@@ -2,9 +2,9 @@
 Init.py file for starlette module
 ---
 Starlette wrapping is subdivided in two parts :
-- starlette.applications : Wraps __call__ on Starlette class to run "init" stage.
-- starlette.routing : request_response function : Run pre_response code and 
-    also runs post_response code after getting response from user function.
+- starlette.applications : Wraps __call__ on Starlette class to create a context object
+- starlette.routing : request_response function : Checks if the request is blocked, and reports status code for
+    route discovery, api discovery, etc.
 
 Folder also includes helper functions : 
 - extract_data_from_request, which will extract the data from a request object safely,

@@ -8,7 +8,12 @@ from aikido_zen.helpers.logging import logger
 from aikido_zen.context import Context
 from aikido_zen.background_process.packages import pkg_compat_check, ANY_VERSION
 from aikido_zen.context import get_current_context
-import aikido_zen.sources.functions.request_handler as funcs
+import aikido_zen.sources.functions.on_post_request as funcs
+from aikido_zen.sources.functions.check_if_request_is_blocked import (
+    check_if_request_is_blocked,
+)
+from aikido_zen.sources.functions.on_init_request import on_init_request
+from aikido_zen.sources.functions.on_post_request import on_post_request
 
 
 def aik_full_dispatch_request(*args, former_full_dispatch_request=None, **kwargs):
@@ -34,12 +39,14 @@ def aik_full_dispatch_request(*args, former_full_dispatch_request=None, **kwargs
     extract_form_data_from_flask_request_and_save_data(req)
     extract_view_args_from_flask_request_and_save_data(req)
 
-    pre_response = funcs.request_handler(stage="pre_response")
-    if pre_response:
+    block_result = check_if_request_is_blocked()
+    if block_result.blocking:
         # This happens when a route is rate limited, a user blocked, etc...
-        return Response(pre_response[0], status=pre_response[1], mimetype="text/plain")
+        return Response(
+            block_result.message, status=block_result.status_code, mimetype="text/plain"
+        )
     res = former_full_dispatch_request(*args, **kwargs)
-    funcs.request_handler(stage="post_response", status_code=res.status_code)
+    on_post_request(status_code=res.status_code)
     return res
 
 
@@ -84,9 +91,7 @@ def aikido___call__(flask_app, environ, start_response):
     # We don't want to install werkzeug :
     # pylint: disable=import-outside-toplevel
     try:
-        context1 = Context(req=environ, source="flask")
-        context1.set_as_current_context()
-        funcs.request_handler(stage="init")
+        on_init_request(Context(req=environ, source="flask"))
     except Exception as e:
         logger.debug("Exception on aikido __call__ function : %s", e)
     res = flask_app.wsgi_app(environ, start_response)
