@@ -6,7 +6,6 @@ import regex as re
 from aikido_zen.helpers.add_ip_address_to_blocklist import add_ip_address_to_blocklist
 from aikido_zen.helpers.match_endpoints import match_endpoints
 from aikido_zen.helpers.iplist import IPList
-from aikido_zen.vulnerabilities.ssrf.is_private_ip import is_private_ip
 
 
 # noinspection PyAttributeOutsideInit
@@ -76,19 +75,6 @@ class ServiceConfig:
         for entry in self.blocked_ips:
             if entry["iplist"].matches(ip):
                 return entry["description"]
-        return False
-
-    def is_allowed_ip(self, ip) -> bool:
-        if not self.allowed_ips or len(self.allowed_ips) < 1:
-            return True
-        # Always allow access from local IP addresses
-        if is_private_ip(ip):
-            return True
-
-        for entry in self.allowed_ips:
-            if entry["iplist"].matches(ip):
-                # If the IP matches one of the lists the IP is allowed :
-                return True
         return False
 
     def set_blocked_user_agents(self, blocked_user_agents: str):
