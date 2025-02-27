@@ -1,13 +1,11 @@
 import pytest
 from unittest.mock import patch, MagicMock
 from aikido_zen.background_process.routes import Routes
-from aikido_zen.background_process.comms import get_comms
-from aikido_zen.helpers.get_current_unixtime_ms import get_unixtime_ms
 from .thread_cache import ThreadCache, THREAD_CONFIG_TTL_MS, threadlocal_storage
 from ..background_process.service_config import ServiceConfig
-from ..ratelimiting.get_ratelimited_endpoint_test import endpoints
 from aikido_zen.helpers.blocklist import BlockList
 from aikido_zen.helpers.add_ip_address_to_blocklist import add_ip_address_to_blocklist
+from ..context import Context, current_context
 
 
 @pytest.fixture
@@ -18,10 +16,27 @@ def thread_cache():
 
 @pytest.fixture(autouse=True)
 def run_around_tests():
+    class Context1(Context):
+        def __init__(self):
+            self.cookies = {}
+            self.headers = {}
+            self.remote_address = "1.1.1.1"
+            self.method = "POST"
+            self.url = "url"
+            self.query = {}
+            self.body = {
+                "domain": "www.example`whoami`.com",
+            }
+            self.source = "express"
+            self.route = "/"
+            self.parsed_userinput = {}
+
+    Context1().set_as_current_context()
     yield
-    # Make sure to reset thread cache after every test so it does not
+    # Make sure to reset thread cache and context after every test so it does not
     # interfere with other tests
     setattr(threadlocal_storage, "cache", None)
+    current_context.set(None)
 
 
 def test_initialization(thread_cache: ThreadCache):
@@ -101,6 +116,47 @@ def test_renew_if_ttl_expired(
     ]
     assert thread_cache.is_user_blocked("user123")
     assert thread_cache.last_renewal > 0
+
+
+@patch("aikido_zen.background_process.comms.get_comms")
+@patch("aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms")
+def test_renew_if_ttl_expired_but_context_not_set(
+    mock_get_unixtime_ms, mock_get_comms, thread_cache: ThreadCache
+):
+    """Test renewing the cache if TTL has expired."""
+    current_context.set(None)
+    mock_get_unixtime_ms.return_value = (
+        THREAD_CONFIG_TTL_MS + 1
+    )  # Simulate TTL expiration
+    mock_get_comms.return_value = MagicMock()
+    mock_get_comms.return_value.send_data_to_bg_process.return_value = {
+        "success": True,
+        "data": {
+            "config": ServiceConfig(
+                endpoints=[
+                    {
+                        "graphql": False,
+                        "method": "POST",
+                        "route": "/v2",
+                        "rate_limiting": {
+                            "enabled": False,
+                        },
+                        "force_protection_off": False,
+                    }
+                ],
+                bypassed_ips=["192.168.1.1"],
+                blocked_uids={"user123"},
+                last_updated_at=-1,
+                received_any_stats=True,
+                blocked_ips=[],
+            ),
+            "routes": {},
+        },
+    }
+
+    thread_cache.renew_if_ttl_expired()
+    # Should be bypassed but isnt due to context not set :
+    assert not thread_cache.is_bypassed_ip("192.168.1.1")
 
 
 @patch("aikido_zen.background_process.comms.get_comms")
