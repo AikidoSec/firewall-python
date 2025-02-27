@@ -18,8 +18,8 @@ class ServiceConfig:
         self,
         endpoints,
         last_updated_at: int,
-        blocked_uids: set[str],
-        bypassed_ips: set[str],
+        blocked_uids,
+        bypassed_ips,
         received_any_stats: bool,
     ):
         # Init the class using update function :
