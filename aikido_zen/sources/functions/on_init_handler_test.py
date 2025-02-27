@@ -5,6 +5,7 @@ from .on_init_handler import on_init_handler
 from ...context import Context, current_context
 from aikido_zen.helpers.add_ip_address_to_blocklist import add_ip_address_to_blocklist
 from ...thread.thread_cache import ThreadCache, threadlocal_storage
+from aikido_zen.helpers.iplist import IPList
 
 
 # Helper function to set context

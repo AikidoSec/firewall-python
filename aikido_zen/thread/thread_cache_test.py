@@ -3,7 +3,7 @@ from unittest.mock import patch, MagicMock
 from aikido_zen.background_process.routes import Routes
 from .thread_cache import ThreadCache, THREAD_CONFIG_TTL_MS, threadlocal_storage
 from ..background_process.service_config import ServiceConfig
-from aikido_zen.helpers.blocklist import BlockList
+from aikido_zen.helpers.iplist import IPList
 from aikido_zen.helpers.add_ip_address_to_blocklist import add_ip_address_to_blocklist
 from ..context import Context, current_context
 
@@ -42,7 +42,7 @@ def run_around_tests():
 def test_initialization(thread_cache: ThreadCache):
     """Test that the ThreadCache initializes correctly."""
     assert isinstance(thread_cache.routes, Routes)
-    assert isinstance(thread_cache.config.bypassed_ips, BlockList)
+    assert isinstance(thread_cache.config.bypassed_ips, IPList)
     assert thread_cache.get_endpoints() == []
     assert thread_cache.config.blocked_uids == set()
     assert thread_cache.reqs == 0
@@ -178,7 +178,7 @@ def test_reset(thread_cache: ThreadCache):
     thread_cache.config.blocked_uids.add("user123")
     thread_cache.reset()
 
-    assert isinstance(thread_cache.config.bypassed_ips, BlockList)
+    assert isinstance(thread_cache.config.bypassed_ips, IPList)
     assert thread_cache.config.blocked_uids == set()
     assert thread_cache.reqs == 0
     assert thread_cache.last_renewal == 0
@@ -197,7 +197,7 @@ def test_renew_with_no_comms(thread_cache: ThreadCache):
     """Test that renew does not proceed if there are no communications available."""
     with patch("aikido_zen.background_process.comms.get_comms", return_value=None):
         thread_cache.renew()
-        assert isinstance(thread_cache.config.bypassed_ips, BlockList)
+        assert isinstance(thread_cache.config.bypassed_ips, IPList)
         assert thread_cache.get_endpoints() == []
         assert thread_cache.config.blocked_uids == set()
         assert thread_cache.reqs == 0
@@ -217,7 +217,7 @@ def test_renew_with_invalid_response(mock_get_comms, thread_cache: ThreadCache):
     }
 
     thread_cache.renew()
-    assert isinstance(thread_cache.config.bypassed_ips, BlockList)
+    assert isinstance(thread_cache.config.bypassed_ips, IPList)
     assert thread_cache.get_endpoints() == []
     assert thread_cache.config.blocked_uids == set()
     assert thread_cache.last_renewal > 0  # Should update last_renewal
