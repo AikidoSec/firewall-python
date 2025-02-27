@@ -1,4 +1,4 @@
-"""Exports request_handler function"""
+"""Exports on_post_request_handler function"""
 
 import aikido_zen.background_process as communications
 import aikido_zen.context as ctx

@@ -3,11 +3,9 @@
 import json
 from aikido_zen.context import Context
 from aikido_zen.helpers.logging import logger
-from ..functions.request_handler import request_handler
 
 
 def create_context(request):
-    """Parse request and body, run "init" stage with request_handler"""
     body = None
     try:
         body = extract_body_from_django_request(request)

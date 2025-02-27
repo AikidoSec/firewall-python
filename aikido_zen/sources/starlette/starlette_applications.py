@@ -1,4 +1,4 @@
-"""Wraps starlette.applications for initial request_handler"""
+"""Wraps starlette.applications to add the ASGI handler"""
 
 import copy
 import aikido_zen.importhook as importhook

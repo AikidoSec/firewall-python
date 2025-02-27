@@ -1,5 +1,5 @@
 """
-Wraps starlette.applications for initial request_handler
+Wraps starlette.applications to extract request data and read response status code
 Attention: We will be using rr to refer to request_response. It's used a lot and
 readability would be impaired if we did not abbreviate this
 """
@@ -9,7 +9,6 @@ import aikido_zen.importhook as importhook
 from aikido_zen.helpers.logging import logger
 from .extract_data_from_request import extract_data_from_request
 from ..functions.on_post_request_handler import on_post_request_handler
-from ..functions.request_handler import request_handler
 
 
 @importhook.on_import("starlette.routing")
@@ -63,4 +62,5 @@ def aik_route_func_wrapper(func):
         # Do route discovery, api discovery, etc.
         on_post_request_handler(status_code=res.status_code)
         return res
+
     return aikido_route_func
