@@ -2,9 +2,9 @@ import pytest
 
 from aikido_zen.background_process.service_config import ServiceConfig
 from .on_init_handler import on_init_handler
-from ...context import Context
+from ...context import Context, current_context
 from aikido_zen.helpers.add_ip_address_to_blocklist import add_ip_address_to_blocklist
-from ...thread.thread_cache import ThreadCache
+from ...thread.thread_cache import ThreadCache, threadlocal_storage
 
 
 # Helper function to set context
@@ -45,6 +45,15 @@ def create_service_config(blocked_ips=None):
     )
     ThreadCache().config = config
     return config
+
+
+@pytest.fixture(autouse=True)
+def run_around_tests():
+    yield
+    # Make sure to reset context and cache after every test so it does not
+    # interfere with other tests
+    current_context.set(None)
+    threadlocal_storage.cache = None
 
 
 def test_blocked_ip():
