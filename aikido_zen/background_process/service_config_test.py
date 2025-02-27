@@ -94,7 +94,9 @@ def test_ip_blocking():
         blocked_uids=["user1", "user2"],
         bypassed_ips=["192.168.1.1", "10.0.0.0/16", "::1/128"],
         received_any_stats=True,
-        blocked_ips=[
+    )
+    config.set_blocked_ips(
+        [
             {
                 "source": "geoip",
                 "description": "description",
@@ -106,7 +108,7 @@ def test_ip_blocking():
                     "5.6.7.8/32",
                 ],
             }
-        ],
+        ]
     )
 
     assert config.is_blocked_ip("1.2.3.4") is "description"
