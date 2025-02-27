@@ -41,8 +41,11 @@ def create_service_config(blocked_ips=None):
         blocked_uids=set(),
         bypassed_ips=[],
         received_any_stats=False,
-        blocked_ips=blocked_ips or [],
     )
+    if blocked_ips:
+        config.set_blocked_ips(blocked_ips)
+    ThreadCache().config = config
+    return config
 
 
 def test_blocked_ip():
