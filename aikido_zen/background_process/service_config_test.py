@@ -77,7 +77,6 @@ def service_config():
         blocked_uids=["user1", "user2"],
         bypassed_ips=["192.168.1.1", "10.0.0.1"],
         received_any_stats=True,
-        blocked_ips=[],
     )
 
 
