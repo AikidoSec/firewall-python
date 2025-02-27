@@ -19,7 +19,6 @@ def check_if_request_is_blocked(context: Context) -> BlockResult:
     - Checks if the IP is allowed to access the route (route-specific)
     - Checks if the IP is in a blocklist (if that exists)
     """
-    context = get_current_context()
     if context is None:
         return BlockResult(False)
     cache = get_cache()
@@ -42,3 +41,5 @@ def check_if_request_is_blocked(context: Context) -> BlockResult:
         message = "Your IP address is blocked due to " + reason
         message += " (Your IP: " + context.remote_address + ")"
         return BlockResult(True, message)
+
+    return BlockResult(False)
