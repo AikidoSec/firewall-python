@@ -32,6 +32,7 @@ class ServiceConfig:
         self.endpoints = [
             endpoint for endpoint in endpoints if not endpoint.get("graphql")
         ]
+
     def get_endpoints(self, route_metadata):
         """
         Gets the endpoint that matches the current context
@@ -44,6 +45,7 @@ class ServiceConfig:
         self.bypassed_ips = IPList()
         for ip in bypassed_ips:
             add_ip_address_to_blocklist(ip, self.bypassed_ips)
+
     def is_bypassed_ip(self, ip):
         """Checks if the IP is on the bypass list"""
         return self.bypassed_ips.matches(ip)
@@ -64,6 +66,7 @@ class ServiceConfig:
                     "blocklist": blocklist,
                 }
             )
+
     def is_blocked_ip(self, ip):
         for entry in self.blocked_ips:
             if entry["blocklist"].matches(ip):
