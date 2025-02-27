@@ -85,3 +85,14 @@ class ServiceConfig:
             if entry["blocklist"].matches(ip):
                 return entry["description"]
         return False
+
+
+def get_empty_service_config() -> ServiceConfig:
+    return ServiceConfig(
+        endpoints=[],
+        blocked_uids=set(),
+        bypassed_ips=[],
+        blocked_ips=[],
+        last_updated_at=-1,
+        received_any_stats=False,
+    )

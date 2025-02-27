@@ -9,7 +9,7 @@ from aikido_zen.ratelimiting.rate_limiter import RateLimiter
 from aikido_zen.helpers.logging import logger
 from .update_firewall_lists import update_firewall_lists
 from ..api.http_api import ReportingApiHTTP
-from ..service_config import ServiceConfig
+from ..service_config import ServiceConfig, get_empty_service_config
 from ..users import Users
 from ..hostnames import Hostnames
 from ..realtime.start_polling_for_changes import start_polling_for_changes
@@ -36,14 +36,7 @@ class CloudConnectionManager:
         self.token = token  # Should be instance of the Token class!
         self.routes = Routes(200)
         self.hostnames = Hostnames(200)
-        self.conf = ServiceConfig(
-            endpoints=[],
-            last_updated_at=-1,  # Has not been updated yet
-            blocked_uids=[],
-            bypassed_ips=[],
-            received_any_stats=True,
-            blocked_ips=[],
-        )
+        self.conf = get_empty_service_config()
         self.rate_limiter = RateLimiter(
             max_items=5000, time_to_live_in_ms=120 * 60 * 1000  # 120 minutes
         )

@@ -5,7 +5,10 @@ import aikido_zen.background_process.comms as comms
 import aikido_zen.helpers.get_current_unixtime_ms as t
 from aikido_zen.context import get_current_context
 from aikido_zen.background_process.routes import Routes
-from aikido_zen.background_process.service_config import ServiceConfig
+from aikido_zen.background_process.service_config import (
+    get_empty_service_config,
+    ServiceConfig,
+)
 from aikido_zen.helpers.logging import logger
 
 THREAD_CONFIG_TTL_MS = 60 * 1000  # Time-To-Live is 60 seconds for the thread cache
@@ -57,14 +60,7 @@ class ThreadCache:
     def reset(self):
         """Empties out all values of the cache"""
         self.routes = Routes(max_size=1000)
-        self.config = ServiceConfig(
-            endpoints=[],
-            blocked_uids=set(),
-            bypassed_ips=[],
-            blocked_ips=[],
-            last_updated_at=-1,
-            received_any_stats=False,
-        )
+        self.config = get_empty_service_config()
         self.reqs = 0
         self.last_renewal = 0
         self.middleware_installed = False
