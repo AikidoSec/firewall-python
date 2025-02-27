@@ -13,6 +13,8 @@ from .is_private_ip import is_private_ip
 from .find_hostname_in_context import find_hostname_in_context
 from .extract_ip_array_from_results import extract_ip_array_from_results
 from .is_redirect_to_private_ip import is_redirect_to_private_ip
+from ...helpers.get_ip_from_request import trust_proxy
+from ...helpers.get_port_from_url import get_port_from_url
 
 
 #  gets called when the result of the DNS resolution has come in
@@ -29,10 +31,24 @@ def inspect_getaddrinfo_result(dns_results, hostname, port):
     context = get_current_context()
     if not context:
         return  # Context should be set to check user input.
+
     if get_cache() and get_cache().is_bypassed_ip(context.remote_address):
         # We check for bypassed ip's here since it is not checked for us
         # in run_vulnerability_scan due to the exception for SSRF (see above code)
         return
+
+    # We don't want to block outgoing requests to the same host as the server
+    # (often happens that we have a match on headers like `Host`, `Origin`, `Referer`, etc.)
+    # We have to check the port as well, because the hostname can be the same but with a different port
+    # If Node.js is exposed to the internet, we can't be sure about the Host header
+    if trust_proxy() and context.get("url"):
+        base_url = try_parse_url(context.url)
+        if (
+            base_url
+            and base_url.hostname == hostname
+            and get_port_from_url(context.url) == port
+        ):
+            return
 
     # attack_findings is an object containing source, pathToPayload and payload.
     attack_findings = find_hostname_in_context(hostname, context, port)
