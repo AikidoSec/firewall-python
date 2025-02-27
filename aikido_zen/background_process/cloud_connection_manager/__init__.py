@@ -97,6 +97,6 @@ class CloudConnectionManager:
         """Update configuration based on the server's response"""
         return update_service_config(self, res)
 
-    def update_blocked_ip_addresses(self):
+    def update_firewall_lists(self):
         """Will update service config with blocklist of IP addresses"""
         return update_firewall_lists(self)
