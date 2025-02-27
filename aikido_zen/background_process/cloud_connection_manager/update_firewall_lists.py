@@ -1,7 +1,10 @@
 """
 Exports update_firewall_lists
 """
-from aikido_zen.background_process.cloud_connection_manager import CloudConnectionManager
+
+from aikido_zen.background_process.cloud_connection_manager import (
+    CloudConnectionManager,
+)
 from aikido_zen.helpers.logging import logger
 
 
