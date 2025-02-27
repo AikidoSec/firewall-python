@@ -36,8 +36,8 @@ def test_dangerous_response_with_firewall():
     
     assert len(attacks) == 1
     del attacks[0]["attack"]["stack"]
-    assert attacks[0]["user"]["id"] == "100"
-    del attacks[0]["user"]
+    assert attacks[0]["attack"]["user"]["id"] == "100"
+    del attacks[0]["attack"]["user"]
     assert attacks[0]["attack"] == {
         "blocked": True,
         "kind": "sql_injection",
