@@ -80,7 +80,6 @@ def test_renew_if_ttl_expired(
                 blocked_uids={"user123"},
                 last_updated_at=-1,
                 received_any_stats=True,
-                blocked_ips=[],
             ),
             "routes": {},
         },
@@ -101,6 +100,46 @@ def test_renew_if_ttl_expired(
     ]
     assert thread_cache.is_user_blocked("user123")
     assert thread_cache.last_renewal > 0
+
+
+@patch("aikido_zen.background_process.comms.get_comms")
+@patch("aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms")
+def test_renew_if_ttl_expired_but_context_not_set(
+    mock_get_unixtime_ms, mock_get_comms, thread_cache: ThreadCache
+):
+    """Test renewing the cache if TTL has expired."""
+    current_context.set(None)
+    mock_get_unixtime_ms.return_value = (
+        THREAD_CONFIG_TTL_MS + 1
+    )  # Simulate TTL expiration
+    mock_get_comms.return_value = MagicMock()
+    mock_get_comms.return_value.send_data_to_bg_process.return_value = {
+        "success": True,
+        "data": {
+            "config": ServiceConfig(
+                endpoints=[
+                    {
+                        "graphql": False,
+                        "method": "POST",
+                        "route": "/v2",
+                        "rate_limiting": {
+                            "enabled": False,
+                        },
+                        "force_protection_off": False,
+                    }
+                ],
+                bypassed_ips=["192.168.1.1"],
+                blocked_uids={"user123"},
+                last_updated_at=-1,
+                received_any_stats=True,
+            ),
+            "routes": {},
+        },
+    }
+
+    thread_cache.renew_if_ttl_expired()
+    # Should be bypassed but isnt due to context not set :
+    assert not thread_cache.is_bypassed_ip("192.168.1.1")
 
 
 @patch("aikido_zen.background_process.comms.get_comms")
@@ -220,7 +259,6 @@ def test_renew_if_ttl_expired_multiple_times(
                 blocked_uids={"user123"},
                 last_updated_at=-1,
                 received_any_stats=True,
-                blocked_ips=[],
             ),
             "routes": {},
         },
@@ -289,7 +327,6 @@ def test_parses_routes_correctly(
                 blocked_uids={"user123"},
                 last_updated_at=-1,
                 received_any_stats=True,
-                blocked_ips=[],
             ),
             "routes": {
                 "POST:/body": {
