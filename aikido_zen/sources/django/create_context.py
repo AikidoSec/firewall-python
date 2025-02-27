@@ -14,17 +14,8 @@ def create_context(request):
     except Exception as e:
         logger.debug("Django unable to extract body from request: %s", e)
 
-    # In a separate try-catch we set the context :
-    try:
-        context = None
-        if (
-            hasattr(request, "scope") and request.scope is not None
-        ):  # This request is an ASGI request
-            return Context(req=request.scope, body=body, source="django_async")
-        elif hasattr(request, "META") and request.META is not None:  # WSGI request
-            return Context(req=request.META, body=body, source="django")
-    except Exception as e:
-        logger.debug("Error occurred in run_init_stage function (Django): %s", e)
+    if hasattr(request, "META") and request.META is not None:  # WSGI request
+        return Context(req=request.META, body=body, source="django")
 
 
 def extract_body_from_django_request(request):
