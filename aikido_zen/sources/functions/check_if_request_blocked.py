@@ -1,6 +1,5 @@
-"""Mainly exports check_if_ip_blocked"""
+"""Mainly exports check_if_request_blocked"""
 
-from aikido_zen.helpers.logging import logger
 from aikido_zen.background_process.service_config import ServiceConfig
 from aikido_zen.helpers.match_endpoints import match_endpoints
 from aikido_zen.sources.functions.ip_allowed_to_access_route import (
@@ -8,7 +7,7 @@ from aikido_zen.sources.functions.ip_allowed_to_access_route import (
 )
 
 
-def check_if_ip_blocked(context, endpoints, config: ServiceConfig):
+def check_if_request_blocked(context, endpoints, config: ServiceConfig):
     """
     Inspects the IP address of the request:
     - Whether the IP address is blocked by an IP blocklist (e.g. Geo restrictions)

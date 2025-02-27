@@ -9,7 +9,7 @@ from aikido_zen.helpers.logging import logger
 from aikido_zen.thread.thread_cache import get_cache
 from aikido_zen.ratelimiting.get_ratelimited_endpoint import get_ratelimited_endpoint
 from aikido_zen.helpers.match_endpoints import match_endpoints
-from .check_if_ip_blocked import check_if_ip_blocked
+from .check_if_request_blocked import check_if_request_blocked
 from .ip_allowed_to_access_route import ip_allowed_to_access_route
 
 
@@ -48,7 +48,7 @@ def pre_response():
     endpoints = get_cache().get_endpoints()
 
     # IP Allowlist/Blocklist:
-    ip_check_result = check_if_ip_blocked(context, endpoints, get_cache().config)
+    ip_check_result = check_if_request_blocked(context, endpoints, get_cache().config)
     if ip_check_result:
         return ip_check_result
 
