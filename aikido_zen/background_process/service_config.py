@@ -86,6 +86,8 @@ class ServiceConfig:
         self.blocked_user_agent_regex = re.compile(blocked_user_agents, re.IGNORECASE)
 
     def is_user_agent_blocked(self, ua: str):
+        if not ua:
+            return False
         if not self.blocked_user_agent_regex:
             return False
         return self.blocked_user_agent_regex.match(ua)

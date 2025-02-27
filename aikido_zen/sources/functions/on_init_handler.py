@@ -51,7 +51,7 @@ def on_init_handler(context: Context):
         return BlockResult(True, message)
 
     # User agent blocking (e.g. blocking AI scrapers)
-    if cache.config.is_user_agent_blocked(context.headers["USER_AGENT"]):
+    if cache.config.is_user_agent_blocked(context.get_user_agent()):
         msg = "You are not allowed to access this resource because you have been identified as a bot."
         return BlockResult(True, msg)
 
