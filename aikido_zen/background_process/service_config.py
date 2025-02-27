@@ -2,6 +2,8 @@
 Exports ServiceConfig class
 """
 
+from typing import Pattern
+
 import regex as re
 from aikido_zen.helpers.add_ip_address_to_blocklist import add_ip_address_to_blocklist
 from aikido_zen.helpers.match_endpoints import match_endpoints
@@ -28,7 +30,7 @@ class ServiceConfig:
         )
         self.blocked_ips = []
         self.allowed_ips = []
-        self.blocked_user_agent_regex = None
+        self.blocked_user_agent_regex: Pattern = None
 
     def update(
         self,
@@ -97,6 +99,11 @@ class ServiceConfig:
             self.blocked_user_agent_regex = None
             return
         self.blocked_user_agent_regex = re.compile(blocked_user_agents, re.IGNORECASE)
+
+    def is_user_agent_blocked(self, ua: str):
+        if not self.blocked_user_agent_regex:
+            return False
+        return self.blocked_user_agent_regex.match(ua)
 
 
 def get_empty_service_config() -> ServiceConfig:
