@@ -39,12 +39,6 @@ def aik_route_func_wrapper(func):
             if not req:
                 return
             await extract_data_from_request(req)
-            pre_response_results = request_handler(stage="pre_response")
-            if pre_response_results:
-                response = create_starlette_response(pre_response_results)
-                if response:
-                    # Make sure to not return when an error occured or there is an invalid response
-                    return response
         except Exception as e:
             logger.debug("Exception occured in pre_response stage starlette : %s", e)
 
@@ -70,16 +64,3 @@ def aik_route_func_wrapper(func):
         return res
 
     return aikido_route_func
-
-
-def create_starlette_response(pre_response):
-    """Tries to import PlainTextResponse and generates starlette plain text response"""
-    text, status_code = pre_response
-    try:
-        from starlette.responses import PlainTextResponse
-    except ImportError:
-        logger.info(
-            "Ensure `starlette` install is valid, failed to import starlette.responses"
-        )
-        return None
-    return PlainTextResponse(text, status_code)

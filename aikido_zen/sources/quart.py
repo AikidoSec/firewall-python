@@ -7,23 +7,8 @@ import aikido_zen.importhook as importhook
 from aikido_zen.helpers.logging import logger
 from aikido_zen.context import Context, get_current_context
 from aikido_zen.background_process.packages import pkg_compat_check, ANY_VERSION
+from .asgi import asgi_decorator
 from .functions.request_handler import request_handler
-
-
-async def aikido___call___wrapper(former_call, quart_app, scope, receive, send):
-    """Aikido's __call__ wrapper"""
-    # We don't want to install werkzeug :
-    # pylint: disable=import-outside-toplevel
-    try:
-        if scope["type"] != "http":
-            return await former_call(quart_app, scope, receive, send)
-        context1 = Context(req=scope, source="quart")
-        context1.set_as_current_context()
-
-        request_handler(stage="init")
-    except Exception as e:
-        logger.debug("Exception on aikido __call__ function : %s", e)
-    return await former_call(quart_app, scope, receive, send)
 
 
 async def handle_request_wrapper(former_handle_request, quart_app, req):
@@ -63,56 +48,19 @@ async def handle_request_wrapper(former_handle_request, quart_app, req):
         raise e
 
 
-async def send_status_code_and_text(send, pre_response):
-    """Sends a status code and text"""
-    await send(
-        {
-            "type": "http.response.start",
-            "status": pre_response[1],
-            "headers": [(b"content-type", b"text/plain")],
-        }
-    )
-    await send(
-        {
-            "type": "http.response.body",
-            "body": pre_response[0].encode("utf-8"),
-            "more_body": False,
-        }
-    )
-
-
 @importhook.on_import("quart.app")
 def on_quart_import(quart):
-    """
-    Hook 'n wrap on `quart.app`
-    Our goal is to wrap the __call__, handle_request, asgi_app functios of the "Quart" class
-    """
     if not pkg_compat_check("quart", required_version=ANY_VERSION):
         return quart
     modified_quart = importhook.copy_module(quart)
 
     former_handle_request = copy.deepcopy(quart.Quart.handle_request)
-    former_asgi_app = copy.deepcopy(quart.Quart.asgi_app)
-    former_call = copy.deepcopy(quart.Quart.__call__)
-
-    async def aikido___call__(quart_app, scope, receive=None, send=None):
-        return await aikido___call___wrapper(
-            former_call, quart_app, scope, receive, send
-        )
+    call_original = copy.deepcopy(quart.Quart.__call__)
 
     async def aikido_handle_request(quart_app, request):
         return await handle_request_wrapper(former_handle_request, quart_app, request)
 
-    async def aikido_asgi_app(quart_app, scope, receive=None, send=None):
-        if scope["type"] == "http":
-            # Run pre_response code :
-            pre_response = request_handler(stage="pre_response")
-            if pre_response:
-                return await send_status_code_and_text(send, pre_response)
-        return await former_asgi_app(quart_app, scope, receive, send)
-
     # pylint:disable=no-member # Pylint has issues with the wrapping
-    setattr(modified_quart.Quart, "__call__", aikido___call__)
+    setattr(modified_quart.Quart, "__call__", asgi_decorator(call_original, "quart"))
     setattr(modified_quart.Quart, "handle_request", aikido_handle_request)
-    setattr(modified_quart.Quart, "asgi_app", aikido_asgi_app)
     return modified_quart
