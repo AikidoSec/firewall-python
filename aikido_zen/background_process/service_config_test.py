@@ -45,8 +45,7 @@ def test_service_config_initialization():
         last_updated_at,
         ["0", "0", "1", "5"],
         ["127.0.0.1", "123.1.2.0/24", "132.1.0.0/16"],
-        True,
-        [],
+        True
     )
 
     # Check that non-GraphQL endpoints are correctly filtered
