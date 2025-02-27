@@ -15,4 +15,4 @@ def update_firewall_lists(connection_manager: CloudConnectionManager):
         if res.get("success") and res.get("blockedIPAddresses"):
             connection_manager.conf.set_blocked_ips(res.get("blockedIPAddresses"))
     except Exception as e:
-        logger.debug("Exception in update_blocked_ip_addresses: %s", e)
+        logger.debug("Exception in update_firewall_lists: %s", e)
