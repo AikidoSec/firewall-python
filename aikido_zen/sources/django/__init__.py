@@ -16,15 +16,8 @@ from .create_context import create_context
 from ... import logger
 
 
-@importhook.on_import("django.core.handlers.base")
-def django_get_response_instrumentation(django):
-    if not pkg_compat_check("django", required_version=ANY_VERSION):
-        return django
-
-    modified_django = importhook.copy_module(django)
-    get_response_original = copy.deepcopy(django.BaseHandler.get_response)
-
-    def get_response_modified(self, request):
+def get_response_decorator(func):
+    def wrapper(self, request):
         try:
             # Check if the request is blocked (e.g. geo restrictions, bot blocking, ...)
             block_result = on_init_handler(create_context(request))
@@ -36,15 +29,27 @@ def django_get_response_instrumentation(django):
             )
 
         # Get response and report status code for route discovery, api specs, ...
-        res = get_response_original(self, request)
+        res = func(self, request)
         if hasattr(res, "status_code"):
             on_post_request_handler(status_code=res.status_code)
         return res
 
-    # pylint: disable=no-member
-    setattr(modified_django.BaseHandler, "get_response", get_response_modified)
-    setattr(django.BaseHandler, "get_response", get_response_modified)
+    return wrapper
 
+
+@importhook.on_import("django.core.handlers.base")
+def django_get_response_instrumentation(django):
+    if not pkg_compat_check("django", required_version=ANY_VERSION):
+        return django
+
+    modified_django = importhook.copy_module(django)
+
+    # pylint: disable=no-member
+    setattr(
+        modified_django.BaseHandler,
+        "get_response",
+        get_response_decorator(django.BaseHandler.get_response),
+    )
     return modified_django
 
 
