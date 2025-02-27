@@ -10,10 +10,7 @@ https://github.com/django/django/blob/5865ff5adcf64da03d306dc32b36e87ae6927c85/d
 import copy
 import aikido_zen.importhook as importhook
 from aikido_zen.background_process.packages import pkg_compat_check, ANY_VERSION
-from ..functions.check_if_request_is_blocked import (
-    check_if_request_is_blocked,
-    BlockResult,
-)
+from ..functions.on_init_handler import on_init_handler, BlockResult
 from ..functions.request_handler import request_handler
 from .create_context import create_context
 from ... import logger
@@ -29,13 +26,8 @@ def django_get_response_instrumentation(django):
 
     def get_response_modified(self, request):
         try:
-            # Extract context for Django :
-            context = create_context(request)
-            context.set_as_current_context()
-            request_handler(stage="init")
-
             # Check if the request is blocked (e.g. geo restrictions, bot blocking, ...)
-            block_result = check_if_request_is_blocked(context)
+            block_result = on_init_handler(create_context(request))
             if block_result.blocking:
                 return create_http_response(block_result)
         except Exception as e:

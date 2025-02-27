@@ -1,29 +1,28 @@
-"""Mainly exports check_if_ip_blocked"""
-
-from aikido_zen.context import get_current_context, Context
+from aikido_zen.context import Context
 from aikido_zen.sources.functions.ip_allowed_to_access_route import (
     ip_allowed_to_access_route,
 )
 from aikido_zen.thread.thread_cache import get_cache
 
 
-class BlockResult:
-    def __init__(self, blocking=False, message="", status_code=403):
-        self.blocking = blocking
-        self.message = message
-        self.status_code = status_code
-
-
-def check_if_request_is_blocked(context: Context) -> BlockResult:
+def on_init_handler(context: Context):
     """
-    - Checks if the IP is allowed to access the route (route-specific)
-    - Checks if the IP is in a blocklist (if that exists)
+    On-Init Handler should be called after a context has been created, the function will :
+    - Store context
+    - Renew thread cache if necessary and store the hits
+    - Check per-endpoint ip allowlist
+    - Check global ip blocklist (e.g. geofencing)
     """
     if context is None:
         return BlockResult(False)
+    context.set_as_current_context()  # Save the new context
+
+    # Checking TTL and Hit Statistics
     cache = get_cache()
     if cache is None:
         return BlockResult(False)
+    cache.renew_if_ttl_expired()  # Only check TTL at the start of a request.
+    cache.increment_stats()
 
     # Per endpoint IP Allowlist
     matched_endpoints = cache.config.get_endpoints(context.get_route_metadata())
@@ -43,3 +42,10 @@ def check_if_request_is_blocked(context: Context) -> BlockResult:
         return BlockResult(True, message)
 
     return BlockResult(False)
+
+
+class BlockResult:
+    def __init__(self, blocking=False, message="", status_code=403):
+        self.blocking = blocking
+        self.message = message
+        self.status_code = status_code
