@@ -8,6 +8,7 @@ from aikido_zen.helpers.logging import logger
 from aikido_zen.context import Context
 from aikido_zen.background_process.packages import pkg_compat_check
 from aikido_zen.context import get_current_context
+from aikido_zen.sources.functions.on_init_handler import on_init_handler
 from aikido_zen.sources.functions.on_post_request_handler import on_post_request_handler
 
 
@@ -29,15 +30,10 @@ def aik_full_dispatch_request(*args, former_full_dispatch_request=None, **kwargs
         return former_full_dispatch_request(*args, **kwargs)
 
     req = request_ctx.request
-
     extract_cookies_from_flask_request_and_save_data(req)
     extract_form_data_from_flask_request_and_save_data(req)
     extract_view_args_from_flask_request_and_save_data(req)
 
-    pre_response = funcs.request_handler(stage="pre_response")
-    if pre_response:
-        # This happens when a route is rate limited, a user blocked, etc...
-        return Response(pre_response[0], status=pre_response[1], mimetype="text/plain")
     res = former_full_dispatch_request(*args, **kwargs)
     on_post_request_handler(status_code=res.status_code)
     return res
@@ -84,9 +80,14 @@ def aikido___call__(flask_app, environ, start_response):
     # We don't want to install werkzeug :
     # pylint: disable=import-outside-toplevel
     try:
-        context1 = Context(req=environ, source="flask")
-        context1.set_as_current_context()
-        funcs.request_handler(stage="init")
+
+        block_result = on_init_handler(Context(req=environ, source="flask"))
+        if block_result.blocking:
+            # Write a response :
+            response_headers = [("Content-type", "text/plain")]
+            start_response(str(block_result.status_code), response_headers)
+            return [block_result.message.encode("utf-8")]
+
     except Exception as e:
         logger.debug("Exception on aikido __call__ function : %s", e)
     res = flask_app.wsgi_app(environ, start_response)
