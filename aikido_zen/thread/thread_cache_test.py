@@ -95,7 +95,6 @@ def test_renew_if_ttl_expired(
                 blocked_uids={"user123"},
                 last_updated_at=-1,
                 received_any_stats=True,
-                blocked_ips=[],
             ),
             "routes": {},
         },
@@ -148,7 +147,6 @@ def test_renew_if_ttl_expired_but_context_not_set(
                 blocked_uids={"user123"},
                 last_updated_at=-1,
                 received_any_stats=True,
-                blocked_ips=[],
             ),
             "routes": {},
         },
@@ -276,7 +274,6 @@ def test_renew_if_ttl_expired_multiple_times(
                 blocked_uids={"user123"},
                 last_updated_at=-1,
                 received_any_stats=True,
-                blocked_ips=[],
             ),
             "routes": {},
         },
@@ -345,7 +342,6 @@ def test_parses_routes_correctly(
                 blocked_uids={"user123"},
                 last_updated_at=-1,
                 received_any_stats=True,
-                blocked_ips=[],
             ),
             "routes": {
                 "POST:/body": {
