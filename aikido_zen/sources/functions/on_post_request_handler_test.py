@@ -1,9 +1,8 @@
-import pytest
 from unittest.mock import patch, MagicMock
-from aikido_zen.background_process import get_comms
-from aikido_zen.helpers.logging import logger
-from aikido_zen.thread.thread_cache import get_cache, ThreadCache
-from .request_handler import request_handler, post_response
+import pytest
+
+from aikido_zen.sources.functions.on_post_request_handler import on_post_request_handler
+from aikido_zen.thread.thread_cache import ThreadCache
 
 
 @pytest.fixture
@@ -29,7 +28,7 @@ def test_post_response_useful_route(mock_get_comms, mock_context):
     cache = ThreadCache()  # Creates a new cache
     assert cache.routes.routes == {}
     with patch("aikido_zen.context.get_current_context", return_value=mock_context):
-        request_handler("post_response", status_code=200)
+        on_post_request_handler(status_code=200)
 
     # Check that the route was initialized and updated
     assert cache.routes.routes == {
@@ -62,7 +61,7 @@ def test_post_response_not_useful_route(mock_get_comms, mock_context):
     assert cache.routes.routes == {}
 
     with patch("aikido_zen.context.get_current_context", return_value=mock_context):
-        request_handler("post_response", status_code=500)
+        on_post_request_handler(status_code=500)
 
     assert cache.routes.routes == {}
     comms.send_data_to_bg_process.assert_not_called()
@@ -79,7 +78,7 @@ def test_post_response_no_context(mock_get_comms):
 
     # Simulate no context
     with patch("aikido_zen.context.get_current_context", return_value=None):
-        result = request_handler("post_response", status_code=200)
+        on_post_request_handler(status_code=200)
 
     assert cache.routes.routes == {}
     comms.send_data_to_bg_process.assert_not_called()
