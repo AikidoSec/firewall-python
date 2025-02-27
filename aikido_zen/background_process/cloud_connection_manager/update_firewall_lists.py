@@ -1,11 +1,11 @@
 """
-Exports update_blocked_ip_addresses
+Exports update_firewall_lists
 """
 
 from aikido_zen.helpers.logging import logger
 
 
-def update_blocked_ip_addresses(connection_manager):
+def update_firewall_lists(connection_manager):
     """Will update service config with blocklist of IP addresses"""
     if not connection_manager.token or connection_manager.serverless:
         # Need token, and support in serverless mode is off for this feature
