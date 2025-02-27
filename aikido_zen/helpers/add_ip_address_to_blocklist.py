@@ -1,6 +1,6 @@
 """Exports add_ip_address_to_blocklist"""
 
-from aikido_zen.helpers.blocklist import get_ip_address_type
+from aikido_zen.helpers.iplist import get_ip_address_type
 
 
 def add_ip_address_to_blocklist(ip: str, blocklist) -> bool:
