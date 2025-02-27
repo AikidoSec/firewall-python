@@ -12,7 +12,16 @@ def update_firewall_lists(connection_manager):
         return
     try:
         res = connection_manager.api.fetch_firewall_lists(connection_manager.token)
-        if res.get("success") and res.get("blockedIPAddresses"):
+        if not res.get("success"):
+            return
+        if res.get("blockedIPAddresses"):
             connection_manager.conf.set_blocked_ips(res.get("blockedIPAddresses"))
+        if res.get("allowedIPAddresses"):
+            connection_manager.conf.set_allowed_ips(res.get("allowedIPAddresses"))
+        if res.get("blockedUserAgents"):
+            connection_manager.conf.set_blocked_user_agents(
+                res.get("blockedUserAgents")
+            )
+
     except Exception as e:
         logger.debug("Exception in update_firewall_lists: %s", e)
