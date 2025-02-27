@@ -6,9 +6,9 @@ import copy
 import aikido_zen.importhook as importhook
 from aikido_zen.helpers.logging import logger
 from aikido_zen.context import Context
-from aikido_zen.background_process.packages import pkg_compat_check, ANY_VERSION
+from aikido_zen.background_process.packages import pkg_compat_check
 from aikido_zen.context import get_current_context
-import aikido_zen.sources.functions.request_handler as funcs
+from aikido_zen.sources.functions.on_post_request_handler import on_post_request_handler
 
 
 def aik_full_dispatch_request(*args, former_full_dispatch_request=None, **kwargs):
@@ -39,7 +39,7 @@ def aik_full_dispatch_request(*args, former_full_dispatch_request=None, **kwargs
         # This happens when a route is rate limited, a user blocked, etc...
         return Response(pre_response[0], status=pre_response[1], mimetype="text/plain")
     res = former_full_dispatch_request(*args, **kwargs)
-    funcs.request_handler(stage="post_response", status_code=res.status_code)
+    on_post_request_handler(status_code=res.status_code)
     return res
 
 

@@ -5,26 +5,20 @@ import aikido_zen.context as ctx
 from aikido_zen.api_discovery.get_api_info import get_api_info
 from aikido_zen.api_discovery.update_route_info import update_route_info
 from aikido_zen.helpers.is_useful_route import is_useful_route
-from aikido_zen.helpers.logging import logger
 from aikido_zen.thread.thread_cache import get_cache
 
 
-def request_handler(stage, status_code=0):
-    """This will check for rate limiting, Allowed IP's, useful routes, etc."""
-    try:
-        if stage == "post_response":
-            return post_response(status_code)
-    except Exception as e:
-        logger.debug("Exception occured in request_handler : %s", e)
-    return None
-
-
-def post_response(status_code):
-    """Checks if the current route is useful"""
+def on_post_request_handler(status_code=0):
+    """
+    On-Post Request Handler is called after we know what the response will be, so when we know the status code.
+    Depending on the status code and route it will report the route and generate api specs
+    """
     context = ctx.get_current_context()
     comms = communications.get_comms()
     if not context or not comms:
         return
+    route_metadata = context.get_route_metadata()
+
     is_curr_route_useful = is_useful_route(
         status_code,
         context.route,
@@ -32,7 +26,7 @@ def post_response(status_code):
     )
     if not is_curr_route_useful:
         return
-    route_metadata = context.get_route_metadata()
+
     cache = get_cache()
     if cache:
         route = cache.routes.get(route_metadata)

@@ -11,7 +11,7 @@ import copy
 import aikido_zen.importhook as importhook
 from aikido_zen.background_process.packages import pkg_compat_check, ANY_VERSION
 from ..functions.on_init_handler import on_init_handler, BlockResult
-from ..functions.request_handler import request_handler
+from ..functions.on_post_request_handler import on_post_request_handler
 from .create_context import create_context
 from ... import logger
 
@@ -38,7 +38,7 @@ def django_get_response_instrumentation(django):
         # Get response and report status code for route discovery, api specs, ...
         res = get_response_original(self, request)
         if hasattr(res, "status_code"):
-            request_handler(stage="post_response", status_code=res.status_code)
+            on_post_request_handler(status_code=res.status_code)
         return res
 
     # pylint: disable=no-member

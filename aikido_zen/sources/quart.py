@@ -8,7 +8,7 @@ from aikido_zen.helpers.logging import logger
 from aikido_zen.context import Context, get_current_context
 from aikido_zen.background_process.packages import pkg_compat_check, ANY_VERSION
 from .asgi import asgi_decorator
-from .functions.request_handler import request_handler
+from .functions.on_post_request_handler import on_post_request_handler
 
 
 async def handle_request_wrapper(former_handle_request, quart_app, req):
@@ -34,17 +34,16 @@ async def handle_request_wrapper(former_handle_request, quart_app, req):
     except Exception as e:
         logger.debug("Exception in handle_request : %s", e)
 
-    # Fetch response and run post_response handler :
+    # Fetch response and report status code for route discovery, api specs, etc.
     # pylint:disable=import-outside-toplevel # We don't want to install this by default
     from werkzeug.exceptions import HTTPException
 
     try:
         response = await former_handle_request(quart_app, req)
-        status_code = response.status_code
-        request_handler(stage="post_response", status_code=status_code)
+        on_post_request_handler(status_code=response.status_code)
         return response
     except HTTPException as e:
-        request_handler(stage="post_response", status_code=e.code)
+        on_post_request_handler(status_code=e.code)
         raise e
 
 
