@@ -42,7 +42,6 @@ class CloudConnectionManager:
             blocked_uids=[],
             bypassed_ips=[],
             received_any_stats=True,
-            blocked_ips=[],
         )
         self.rate_limiter = RateLimiter(
             max_items=5000, time_to_live_in_ms=120 * 60 * 1000  # 120 minutes
@@ -104,6 +103,6 @@ class CloudConnectionManager:
         """Update configuration based on the server's response"""
         return update_service_config(self, res)
 
-    def update_blocked_ip_addresses(self):
+    def update_firewall_lists(self):
         """Will update service config with blocklist of IP addresses"""
         return update_firewall_lists(self)
