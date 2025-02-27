@@ -5,7 +5,6 @@ Exports ServiceConfig class
 from aikido_zen.helpers.add_ip_address_to_blocklist import add_ip_address_to_blocklist
 from aikido_zen.helpers.match_endpoints import match_endpoints
 from aikido_zen.helpers.iplist import IPList
-from aikido_zen.helpers.logging import logger
 
 
 # noinspection PyAttributeOutsideInit
