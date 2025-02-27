@@ -14,7 +14,7 @@ def get_ip_address_type(ip):
         return None
 
 
-class BlockList:
+class IPList:
     """A blocklist, where you can add subnets and addresses"""
 
     def __init__(self):
@@ -27,7 +27,7 @@ class BlockList:
     def add_subnet(self, plain_ip: str, ip_range: int, ip_type: str):
         self.blocked_subnets.append((plain_ip, ip_range, ip_type))
 
-    def is_blocked(self, ip: str) -> bool:
+    def matches(self, ip: str) -> bool:
         ip_type = get_ip_address_type(ip)
         if not ip_type:
             return False

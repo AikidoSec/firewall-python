@@ -4,7 +4,7 @@ from aikido_zen.background_process.service_config import ServiceConfig
 from .check_if_ip_blocked import check_if_ip_blocked
 from ...context import Context
 from aikido_zen.helpers.add_ip_address_to_blocklist import add_ip_address_to_blocklist
-from aikido_zen.helpers.blocklist import BlockList
+from aikido_zen.helpers.iplist import IPList
 
 
 # Helper function to set context
