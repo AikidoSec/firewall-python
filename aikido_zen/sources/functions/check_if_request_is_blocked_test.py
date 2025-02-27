@@ -1,7 +1,7 @@
 import pytest
 
 from aikido_zen.background_process.service_config import ServiceConfig
-from .check_if_ip_blocked import check_if_ip_blocked
+from .check_if_request_is_blocked import check_if_request_is_blocked
 from ...context import Context
 from aikido_zen.helpers.add_ip_address_to_blocklist import add_ip_address_to_blocklist
 from aikido_zen.helpers.blocklist import BlockList
@@ -54,7 +54,7 @@ def test_blocked_ip():
     config = create_service_config(blocked_ips)
 
     # Act
-    result = check_if_ip_blocked(context, config.endpoints, config)
+    result = check_if_request_is_blocked(context, config.endpoints, config)
 
     # Assert
     assert result == (
@@ -72,7 +72,7 @@ def test_allowed_ip():
     config = create_service_config(blocked_ips)
 
     # Act
-    result = check_if_ip_blocked(context, config.endpoints, config)
+    result = check_if_request_is_blocked(context, config.endpoints, config)
 
     # Assert
     assert result is False
@@ -84,7 +84,7 @@ def test_invalid_context():
     config = create_service_config()
 
     # Act
-    result = check_if_ip_blocked(context, config.endpoints, config)
+    result = check_if_request_is_blocked(context, config.endpoints, config)
 
     # Assert
     assert result is False
@@ -99,7 +99,7 @@ def test_not_allowed_ip():
     config = create_service_config(blocked_ips)
 
     # Act
-    result = check_if_ip_blocked(context, config.endpoints, config)
+    result = check_if_request_is_blocked(context, config.endpoints, config)
 
     # Assert
     assert result == (
@@ -118,7 +118,7 @@ def test_bypassed_ip():
     add_ip_address_to_blocklist("1.1.1.1", config.bypassed_ips)  # Adding to bypass list
 
     # Act
-    result = check_if_ip_blocked(context, config.endpoints, config)
+    result = check_if_request_is_blocked(context, config.endpoints, config)
 
     # Assert
     assert result is False  # Should be allowed since it's in the bypass list
@@ -133,7 +133,7 @@ def test_ip_allowed_by_endpoint():
     config = create_service_config(blocked_ips)
 
     # Act
-    result = check_if_ip_blocked(context, config.endpoints, config)
+    result = check_if_request_is_blocked(context, config.endpoints, config)
 
     # Assert
     assert result is False  # Should be allowed since it's in the allowed list
@@ -148,7 +148,7 @@ def test_ip_not_allowed_by_endpoint():
     config = create_service_config(blocked_ips)
 
     # Act
-    result = check_if_ip_blocked(context, config.endpoints, config)
+    result = check_if_request_is_blocked(context, config.endpoints, config)
 
     # Assert
     assert result == (
@@ -170,7 +170,7 @@ def test_multiple_blocked_ips():
     config = create_service_config(blocked_ips)
 
     # Act
-    result = check_if_ip_blocked(context, config.endpoints, config)
+    result = check_if_request_is_blocked(context, config.endpoints, config)
 
     # Assert
     assert result == (
