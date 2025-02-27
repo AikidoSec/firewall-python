@@ -61,7 +61,6 @@ class ThreadCache:
             endpoints=[],
             blocked_uids=set(),
             bypassed_ips=[],
-            blocked_ips=[],
             last_updated_at=-1,
             received_any_stats=False,
         )

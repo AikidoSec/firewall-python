@@ -2,11 +2,9 @@
 
 from aikido_zen.helpers.logging import logger
 from aikido_zen.helpers.get_current_unixtime_ms import get_unixtime_ms
-from . import CloudConnectionManager
-from ..service_config import ServiceConfig
 
 
-def update_service_config(connection_manager: CloudConnectionManager, res):
+def update_service_config(connection_manager, res):
     """
     Update configuration based on the server's response
     """
