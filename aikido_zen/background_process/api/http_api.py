@@ -29,8 +29,14 @@ class ReportingApiHTTP(ReportingApi):
             return {"success": False, "error": "unknown"}
         return self.to_api_response(res)
 
-    def fetch_blocked_ips(self, token):
-        """Fetches blocked IPs from aikido server"""
+    def fetch_firewall_lists(self, token):
+        """
+        Fetches firewall lists from aikido server
+        If successful the current API returns :
+        - `allowedIPAddresses` : An array with iplist entries which are the only ones allowed
+        - `blockedIPAddresses` : An array with iplist entries that are blocked
+        - `blockedUserAgents` : A string with a simple regex to match user agents with
+        """
         try:
             res = requests.get(
                 self.reporting_url + "api/runtime/firewall/lists",
