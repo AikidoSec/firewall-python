@@ -1,4 +1,5 @@
 from aikido_zen.context import Context
+from aikido_zen.helpers.is_ip_allowed_by_allowlist import is_ip_allowed_by_allowlist
 from aikido_zen.sources.functions.ip_allowed_to_access_route import (
     ip_allowed_to_access_route,
 )
@@ -37,7 +38,7 @@ def on_init_handler(context: Context):
         return BlockResult(True, message)
 
     # Global IP Allowlist (e.g. for geofencing)
-    if cache.config.is_allowed_ip(context.remote_address):
+    if is_ip_allowed_by_allowlist(cache.config, context.remote_address):
         message = "Your IP address is not allowed."
         message += " (Your IP: " + context.remote_address + ")"
         return BlockResult(True, message)
