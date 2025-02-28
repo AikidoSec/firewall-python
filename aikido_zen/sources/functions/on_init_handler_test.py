@@ -5,6 +5,7 @@ from .on_init_handler import on_init_handler
 from ...context import Context, current_context
 from aikido_zen.helpers.add_ip_address_to_blocklist import add_ip_address_to_blocklist
 from ...thread.thread_cache import ThreadCache, threadlocal_storage
+from aikido_zen.helpers.iplist import IPList
 
 
 # Helper function to set context
@@ -41,8 +42,9 @@ def create_service_config(blocked_ips=None):
         blocked_uids=set(),
         bypassed_ips=[],
         received_any_stats=False,
-        blocked_ips=blocked_ips or [],
     )
+    if blocked_ips:
+        config.set_blocked_ips(blocked_ips)
     ThreadCache().config = config
     return config
 

@@ -126,3 +126,8 @@ class Context:
             "route": self.route,
             "url": self.url,
         }
+
+    def get_user_agent(self):
+        if "USER_AGENT" in self.headers:
+            return self.headers["USER_AGENT"]
+        return None

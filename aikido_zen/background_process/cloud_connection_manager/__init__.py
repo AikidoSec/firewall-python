@@ -7,7 +7,7 @@ from aikido_zen.background_process.heartbeats import send_heartbeats_every_x_sec
 from aikido_zen.background_process.routes import Routes
 from aikido_zen.ratelimiting.rate_limiter import RateLimiter
 from aikido_zen.helpers.logging import logger
-from .update_blocked_ip_addresses import update_blocked_ip_addresses
+from .update_firewall_lists import update_firewall_lists
 from ..api.http_api import ReportingApiHTTP
 from ..service_config import ServiceConfig
 from ..users import Users
@@ -42,7 +42,6 @@ class CloudConnectionManager:
             blocked_uids=[],
             bypassed_ips=[],
             received_any_stats=True,
-            blocked_ips=[],
         )
         self.rate_limiter = RateLimiter(
             max_items=5000, time_to_live_in_ms=120 * 60 * 1000  # 120 minutes
@@ -104,6 +103,6 @@ class CloudConnectionManager:
         """Update configuration based on the server's response"""
         return update_service_config(self, res)
 
-    def update_blocked_ip_addresses(self):
+    def update_firewall_lists(self):
         """Will update service config with blocklist of IP addresses"""
-        return update_blocked_ip_addresses(self)
+        return update_firewall_lists(self)
