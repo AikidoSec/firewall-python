@@ -37,6 +37,42 @@ class MockApi:
         }
 
 
+class MockApiNoUA:
+    """Mock API class to simulate API responses."""
+
+    def fetch_firewall_lists(self, token):
+        return {
+            "success": True,
+            "blockedIPAddresses": [
+                {
+                    "source": "example",
+                    "description": "Example description",
+                    "ips": ["192.168.1.0/24"],
+                }
+            ],
+            "allowedIPAddresses": [],
+            "blockedUserAgents": "",
+        }
+
+
+class MockApiInvalidRegex:
+    """Mock API class to simulate API responses."""
+
+    def fetch_firewall_lists(self, token):
+        return {
+            "success": True,
+            "blockedIPAddresses": [
+                {
+                    "source": "example",
+                    "description": "Example description",
+                    "ips": ["192.168.1.0/24"],
+                }
+            ],
+            "allowedIPAddresses": [],
+            "blockedUserAgents": "[abc",
+        }
+
+
 @pytest.fixture
 def connection_manager():
     """Fixture to create a CloudConnectionManager instance with a mock API."""
@@ -52,8 +88,7 @@ def connection_manager():
     return TestCloudConnectionManager(token="valid_token", serverless=False)
 
 
-@patch("aikido_zen.helpers.logging.logger")
-def test_update_firewall_lists_success(mock_logger, connection_manager):
+def test_update_firewall_lists_success(connection_manager):
     # Call the function to test
     update_firewall_lists(connection_manager)
 
@@ -67,6 +102,38 @@ def test_update_firewall_lists_success(mock_logger, connection_manager):
 
     # Check that the blocked user agents were set correctly
     assert connection_manager.conf.is_user_agent_blocked("bAdBoT test woop wop")
+    assert not connection_manager.conf.is_user_agent_blocked("")
+    assert not connection_manager.conf.is_user_agent_blocked(None)
+
+
+def test_update_firewall_lists_no_ua(connection_manager):
+    # Call the function to test
+    connection_manager.api = MockApiNoUA()
+    update_firewall_lists(connection_manager)
+
+    # Check that the blocked IPs were set correctly
+    assert connection_manager.conf.is_blocked_ip("192.168.1.1")
+    assert connection_manager.conf.is_blocked_ip("192.168.1.2")
+
+    # Check that the blocked user agents were set correctly
+    assert not connection_manager.conf.is_user_agent_blocked("bAdBoT test woop wop")
+    assert not connection_manager.conf.is_user_agent_blocked("")
+    assert connection_manager.conf.blocked_user_agent_regex is None
+
+
+def test_update_firewall_lists_invalid_regex(connection_manager):
+    # Call the function to test
+    connection_manager.api = MockApiInvalidRegex()
+    update_firewall_lists(connection_manager)
+
+    # Check that the blocked IPs were set correctly
+    assert connection_manager.conf.is_blocked_ip("192.168.1.1")
+    assert connection_manager.conf.is_blocked_ip("192.168.1.2")
+
+    # Check that the blocked user agents were set correctly
+    assert not connection_manager.conf.is_user_agent_blocked("bAdBoT test woop wop")
+    assert not connection_manager.conf.is_user_agent_blocked("")
+    assert connection_manager.conf.blocked_user_agent_regex is None
 
 
 def test_update_firewall_lists_no_token(connection_manager):
@@ -87,8 +154,7 @@ def test_update_firewall_lists_serverless(connection_manager):
     assert len(connection_manager.conf.bypassed_ips.blocked_addresses) == 0
 
 
-@patch("aikido_zen.helpers.logging.logger")
-def test_update_firewall_lists_api_failure(mock_logger, connection_manager):
+def test_update_firewall_lists_api_failure(connection_manager):
     # Override the mock API to simulate a failure
     class FailingApi:
         def fetch_firewall_lists(self, token):
