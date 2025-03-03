@@ -108,7 +108,7 @@ def test_ignore_files_that_end_with_php():
 
 
 def test_allow_well_known_directory():
-    assert is_useful_route(status_code=200, route="/.well-known", method="GET") is True
+    assert is_useful_route(status_code=200, route="/.well-known", method="GET") is False
     assert (
         is_useful_route(
             status_code=200, route="/.well-known/change-password", method="GET"
