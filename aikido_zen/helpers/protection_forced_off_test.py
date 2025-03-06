@@ -129,6 +129,7 @@ def test_protection_forced_off_with_multiple_endpoints2():
     ]
     assert protection_forced_off(route_metadata, endpoints) is True
 
+
 def test_protection_forced_off_with_multiple_endpoints3():
     route_metadata = sample_route_metadata(
         url="http://example.com/posts/3", route="/posts/:number"
