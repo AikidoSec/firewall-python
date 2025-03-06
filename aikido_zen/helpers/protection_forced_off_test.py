@@ -85,7 +85,7 @@ def test_protection_forced_off_with_multiple_endpoints():
                 "maxRequests": 10,
                 "windowSizeInMS": 1000,
             },
-            "forceProtectionOff": True,  # This should be the one returned
+            "forceProtectionOff": True,
         },
         {
             "method": "POST",
@@ -114,7 +114,7 @@ def test_protection_forced_off_with_multiple_endpoints2():
                 "maxRequests": 10,
                 "windowSizeInMS": 1000,
             },
-            "forceProtectionOff": False,  # This should be the one returned
+            "forceProtectionOff": False,
         },
         {
             "method": "POST",
@@ -125,6 +125,34 @@ def test_protection_forced_off_with_multiple_endpoints2():
                 "windowSizeInMS": 1000,
             },
             "forceProtectionOff": True,
+        },
+    ]
+    assert protection_forced_off(route_metadata, endpoints) is True
+
+def test_protection_forced_off_with_multiple_endpoints3():
+    route_metadata = sample_route_metadata(
+        url="http://example.com/posts/3", route="/posts/:number"
+    )
+    endpoints = [
+        {
+            "method": "POST",
+            "route": "/posts/:number",
+            "rateLimiting": {
+                "enabled": True,
+                "maxRequests": 10,
+                "windowSizeInMS": 1000,
+            },
+            "forceProtectionOff": False,
+        },
+        {
+            "method": "POST",
+            "route": "/posts/:number",
+            "rateLimiting": {
+                "enabled": True,
+                "maxRequests": 10,
+                "windowSizeInMS": 1000,
+            },
+            "forceProtectionOff": False,
         },
     ]
     assert protection_forced_off(route_metadata, endpoints) is False
