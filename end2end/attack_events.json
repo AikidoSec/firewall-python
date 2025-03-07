@@ -43,5 +43,16 @@
     "payload": "\"Dangerous Bobby', TRUE); -- \"",
     "source": "body",
     "user_id": "user123"
+  },
+  "flask_xml_attack": {
+    "blocked": true,
+    "kind": "sql_injection",
+    "metadata": {
+      "sql": "INSERT INTO dogs (dog_name, isAdmin) VALUES ('Malicious dog', TRUE); -- ', FALSE)"
+    },
+    "operation": "psycopg2.Connection.Cursor.execute",
+    "pathToPayload": ".dog_name.[0]",
+    "payload": "\"Malicious dog', TRUE); -- \"",
+    "source": "xml"
   }
 }
