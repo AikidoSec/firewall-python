@@ -65,5 +65,16 @@
     "pathToPayload": ".dog_name",
     "payload": "\"Dangerous bobby\\\", 1); -- \"",
     "source": "body"
+  },
+  "flask_mongo_attack": {
+    "blocked": true,
+    "kind": "nosql_injection",
+    "metadata": {
+      "filter": "{\"dog_name\": \"bobby_tables\", \"pswd\": {\"$ne\": \"\"}}"
+    },
+    "operation": "pymongo.collection.Collection.find",
+    "pathToPayload": ".pswd",
+    "payload": "{\"$ne\": \"\"}",
+    "source": "body"
   }
 }
