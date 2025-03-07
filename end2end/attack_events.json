@@ -63,7 +63,7 @@
     },
     "operation": "pymysql.Cursor.execute",
     "pathToPayload": ".dog_name",
-    "payload": "\"Dangerous bobby\\\\\", 1); -- \"",
+    "payload": "\"Dangerous bobby\\\", 1); -- \"",
     "source": "body"
   }
 }
