@@ -31,5 +31,17 @@
     "pathToPayload": ".dog_name",
     "payload": "\"Dangerous bobby', TRUE); -- \"",
     "source": "body"
+  },
+  "quart_postgres_attack": {
+    "blocked": true,
+    "kind": "sql_injection",
+    "metadata": {
+      "sql": "INSERT INTO dogs (dog_name, isAdmin) VALUES ('Dangerous Bobby', TRUE); -- ', FALSE)"
+    },
+    "operation": "asyncpg.connection.Connection.execute",
+    "pathToPayload": ".dog_name",
+    "payload": "\"Dangerous Bobby', TRUE); -- \"",
+    "source": "body",
+    "user_id": "user123"
   }
 }
