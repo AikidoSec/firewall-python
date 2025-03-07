@@ -54,5 +54,16 @@
     "pathToPayload": ".dog_name.[0]",
     "payload": "\"Malicious dog', TRUE); -- \"",
     "source": "xml"
+  },
+  "flask_mysql_attack": {
+    "blocked": true,
+    "kind": "sql_injection",
+    "metadata": {
+      "sql": "INSERT INTO dogs (dog_name, isAdmin) VALUES (\"Dangerous bobby\", 1); -- \", 0)"
+    },
+    "operation": "pymysql.Cursor.execute",
+    "pathToPayload": ".dog_name",
+    "payload": "\"Dangerous bobby\\\\\", 1); -- \"",
+    "source": "body"
   }
 }
