@@ -76,5 +76,27 @@
     "pathToPayload": ".pswd",
     "payload": "{\"$ne\": \"\"}",
     "source": "body"
+  },
+  "flask_postgres_attack_body": {
+    "blocked": true,
+    "kind": "sql_injection",
+    "metadata": {
+      "sql": "INSERT INTO dogs (dog_name, isAdmin) VALUES ('Dangerous Bobby', TRUE); -- ', FALSE)"
+    },
+    "operation": "psycopg2.Connection.Cursor.execute",
+    "pathToPayload": ".dog_name",
+    "payload": "\"Dangerous Bobby', TRUE); -- \"",
+    "source": "body"
+  },
+    "flask_postgres_attack_cookie": {
+    "blocked": true,
+    "kind": "sql_injection",
+    "metadata": {
+      "sql": "INSERT INTO dogs (dog_name, isAdmin) VALUES ('Bobby', TRUE) --', FALSE)"
+    },
+    "operation": "psycopg2.Connection.Cursor.execute",
+    "pathToPayload": ".dog_name",
+    "payload": "\"Bobby', TRUE) --\"",
+    "source": "cookies"
   }
 }
