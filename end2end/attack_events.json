@@ -20,5 +20,16 @@
     "pathToPayload": ".[0]",
     "payload": "\"ls -la\"",
     "source": "route_params"
+  },
+  "django_postgres_attack": {
+    "blocked": true,
+    "kind": "sql_injection",
+    "metadata": {
+      "sql": "INSERT INTO sample_app_Dogs (dog_name, is_admin) VALUES ('Dangerous bobby', TRUE); -- ', FALSE)"
+    },
+    "operation": "psycopg2.Connection.Cursor.execute",
+    "pathToPayload": ".dog_name",
+    "payload": "\"Dangerous bobby', TRUE); -- \"",
+    "source": "body"
   }
 }
