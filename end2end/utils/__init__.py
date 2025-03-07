@@ -9,13 +9,14 @@ from .test_ratelimiting import test_ratelimiting, test_ratelimiting_per_user
 from .test_payloads_safe_vs_unsafe import test_payloads_safe_vs_unsafe
 
 class App:
-    def __init__(self, port):
+    def __init__(self, port, status_code_valid=200):
         self.urls = {
             "enabled": f"http://localhost:{port}",
             "disabled": f"http://localhost:{port + 1}"
         }
         self.payloads = {}
         self.event_handler = EventHandler()
+        self.status_code_valid = status_code_valid
 
     def add_payload(self,key, safe_request, unsafe_request, test_event=None):
         self.payloads[key] = {
@@ -30,7 +31,7 @@ class App:
         payload = self.payloads.get(key)
 
         self.event_handler.reset()
-        test_payloads_safe_vs_unsafe(payload, self.urls)
+        test_payloads_safe_vs_unsafe(payload, self.urls, status_code1=self.status_code_valid)
         print("✅ Tested payload: " + key)
 
         if payload["test_event"]:

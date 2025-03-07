@@ -1,7 +1,7 @@
 from __init__ import events
 from utils import App, Request
 
-starlette_postgres_app = App(8102)
+starlette_postgres_app = App(8102, status_code_valid=201)
 
 starlette_postgres_app.add_payload(
     "sql", test_event=events["quart_postgres_attack"],

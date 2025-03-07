@@ -1,7 +1,7 @@
 from __init__ import events
 from utils import App, Request
 
-quart_postgres_app = App(8096)
+quart_postgres_app = App(8096, status_code_valid=201)
 
 quart_postgres_app.add_payload(
     "sql", test_event=events["quart_postgres_attack"],
