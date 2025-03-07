@@ -82,6 +82,12 @@ def mock_set_config():
 def mock_get_events():
     return jsonify(events)
 
+@app.route('/mock/reset', methods=['GET'])
+def mock_reset():
+    global events
+    events = [] # Reset events
+    return jsonify({})
+
 
 if __name__ == '__main__':
     if len(sys.argv) < 2 or len(sys.argv) > 3:
