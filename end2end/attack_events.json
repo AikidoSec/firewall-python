@@ -1,0 +1,24 @@
+{
+  "django_mysql_attack_sql": {
+    "blocked": true,
+    "kind": "sql_injection",
+    "metadata": {
+      "sql": "INSERT INTO sample_app_dogs (dog_name, dog_boss) VALUES (\"Dangerous bobby\", 1); -- \", \"N/A\")"
+    },
+    "operation": "MySQLdb.Cursor.execute",
+    "pathToPayload": ".dog_name",
+    "payload": "\"Dangerous bobby\\\", 1); -- \"",
+    "source": "body"
+  },
+  "django_mysql_attack_shell": {
+    "blocked": true,
+    "kind": "shell_injection",
+    "metadata": {
+      "command": "ls -la"
+    },
+    "operation": "subprocess.Popen",
+    "pathToPayload": ".[0]",
+    "payload": "\"ls -la\"",
+    "source": "route_params"
+  }
+}
