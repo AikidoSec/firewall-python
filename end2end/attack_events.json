@@ -1,0 +1,102 @@
+{
+  "django_mysql_attack_sql": {
+    "blocked": true,
+    "kind": "sql_injection",
+    "metadata": {
+      "sql": "INSERT INTO sample_app_dogs (dog_name, dog_boss) VALUES (\"Dangerous bobby\", 1); -- \", \"N/A\")"
+    },
+    "operation": "MySQLdb.Cursor.execute",
+    "pathToPayload": ".dog_name",
+    "payload": "\"Dangerous bobby\\\", 1); -- \"",
+    "source": "body"
+  },
+  "django_mysql_attack_shell": {
+    "blocked": true,
+    "kind": "shell_injection",
+    "metadata": {
+      "command": "ls -la"
+    },
+    "operation": "subprocess.Popen",
+    "pathToPayload": ".[0]",
+    "payload": "\"ls -la\"",
+    "source": "route_params"
+  },
+  "django_postgres_attack": {
+    "blocked": true,
+    "kind": "sql_injection",
+    "metadata": {
+      "sql": "INSERT INTO sample_app_Dogs (dog_name, is_admin) VALUES ('Dangerous bobby', TRUE); -- ', FALSE)"
+    },
+    "operation": "psycopg2.Connection.Cursor.execute",
+    "pathToPayload": ".dog_name",
+    "payload": "\"Dangerous bobby', TRUE); -- \"",
+    "source": "body"
+  },
+  "quart_postgres_attack": {
+    "blocked": true,
+    "kind": "sql_injection",
+    "metadata": {
+      "sql": "INSERT INTO dogs (dog_name, isAdmin) VALUES ('Dangerous Bobby', TRUE); -- ', FALSE)"
+    },
+    "operation": "asyncpg.connection.Connection.execute",
+    "pathToPayload": ".dog_name",
+    "payload": "\"Dangerous Bobby', TRUE); -- \"",
+    "source": "body",
+    "user_id": "user123"
+  },
+  "flask_xml_attack": {
+    "blocked": true,
+    "kind": "sql_injection",
+    "metadata": {
+      "sql": "INSERT INTO dogs (dog_name, isAdmin) VALUES ('Malicious dog', TRUE); -- ', FALSE)"
+    },
+    "operation": "psycopg2.Connection.Cursor.execute",
+    "pathToPayload": ".dog_name.[0]",
+    "payload": "\"Malicious dog', TRUE); -- \"",
+    "source": "xml"
+  },
+  "flask_mysql_attack": {
+    "blocked": true,
+    "kind": "sql_injection",
+    "metadata": {
+      "sql": "INSERT INTO dogs (dog_name, isAdmin) VALUES (\"Dangerous bobby\", 1); -- \", 0)"
+    },
+    "operation": "pymysql.Cursor.execute",
+    "pathToPayload": ".dog_name",
+    "payload": "\"Dangerous bobby\\\", 1); -- \"",
+    "source": "body"
+  },
+  "flask_mongo_attack": {
+    "blocked": true,
+    "kind": "nosql_injection",
+    "metadata": {
+      "filter": "{\"dog_name\": \"bobby_tables\", \"pswd\": {\"$ne\": \"\"}}"
+    },
+    "operation": "pymongo.collection.Collection.find",
+    "pathToPayload": ".pswd",
+    "payload": "{\"$ne\": \"\"}",
+    "source": "body"
+  },
+  "flask_postgres_attack_body": {
+    "blocked": true,
+    "kind": "sql_injection",
+    "metadata": {
+      "sql": "INSERT INTO dogs (dog_name, isAdmin) VALUES ('Dangerous Bobby', TRUE); -- ', FALSE)"
+    },
+    "operation": "psycopg2.Connection.Cursor.execute",
+    "pathToPayload": ".dog_name",
+    "payload": "\"Dangerous Bobby', TRUE); -- \"",
+    "source": "body"
+  },
+    "flask_postgres_attack_cookie": {
+    "blocked": true,
+    "kind": "sql_injection",
+    "metadata": {
+      "sql": "INSERT INTO dogs (dog_name, isAdmin) VALUES ('Bobby', TRUE) --', FALSE)"
+    },
+    "operation": "psycopg2.Connection.Cursor.execute",
+    "pathToPayload": ".dog_name",
+    "payload": "\"Bobby', TRUE) --\"",
+    "source": "cookies"
+  }
+}
