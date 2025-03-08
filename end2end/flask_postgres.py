@@ -9,7 +9,7 @@ flask_postgres_app.add_payload(
     unsafe_request=Request("/create", body={"dog_name": "Dangerous Bobby', TRUE); -- "}, data_type="form")
 )
 flask_postgres_app.add_payload(
-    "sql_cookie", test_event=["flask_postgres_attack_cookie"],
+    "sql_cookie", test_event=events["flask_postgres_attack_cookie"],
     safe_request=Request("/create_with_cookie", method="GET", cookies={"dog_name": "Bobby Tables"}),
     unsafe_request=Request("/create_with_cookie", method="GET", cookies={"dog_name": "Bobby', TRUE) -- "})
 )
