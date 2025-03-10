@@ -108,8 +108,7 @@
     "operation": "pymysql.Cursor.execute",
     "pathToPayload": ".dog_name",
     "payload": "\"Dangerous bobby\\\", 1); -- \"",
-    "source": "body",
-    "user_id": "123"
+    "source": "body"
   },
   "flask_mysql_attack_shell": {
     "blocked": true,
