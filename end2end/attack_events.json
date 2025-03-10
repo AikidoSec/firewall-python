@@ -41,8 +41,7 @@
     "operation": "asyncpg.connection.Connection.execute",
     "pathToPayload": ".dog_name",
     "payload": "\"Dangerous Bobby', TRUE); -- \"",
-    "source": "body",
-    "user_id": "user123"
+    "source": "body"
   },
   "flask_xml_attack": {
     "blocked": true,
