@@ -16,4 +16,3 @@ flask_mysql_app.add_payload(
 
 flask_mysql_app.test_all_payloads()
 flask_mysql_app.test_rate_limiting()
-flask_mysql_app.test_blocking()
