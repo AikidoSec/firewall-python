@@ -73,7 +73,9 @@ if dont_add_middleware is None or dont_add_middleware.lower() != "1":
             self.app = app
 
         async def __call__(self, scope, receive, send):
-            aikido_zen.set_user({"id": "user123", "name": "John Doe"})
+            for header, value in scope['headers']:
+                if header == 'User':
+                    aikido_zen.set_user({"id": value, "name": "John Doe"})
             return await self.app(scope, receive, send)
     middleware.append(Middleware(SetUserMiddleware))
     middleware.append(Middleware(AikidoStarletteMiddleware))
@@ -87,6 +89,7 @@ routes = [
     Route("/create", create_dog, methods=["POST"]),
     Route("/sync_route", sync_route),
     Route("/just", just,  methods=["GET"]),
+    Route("/test_ratelimiting_1", just,  methods=["GET"]),
     Route("/delayed_route", delayed_route, methods=["GET"])
 ]
 if len(middleware) != 0:

@@ -10,3 +10,5 @@ starlette_postgres_app.add_payload(
 )
 
 starlette_postgres_app.test_all_payloads()
+starlette_postgres_app.test_rate_limiting()
+starlette_postgres_app.test_blocking()
