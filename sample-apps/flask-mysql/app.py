@@ -13,6 +13,7 @@ sentry_sdk.init(
 import subprocess
 from flask import Flask, render_template, request
 from flaskext.mysql import MySQL
+from werkzeug.wrappers import Request
 import requests
 import subprocess
 
@@ -25,7 +26,11 @@ if dont_add_middleware is None or dont_add_middleware.lower() != "1":
         def __init__(self, app):
             self.app = app
         def __call__(self, environ, start_response):
-            aikido_zen.set_user({"id": "123", "name": "John Doe"})
+            req = Request(environ, shallow=True)
+            if req.headers.get("USER"):
+                aikido_zen.set_user({"id": req.headers.get("USER"), "name": "John Doe"})
+            else:
+                aikido_zen.set_user({"id": "123", "name": "John Doe"})
             return self.app(environ, start_response)
     app.wsgi_app = AikidoFlaskMiddleware(app.wsgi_app)
     app.wsgi_app = SetUserMiddleware(app.wsgi_app)

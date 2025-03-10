@@ -11,7 +11,7 @@ flask_mysql_app.add_payload(
 flask_mysql_app.add_payload(
     "shell", test_event=events["flask_mysql_attack_shell"],
     safe_request=Request(route="/shell/bobby", method="GET"),
-    unsafe_request=Request(route="/shell/ls -la", method="GET")
+    unsafe_request=Request(route="/shell/ls -la", method="GET", headers={"user": "456"})
 )
 
 flask_mysql_app.test_all_payloads()
