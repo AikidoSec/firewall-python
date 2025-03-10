@@ -11,7 +11,9 @@ class SetUserMiddleware:
         self.app = app
 
     async def __call__(self, scope, receive, send):
-        aikido_zen.set_user({"id": "user123", "name": "John Doe"})
+        for header, value in scope['headers']:
+            if header == 'User':
+                aikido_zen.set_user({"id": value, "name": "John Doe"})
         return await self.app(scope, receive, send)
 
 app.asgi_app = AikidoQuartMiddleware(app.asgi_app)
@@ -63,6 +65,10 @@ async def create_dog():
         await conn.close()
 
     return jsonify({"message": f'Dog {dog_name} created successfully'}), 201
+
+@app.route("/test_ratelimiting_1", methods=['GET'])
+async def test_ratelimiting_1():
+    return jsonify({"message": "OK"})
 
 @app.route("/create_many", methods=['POST'])
 async def create_dog_many():
