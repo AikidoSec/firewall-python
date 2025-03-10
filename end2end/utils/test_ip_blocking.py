@@ -13,14 +13,14 @@ def test_ip_blocking(url):
         'X-Forwarded-For': "1.2.3.4"
     })
     assert_eq(res.status_code, equals=403)
-    assert_eq(res.text, equals="Your IP address is not allowed to access this resource. (Your IP: 1.2.3.4)")
+    assert_eq(res.text, equals="Your IP address is blocked due to geo restrictions (Your IP: 1.2.3.4)")
 
     # More complex X-Forwarded-For :
     res = requests.get(url, headers={
         'X-Forwarded-For': "invalid.ip.here.now, 1.2.3.4 "
     })
     assert_eq(res.status_code, equals=403)
-    assert_eq(res.text, equals="Your IP address is not allowed to access this resource. (Your IP: 1.2.3.4)")
+    assert_eq(res.text, equals="Your IP address is blocked due to geo restrictions (Your IP: 1.2.3.4)")
 
     # More complex but safe X-Forwarded-For :
     res = requests.get(url, headers={
