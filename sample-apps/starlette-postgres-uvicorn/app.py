@@ -74,8 +74,8 @@ if dont_add_middleware is None or dont_add_middleware.lower() != "1":
 
         async def __call__(self, scope, receive, send):
             for header, value in scope['headers']:
-                if header == 'User':
-                    aikido_zen.set_user({"id": value, "name": "John Doe"})
+                if header.decode("utf-8").upper() == 'USER':
+                    aikido_zen.set_user({"id": value.decode("utf-8"), "name": "John Doe"})
             return await self.app(scope, receive, send)
     middleware.append(Middleware(SetUserMiddleware))
     middleware.append(Middleware(AikidoStarletteMiddleware))

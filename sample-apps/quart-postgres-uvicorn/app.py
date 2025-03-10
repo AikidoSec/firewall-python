@@ -11,10 +11,9 @@ class SetUserMiddleware:
         self.app = app
 
     async def __call__(self, scope, receive, send):
-        print(scope['headers'])
         for header, value in scope['headers']:
-            if header == b'USER':
-                aikido_zen.set_user({"id": str(value), "name": "John Doe"})
+            if header.decode("utf-8").upper() == 'USER':
+                aikido_zen.set_user({"id": value.decode("utf-8"), "name": "John Doe"})
         return await self.app(scope, receive, send)
 
 app.asgi_app = AikidoQuartMiddleware(app.asgi_app)
