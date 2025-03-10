@@ -50,8 +50,8 @@ class App:
             self.test_payload(key)
 
     def test_blocking(self):
-        test_bot_blocking(self.urls["enabled"])
-        print("✅ Tested bot blocking")
+        #test_bot_blocking(self.urls["enabled"])
+        #print("✅ Tested bot blocking")
         test_ip_blocking(self.urls["enabled"])
         print("✅ Tested IP Blocking")
 

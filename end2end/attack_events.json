@@ -98,5 +98,29 @@
     "pathToPayload": ".dog_name",
     "payload": "\"Bobby', TRUE) --\"",
     "source": "cookies"
+  },
+  "flask_mysql_attack_sql": {
+    "blocked": true,
+    "kind": "sql_injection",
+    "metadata": {
+      "sql": "INSERT INTO dogs (dog_name, isAdmin) VALUES (\"Dangerous bobby\", 1); -- \", 0)"
+    },
+    "operation": "pymysql.Cursor.execute",
+    "pathToPayload": ".dog_name",
+    "payload": "\"Dangerous bobby\\\", 1); -- \"",
+    "source": "body",
+    "user_id": "123"
+  },
+  "flask_mysql_attack_shell": {
+    "blocked": true,
+    "kind": "shell_injection",
+    "metadata": {
+      "command": "ls -la"
+    },
+    "operation": "subprocess.Popen",
+    "pathToPayload": ".command",
+    "payload": "\"ls -la\"",
+    "source": "route_params",
+    "user_id": "123"
   }
 }
