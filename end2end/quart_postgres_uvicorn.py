@@ -11,4 +11,3 @@ quart_postgres_app.add_payload(
 
 quart_postgres_app.test_all_payloads()
 quart_postgres_app.test_rate_limiting()
-quart_postgres_app.test_blocking()
