@@ -11,8 +11,9 @@ class SetUserMiddleware:
         self.app = app
 
     async def __call__(self, scope, receive, send):
+        print(scope['headers'])
         for header, value in scope['headers']:
-            if header == b'user':
+            if header == b'USER':
                 aikido_zen.set_user({"id": str(value), "name": "John Doe"})
         return await self.app(scope, receive, send)
 
