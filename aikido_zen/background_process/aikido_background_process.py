@@ -36,9 +36,7 @@ class AikidoBackgroundProcess:
         try:
             listener = con.Listener(address, authkey=None)
         except OSError:
-            logger.warning(
-                "Aikido listener may already be running on port %s, exiting", address[1]
-            )
+            logger.warning("Failed to start, another agent may already be running.")
             sys.exit(0)
         self.queue = Queue()
         self.connection_manager = None
