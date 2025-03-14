@@ -21,24 +21,23 @@ class RateLimiter:
         Checks if the request is allowed given the history
         """
         current_time = get_unixtime_ms()
-        request_info = self.rate_limited_items.get(key)
+        request_timestamps = self.rate_limited_items.get(key) or list()
 
-        if request_info is None:
-            self.rate_limited_items.set(key, {"count": 1, "startTime": current_time})
-            return True
+        # clear entries that are not in the rate-limiting window anymore
+        request_timestamps = [
+            timestamp
+            for timestamp in request_timestamps
+            if timestamp >= current_time - window_size_in_ms
+        ]
 
-        elapsed_time = current_time - request_info["startTime"]
+        # ensure the number of entries exceeds max_requests by only 1
+        while len(request_timestamps) > (max_requests + 1):
+            # We remove the oldest entry, since this one has become useless if the limit is already exceeded
+            request_timestamps.pop(0)  # Remove the first element
 
-        if elapsed_time > window_size_in_ms:
-            # Reset the counter and timestamp if windowSizeInMS has expired
-            self.rate_limited_items.set(key, {"count": 1, "startTime": current_time})
-            return True
+        # update entries by adding the new timestamp and storing it in the LRU Cache
+        request_timestamps.append(current_time)
+        self.rate_limited_items.set(key, request_timestamps)
 
-        if request_info["count"] < max_requests:
-            # Increment the counter if it is within the windowSizeInMS and maxRequests
-            request_info["count"] += 1
-            self.rate_limited_items.set(key, request_info)  # Update the cache
-            return True
-
-        # Deny the request if the maxRequests is reached within windowSizeInMS
-        return False
+        # if the total amount of requests in the current window exceeds max requests, we rate-limit
+        return len(request_timestamps) <= max_requests
