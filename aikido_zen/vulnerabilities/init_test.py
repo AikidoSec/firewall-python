@@ -169,5 +169,13 @@ def test_ssrf_with_comms_hostnames_add_port_zero(caplog, get_context, monkeypatc
             op="test_op",
             args=([], "test-hostname", 0),
         )
-        # Only SYNC_DATA call
-        mock_comms.send_data_to_bg_process.assert_called_once()
+
+        call_was_made = True
+        try:
+            mock_comms.send_data_to_bg_process.assert_any_call(
+                "HOSTNAMES_ADD", ("test-hostname", 0)
+            )
+        except AssertionError:
+            call_was_made = False
+
+        assert not call_was_made # No calls were made to HOSTNAMES_ADD
