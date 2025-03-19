@@ -1,5 +1,10 @@
 # Flask
 
+> [!WARNING]
+> Use Gunicorn in production environments. While Flask works for testing, it may report incomplete data and is not recommended for production use.
+
+## Installation
+
 1. Install `aikido_zen` package with pip :
 ```sh
 pip install aikido_zen
