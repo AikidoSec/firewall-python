@@ -1,7 +1,7 @@
 # Flask
 
 > [!WARNING]
-> The Flask development server is not fully supported, we recommend using a web server like [gUnicorn](./gunicorn.md) to do more in-depth testing (like stats reporting)
+> The Flask development server is not fully supported, we recommend using a web server like [gUnicorn](./gunicorn.md) to use all features Zen has to offer.
 
 ## Installation
 
