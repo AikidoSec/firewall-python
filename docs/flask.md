@@ -1,7 +1,7 @@
 # Flask
 
 > [!WARNING]
-> Use Gunicorn in production environments. While Flask works for testing, it may report incomplete data and is not recommended for production use.
+> The Flask development server is not fully supported, we recommend using a web server like [gUnicorn](./gunicorn.md)
 
 ## Installation
 
