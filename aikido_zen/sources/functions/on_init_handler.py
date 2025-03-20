@@ -1,4 +1,5 @@
 from aikido_zen.context import Context
+from aikido_zen.helpers.is_ip_allowed_by_allowlist import is_ip_allowed_by_allowlist
 from aikido_zen.sources.functions.ip_allowed_to_access_route import (
     ip_allowed_to_access_route,
 )
@@ -10,8 +11,10 @@ def on_init_handler(context: Context):
     On-Init Handler should be called after a context has been created, the function will :
     - Store context
     - Renew thread cache if necessary and store the hits
-    - Check per-endpoint ip allowlist
-    - Check global ip blocklist (e.g. geofencing)
+    - Checks if the IP is allowed to access the route (route-specific)
+    - Checks if the IP is in an allowlist (if that exists)
+    - Checks if the IP is in a blocklist (if that exists)
+    - Checks if the user agent is blocked (if the regex exists)
     """
     if context is None:
         return BlockResult(False)
@@ -34,12 +37,23 @@ def on_init_handler(context: Context):
             message += f" (Your IP: {context.remote_address})"
         return BlockResult(True, message)
 
+    # Global IP Allowlist (e.g. for geofencing)
+    if not is_ip_allowed_by_allowlist(cache.config, context.remote_address):
+        message = "Your IP address is not allowed."
+        message += " (Your IP: " + context.remote_address + ")"
+        return BlockResult(True, message)
+
     # Global IP Blocklist (e.g. blocking known threat actors)
     reason = cache.config.is_blocked_ip(context.remote_address)
     if reason:
         message = "Your IP address is blocked due to " + reason
         message += " (Your IP: " + context.remote_address + ")"
         return BlockResult(True, message)
+
+    # User agent blocking (e.g. blocking AI scrapers)
+    if cache.config.is_user_agent_blocked(context.get_user_agent()):
+        msg = "You are not allowed to access this resource because you have been identified as a bot."
+        return BlockResult(True, msg)
 
     return BlockResult(False)
 

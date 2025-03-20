@@ -55,7 +55,7 @@ def poll_for_changes(
             logger.debug("According to realtime: Config changed")
             config = realtime.get_config(token)
             connection_manager.update_service_config({**config, "success": True})
-            connection_manager.update_blocked_ip_addresses()
+            connection_manager.update_firewall_lists()
     except Exception as e:
         logger.error("Failed to check for config updates due to error : %s", e)
 

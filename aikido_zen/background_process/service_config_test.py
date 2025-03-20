@@ -1,6 +1,6 @@
 import pytest
 from .service_config import ServiceConfig
-from aikido_zen.helpers.blocklist import BlockList
+from aikido_zen.helpers.iplist import IPList
 
 
 def test_service_config_initialization():
@@ -46,7 +46,6 @@ def test_service_config_initialization():
         ["0", "0", "1", "5"],
         ["127.0.0.1", "123.1.2.0/24", "132.1.0.0/16"],
         True,
-        [],
     )
 
     # Check that non-GraphQL endpoints are correctly filtered
@@ -54,10 +53,10 @@ def test_service_config_initialization():
     assert service_config.endpoints[0]["route"] == "/v1"
     assert service_config.endpoints[1]["route"] == "/v3"
     assert service_config.last_updated_at == last_updated_at
-    assert isinstance(service_config.bypassed_ips, BlockList)
-    assert service_config.bypassed_ips.is_blocked("127.0.0.1")
-    assert service_config.bypassed_ips.is_blocked("123.1.2.2")
-    assert not service_config.bypassed_ips.is_blocked("1.1.1.1")
+    assert isinstance(service_config.bypassed_ips, IPList)
+    assert service_config.bypassed_ips.matches("127.0.0.1")
+    assert service_config.bypassed_ips.matches("123.1.2.2")
+    assert not service_config.bypassed_ips.matches("1.1.1.1")
     assert service_config.blocked_uids == set(["1", "0", "5"])
 
 
@@ -77,14 +76,13 @@ def service_config():
         blocked_uids=["user1", "user2"],
         bypassed_ips=["192.168.1.1", "10.0.0.1"],
         received_any_stats=True,
-        blocked_ips=[],
     )
 
 
 def test_initialization(service_config):
     assert len(service_config.endpoints) == 2  # Only non-graphql endpoints
     assert service_config.last_updated_at == "2023-10-01T00:00:00Z"
-    assert isinstance(service_config.bypassed_ips, BlockList)
+    assert isinstance(service_config.bypassed_ips, IPList)
     assert service_config.blocked_uids == {"user1", "user2"}
 
 
@@ -95,7 +93,9 @@ def test_ip_blocking():
         blocked_uids=["user1", "user2"],
         bypassed_ips=["192.168.1.1", "10.0.0.0/16", "::1/128"],
         received_any_stats=True,
-        blocked_ips=[
+    )
+    config.set_blocked_ips(
+        [
             {
                 "source": "geoip",
                 "description": "description",
@@ -107,7 +107,7 @@ def test_ip_blocking():
                     "5.6.7.8/32",
                 ],
             }
-        ],
+        ]
     )
 
     assert config.is_blocked_ip("1.2.3.4") is "description"
