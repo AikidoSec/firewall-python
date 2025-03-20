@@ -1,10 +1,10 @@
 import pytest
 
 from aikido_zen.background_process.service_config import ServiceConfig
-from .check_if_ip_blocked import check_if_ip_blocked
-from ...context import Context
+from .on_init_handler import on_init_handler
+from ...context import Context, current_context
 from aikido_zen.helpers.add_ip_address_to_blocklist import add_ip_address_to_blocklist
-from aikido_zen.helpers.blocklist import BlockList
+from ...thread.thread_cache import ThreadCache, threadlocal_storage
 
 
 # Helper function to set context
@@ -28,7 +28,7 @@ def set_context(remote_address):
 
 # Helper function to create ServiceConfig
 def create_service_config(blocked_ips=None):
-    return ServiceConfig(
+    config = ServiceConfig(
         endpoints=[
             {
                 "method": "POST",
@@ -43,24 +43,37 @@ def create_service_config(blocked_ips=None):
         received_any_stats=False,
         blocked_ips=blocked_ips or [],
     )
+    ThreadCache().config = config
+    return config
+
+
+@pytest.fixture(autouse=True)
+def run_around_tests():
+    yield
+    # Make sure to reset context and cache after every test so it does not
+    # interfere with other tests
+    current_context.set(None)
+    threadlocal_storage.cache = None
 
 
 def test_blocked_ip():
     # Arrange
-    context = set_context("192.168.1.1")
+    context = set_context("1.1.1.1")
     blocked_ips = [
-        {"source": "test", "description": "Blocked for testing", "ips": ["192.168.1.1"]}
+        {"source": "test", "description": "Blocked for testing", "ips": ["1.1.1.1"]}
     ]
     config = create_service_config(blocked_ips)
 
     # Act
-    result = check_if_ip_blocked(context, config.endpoints, config)
+    result = on_init_handler(context)
 
     # Assert
-    assert result == (
-        "Your IP address is blocked due to Blocked for testing (Your IP: 192.168.1.1)",
-        403,
+    assert result.blocking
+    assert (
+        result.message
+        == "Your IP address is blocked due to Blocked for testing (Your IP: 1.1.1.1)"
     )
+    assert result.status_code == 403
 
 
 def test_allowed_ip():
@@ -72,10 +85,10 @@ def test_allowed_ip():
     config = create_service_config(blocked_ips)
 
     # Act
-    result = check_if_ip_blocked(context, config.endpoints, config)
+    result = on_init_handler(context)
 
     # Assert
-    assert result is False
+    assert not result.blocking
 
 
 def test_invalid_context():
@@ -84,10 +97,10 @@ def test_invalid_context():
     config = create_service_config()
 
     # Act
-    result = check_if_ip_blocked(context, config.endpoints, config)
+    result = on_init_handler(context)
 
     # Assert
-    assert result is False
+    assert not result.blocking
 
 
 def test_not_allowed_ip():
@@ -99,13 +112,15 @@ def test_not_allowed_ip():
     config = create_service_config(blocked_ips)
 
     # Act
-    result = check_if_ip_blocked(context, config.endpoints, config)
+    result = on_init_handler(context)
 
     # Assert
-    assert result == (
-        "Your IP address is not allowed to access this resource. (Your IP: 192.168.1.3)",
-        403,
+    assert result.blocking
+    assert (
+        result.message
+        == "Your IP address is not allowed to access this resource. (Your IP: 192.168.1.3)"
     )
+    assert result.status_code == 403
 
 
 def test_bypassed_ip():
@@ -118,10 +133,10 @@ def test_bypassed_ip():
     add_ip_address_to_blocklist("1.1.1.1", config.bypassed_ips)  # Adding to bypass list
 
     # Act
-    result = check_if_ip_blocked(context, config.endpoints, config)
+    result = on_init_handler(context)
 
     # Assert
-    assert result is False  # Should be allowed since it's in the bypass list
+    assert not result.blocking  # Should be allowed since it's in the bypass list
 
 
 def test_ip_allowed_by_endpoint():
@@ -133,10 +148,10 @@ def test_ip_allowed_by_endpoint():
     config = create_service_config(blocked_ips)
 
     # Act
-    result = check_if_ip_blocked(context, config.endpoints, config)
+    result = on_init_handler(context)
 
     # Assert
-    assert result is False  # Should be allowed since it's in the allowed list
+    assert not result.blocking
 
 
 def test_ip_not_allowed_by_endpoint():
@@ -148,13 +163,15 @@ def test_ip_not_allowed_by_endpoint():
     config = create_service_config(blocked_ips)
 
     # Act
-    result = check_if_ip_blocked(context, config.endpoints, config)
+    result = on_init_handler(context)
 
     # Assert
-    assert result == (
-        "Your IP address is not allowed to access this resource. (Your IP: 4.4.4.4)",
-        403,
+    assert result.blocking
+    assert (
+        result.message
+        == "Your IP address is not allowed to access this resource. (Your IP: 4.4.4.4)"
     )
+    assert result.status_code == 403
 
 
 def test_multiple_blocked_ips():
@@ -170,10 +187,12 @@ def test_multiple_blocked_ips():
     config = create_service_config(blocked_ips)
 
     # Act
-    result = check_if_ip_blocked(context, config.endpoints, config)
+    result = on_init_handler(context)
 
     # Assert
-    assert result == (
-        "Your IP address is blocked due to Blocked for testing (Your IP: 192.168.1.1)",
-        403,
+    assert result.blocking
+    assert (
+        result.message
+        == "Your IP address is not allowed to access this resource. (Your IP: 192.168.1.1)"
     )
+    assert result.status_code == 403

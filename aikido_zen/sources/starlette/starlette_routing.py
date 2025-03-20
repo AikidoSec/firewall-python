@@ -1,5 +1,5 @@
 """
-Wraps starlette.applications for initial request_handler
+Wraps starlette.applications to extract request data and read response status code
 Attention: We will be using rr to refer to request_response. It's used a lot and
 readability would be impaired if we did not abbreviate this
 """
@@ -8,7 +8,7 @@ import copy
 import aikido_zen.importhook as importhook
 from aikido_zen.helpers.logging import logger
 from .extract_data_from_request import extract_data_from_request
-from ..functions.request_handler import request_handler
+from ..functions.on_post_request_handler import on_post_request_handler
 
 
 @importhook.on_import("starlette.routing")
@@ -39,12 +39,6 @@ def aik_route_func_wrapper(func):
             if not req:
                 return
             await extract_data_from_request(req)
-            pre_response_results = request_handler(stage="pre_response")
-            if pre_response_results:
-                response = create_starlette_response(pre_response_results)
-                if response:
-                    # Make sure to not return when an error occured or there is an invalid response
-                    return response
         except Exception as e:
             logger.debug("Exception occured in pre_response stage starlette : %s", e)
 
@@ -65,21 +59,8 @@ def aik_route_func_wrapper(func):
             # there are no compatibility issues and the behaviour remains unchanged.
             res = await functools.partial(run_in_threadpool, func)(*args, **kwargs)
 
-        # Code after response (post_response stage)
-        request_handler(stage="post_response", status_code=res.status_code)
+        # Do route discovery, api discovery, etc.
+        on_post_request_handler(status_code=res.status_code)
         return res
 
     return aikido_route_func
-
-
-def create_starlette_response(pre_response):
-    """Tries to import PlainTextResponse and generates starlette plain text response"""
-    text, status_code = pre_response
-    try:
-        from starlette.responses import PlainTextResponse
-    except ImportError:
-        logger.info(
-            "Ensure `starlette` install is valid, failed to import starlette.responses"
-        )
-        return None
-    return PlainTextResponse(text, status_code)
