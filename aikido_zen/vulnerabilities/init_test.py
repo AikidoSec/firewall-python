@@ -178,4 +178,4 @@ def test_ssrf_with_comms_hostnames_add_port_zero(caplog, get_context, monkeypatc
         except AssertionError:
             call_was_made = False
 
-        assert not call_was_made # No calls were made to HOSTNAMES_ADD
+        assert not call_was_made  # No calls were made to HOSTNAMES_ADD
