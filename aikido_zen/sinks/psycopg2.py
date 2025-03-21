@@ -49,7 +49,10 @@ def on_psycopg2_import(psycopg2):
     """
     # Users can install either psycopg2 or psycopg2-binary, we need to check if at least
     # one is installed and if they meet version requirements :
-    if not is_package_compatible(required_version=PSYCOPG2_REQUIRED_VERSION, packages=["psycopg2", "psycopg2-binary"]):
+    if not is_package_compatible(
+        required_version=PSYCOPG2_REQUIRED_VERSION,
+        packages=["psycopg2", "psycopg2-binary"],
+    ):
         # Both psycopg2 and psycopg2-binary are not supported, don't wrapping
         return psycopg2
     modified_psycopg2 = importhook.copy_module(psycopg2)
