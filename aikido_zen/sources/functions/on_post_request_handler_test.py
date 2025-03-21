@@ -18,11 +18,13 @@ def mock_context():
     }
     return context
 
+
 @pytest.fixture(autouse=True)
 def run_around_tests():
     get_cache().reset()
     yield
     get_cache().reset()
+
 
 @patch("aikido_zen.background_process.get_comms")
 def test_post_response_useful_route(mock_get_comms, mock_context):
@@ -44,7 +46,6 @@ def test_post_response_useful_route(mock_get_comms, mock_context):
             "hits_delta_since_sync": 1,
         }
     }
-
 
 
 @patch("aikido_zen.background_process.get_comms")

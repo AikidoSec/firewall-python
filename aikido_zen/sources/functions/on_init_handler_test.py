@@ -4,7 +4,7 @@ from aikido_zen.background_process.service_config import ServiceConfig
 from .on_init_handler import on_init_handler
 from ...context import Context, current_context
 from aikido_zen.helpers.add_ip_address_to_blocklist import add_ip_address_to_blocklist
-from ...thread.thread_cache import ThreadCache, threadlocal_storage
+from ...thread.thread_cache import ThreadCache, get_cache
 from aikido_zen.helpers.iplist import IPList
 
 
@@ -45,17 +45,18 @@ def create_service_config(blocked_ips=None):
     )
     if blocked_ips:
         config.set_blocked_ips(blocked_ips)
-    ThreadCache().config = config
+    get_cache().config = config
     return config
 
 
 @pytest.fixture(autouse=True)
 def run_around_tests():
+    get_cache().reset()
     yield
     # Make sure to reset context and cache after every test so it does not
     # interfere with other tests
     current_context.set(None)
-    threadlocal_storage.cache = None
+    get_cache().reset()
 
 
 def test_blocked_ip():
