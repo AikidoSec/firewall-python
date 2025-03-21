@@ -2,16 +2,18 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 from aikido_zen.context import current_context, Context, get_current_context
-from aikido_zen.thread.thread_cache import ThreadCache, threadlocal_storage
+from aikido_zen.thread.thread_cache import ThreadCache, get_cache
 from . import should_block_request
 
 
 @pytest.fixture(autouse=True)
 def run_around_tests():
+    get_cache().reset()
     yield
     # Make sure to reset context and cache after every test so it does not
     # interfere with other tests
     current_context.set(None)
+    get_cache().reset()
 
 
 def test_without_context():
@@ -39,20 +41,15 @@ def set_context(user=None, executed_middleware=False):
     ).set_as_current_context()
 
 
-class MyThreadCache(ThreadCache):
-    def renew_if_ttl_expired(self):
-        return
-
-
 def test_with_context_without_cache():
     set_context()
-    threadlocal_storage.cache = None
+    get_cache().cache = None
     assert should_block_request() == {"block": False}
 
 
 def test_with_context_with_cache():
     set_context(user={"id": "123"})
-    thread_cache = MyThreadCache()
+    thread_cache = get_cache()
 
     thread_cache.config.blocked_uids = ["123"]
     assert get_current_context().executed_middleware == False
@@ -76,7 +73,7 @@ def test_with_context_with_cache():
 
 def test_cache_comms_with_endpoints():
     set_context(user={"id": "456"})
-    thread_cache = MyThreadCache()
+    thread_cache = get_cache()
     thread_cache.config.blocked_uids = ["123"]
     thread_cache.config.endpoints = [
         {
