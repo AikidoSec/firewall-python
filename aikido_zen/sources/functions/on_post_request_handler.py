@@ -29,14 +29,9 @@ def on_post_request_handler(status_code=0):
 
     cache = get_cache()
     if cache:
-        route = cache.routes.get(route_metadata)
-        if not route:
-            # This route does not exist yet, initialize it:
-            cache.routes.initialize_route(route_metadata)
-            comms.send_data_to_bg_process("INITIALIZE_ROUTE", route_metadata)
+        cache.routes.increment_route(route_metadata)
+
         # Run API Discovery :
         update_route_info(
             new_apispec=get_api_info(context), route=cache.routes.get(route_metadata)
         )
-        # Add hit :
-        cache.routes.increment_route(route_metadata)
