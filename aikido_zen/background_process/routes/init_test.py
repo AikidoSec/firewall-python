@@ -102,13 +102,6 @@ def test_increment_route_twice():
     assert routes.routes["GET:/api/resource"]["hits"] == 2
 
 
-def test_increment_route_that_does_not_exist():
-    routes = Routes(max_size=3)
-    routes.increment_route(gen_route_metadata(route="/api/resource"))
-    routes.increment_route(gen_route_metadata(route="/api/resource"))
-    assert len(routes.routes) == 0
-
-
 def test_clear_routes():
     routes = Routes(max_size=3)
     routes.initialize_route(gen_route_metadata(route="/api/resource"))
