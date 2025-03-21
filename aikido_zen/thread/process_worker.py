@@ -20,7 +20,7 @@ def aikido_process_worker_thread():
     while True:
         # Print information about the process
         logger.debug(
-            f"Process ID: {current_process.pid}, Name: {current_process.name} - process_worker running."
+            f"Process ID: {current_process.pid}, Name: {current_process.name} - process_worker renewing thread cache."
         )
 
         # Renew the cache every 5 seconds
