@@ -3,6 +3,7 @@
 import aikido_zen.background_process.comms as comms
 from aikido_zen.background_process.routes import Routes
 from aikido_zen.background_process.service_config import ServiceConfig
+from aikido_zen.context import get_current_context
 from aikido_zen.helpers.logging import logger
 from aikido_zen.thread import process_worker_loader
 
@@ -53,7 +54,7 @@ class ThreadCache:
             },
             receive=True,
         )
-        if not res["success"] and res["data"]:
+        if not res["success"] or not res["data"]:
             return
 
         self.reset()
