@@ -76,4 +76,4 @@ jobs:
         with:
           python-version: 3.9
       - name: Run benchmark
-        run: cat out1.log && tail -f out1.log & python ./benchmarks/starlette_benchmark.py
+        run: cat ./sample-apps/starlette-postgres-uvicorn/out1.log && tail -f ./sample-apps/starlette-postgres-uvicorn/out1.log & python ./benchmarks/starlette_benchmark.py
