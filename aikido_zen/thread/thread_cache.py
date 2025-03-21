@@ -40,13 +40,10 @@ class ThreadCache:
         self.middleware_installed = False
 
     def renew(self):
-        """
-        Makes an IPC call to store the amount of hits and requests and renew the config
-        """
-
         if not comms.get_comms():
             return
 
+        # send stored data and receive new config and routes
         res = comms.get_comms().send_data_to_bg_process(
             action="SYNC_DATA",
             obj={
@@ -56,16 +53,19 @@ class ThreadCache:
             },
             receive=True,
         )
+        if not res["success"] and res["data"]:
+            return
 
         self.reset()
-        if res["success"] and res["data"]:
-            if isinstance(res["data"].get("config"), ServiceConfig):
-                self.config = res["data"]["config"]
-            if isinstance(res["data"].get("routes"), dict):
-                self.routes.routes = res["data"]["routes"]
-                for route in self.routes.routes.values():
-                    route["hits_delta_since_sync"] = 0
-            logger.debug("Renewed thread cache")
+        # update config
+        if isinstance(res["data"].get("config"), ServiceConfig):
+            self.config = res["data"]["config"]
+
+        # update routes
+        if isinstance(res["data"].get("routes"), dict):
+            self.routes.routes = res["data"]["routes"]
+            for route in self.routes.routes.values():
+                route["hits_delta_since_sync"] = 0
 
     def increment_stats(self):
         """Increments the requests"""
