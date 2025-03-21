@@ -24,7 +24,6 @@ def on_init_handler(context: Context):
     cache = get_cache()
     if cache is None:
         return BlockResult(False)
-    cache.renew_if_ttl_expired()  # Only check TTL at the start of a request.
     cache.increment_stats()
 
     # Per endpoint IP Allowlist
