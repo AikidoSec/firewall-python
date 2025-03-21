@@ -3,17 +3,18 @@ from unittest.mock import MagicMock, patch
 from . import run_vulnerability_scan
 from aikido_zen.context import current_context, Context
 from aikido_zen.errors import AikidoSQLInjection
-from aikido_zen.thread.thread_cache import ThreadCache, threadlocal_storage
+from aikido_zen.thread.thread_cache import get_cache
 from aikido_zen.helpers.iplist import IPList
 
 
 @pytest.fixture(autouse=True)
 def run_around_tests():
+    get_cache().reset()
     yield
     # Make sure to reset context and cache after every test so it does not
     # interfere with other tests
     current_context.set(None)
-    setattr(threadlocal_storage, "cache", None)
+    get_cache().reset()
 
 
 @pytest.fixture
@@ -49,14 +50,14 @@ def get_context():
 
 def test_run_vulnerability_scan_no_context(caplog):
     current_context.set(None)
-    threadlocal_storage.cache = 1
+    get_cache().cache = 1
     run_vulnerability_scan(kind="test", op="test", args=tuple())
     assert len(caplog.text) == 0
 
 
 def test_run_vulnerability_scan_no_context_no_lifecycle(caplog):
     current_context.set(None)
-    threadlocal_storage.cache = None
+    get_cache().cache = None
     run_vulnerability_scan(kind="test", op="test", args=tuple())
     assert len(caplog.text) == 0
 
@@ -64,13 +65,12 @@ def test_run_vulnerability_scan_no_context_no_lifecycle(caplog):
 def test_run_vulnerability_scan_context_no_lifecycle(caplog):
     with pytest.raises(Exception):
         current_context.set(1)
-        threadlocal_storage.cache = None
+        get_cache().cache = None
         run_vulnerability_scan(kind="test", op="test", args=tuple())
 
 
 def test_lifecycle_cache_ok(caplog, get_context):
     get_context.set_as_current_context()
-    cache = ThreadCache()
     run_vulnerability_scan(kind="test", op="test", args=tuple())
     assert "Vulnerability type test currently has no scans implemented" in caplog.text
 
@@ -92,7 +92,6 @@ def test_lifecycle_cache_bypassed_ip(caplog, get_context):
 
 def test_sql_injection(caplog, get_context, monkeypatch):
     get_context.set_as_current_context()
-    cache = ThreadCache()
     monkeypatch.setenv("AIKIDO_BLOCK", "1")
     with pytest.raises(AikidoSQLInjection):
         run_vulnerability_scan(
@@ -104,7 +103,6 @@ def test_sql_injection(caplog, get_context, monkeypatch):
 
 def test_sql_injection_with_route_params(caplog, get_context, monkeypatch):
     get_context.set_as_current_context()
-    cache = ThreadCache()
     monkeypatch.setenv("AIKIDO_BLOCK", "1")
     with pytest.raises(AikidoSQLInjection):
         run_vulnerability_scan(
@@ -116,8 +114,6 @@ def test_sql_injection_with_route_params(caplog, get_context, monkeypatch):
 
 def test_sql_injection_with_comms(caplog, get_context, monkeypatch):
     get_context.set_as_current_context()
-    cache = ThreadCache()
-    cache.last_renewal = 9999999999999999999999
     monkeypatch.setenv("AIKIDO_BLOCK", "1")
     with patch("aikido_zen.background_process.comms.get_comms") as mock_get_comms:
         # Create a mock comms object
