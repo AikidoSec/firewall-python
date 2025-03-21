@@ -59,7 +59,7 @@ class AikidoBackgroundProcess:
                     conn.close()  # Sort of EOL for Python IPC
                     break
                 except Exception as e:
-                    logger.error("Exception occured in server thread : %s", e)
+                    logger.error("Exception occurred in server thread : %s", e)
                     logger.debug("Trace \n %s", traceback.format_exc())
                     break  # Return back to listening for new connections
 

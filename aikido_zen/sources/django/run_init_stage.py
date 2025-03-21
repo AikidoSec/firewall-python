@@ -33,7 +33,7 @@ def run_init_stage(request):
             # So a byte string gets converted into a string to stop that from happening.
             body = ""  # Set body to an empty string.
     except Exception as e:
-        logger.debug("Error occured in run_init_stage function (Django) : %s", e)
+        logger.debug("Exception occurred in run_init_stage function (Django) : %s", e)
 
     # In a separate try-catch we set the context :
     try:
@@ -51,4 +51,4 @@ def run_init_stage(request):
         # Init stage needs to be run with context already set :
         request_handler(stage="init")
     except Exception as e:
-        logger.debug("Error occurred in run_init_stage function (Django): %s", e)
+        logger.debug("Exception occurred in run_init_stage function (Django): %s", e)

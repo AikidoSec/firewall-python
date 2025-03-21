@@ -52,7 +52,7 @@ def extract_view_args_from_flask_request_and_save_data(req):
             context.route_params = dict(req.view_args)
             context.set_as_current_context()
     except Exception as e:
-        logger.debug("Exception occured whilst extracting flask view args data: %s", e)
+        logger.debug("Exception occurred whilst extracting flask view args data: %s", e)
 
 
 def extract_form_data_from_flask_request_and_save_data(req):
@@ -66,7 +66,7 @@ def extract_form_data_from_flask_request_and_save_data(req):
                 context.set_body(req.data.decode("utf-8"))
             context.set_as_current_context()
     except Exception as e:
-        logger.debug("Exception occured whilst extracting flask body data: %s", e)
+        logger.debug("Exception occurred whilst extracting flask body data: %s", e)
 
 
 def extract_cookies_from_flask_request_and_save_data(req):
@@ -76,7 +76,7 @@ def extract_cookies_from_flask_request_and_save_data(req):
         context.cookies = req.cookies.to_dict()
         context.set_as_current_context()
     except Exception as e:
-        logger.debug("Exception occured whilst extracting flask cookie data: %s", e)
+        logger.debug("Exception occurred whilst extracting flask cookie data: %s", e)
 
 
 def aikido___call__(flask_app, environ, start_response):

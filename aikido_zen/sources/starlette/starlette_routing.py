@@ -43,10 +43,10 @@ def aik_route_func_wrapper(func):
             if pre_response_results:
                 response = create_starlette_response(pre_response_results)
                 if response:
-                    # Make sure to not return when an error occured or there is an invalid response
+                    # Make sure to not return when an error occurred or there is an invalid response
                     return response
         except Exception as e:
-            logger.debug("Exception occured in pre_response stage starlette : %s", e)
+            logger.debug("Exception occurred in pre_response stage starlette : %s", e)
 
         # Calling the function, check if it's async or not (same checks as in codebase starlette)
         try:

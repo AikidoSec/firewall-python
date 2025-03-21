@@ -55,4 +55,4 @@ def update_api_info(new_apispec, existing_apispec=None):
         )
         return existing_apispec
     except Exception as e:
-        logger.debug("Exception occured in update_api_info : %s", e)
+        logger.debug("Exception occurred in update_api_info : %s", e)
