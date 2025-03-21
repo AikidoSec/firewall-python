@@ -42,7 +42,9 @@ class AikidoBackgroundProcess:
         # Start reporting thread :
         Thread(target=self.reporting_thread).start()
 
-        logger.debug("Background process started successfully, with UDS File : %s", address)
+        logger.debug(
+            "Background process started successfully, with UDS File : %s", address
+        )
 
         while True:
             conn = listener.accept()

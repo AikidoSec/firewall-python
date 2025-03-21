@@ -20,7 +20,10 @@ if aikido_debug_env is not None:
 logger = logging.getLogger(APPLICATION_NAME)
 
 # Configure format
-fmt = logging.Formatter("%(name)s: %(asctime)s | %(levelname)s | %(processName)s > %(message)s", datefmt="%H:%M:%S")
+fmt = logging.Formatter(
+    "%(name)s: %(asctime)s | %(levelname)s | %(processName)s > %(message)s",
+    datefmt="%H:%M:%S",
+)
 # Get stdout handler
 stdout = logging.StreamHandler(stream=sys.stdout)
 stdout.setLevel(LOG_LEVEL)
