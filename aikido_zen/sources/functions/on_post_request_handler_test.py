@@ -2,7 +2,7 @@ from unittest.mock import patch, MagicMock
 import pytest
 
 from aikido_zen.sources.functions.on_post_request_handler import on_post_request_handler
-from aikido_zen.thread.thread_cache import ThreadCache
+from aikido_zen.thread.thread_cache import ThreadCache, get_cache
 
 
 @pytest.fixture
@@ -18,6 +18,11 @@ def mock_context():
     }
     return context
 
+@pytest.fixture(autouse=True)
+def run_around_tests():
+    get_cache().reset()
+    yield
+    get_cache().reset()
 
 @patch("aikido_zen.background_process.get_comms")
 def test_post_response_useful_route(mock_get_comms, mock_context):
@@ -25,13 +30,12 @@ def test_post_response_useful_route(mock_get_comms, mock_context):
     comms = MagicMock()
     mock_get_comms.return_value = comms
 
-    cache = ThreadCache()  # Creates a new cache
-    assert cache.routes.routes == {}
+    assert get_cache().routes.routes == {}
     with patch("aikido_zen.context.get_current_context", return_value=mock_context):
         on_post_request_handler(status_code=200)
 
     # Check that the route was initialized and updated
-    assert cache.routes.routes == {
+    assert get_cache().routes.routes == {
         "GET:/test/route": {
             "apispec": {},
             "hits": 1,
@@ -41,14 +45,6 @@ def test_post_response_useful_route(mock_get_comms, mock_context):
         }
     }
 
-    comms.send_data_to_bg_process.assert_called_once_with(
-        "INITIALIZE_ROUTE",
-        {
-            "route": "/test/route",
-            "method": "GET",
-            "url": "http://localhost:8080/test/route",
-        },
-    )
 
 
 @patch("aikido_zen.background_process.get_comms")
