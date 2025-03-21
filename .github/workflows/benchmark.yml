@@ -66,7 +66,7 @@ jobs:
           make install && make build
       - name: Start starlette
         working-directory: ./sample-apps/starlette-postgres-uvicorn
-        run: nohup make runBenchmark & nohup make runZenDisabled &
+        run: nohup make runBenchmark > out1.log & nohup make runZenDisabled &
       - name: Install wrk
         run: |
           sudo apt-get update
@@ -76,4 +76,4 @@ jobs:
         with:
           python-version: 3.9
       - name: Run benchmark
-        run: python ./benchmarks/starlette_benchmark.py
+        run: cat out1.log && tail -f out1.log & python ./benchmarks/starlette_benchmark.py
