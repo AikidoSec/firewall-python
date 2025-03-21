@@ -1,6 +1,7 @@
 import multiprocessing
 import threading
 
+from aikido_zen.context import get_current_context
 from aikido_zen.thread.process_worker import aikido_process_worker_thread
 
 
@@ -8,6 +9,8 @@ def load_worker():
     """
     Loads in a new process worker if one does not already exist for the current process
     """
+    if get_current_context() is None:
+        return  # don't start a worker if it's not related to a request.
 
     # The name is aikido-process-worker- + the current PID
     thread_name = "aikido-process-worker-" + str(multiprocessing.current_process().pid)
