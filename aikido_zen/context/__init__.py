@@ -14,7 +14,6 @@ from aikido_zen.helpers.logging import logger
 from .wsgi import set_wsgi_attributes_on_context
 from .asgi import set_asgi_attributes_on_context
 from .extract_route_params import extract_route_params
-from .. import process_worker
 
 UINPUT_SOURCES = ["body", "cookies", "query", "headers", "xml", "route_params"]
 current_context = contextvars.ContextVar("current_context", default=None)
@@ -38,7 +37,6 @@ class Context:
     """
 
     def __init__(self, context_obj=None, body=None, req=None, source=None):
-        process_worker.start_worker()
         if context_obj:
             logger.debug("Creating Context instance based on dict object.")
             self.__dict__.update(context_obj)
