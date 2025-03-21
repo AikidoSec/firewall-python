@@ -6,7 +6,7 @@ import copy
 import aikido_zen.importhook as importhook
 from aikido_zen.helpers.logging import logger
 from aikido_zen.context import Context
-from aikido_zen.background_process.packages import pkg_compat_check, ANY_VERSION
+from aikido_zen.background_process.packages import is_package_compatible, ANY_VERSION
 from aikido_zen.context import get_current_context
 import aikido_zen.sources.functions.request_handler as funcs
 
@@ -103,7 +103,7 @@ def on_flask_import(flask):
     @app.route |-> `add_url_rule` |-> self.view_functions. these get called via
     full_dispatch_request, which we wrap. We also wrap __call__ to run our middleware.
     """
-    if not pkg_compat_check("flask", required_version=FLASK_REQUIRED_VERSION):
+    if not is_package_compatible("flask", required_version=FLASK_REQUIRED_VERSION):
         return flask
     modified_flask = importhook.copy_module(flask)
     former_fdr = copy.deepcopy(flask.Flask.full_dispatch_request)

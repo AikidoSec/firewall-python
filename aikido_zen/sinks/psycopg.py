@@ -4,7 +4,7 @@ Sink module for `psycopg`
 
 import copy
 import aikido_zen.importhook as importhook
-from aikido_zen.background_process.packages import pkg_compat_check
+from aikido_zen.background_process.packages import is_package_compatible
 import aikido_zen.vulnerabilities as vulns
 
 REQUIRED_PSYCOPG_VERSION = "3.1.0"
@@ -16,7 +16,7 @@ def on_psycopg_import(psycopg):
     Hook 'n wrap on `psycopg.connect` function, we modify the cursor_factory
     of the result of this connect function.
     """
-    if not pkg_compat_check("psycopg", REQUIRED_PSYCOPG_VERSION):
+    if not is_package_compatible("psycopg", REQUIRED_PSYCOPG_VERSION):
         return psycopg
     modified_psycopg = importhook.copy_module(psycopg)
     former_copy_funtcion = copy.deepcopy(psycopg.Cursor.copy)
