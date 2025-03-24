@@ -40,7 +40,7 @@ def aik_route_func_wrapper(func):
                 return
             await extract_data_from_request(req)
         except Exception as e:
-            logger.debug("Exception occured in pre_response stage starlette : %s", e)
+            logger.debug("Exception occurred in pre_response stage starlette : %s", e)
 
         # Calling the function, check if it's async or not (same checks as in codebase starlette)
         try:

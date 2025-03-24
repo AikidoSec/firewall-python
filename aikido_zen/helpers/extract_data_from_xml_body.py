@@ -23,4 +23,4 @@ def extract_data_from_xml_body(user_input, root_element):
                 extracted_xml_attrs[k].add(v)
         context.set_as_current_context()
     except Exception as e:
-        logger.debug("Exception occured when extracting XML: %s", e)
+        logger.debug("Exception occurred when extracting XML: %s", e)

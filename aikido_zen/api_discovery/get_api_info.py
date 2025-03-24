@@ -16,7 +16,7 @@ def get_api_info(context):
         if body_info or query_info or auth_info:
             return {"body": body_info, "query": query_info, "auth": auth_info}
     except Exception as e:
-        logger.debug("Exception occured whilst generating apispec: %s", e)
+        logger.debug("Exception occurred whilst generating apispec: %s", e)
 
     return {}
 

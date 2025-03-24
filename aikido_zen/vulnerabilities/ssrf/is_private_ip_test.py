@@ -20,10 +20,11 @@ def test_private_ipv6_addresses():
     assert is_private_ip("::1") is True  # Loopback address
     assert is_private_ip("fc00::1") is True  # Unique local address
     assert is_private_ip("fe80::1") is True  # Link-local address
+    assert is_private_ip("2001:db8::1") is True  # Documentation address
 
 
 def test_public_ipv6_addresses():
-    assert is_private_ip("2001:db8::1") is False  # Documentation address
+    assert is_private_ip("2a00::db8::1") is False  # Documentation address
     assert is_private_ip("::ffff:8.8.8.8") is False  # IPv4-mapped address
 
 
@@ -32,3 +33,14 @@ def test_invalid_addresses():
     assert is_private_ip("") is False
     assert is_private_ip("256.256.256.256") is False  # Invalid IPv4
     assert is_private_ip("::g") is False  # Invalid IPv6
+
+
+def test_ipv4_mapped_ipv6():
+    assert is_private_ip("::ffff:127.0.0.0") is True
+    assert is_private_ip("::ffff:127.0.0.1") is True
+    assert is_private_ip("::ffff:10.0.2.3") is True
+    assert is_private_ip("::ffff:192.168.2.1") is True
+
+    assert is_private_ip("::ffff:1.2.3.4") is False
+    assert is_private_ip("::ffff:192.2.3.4") is False
+    assert is_private_ip("::ffff:172.1.2.3") is False

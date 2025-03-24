@@ -46,7 +46,6 @@ def start_background_process():
         # Ping must have failed, remove the existing file to ensure there is no corruption.
         os.remove(uds_filename)
 
-    logger.debug("Background process starting on UDS File : %s", uds_filename)
     #  Daemon is set to True so that the process kills itself when the main process dies
     background_process = Process(
         target=AikidoBackgroundProcess, args=(comms.address, comms.key), daemon=True
