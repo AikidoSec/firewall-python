@@ -26,7 +26,7 @@ def run_around_tests():
     setattr(threadlocal_storage, "cache", None)
 
 
-def set_context_and_lifecycle(url):
+def set_context_and_lifecycle(url, host=None):
     wsgi_request = {
         "REQUEST_METHOD": "GET",
         "HTTP_HEADER_1": "header 1 value",
@@ -40,6 +40,8 @@ def set_context_and_lifecycle(url):
         "CONTENT_TYPE": "application/json",
         "REMOTE_ADDR": "198.51.100.23",
     }
+    if host is not None:
+        wsgi_request["HTTP_HOST"] = host
     context = Context(
         req=wsgi_request,
         body={
@@ -115,3 +117,30 @@ def test_no_raises_if_diff_url(monkeypatch):
     monkeypatch.setenv("AIKIDO_BLOCK", "1")
     with pytest.raises(urllib3.exceptions.MaxRetryError):
         http.request("GET", SSRF_TEST_DOMAIN_TWICE)
+
+def test_srrf_with_request_to_itself(monkeypatch):
+    http = urllib3.PoolManager()
+    reset_comms()
+
+    set_context_and_lifecycle("http://localhost:5000/test/1", host="localhost:5000")
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
+    with pytest.raises(urllib3.exceptions.MaxRetryError):
+        http.request("GET", "http://localhost:5000/test/1")
+
+    # Now test with no port match
+    set_context_and_lifecycle("http://localhost:5000/test/2", host="localhost:4999")
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
+    with pytest.raises(AikidoSSRF):
+        http.request("GET", "http://localhost:5000/test/2")
+
+    # Test with http app requesting to https
+    set_context_and_lifecycle("https://localhost/test/3", host="localhost:80")
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
+    with pytest.raises(urllib3.exceptions.MaxRetryError):
+        http.request("GET", "https://localhost/test/3")
+
+    # Test with https app requesting to http
+    set_context_and_lifecycle("http://localhost/test/4", host="localhost:443")
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
+    with pytest.raises(urllib3.exceptions.MaxRetryError):
+        http.request("GET", "https://localhost/test/4")
