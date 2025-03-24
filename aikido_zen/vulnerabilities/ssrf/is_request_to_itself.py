@@ -21,9 +21,7 @@ def is_request_to_itself(server_url, outbound_hostname, outbound_port):
         return False
 
     if base_url.hostname != outbound_hostname:
-        return (
-            False  # the outbound hostname is different from the server url's hostname.
-        )
+        return False
 
     base_url_port = get_port_from_url(base_url, parsed=True)
 
