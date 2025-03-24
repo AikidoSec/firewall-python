@@ -118,6 +118,7 @@ def test_no_raises_if_diff_url(monkeypatch):
     with pytest.raises(urllib3.exceptions.MaxRetryError):
         http.request("GET", SSRF_TEST_DOMAIN_TWICE)
 
+
 def test_srrf_with_request_to_itself(monkeypatch):
     http = urllib3.PoolManager()
     reset_comms()
