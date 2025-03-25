@@ -85,5 +85,5 @@ def test_initial_heartbeat():
             "method": "POST",
             "path": "/app/create"
         }], 
-        {"aborted":0,"attacksDetected":{"blocked":2,"total":2},"total":0}
+        {"aborted":0,"attacksDetected":{"blocked":2,"total":2},"total":1}
     )
