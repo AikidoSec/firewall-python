@@ -31,7 +31,7 @@ class ReportingApiHTTP(ReportingApi):
 
     def fetch_firewall_lists(self, token):
         """
-        Fetches firewall lists from aikido server
+        Fetches firewall lists from aikido's servers
         If successful the current API returns :
         - `allowedIPAddresses` : An array with iplist entries which are the only ones allowed
         - `blockedIPAddresses` : An array with iplist entries that are blocked
