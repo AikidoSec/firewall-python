@@ -9,7 +9,7 @@ def is_ip_allowed_by_allowlist(service_config, ip):
     if not service_config.allowed_ips or len(service_config.allowed_ips) < 1:
         return True
     # Always allow access from local IP addresses
-    if is_localhost_ip(ip) or is_private_ip(ip):
+    if is_private_ip(ip):
         return True
 
     for entry in service_config.allowed_ips:
