@@ -4,7 +4,6 @@ from aikido_zen.thread.thread_cache import get_cache, ThreadCache, threadlocal_s
 from .request_handler import request_handler, post_response
 from ...background_process.service_config import ServiceConfig
 from ...context import Context, current_context
-from ...helpers.add_ip_address_to_blocklist import add_ip_address_to_blocklist
 
 
 @pytest.fixture
@@ -204,7 +203,7 @@ def test_bypassed_ip():
         {"source": "test", "description": "Blocked for testing", "ips": ["192.168.1.1"]}
     ]
     config = create_service_config(blocked_ips)
-    add_ip_address_to_blocklist("1.1.1.1", config.bypassed_ips)  # Adding to bypass list
+    config.bypassed_ips.add("1.1.1.1")
 
     # Act
     result = request_handler("pre_response")

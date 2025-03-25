@@ -117,3 +117,46 @@ def test_blocklist_subnet_with_single_ip():
 
     assert blocklist.matches("192.168.1.1") is True
     assert blocklist.matches("192.168.1.2") is False  # Outside the subnet
+
+
+# Tests add function
+def test_valid_ips():
+    blocklist = IPList()
+
+    blocklist.add("1.2.3.4")
+    assert blocklist.matches("1.2.3.4") is True
+
+    blocklist.add("fd00:ec2::254")
+    assert blocklist.matches("fd00:ec2::254") is True
+
+    blocklist.add("192.168.2.1/24")
+    assert blocklist.matches("192.168.2.1") is True
+    assert blocklist.matches("192.168.2.240") is True
+
+    blocklist.add("fd00:124::1/64")
+    assert blocklist.matches("fd00:124::1") is True
+    assert blocklist.matches("fd00:124::f") is True
+    assert blocklist.matches("fd00:124::ff13") is True
+
+    blocklist.add("fd00:f123::1/128")
+    assert blocklist.matches("fd00:f123::1") is True
+
+    assert blocklist.matches("2.3.4.5") is False
+    assert blocklist.matches("fd00:125::ff13") is False
+    assert blocklist.matches("fd00:f123::2") is False
+
+
+def test_invalid_ips():
+    blocklist = IPList()
+
+    blocklist.add("192.168.2.2.1/24")
+    assert blocklist.matches("192.168.2.2.1") is False
+
+    blocklist.add("test")
+    assert blocklist.matches("test") is False
+
+    blocklist.add("")
+    assert blocklist.matches("") is False
+
+    blocklist.add("fd00:124::1/test")
+    assert blocklist.matches("fd00:124::1") is False

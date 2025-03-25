@@ -5,7 +5,6 @@ Exports ServiceConfig class
 from typing import Pattern
 
 import regex as re
-from aikido_zen.helpers.add_ip_address_to_blocklist import add_ip_address_to_blocklist
 from aikido_zen.helpers.match_endpoints import match_endpoints
 from aikido_zen.helpers.iplist import IPList
 
@@ -61,7 +60,7 @@ class ServiceConfig:
         """Creates an IPList from the given bypassed ip set"""
         self.bypassed_ips = IPList()
         for ip in bypassed_ips:
-            add_ip_address_to_blocklist(ip, self.bypassed_ips)
+            self.bypassed_ips.add(ip)
 
     def is_bypassed_ip(self, ip):
         """Checks if the IP is on the bypass list"""
@@ -99,7 +98,8 @@ def parse_ip_entry(entry):
     """
     iplist = IPList()
     for ip in entry["ips"]:
-        add_ip_address_to_blocklist(ip, iplist)
+        iplist.add(ip)
+
     return {
         "source": entry["source"],
         "description": entry["description"],

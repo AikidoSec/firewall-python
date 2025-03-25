@@ -5,7 +5,6 @@ from aikido_zen.context import current_context, Context
 from aikido_zen.errors import AikidoSQLInjection
 from aikido_zen.thread.thread_cache import ThreadCache, threadlocal_storage
 from aikido_zen.helpers.iplist import IPList
-from aikido_zen.helpers.add_ip_address_to_blocklist import add_ip_address_to_blocklist
 
 
 @pytest.fixture(autouse=True)
@@ -85,7 +84,7 @@ def test_lifecycle_cache_bypassed_ip(caplog, get_context):
     get_context.set_as_current_context()
     cache = ThreadCache()
     cache.config.bypassed_ips = IPList()
-    add_ip_address_to_blocklist("198.51.100.23", cache.config.bypassed_ips)
+    cache.config.bypassed_ips.add("198.51.100.23")
     assert cache.is_bypassed_ip("198.51.100.23")
     run_vulnerability_scan(kind="test", op="test", args=tuple())
     assert len(caplog.text) == 0
