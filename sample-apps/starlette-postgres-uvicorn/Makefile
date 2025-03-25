@@ -21,7 +21,7 @@ runBenchmark: install
 	AIKIDO_REALTIME_ENDPOINT="http://localhost:5000/" \
 	AIKIDO_ENDPOINT="http://localhost:5000/" AIKIDO_DISABLE=0 \
 	DONT_ADD_MIDDLEWARE=1 \
-	poetry run uvicorn app:app --host 0.0.0.0 --port 8102 --workers 4
+	poetry run uvicorn app:app --host 0.0.0.0 --port 8102 --workers 2
 
 .PHONY: runZenDisabled
 runZenDisabled: install
