@@ -141,6 +141,7 @@ def test_blocked_ip():
         {"source": "test", "description": "Blocked for testing", "ips": ["192.168.1.1"]}
     ]
     config = create_service_config(blocked_ips)
+    config.endpoints[0]["allowedIPAddresses"] = []  # Clear allowed ips for endpoint
 
     # Act
     result = request_handler("pre_response")
