@@ -3,6 +3,9 @@ from aikido_zen.vulnerabilities.ssrf.is_private_ip import is_private_ip
 
 
 def is_ip_allowed_by_allowlist(service_config, ip):
+    """
+    This function was separated from the ServiceConfig object, because otherwise you would have a circular dep.
+    """
     if not service_config.allowed_ips or len(service_config.allowed_ips) < 1:
         return True
     # Always allow access from local IP addresses
