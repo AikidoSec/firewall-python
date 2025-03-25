@@ -6,7 +6,7 @@ from aikido_zen.helpers.logging import logger
 
 
 def update_firewall_lists(connection_manager):
-    """Will update service config with blocklist of IP addresses"""
+    """Fetches firewall lists from core and updates config (blocked/allowed IPs, blocked user agents)"""
     if not connection_manager.token or connection_manager.serverless:
         # Need token, and support in serverless mode is off for this feature
         return
