@@ -40,7 +40,7 @@ def on_http_import(http):
             source_url = try_parse_url(assembled_url)
             handle_http_response(http_response=response, source=source_url)
         except Exception as e:
-            logger.debug("Exception occured in custom getresponse function : %s", e)
+            logger.debug("Exception occurred in custom getresponse function : %s", e)
         return response
 
     # pylint: disable=no-member
