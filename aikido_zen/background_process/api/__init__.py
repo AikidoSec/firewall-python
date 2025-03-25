@@ -28,4 +28,4 @@ class ReportingApi:
         """Report event to aikido server"""
 
     def fetch_firewall_lists(self, token):
-        """Fetches the different lists from aikido server"""
+        """Fetches the different lists from aikido's servers"""
