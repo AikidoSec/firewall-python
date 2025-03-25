@@ -79,7 +79,7 @@ def test_initial_heartbeat():
     assert len(heartbeat_events) == 1
     validate_heartbeat(heartbeat_events[0], 
         [{
-            "apispec": {},
+            "apispec": {'body': {'type': 'form-urlencoded', 'schema': {'type': 'object', 'properties': {'dog_name': {'type': 'string'}}}}, 'query': None, 'auth': None},
             "hits": 1,
             "hits_delta_since_sync": 0,
             "method": "POST",
