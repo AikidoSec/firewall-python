@@ -81,7 +81,7 @@ def test_initial_heartbeat():
         [{
             "apispec": {},
             "hits": 1,
-            "hits_delta_since_sync": 1,
+            "hits_delta_since_sync": 0,
             "method": "POST",
             "path": "/app/create"
         }], 
