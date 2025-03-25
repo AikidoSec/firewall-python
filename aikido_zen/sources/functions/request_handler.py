@@ -14,13 +14,6 @@ from ...helpers.is_ip_allowed_by_allowlist import is_ip_allowed_by_allowlist
 def request_handler(stage, status_code=0):
     """This will check for rate limiting, Allowed IP's, useful routes, etc."""
     try:
-        if stage == "init":
-            # Initial stage of the request, called after context is stored.
-            thread_cache = get_cache()
-            thread_cache.renew_if_ttl_expired()  # Only check TTL at the start of a request.
-            if ctx.get_current_context() and thread_cache:
-                thread_cache.increment_stats()  # Increment request statistics if a context exists.
-
         if stage == "pre_response":
             return pre_response()
         if stage == "post_response":

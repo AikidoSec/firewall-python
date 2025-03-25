@@ -7,6 +7,7 @@ import aikido_zen.importhook as importhook
 from aikido_zen.helpers.logging import logger
 from aikido_zen.context import Context, get_current_context
 from aikido_zen.background_process.packages import pkg_compat_check, ANY_VERSION
+from .functions.on_init_handler import on_init_handler
 from .functions.request_handler import request_handler
 
 
@@ -17,10 +18,8 @@ async def aikido___call___wrapper(former_call, quart_app, scope, receive, send):
     try:
         if scope["type"] != "http":
             return await former_call(quart_app, scope, receive, send)
-        context1 = Context(req=scope, source="quart")
-        context1.set_as_current_context()
-
-        request_handler(stage="init")
+        context = Context(req=scope, source="quart")
+        on_init_handler(context)
     except Exception as e:
         logger.debug("Exception on aikido __call__ function : %s", e)
     return await former_call(quart_app, scope, receive, send)
