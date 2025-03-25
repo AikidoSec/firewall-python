@@ -68,10 +68,10 @@ class ServiceConfig:
         return self.bypassed_ips.matches(ip)
 
     def set_blocked_ips(self, blocked_ip_entries):
-        self.blocked_ips = parse_ip_entries(blocked_ip_entries)
+        self.blocked_ips = map(parse_ip_entry, blocked_ip_entries)
 
     def set_allowed_ips(self, allowed_ip_entries):
-        self.allowed_ips = parse_ip_entries(allowed_ip_entries)
+        self.allowed_ips = map(parse_ip_entry, allowed_ip_entries)
 
     def is_blocked_ip(self, ip):
         for entry in self.blocked_ips:
@@ -93,14 +93,15 @@ class ServiceConfig:
         return self.blocked_user_agent_regex.match(ua)
 
 
-def parse_ip_entries(ip_entries):
+def parse_ip_entry(entry):
     """
-    Converts ip entries: {"source": "example", "description": "Example description", "ips": []}
+    Converts ip entry: {"source": "example", "description": "Example description", "ips": []}
     """
-    for entry in ip_entries:
-        # Create an IPList for the addresses and ranges provided in `ips` :
-        entry["iplist"] = IPList()
-        for ip in entry["ips"]:
-            add_ip_address_to_blocklist(ip, entry["iplist"])
-        del entry["ips"]  # Delete the now converted `ips` list.
-    return ip_entries
+    iplist = IPList()
+    for ip in entry["ips"]:
+        add_ip_address_to_blocklist(ip, iplist)
+    return {
+        "source": entry["source"],
+        "description": entry["description"],
+        "iplist": iplist,
+    }
