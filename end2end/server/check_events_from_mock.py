@@ -22,6 +22,7 @@ def validate_started_event(event, stack, dry_mode=False, serverless=False, os_na
     #    assert set(event["agent"]["stack"]) == set(stack)
 
 def validate_heartbeat(event, routes, req_stats):
+    print(json.dumps(event))
     assert event["type"] == "heartbeat"
     assert event["routes"] == routes
     assert event["stats"]["requests"] == req_stats
