@@ -68,10 +68,10 @@ class ServiceConfig:
         return self.bypassed_ips.matches(ip)
 
     def set_blocked_ips(self, blocked_ip_entries):
-        self.blocked_ips = map(parse_ip_entry, blocked_ip_entries)
+        self.blocked_ips = list(map(parse_ip_entry, blocked_ip_entries))
 
     def set_allowed_ips(self, allowed_ip_entries):
-        self.allowed_ips = map(parse_ip_entry, allowed_ip_entries)
+        self.allowed_ips = list(map(parse_ip_entry, allowed_ip_entries))
 
     def is_blocked_ip(self, ip):
         for entry in self.blocked_ips:
