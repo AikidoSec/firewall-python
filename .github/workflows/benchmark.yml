@@ -60,6 +60,10 @@ jobs:
       - name: Start databases
         working-directory:  ./sample-apps/databases
         run: docker compose up --build -d
+      - name: Build and start aikido mock server
+        run: |
+            cd end2end/server && docker build -t mock_core .
+            docker run --name mock_core -d -p 5000:5000 mock_core
       - name: Install dependencies & build
         run: |
           python -m pip install --upgrade pip
