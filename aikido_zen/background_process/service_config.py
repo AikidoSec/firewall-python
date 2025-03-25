@@ -6,10 +6,8 @@ from typing import Pattern
 
 import regex as re
 from aikido_zen.helpers.add_ip_address_to_blocklist import add_ip_address_to_blocklist
-from aikido_zen.helpers.is_localhost_ip import is_localhost_ip
 from aikido_zen.helpers.match_endpoints import match_endpoints
 from aikido_zen.helpers.iplist import IPList
-from aikido_zen.vulnerabilities.ssrf.is_private_ip import is_private_ip
 
 
 # noinspection PyAttributeOutsideInit
@@ -69,24 +67,11 @@ class ServiceConfig:
         """Checks if the IP is on the bypass list"""
         return self.bypassed_ips.matches(ip)
 
-    def set_allowed_ips(self, allowed_ip_entries):
-        self.allowed_ips = parse_ip_entries(allowed_ip_entries)
-
-    def is_allowed_ip(self, ip):
-        if not self.allowed_ips or len(self.allowed_ips) < 1:
-            return True
-        # Always allow access from local IP addresses
-        if is_localhost_ip(ip) or is_private_ip(ip):
-            return True
-
-        for entry in self.allowed_ips:
-            if entry["iplist"].matches(ip):
-                # If the IP matches one of the lists the IP is allowed
-                return True
-        return False
-
     def set_blocked_ips(self, blocked_ip_entries):
         self.blocked_ips = parse_ip_entries(blocked_ip_entries)
+
+    def set_allowed_ips(self, allowed_ip_entries):
+        self.allowed_ips = parse_ip_entries(allowed_ip_entries)
 
     def is_blocked_ip(self, ip):
         for entry in self.blocked_ips:
