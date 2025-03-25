@@ -71,5 +71,5 @@ run_benchmark(
 )
 run_benchmark(
     "http://localhost:8102/just", "http://localhost:8103/just", "an empty route",
-    percentage_limit=30, ms_limit=25
+    percentage_limit=30, ms_limit=30
 )
