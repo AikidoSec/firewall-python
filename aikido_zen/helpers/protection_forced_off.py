@@ -8,6 +8,7 @@ def protection_forced_off(route_metadata, endpoints):
     matches = match_endpoints(route_metadata, endpoints)
     if matches and len(matches) > 0:
         for match in matches:
-            if match["forceProtectionOff"]:
+            # We have to check if it's a prop of match, mostly for when test cases forget this
+            if "forceProtectionOff" in match and match["forceProtectionOff"]:
                 return True
     return False
