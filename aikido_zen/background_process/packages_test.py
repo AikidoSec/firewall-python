@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock
-from .packages import pkg_compat_check, ANY_VERSION
+from .packages import is_package_compatible, ANY_VERSION
 
 
 @pytest.fixture
@@ -34,7 +34,7 @@ def test_pkg_compat_check_success(mock_get_comms, mocker):
     )
 
     # Call the function under test
-    pkg_compat_check(pkg_name, ANY_VERSION)
+    is_package_compatible(pkg_name, ANY_VERSION)
 
 
 def test_pkg_compat_check_retry(mock_get_comms, mocker):
@@ -59,7 +59,7 @@ def test_pkg_compat_check_retry(mock_get_comms, mocker):
     )
 
     # Call the function under test
-    pkg_compat_check(pkg_name, ANY_VERSION)
+    is_package_compatible(pkg_name, ANY_VERSION)
 
 
 def test_pkg_compat_check_partial_success(mock_get_comms, mocker):
@@ -84,4 +84,4 @@ def test_pkg_compat_check_partial_success(mock_get_comms, mocker):
     )
 
     # Call the function under test
-    pkg_compat_check(pkg_name, ANY_VERSION)
+    is_package_compatible(pkg_name, ANY_VERSION)

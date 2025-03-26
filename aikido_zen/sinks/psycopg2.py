@@ -4,7 +4,7 @@ Sink module for `psycopg2`
 
 import copy
 import aikido_zen.importhook as importhook
-from aikido_zen.background_process.packages import pkg_compat_check
+from aikido_zen.background_process.packages import is_package_compatible
 import aikido_zen.vulnerabilities as vulns
 
 PSYCOPG2_REQUIRED_VERSION = "2.9.2"
@@ -49,10 +49,11 @@ def on_psycopg2_import(psycopg2):
     """
     # Users can install either psycopg2 or psycopg2-binary, we need to check if at least
     # one is installed and if they meet version requirements :
-    if not pkg_compat_check(
-        "psycopg2", PSYCOPG2_REQUIRED_VERSION
-    ) and not pkg_compat_check("psycopg2-binary", PSYCOPG2_REQUIRED_VERSION):
-        # Both pyscopg2 and psycopg2-binary are not supported, abort wrapping
+    if not is_package_compatible(
+        required_version=PSYCOPG2_REQUIRED_VERSION,
+        packages=["psycopg2", "psycopg2-binary"],
+    ):
+        # Both psycopg2 and psycopg2-binary are not supported, don't wrapping
         return psycopg2
     modified_psycopg2 = importhook.copy_module(psycopg2)
     former_connect_function = copy.deepcopy(psycopg2.connect)
