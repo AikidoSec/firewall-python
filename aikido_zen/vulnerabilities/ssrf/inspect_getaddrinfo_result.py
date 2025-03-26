@@ -29,10 +29,6 @@ def inspect_getaddrinfo_result(dns_results, hostname, port):
     context = get_current_context()
     if not context:
         return  # Context should be set to check user input.
-    if get_cache() and get_cache().is_bypassed_ip(context.remote_address):
-        # We check for bypassed ip's here since it is not checked for us
-        # in run_vulnerability_scan due to the exception for SSRF (see above code)
-        return
 
     # attack_findings is an object containing source, pathToPayload and payload.
     attack_findings = find_hostname_in_context(hostname, context, port)

@@ -9,6 +9,7 @@ from aikido_zen.context import Context
 from aikido_zen.background_process.packages import pkg_compat_check, ANY_VERSION
 from aikido_zen.context import get_current_context
 import aikido_zen.sources.functions.request_handler as funcs
+from aikido_zen.sources.functions.on_init_handler import on_init_handler
 
 
 def aik_full_dispatch_request(*args, former_full_dispatch_request=None, **kwargs):
@@ -84,9 +85,8 @@ def aikido___call__(flask_app, environ, start_response):
     # We don't want to install werkzeug :
     # pylint: disable=import-outside-toplevel
     try:
-        context1 = Context(req=environ, source="flask")
-        context1.set_as_current_context()
-        funcs.request_handler(stage="init")
+        context = Context(req=environ, source="flask")
+        on_init_handler(context)
     except Exception as e:
         logger.debug("Exception on aikido __call__ function : %s", e)
     res = flask_app.wsgi_app(environ, start_response)

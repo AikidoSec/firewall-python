@@ -111,11 +111,10 @@ def test_flask_all_3_func_with_view_args_and_invalid_json_body():
             "CONTENT_TYPE": "application/json",
         }
         calls = mock_request_handler.call_args_list
-        assert len(calls) == 3
-        assert calls[0][1]["stage"] == "init"
-        assert calls[1][1]["stage"] == "pre_response"
-        assert calls[2][1]["stage"] == "post_response"
-        assert calls[2][1]["status_code"] == 200
+        assert len(calls) == 2
+        assert calls[0][1]["stage"] == "pre_response"
+        assert calls[1][1]["stage"] == "post_response"
+        assert calls[1][1]["status_code"] == 200
 
         assert get_current_context().route_params["user"] == "JohnDoe"
         assert get_current_context().route_params["age"] == "30"
@@ -146,11 +145,10 @@ def test_flask_all_3_func_with_malformed_cookie():
         assert get_current_context().cookies == {"\u0000" * 10: ""}
 
         calls = mock_request_handler.call_args_list
-        assert len(calls) == 3
-        assert calls[0][1]["stage"] == "init"
-        assert calls[1][1]["stage"] == "pre_response"
-        assert calls[2][1]["stage"] == "post_response"
-        assert calls[2][1]["status_code"] == 404
+        assert len(calls) == 2
+        assert calls[0][1]["stage"] == "pre_response"
+        assert calls[1][1]["stage"] == "post_response"
+        assert calls[1][1]["status_code"] == 404
 
 
 def test_flask_all_3_func_with_invalid_body():
@@ -184,11 +182,10 @@ def test_flask_all_3_func_with_invalid_body():
             "CONTENT_TYPE": "application/json",
         }
         calls = mock_request_handler.call_args_list
-        assert len(calls) == 3
-        assert calls[0][1]["stage"] == "init"
-        assert calls[1][1]["stage"] == "pre_response"
-        assert calls[2][1]["stage"] == "post_response"
-        assert calls[2][1]["status_code"] == 404
+        assert len(calls) == 2
+        assert calls[0][1]["stage"] == "pre_response"
+        assert calls[1][1]["stage"] == "post_response"
+        assert calls[1][1]["status_code"] == 404
 
 
 def test_flask_all_3_func():
@@ -218,11 +215,10 @@ def test_flask_all_3_func():
             "CONTENT_TYPE": "application/x-www-form-urlencoded",
         }
         calls = mock_request_handler.call_args_list
-        assert len(calls) == 3
-        assert calls[0][1]["stage"] == "init"
-        assert calls[1][1]["stage"] == "pre_response"
-        assert calls[2][1]["stage"] == "post_response"
-        assert calls[2][1]["status_code"] == 404
+        assert len(calls) == 2
+        assert calls[0][1]["stage"] == "pre_response"
+        assert calls[1][1]["stage"] == "post_response"
+        assert calls[1][1]["status_code"] == 404
 
 
 def test_startup_flask():
