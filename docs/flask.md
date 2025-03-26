@@ -5,23 +5,25 @@
 
 ## Installation
 
-1. Install `aikido_zen` package with pip :
+1. Install `aikido_zen` package with pip:
 ```sh
 pip install aikido_zen
 ```
 
-2. Add the following snippet to the top of your `app.py` file :
+2. Add the following snippet to the top of your `app.py` file:
 ```python
 import aikido_zen
 aikido_zen.protect()
 ```
 Make sure this is above any other import, including above builtin package imports.
 
-3. Setting your environment variables :
+3. Setting your environment variables:
 Make sure to set your token in order to communicate with Aikido's servers
 ```env
 AIKIDO_TOKEN="AIK_RUNTIME_YOUR_TOKEN_HERE"
 ```
+
+You can get your token from the [Aikido Security Dashboard](https://help.aikido.dev/doc/creating-an-aikido-zen-firewall-token/doc6vRJNzC4u).
 
 ## Using gUnicorn
 If you're using gunicorn, please check our docs on that first : [Click Here](./gunicorn.md)

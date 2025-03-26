@@ -1,11 +1,11 @@
 # Gunicorn
 ## Installation/Setup
-1. Install `aikido_zen` package with pip :
+1. Install `aikido_zen` package with pip:
 ```sh
 pip install aikido_zen
 ```
 
-2. Use the following template for your `gunicorn_config.py` file :
+2. Use the following template for your `gunicorn_config.py` file:
 ```python
 import aikido_zen.decorators.gunicorn as aik
 
@@ -19,11 +19,13 @@ And make sure to include this config when starting gunicorn by adding the `-c gu
 gunicorn -c gunicorn_config.py --workers ...
 ```
 
-3. Setting your environment variables :
+3. Setting your environment variables:
 Make sure to set your token in order to communicate with Aikido's servers
 ```env
 AIKIDO_TOKEN="AIK_RUNTIME_YOUR_TOKEN_HERE"
 ```
+
+You can get your token from the [Aikido Security Dashboard](https://help.aikido.dev/doc/creating-an-aikido-zen-firewall-token/doc6vRJNzC4u).
 
 - Enabling extra debugging (optional): ```AIKIDO_DEBUG=1```
 - Enabling blocking using an env variable (optional): ```AIKIDO_BLOCK=1```
