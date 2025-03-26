@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch, MagicMock
 from aikido_zen.thread.thread_cache import get_cache, ThreadCache
-from .request_handler import request_handler, post_response
+from .request_handler import request_handler
 from ...background_process.service_config import ServiceConfig
 from ...context import Context, current_context
 
@@ -29,13 +29,10 @@ def run_around_tests():
     current_context.set(None)
 
 
-@patch("aikido_zen.background_process.get_comms")
-def test_post_response_useful_route(mock_get_comms, mock_context):
+def test_post_response_useful_route(mock_context):
     """Test post_response when the route is useful."""
-    comms = MagicMock()
-    mock_get_comms.return_value = comms
 
-    cache = ThreadCache()  # Creates a new cache
+    cache = get_cache()  # Creates a new cache
     assert cache.routes.routes == {}
     with patch("aikido_zen.context.get_current_context", return_value=mock_context):
         request_handler("post_response", status_code=200)
@@ -50,15 +47,6 @@ def test_post_response_useful_route(mock_get_comms, mock_context):
             "hits_delta_since_sync": 1,
         }
     }
-
-    comms.send_data_to_bg_process.assert_called_once_with(
-        "INITIALIZE_ROUTE",
-        {
-            "route": "/test/route",
-            "method": "GET",
-            "url": "http://localhost:8080/test/route",
-        },
-    )
 
 
 @patch("aikido_zen.background_process.get_comms")
@@ -130,7 +118,7 @@ def create_service_config(blocked_ips=None):
     )
     if blocked_ips:
         config.set_blocked_ips(blocked_ips)
-    ThreadCache().config = config
+    get_cache().config = config
     return config
 
 

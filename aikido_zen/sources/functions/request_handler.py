@@ -1,6 +1,5 @@
 """Exports request_handler function"""
 
-import aikido_zen.background_process as communications
 import aikido_zen.context as ctx
 from aikido_zen.api_discovery.get_api_info import get_api_info
 from aikido_zen.api_discovery.update_route_info import update_route_info
@@ -73,8 +72,7 @@ def pre_response():
 def post_response(status_code):
     """Checks if the current route is useful"""
     context = ctx.get_current_context()
-    comms = communications.get_comms()
-    if not context or not comms:
+    if not context:
         return
     route_metadata = context.get_route_metadata()
 
