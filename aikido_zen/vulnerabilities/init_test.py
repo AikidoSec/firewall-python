@@ -82,7 +82,7 @@ def test_ssrf(caplog, get_context):
 
 def test_lifecycle_cache_bypassed_ip(caplog, get_context):
     get_context.set_as_current_context()
-    cache = ThreadCache()
+    cache = get_cache()
     cache.config.bypassed_ips = IPList()
     cache.config.bypassed_ips.add("198.51.100.23")
     assert cache.is_bypassed_ip("198.51.100.23")
