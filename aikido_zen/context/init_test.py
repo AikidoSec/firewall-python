@@ -16,6 +16,7 @@ basic_wsgi_req = {
     "QUERY_STRING": "user=JohnDoe&age=30&age=35",
     "CONTENT_TYPE": "application/json",
     "REMOTE_ADDR": "198.51.100.23",
+    "HTTP_USER_AGENT": "Mozilla/5.0",
 }
 
 
@@ -71,6 +72,7 @@ def test_wsgi_context_1():
         "executed_middleware": False,
         "route_params": [],
     }
+    assert context.get_user_agent() is None
 
 
 def test_wsgi_context_2():
@@ -84,6 +86,7 @@ def test_wsgi_context_2():
             "COOKIE": "sessionId=abc123xyz456;",
             "HOST": "localhost:8080",
             "CONTENT_TYPE": "application/json",
+            "USER_AGENT": "Mozilla/5.0",
         },
         "cookies": {"sessionId": "abc123xyz456"},
         "url": "http://localhost:8080/hello",
@@ -99,6 +102,7 @@ def test_wsgi_context_2():
         "executed_middleware": False,
         "route_params": [],
     }
+    assert context.get_user_agent() == "Mozilla/5.0"
 
 
 def test_set_as_current_context(mocker):
@@ -130,6 +134,7 @@ def test_context_is_picklable(mocker):
         "COOKIE": "sessionId=abc123xyz456;",
         "HOST": "localhost:8080",
         "CONTENT_TYPE": "application/json",
+        "USER_AGENT": "Mozilla/5.0",
     }
     assert unpickled_obj.query == {"user": ["JohnDoe"], "age": ["30", "35"]}
     assert unpickled_obj.cookies == {"sessionId": "abc123xyz456"}

@@ -5,7 +5,6 @@ Exports ServiceConfig class
 from typing import Pattern
 
 import regex as re
-from aikido_zen.helpers.add_ip_address_to_blocklist import add_ip_address_to_blocklist
 from aikido_zen.helpers.match_endpoints import match_endpoints
 from aikido_zen.helpers.iplist import IPList
 
@@ -61,17 +60,17 @@ class ServiceConfig:
         """Creates an IPList from the given bypassed ip set"""
         self.bypassed_ips = IPList()
         for ip in bypassed_ips:
-            add_ip_address_to_blocklist(ip, self.bypassed_ips)
+            self.bypassed_ips.add(ip)
 
     def is_bypassed_ip(self, ip):
         """Checks if the IP is on the bypass list"""
         return self.bypassed_ips.matches(ip)
 
     def set_blocked_ips(self, blocked_ip_entries):
-        self.blocked_ips = parse_ip_entries(blocked_ip_entries)
+        self.blocked_ips = list(map(parse_ip_entry, blocked_ip_entries))
 
     def set_allowed_ips(self, allowed_ip_entries):
-        self.allowed_ips = parse_ip_entries(allowed_ip_entries)
+        self.allowed_ips = list(map(parse_ip_entry, allowed_ip_entries))
 
     def is_blocked_ip(self, ip):
         for entry in self.blocked_ips:
@@ -93,14 +92,16 @@ class ServiceConfig:
         return self.blocked_user_agent_regex.match(ua)
 
 
-def parse_ip_entries(ip_entries):
+def parse_ip_entry(entry):
     """
-    Converts ip entries: {"source": "example", "description": "Example description", "ips": []}
+    Converts ip entry: {"source": "example", "description": "Example description", "ips": []}
     """
-    for entry in ip_entries:
-        # Create an IPList for the addresses and ranges provided in `ips` :
-        entry["iplist"] = IPList()
-        for ip in entry["ips"]:
-            add_ip_address_to_blocklist(ip, entry["iplist"])
-        del entry["ips"]  # Delete the now converted `ips` list.
-    return ip_entries
+    iplist = IPList()
+    for ip in entry["ips"]:
+        iplist.add(ip)
+
+    return {
+        "source": entry["source"],
+        "description": entry["description"],
+        "iplist": iplist,
+    }

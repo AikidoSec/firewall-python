@@ -27,6 +27,26 @@ class IPList:
     def add_subnet(self, plain_ip: str, ip_range: int, ip_type: str):
         self.blocked_subnets.append((plain_ip, ip_range, ip_type))
 
+    def add(self, ip_or_cidr):
+        """
+        Checks whether ip_or_cidr is an IP address or is a subnet, and decides the correct IP type (IPv4 or IPv6)
+        """
+        if "/" not in ip_or_cidr:  # IP Address
+            ip_type = get_ip_address_type(ip_or_cidr)
+            if ip_type:
+                self.add_address(ip_or_cidr, ip_type)
+        else:  # Subnet
+            plain_ip, range_str = ip_or_cidr.split("/")
+            try:
+                ip_range = int(range_str)
+            except ValueError:
+                return
+            ip_type = get_ip_address_type(plain_ip)
+            if not ip_type:
+                return
+
+            self.add_subnet(plain_ip, ip_range, ip_type)
+
     def matches(self, ip: str) -> bool:
         ip_type = get_ip_address_type(ip)
         if not ip_type:

@@ -1,11 +1,10 @@
 import pytest
 from unittest.mock import patch, MagicMock
 from aikido_zen.background_process.routes import Routes
-from .thread_cache import ThreadCache, get_cache
+from .thread_cache import ThreadCache, THREAD_CONFIG_TTL_MS, threadlocal_storage
 from ..background_process.service_config import ServiceConfig
+from ..context import current_context, Context
 from aikido_zen.helpers.iplist import IPList
-from aikido_zen.helpers.add_ip_address_to_blocklist import add_ip_address_to_blocklist
-from ..context import Context, current_context
 
 
 @pytest.fixture
@@ -14,28 +13,18 @@ def thread_cache():
     return ThreadCache()
 
 
+class Context2(Context):
+    def __init__(self):
+        pass
+
+
 @pytest.fixture(autouse=True)
 def run_around_tests():
-    class Context1(Context):
-        def __init__(self):
-            self.cookies = {}
-            self.headers = {}
-            self.remote_address = "1.1.1.1"
-            self.method = "POST"
-            self.url = "url"
-            self.query = {}
-            self.body = {
-                "domain": "www.example`whoami`.com",
-            }
-            self.source = "express"
-            self.route = "/"
-            self.parsed_userinput = {}
-
-    Context1().set_as_current_context()
+    Context2().set_as_current_context()
     yield
     # Make sure to reset thread cache and context after every test so it does not
     # interfere with other tests
-    get_cache().reset()
+    setattr(threadlocal_storage, "cache", None)
     current_context.set(None)
 
 
@@ -50,10 +39,10 @@ def test_initialization(thread_cache: ThreadCache):
 
 def test_is_bypassed_ip(thread_cache: ThreadCache):
     """Test checking if an IP is bypassed."""
-    add_ip_address_to_blocklist("192.168.1.1", thread_cache.config.bypassed_ips)
+    thread_cache.config.bypassed_ips.add("192.168.1.1")
     assert thread_cache.is_bypassed_ip("192.168.1.1") is True
     assert thread_cache.is_bypassed_ip("192.168.1.2") is False
-    add_ip_address_to_blocklist("10.0.0.1/32", thread_cache.config.bypassed_ips)
+    thread_cache.config.bypassed_ips.add("10.0.0.1/32")
     assert thread_cache.is_bypassed_ip("10.0.0.1") is True
     assert thread_cache.is_bypassed_ip("10.0.0.2.2") is False
 
@@ -65,9 +54,73 @@ def test_is_user_blocked(thread_cache: ThreadCache):
     assert thread_cache.is_user_blocked("user456") is False
 
 
+@patch("aikido_zen.background_process.comms.get_comms")
+@patch("aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms")
+def test_renew_if_ttl_expired(
+    mock_get_unixtime_ms, mock_get_comms, thread_cache: ThreadCache
+):
+    """Test renewing the cache if TTL has expired."""
+    mock_get_unixtime_ms.return_value = (
+        THREAD_CONFIG_TTL_MS + 1
+    )  # Simulate TTL expiration
+    mock_get_comms.return_value = MagicMock()
+    mock_get_comms.return_value.send_data_to_bg_process.return_value = {
+        "success": True,
+        "data": {
+            "config": ServiceConfig(
+                endpoints=[
+                    {
+                        "graphql": False,
+                        "method": "POST",
+                        "route": "/v2",
+                        "rate_limiting": {
+                            "enabled": False,
+                        },
+                        "force_protection_off": False,
+                    }
+                ],
+                bypassed_ips=["192.168.1.1"],
+                blocked_uids={"user123"},
+                last_updated_at=-1,
+                received_any_stats=True,
+            ),
+            "routes": {},
+        },
+    }
+
+    thread_cache.renew_if_ttl_expired()
+    assert thread_cache.is_bypassed_ip("192.168.1.1")
+    assert thread_cache.get_endpoints() == [
+        {
+            "graphql": False,
+            "method": "POST",
+            "route": "/v2",
+            "rate_limiting": {
+                "enabled": False,
+            },
+            "force_protection_off": False,
+        }
+    ]
+    assert thread_cache.is_user_blocked("user123")
+    assert thread_cache.last_renewal > 0
+
+
+@patch("aikido_zen.background_process.comms.get_comms")
+@patch("aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms")
+def test_renew_if_ttl_not_expired(
+    mock_get_unixtime_ms, mock_get_comms, thread_cache: ThreadCache
+):
+    """Test that renew is not called if TTL has not expired."""
+    mock_get_unixtime_ms.return_value = 0  # Simulate TTL not expired
+    thread_cache.last_renewal = 0  # Set last renewal to 0
+
+    thread_cache.renew_if_ttl_expired()
+    assert thread_cache.last_renewal == 0  # Should not change
+
+
 def test_reset(thread_cache: ThreadCache):
     """Test that reset empties the cache."""
-    add_ip_address_to_blocklist("192.168.1.1", thread_cache.config.bypassed_ips)
+    thread_cache.config.bypassed_ips.add("192.168.1.1")
     thread_cache.config.blocked_uids.add("user123")
     thread_cache.reset()
 
@@ -115,7 +168,7 @@ def test_renew_with_invalid_response(mock_get_comms, thread_cache: ThreadCache):
 
 def test_is_bypassed_ip_case_insensitivity(thread_cache: ThreadCache):
     """Test that IP check is case-insensitive."""
-    add_ip_address_to_blocklist("192.168.1.1", thread_cache.config.bypassed_ips)
+    thread_cache.config.bypassed_ips.add("192.168.1.1")
     assert thread_cache.is_bypassed_ip("192.168.1.1") is True
     assert thread_cache.is_bypassed_ip("192.168.1.1".upper()) is True
 
@@ -135,6 +188,74 @@ def test_increment_stats_thread_safety(thread_cache):
         thread.join()
 
     assert thread_cache.reqs == 1000  # 10 threads incrementing 100 times
+
+
+@patch("aikido_zen.background_process.comms.get_comms")
+@patch("aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms")
+def test_renew_if_ttl_expired_multiple_times(
+    mock_get_unixtime_ms, mock_get_comms, thread_cache: ThreadCache
+):
+    """Test renewing the cache multiple times if TTL has expired."""
+    mock_get_unixtime_ms.return_value = (
+        THREAD_CONFIG_TTL_MS + 1
+    )  # Simulate TTL expiration
+    mock_get_comms.return_value = MagicMock()
+    mock_get_comms.return_value.send_data_to_bg_process.return_value = {
+        "success": True,
+        "data": {
+            "config": ServiceConfig(
+                endpoints=[
+                    {
+                        "graphql": False,
+                        "method": "POST",
+                        "route": "/v2",
+                        "rate_limiting": {
+                            "enabled": False,
+                        },
+                        "force_protection_off": False,
+                    }
+                ],
+                bypassed_ips=["192.168.1.1"],
+                blocked_uids={"user123"},
+                last_updated_at=-1,
+                received_any_stats=True,
+            ),
+            "routes": {},
+        },
+    }
+
+    # First renewal
+    thread_cache.renew_if_ttl_expired()
+    assert thread_cache.is_bypassed_ip("192.168.1.1")
+    assert thread_cache.get_endpoints() == [
+        {
+            "graphql": False,
+            "method": "POST",
+            "route": "/v2",
+            "rate_limiting": {
+                "enabled": False,
+            },
+            "force_protection_off": False,
+        }
+    ]
+    assert thread_cache.is_user_blocked("user123")
+
+    # Simulate another TTL expiration
+    mock_get_unixtime_ms.return_value += THREAD_CONFIG_TTL_MS + 1
+    thread_cache.renew_if_ttl_expired()
+    assert thread_cache.is_bypassed_ip("192.168.1.1")
+    assert thread_cache.get_endpoints() == [
+        {
+            "graphql": False,
+            "method": "POST",
+            "route": "/v2",
+            "rate_limiting": {
+                "enabled": False,
+            },
+            "force_protection_off": False,
+        }
+    ]
+    assert thread_cache.is_user_blocked("user123")
 
 
 @patch("aikido_zen.background_process.comms.get_comms")
