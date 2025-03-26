@@ -89,7 +89,7 @@ class ServiceConfig:
             return False
         if not self.blocked_user_agent_regex:
             return False
-        return self.blocked_user_agent_regex.match(ua)
+        return self.blocked_user_agent_regex.search(ua)
 
 
 def parse_ip_entry(entry):
