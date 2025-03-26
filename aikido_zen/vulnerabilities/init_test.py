@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 from . import run_vulnerability_scan
 from aikido_zen.context import current_context, Context
 from aikido_zen.errors import AikidoSQLInjection
-from aikido_zen.thread.thread_cache import ThreadCache, threadlocal_storage
+from aikido_zen.thread.thread_cache import ThreadCache, get_cache
 from aikido_zen.helpers.iplist import IPList
 
 
