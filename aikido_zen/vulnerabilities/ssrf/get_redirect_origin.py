@@ -37,7 +37,6 @@ def find_origin(redirects, url, visited):
 
     # Find a redirect where the current URL is the destination
     redirect = next((r for r in redirects if compare_urls(r["destination"], url)), None)
-    print("Redirects: ", redirect)
     if redirect:
         # Recursively find the origin starting from the source URL
         return find_origin(redirects, redirect["source"], visited)
