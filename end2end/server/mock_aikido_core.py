@@ -36,6 +36,8 @@ responses = {
                 "ips": ["1.2.3.4"]
             }
         ],
+        "allowedIPAddresses": [],
+        "blockedUserAgents": "",
     },
     "configUpdatedAt": {},
 }

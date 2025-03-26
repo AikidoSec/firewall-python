@@ -17,12 +17,11 @@ def update_firewall_lists(connection_manager):
         blocked_user_agents = res.get("blockedUserAgents")
 
         # Validate response
-        if (
-            not res.get("success")
-            and blocked_ips
-            and allowed_ips
-            and blocked_user_agents
-        ):
+        if not res.get("success"):
+            return
+        if not isinstance(blocked_ips, list) or not isinstance(allowed_ips, list):
+            return
+        if not isinstance(blocked_user_agents, str):
             return
 
         connection_manager.conf.set_blocked_ips(blocked_ips)
