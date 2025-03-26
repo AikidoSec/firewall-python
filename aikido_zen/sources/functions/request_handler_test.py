@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch, MagicMock
-from aikido_zen.thread.thread_cache import get_cache, ThreadCache, threadlocal_storage
+from aikido_zen.thread.thread_cache import get_cache, ThreadCache
 from .request_handler import request_handler, post_response
 from ...background_process.service_config import ServiceConfig
 from ...context import Context, current_context
@@ -22,9 +22,10 @@ def mock_context():
 
 @pytest.fixture(autouse=True)
 def run_around_tests():
+    get_cache().reset()
     current_context.set(None)
     yield
-    setattr(threadlocal_storage, "cache", None)
+    get_cache().reset()
     current_context.set(None)
 
 
