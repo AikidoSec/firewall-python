@@ -1,6 +1,6 @@
-![Aikido Zen for Python 3](https://raw.githubusercontent.com/AikidoSec/firewall-python/main/docs/banner.svg)
+![Zen by Aikido for Python 3](https://raw.githubusercontent.com/AikidoSec/firewall-python/main/docs/banner.svg)
 
-# Zen, in-app firewall for Python 3  | by Aikido
+# Zen, in-app firewall for Python 3 | by Aikido
 [![Codecov](https://img.shields.io/codecov/c/github/AikidoSec/firewall-python?style=flat-square&token=AJK9LU35GY)](https://app.codecov.io/gh/aikidosec/firewall-python) 
 [![PyPI Package](https://img.shields.io/pypi/v/aikido_zen?style=flat-square)](https://pypi.org/project/aikido_zen/)
 ![Code Style : Black](https://img.shields.io/badge/code%20style-black-black?style=flat-square)
@@ -9,9 +9,9 @@
 
 Zen, your in-app firewall for peace of mind– at runtime.
 
-Zen is an embedded Web Application Firewall that autonomously protects your Python apps against common and critical attacks.
+Zen is an embedded Web Application Firewall that autonomously protects your apps against attacks and provides advanced access controls features.
 
-Zen protects your Python apps by preventing user input containing dangerous strings, which allow SQL injections. It runs on the same server as your Python app for simple [installation](https://pypi.org/project/aikido_zen/#installation) and zero maintenance.
+Zen protects your Python apps by blocking malicious user input that could lead to security vulnerabilities. It guards against SQL injections, command injections, path traversal attacks, and more. Running directly on your Python app's server, it offers seamless installation and low maintenance.
 
 ## Features
 
