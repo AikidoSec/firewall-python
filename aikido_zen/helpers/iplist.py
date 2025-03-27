@@ -64,3 +64,9 @@ class IPList:
                 return True
 
         return False
+
+    def from_list(self, ip_list):
+        """Adds a list of IP addresses or subnets to the ip list"""
+        for ip in ip_list:
+            self.add(ip)
+        return self  # Return self to allow chaining
