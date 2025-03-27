@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import MagicMock
 from .ip_allowed_to_access_route import ip_allowed_to_access_route
+from aikido_zen.helpers.iplist import IPList
 
 
 def gen_route_metadata(
@@ -14,7 +15,11 @@ def gen_endpoints(allowed_ip_addresses):
         {
             "route": "/posts/:id",
             "method": "POST",
-            "allowedIPAddresses": allowed_ip_addresses,
+            "allowedIPAddresses": (
+                IPList().from_list(allowed_ip_addresses)
+                if len(allowed_ip_addresses) > 0
+                else None
+            ),
             "force_protection_off": False,
         },
     ]
@@ -33,9 +38,10 @@ def test_always_allows_request_if_no_match():
 
 
 def test_always_allows_request_if_allowed_ip_address():
-    endpoints = gen_endpoints(["1.2.3.4"])
+    endpoints = gen_endpoints(["1.2.3.4", "10.0.0.0/24"])
     modified_context = gen_route_metadata()
     assert ip_allowed_to_access_route("1.2.3.4", modified_context, endpoints) is True
+    assert ip_allowed_to_access_route("10.0.0.2", modified_context, endpoints) is True
 
 
 def test_always_allows_request_if_localhost():
@@ -63,9 +69,10 @@ def test_allows_request_if_allowed_ip_addresses_is_empty():
 
 
 def test_blocks_request_if_not_allowed_ip_address():
-    endpoints = gen_endpoints(["1.2.3.4"])
+    endpoints = gen_endpoints(["1.2.3.4", "10.0.0.0/24"])
     modified_context = gen_route_metadata()
     assert ip_allowed_to_access_route("3.4.5.6", modified_context, endpoints) is False
+    assert ip_allowed_to_access_route("10.1.1.1", modified_context, endpoints) is False
 
 
 def test_checks_every_matching_endpoint():
@@ -73,13 +80,13 @@ def test_checks_every_matching_endpoint():
         {
             "route": "/posts/:id",
             "method": "POST",
-            "allowedIPAddresses": ["3.4.5.6"],
+            "allowedIPAddresses": IPList().from_list(["3.4.5.6"]),
             "force_protection_off": False,
         },
         {
             "route": "/posts/*",
             "method": "POST",
-            "allowedIPAddresses": ["1.2.3.4"],
+            "allowedIPAddresses": IPList().from_list(["1.2.3.4"]),
             "force_protection_off": False,
         },
     ]
@@ -104,7 +111,7 @@ def test_if_allowed_ips_is_empty_or_broken():
         {
             "route": "/posts/*",
             "method": "POST",
-            "allowedIPAddresses": ["1.2.3.4"],
+            "allowedIPAddresses": IPList().from_list(["1.2.3.4"]),
             "force_protection_off": False,
         },
     ]
