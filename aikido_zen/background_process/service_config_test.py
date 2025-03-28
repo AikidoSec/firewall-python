@@ -208,4 +208,5 @@ def test_service_config_with_empty_allowlist():
         }
     )[0]
     assert admin_endpoint["route"] == "/admin"
-    assert admin_endpoint["allowedIPAddresses"] is None
+    assert isinstance(admin_endpoint["allowedIPAddresses"], list)
+    assert len(admin_endpoint["allowedIPAddresses"]) == 0
