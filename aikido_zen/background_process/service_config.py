@@ -60,9 +60,6 @@ class ServiceConfig:
                 or len(endpoint["allowedIPAddresses"]) == 0
             ):
                 #  Skip empty allowlist
-                endpoint["allowedIPAddresses"] = (
-                    None  # Explicitly set to None to be on the safe side
-                )
                 continue
 
             endpoint["allowedIPAddresses"] = IPList(endpoint["allowedIPAddresses"])
