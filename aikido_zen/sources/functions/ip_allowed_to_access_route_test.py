@@ -16,9 +16,7 @@ def gen_endpoints(allowed_ip_addresses):
             "route": "/posts/:id",
             "method": "POST",
             "allowedIPAddresses": (
-                IPList().from_list(allowed_ip_addresses)
-                if len(allowed_ip_addresses) > 0
-                else None
+                IPList(allowed_ip_addresses) if len(allowed_ip_addresses) > 0 else None
             ),
             "force_protection_off": False,
         },
@@ -80,13 +78,13 @@ def test_checks_every_matching_endpoint():
         {
             "route": "/posts/:id",
             "method": "POST",
-            "allowedIPAddresses": IPList().from_list(["3.4.5.6"]),
+            "allowedIPAddresses": IPList(["3.4.5.6"]),
             "force_protection_off": False,
         },
         {
             "route": "/posts/*",
             "method": "POST",
-            "allowedIPAddresses": IPList().from_list(["1.2.3.4"]),
+            "allowedIPAddresses": IPList(["1.2.3.4"]),
             "force_protection_off": False,
         },
     ]
@@ -111,7 +109,7 @@ def test_if_allowed_ips_is_empty_or_broken():
         {
             "route": "/posts/*",
             "method": "POST",
-            "allowedIPAddresses": IPList().from_list(["1.2.3.4"]),
+            "allowedIPAddresses": IPList(["1.2.3.4"]),
             "force_protection_off": False,
         },
     ]
