@@ -3,26 +3,31 @@ Sink module for python's `os`
 """
 
 import copy
+import platform
 from pathlib import PurePath
 import aikido_zen.importhook as importhook
 import aikido_zen.vulnerabilities as vulns
 
-# os.func(...) functions, can have a filename and destination.
-OS_FILE_FUNCTIONS = [
+# Common functions available on both Windows and Unix
+COMMON_FILE_FUNCTIONS = [
     "access",
     "chmod",
-    "chown",
     "mkdir",
     "listdir",
-    "readlink",
     "unlink",
     "rename",
     "rmdir",
     "remove",
-    "symlink",
-    "link",
     "walk",
     "open",
+]
+
+# Unix-specific functions
+UNIX_FILE_FUNCTIONS = [
+    "chown",
+    "readlink",
+    "symlink",
+    "link",
 ]
 
 # os.path.realpath, os.path.abspath aren't wrapped, since they use os.path.join
@@ -57,7 +62,13 @@ def on_os_import(os):
     Returns : Modified os object
     """
     modified_os = importhook.copy_module(os)
-    for op in OS_FILE_FUNCTIONS:
+    
+    # Select functions based on platform
+    functions_to_wrap = COMMON_FILE_FUNCTIONS
+    if platform.system() != "Windows":
+        functions_to_wrap.extend(UNIX_FILE_FUNCTIONS)
+    
+    for op in functions_to_wrap:
         # Wrap os. functions
         former_func = copy.deepcopy(getattr(os, op))
         aikido_new_func = generate_aikido_function(op, former_func)
