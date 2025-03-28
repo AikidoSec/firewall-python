@@ -52,18 +52,20 @@ class ServiceConfig:
 
         # Create a IPList instance for each endpoint
         for endpoint in self.endpoints:
-            if not "allowedIPAddresses" in endpoint or not isinstance(
-                endpoint["allowedIPAddresses"], list
-            ):
+            if not "allowedIPAddresses" in endpoint:
                 #  This feature is not supported by the current aikido server version
                 continue
-            if len(endpoint["allowedIPAddresses"]) == 0:
+            if (
+                not isinstance(endpoint["allowedIPAddresses"], list)
+                or len(endpoint["allowedIPAddresses"]) == 0
+            ):
                 #  Skip empty allowlist
+                endpoint["allowedIPAddresses"] = (
+                    None  # Explicitly set to None to be on the safe side
+                )
                 continue
 
-            endpoint["allowedIPAddresses"] = IPList().from_list(
-                endpoint["allowedIPAddresses"]
-            )
+            endpoint["allowedIPAddresses"] = IPList(endpoint["allowedIPAddresses"])
 
     def get_endpoints(self, route_metadata):
         """
