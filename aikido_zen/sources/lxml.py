@@ -7,7 +7,7 @@ import aikido_zen.importhook as importhook
 from aikido_zen.helpers.extract_data_from_xml_body import (
     extract_data_from_xml_body,
 )
-from aikido_zen.background_process.packages import pkg_compat_check, ANY_VERSION
+from aikido_zen.background_process.packages import is_package_compatible, ANY_VERSION
 
 
 @importhook.on_import("lxml.etree")
@@ -18,7 +18,7 @@ def on_lxml_import(eltree):
     - Wrap on
     Returns : Modified `lxml.etree` object
     """
-    if not pkg_compat_check("lxml", required_version=ANY_VERSION):
+    if not is_package_compatible("lxml", required_version=ANY_VERSION):
         return eltree
     modified_eltree = importhook.copy_module(eltree)
 

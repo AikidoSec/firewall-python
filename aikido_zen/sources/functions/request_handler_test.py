@@ -412,6 +412,37 @@ def test_allowed_for_endpoint_and_in_allowlist_but_is_bot():
     )
 
 
+def test_allowed_for_endpoint_and_in_allowlist_but_is_bot_2():
+    # Arrange
+    set_context(
+        "1.1.1.1",
+        "Mozilla/5.0 (compatible; Bytespider/1.0; +http://bytespider.com/bot.html)",
+    )
+    config = create_service_config()
+    config.set_blocked_user_agents(
+        "AI2Bot|Applebot-Extended|Bytespider|CCBot|ClaudeBot|cohere-training-data-crawler|Diffbot|Google-Extended|GPTBot|Kangaroo Bot|meta-externalagent|anthropic-ai|omgili|PanguBot|Webzio-Extended|Timpibot|img2dataset|ImagesiftBot|archive.org_bot"
+    )
+
+    # Act
+    result = request_handler("pre_response")
+
+    # Assert
+    assert result == (
+        "You are not allowed to access this resource because you have been identified as a bot.",
+        403,
+    )
+
+    set_context("1.1.1.1", "Mozilla/5.0 (compatible; GPTBot/1.0;")
+
+    result = request_handler("pre_response")
+
+    # Assert
+    assert result == (
+        "You are not allowed to access this resource because you have been identified as a bot.",
+        403,
+    )
+
+
 def test_allowed_for_endpoint_and_in_allowlist_bots_are_set_but_is_not_bot():
     # Arrange
     set_context("1.1.1.1", "Test_u4 bot")

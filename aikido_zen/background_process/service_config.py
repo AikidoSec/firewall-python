@@ -45,9 +45,24 @@ class ServiceConfig:
 
     def set_endpoints(self, endpoints):
         """Sets non-graphql endpoints"""
+
         self.endpoints = [
             endpoint for endpoint in endpoints if not endpoint.get("graphql")
         ]
+
+        # Create a IPList instance for each endpoint
+        for endpoint in self.endpoints:
+            if not "allowedIPAddresses" in endpoint:
+                #  This feature is not supported by the current aikido server version
+                continue
+            if (
+                not isinstance(endpoint["allowedIPAddresses"], list)
+                or len(endpoint["allowedIPAddresses"]) == 0
+            ):
+                #  Skip empty allowlist
+                continue
+
+            endpoint["allowedIPAddresses"] = IPList(endpoint["allowedIPAddresses"])
 
     def get_endpoints(self, route_metadata):
         """
@@ -89,7 +104,7 @@ class ServiceConfig:
             return False
         if not self.blocked_user_agent_regex:
             return False
-        return self.blocked_user_agent_regex.match(ua)
+        return self.blocked_user_agent_regex.search(ua)
 
 
 def parse_ip_entry(entry):

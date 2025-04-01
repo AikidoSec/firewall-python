@@ -17,9 +17,14 @@ def get_ip_address_type(ip):
 class IPList:
     """A blocklist, where you can add subnets and addresses"""
 
-    def __init__(self):
+    def __init__(self, ip_list=None):
+        """Initializes the IPList, optionally with a list of IPs or CIDRs"""
         self.blocked_addresses = set()
         self.blocked_subnets = []
+
+        if ip_list:
+            for ip_or_cidr in ip_list:
+                self.add(ip_or_cidr)
 
     def add_address(self, ip: str, ip_type: str):
         self.blocked_addresses.add((ip, ip_type))

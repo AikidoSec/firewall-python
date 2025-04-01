@@ -38,6 +38,18 @@ def test_service_config_initialization():
             },
             "force_protection_off": False,
         },
+        {
+            "graphql": False,
+            "method": "GET",
+            "route": "/admin",
+            "rate_limiting": {
+                "enabled": False,
+                "max_requests": 10,
+                "window_size_in_ms": 1000,
+            },
+            "allowedIPAddresses": ["1.2.3.4", "192.168.2.0/24"],
+            "force_protection_off": False,
+        },
     ]
     last_updated_at = "2023-10-01"
     service_config = ServiceConfig(
@@ -49,15 +61,39 @@ def test_service_config_initialization():
     )
 
     # Check that non-GraphQL endpoints are correctly filtered
-    assert len(service_config.endpoints) == 2
+    assert len(service_config.endpoints) == 3
     assert service_config.endpoints[0]["route"] == "/v1"
     assert service_config.endpoints[1]["route"] == "/v3"
+    assert service_config.endpoints[2]["route"] == "/admin"
     assert service_config.last_updated_at == last_updated_at
     assert isinstance(service_config.bypassed_ips, IPList)
     assert service_config.bypassed_ips.matches("127.0.0.1")
     assert service_config.bypassed_ips.matches("123.1.2.2")
     assert not service_config.bypassed_ips.matches("1.1.1.1")
     assert service_config.blocked_uids == set(["1", "0", "5"])
+
+    v1_endpoint = service_config.get_endpoints(
+        {
+            "method": "POST",
+            "route": "/v1",
+            "url": "/v1",
+        }
+    )[0]
+    assert v1_endpoint["route"] == "/v1"
+    assert not "allowedIPAddresses" in v1_endpoint
+
+    admin_endpoint = service_config.get_endpoints(
+        {
+            "method": "GET",
+            "route": "/admin",
+            "url": "/admin",
+        }
+    )[0]
+    assert admin_endpoint["route"] == "/admin"
+    assert isinstance(admin_endpoint["allowedIPAddresses"], IPList)
+    assert admin_endpoint["allowedIPAddresses"].matches("192.168.2.1")
+    assert admin_endpoint["allowedIPAddresses"].matches("1.2.3.4")
+    assert not admin_endpoint["allowedIPAddresses"].matches("192.168.0.1")
 
 
 # Sample data for testing
@@ -128,3 +164,49 @@ def test_ip_blocking():
     assert not config.is_bypassed_ip("::2")
     assert not config.is_bypassed_ip("1.1.1.1")
     assert not config.is_bypassed_ip("10.1.0.0")
+
+
+def test_service_config_with_empty_allowlist():
+    endpoints = [
+        {
+            "graphql": False,
+            "method": "GET",
+            "route": "/admin",
+            "rate_limiting": {
+                "enabled": False,
+                "max_requests": 10,
+                "window_size_in_ms": 1000,
+            },
+            "allowedIPAddresses": [],
+            "force_protection_off": False,
+        },
+    ]
+    last_updated_at = "2023-10-01"
+    service_config = ServiceConfig(
+        endpoints,
+        last_updated_at,
+        ["0", "0", "1", "5"],
+        ["127.0.0.1", "123.1.2.0/24", "132.1.0.0/16"],
+        True,
+    )
+
+    # Check that non-GraphQL endpoints are correctly filtered
+    assert len(service_config.endpoints) == 1
+    assert service_config.endpoints[0]["route"] == "/admin"
+    assert service_config.last_updated_at == last_updated_at
+    assert isinstance(service_config.bypassed_ips, IPList)
+    assert service_config.bypassed_ips.matches("127.0.0.1")
+    assert service_config.bypassed_ips.matches("123.1.2.2")
+    assert not service_config.bypassed_ips.matches("1.1.1.1")
+    assert service_config.blocked_uids == set(["1", "0", "5"])
+
+    admin_endpoint = service_config.get_endpoints(
+        {
+            "method": "GET",
+            "route": "/admin",
+            "url": "/admin",
+        }
+    )[0]
+    assert admin_endpoint["route"] == "/admin"
+    assert isinstance(admin_endpoint["allowedIPAddresses"], list)
+    assert len(admin_endpoint["allowedIPAddresses"]) == 0
