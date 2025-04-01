@@ -2,7 +2,7 @@
 Init.py file for starlette module
 ---
 Starlette wrapping is subdivided in two parts :
-- starlette.applications : Wraps __call__ on Starlette class to run "init" stage.
+- starlette.applications : Wraps __call__ on Starlette class to run the on_init_handler
 - starlette.routing : request_response function : Run pre_response code and 
     also runs post_response code after getting response from user function.
 
