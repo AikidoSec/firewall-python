@@ -4,7 +4,7 @@ Sink module for `asyncpg`
 
 import copy
 import aikido_zen.importhook as importhook
-from aikido_zen.background_process.packages import pkg_compat_check
+from aikido_zen.background_process.packages import is_package_compatible
 import aikido_zen.vulnerabilities as vulns
 from aikido_zen.helpers.logging import logger
 
@@ -22,7 +22,7 @@ def on_asyncpg_import(asyncpg):
     https://github.com/MagicStack/asyncpg/blob/85d7eed40637e7cad73a44ed2439ffeb2a8dc1c2/asyncpg/connection.py#L43
     Returns : Modified asyncpg.connection object
     """
-    if not pkg_compat_check("asyncpg", REQUIRED_ASYNCPG_VERSION):
+    if not is_package_compatible("asyncpg", REQUIRED_ASYNCPG_VERSION):
         return asyncpg
     modified_asyncpg = importhook.copy_module(asyncpg)
 
