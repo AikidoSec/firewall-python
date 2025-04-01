@@ -10,7 +10,7 @@ ANY_VERSION = "0.0.0"
 
 
 def is_package_compatible(package=None, required_version=ANY_VERSION, packages=None):
-    """Checks for compatibility of one or multiple package names (in the case of psycopg, you need to check multiple names."""
+    """Checks for compatibility of one or multiple package names (in the case of psycopg, you need to check multiple names)"""
     # Fetch package version :
     if package is not None:
         packages = [package]
