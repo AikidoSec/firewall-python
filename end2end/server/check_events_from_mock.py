@@ -22,6 +22,7 @@ def validate_started_event(event, stack, dry_mode=False, serverless=False, os_na
     #    assert set(event["agent"]["stack"]) == set(stack)
 
 def validate_heartbeat(event, routes, req_stats):
-    assert event["type"] == "heartbeat"
-    assert event["routes"] == routes
-    assert event["stats"]["requests"] == req_stats
+    assert event["type"] == "heartbeat", f"Expected event type 'heartbeat', but got '{event['type']}'"
+    assert event["routes"] == routes, f"Expected routes '{routes}', but got '{event['routes']}'"
+    assert event["stats"]["requests"] == req_stats, f"Expected request stats '{req_stats}', but got '{event['stats']['requests']}'"
+
