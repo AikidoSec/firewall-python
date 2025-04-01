@@ -59,6 +59,8 @@ def on_os_import(os):
     modified_os = importhook.copy_module(os)
     for op in OS_FILE_FUNCTIONS:
         # Wrap os. functions
+        if not hasattr(os, op):
+            continue  # Don't wrap methods that are specific to the OS (e.g. chown)
         former_func = copy.deepcopy(getattr(os, op))
         aikido_new_func = generate_aikido_function(op, former_func)
         setattr(os, op, aikido_new_func)
@@ -66,6 +68,8 @@ def on_os_import(os):
 
     for op in OS_PATH_FUNCTIONS:
         # Wrap os.path functions
+        if not hasattr(os.path, op):
+            continue  # Don't wrap methods that are specific to the OS
         former_func = copy.deepcopy(getattr(os.path, op))
         aikido_new_func = generate_aikido_function(f"path.{op}", former_func)
         setattr(os.path, op, aikido_new_func)
