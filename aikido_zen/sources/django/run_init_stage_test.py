@@ -120,6 +120,36 @@ def test_run_init_stage_with_empty_body_string(mock_request):
     assert context.body is None
 
 
+def test_run_init_stage_with_json_wrong_content_type(mock_request):
+    """Test run_init_stage with an XML request."""
+    mock_request.content_type = "application/x-www-form-urlencoded"
+    mock_request.body = '{"key": "value"}'  # Example XML body
+    run_init_stage(mock_request)
+    # Assertions
+    context: Context = get_current_context()
+    assert context.body == {"key": "value"}
+
+
+def test_run_init_stage_with_xml_wrong_content_type(mock_request):
+    """Test run_init_stage with an XML request."""
+    mock_request.content_type = "application/json"
+    mock_request.body = "<root><key>value</key></root>"  # Example XML body
+    run_init_stage(mock_request)
+    # Assertions
+    context: Context = get_current_context()
+    assert context.body == "<root><key>value</key></root>"
+
+
+def test_run_init_stage_with_xml_wrong_content_type_form_urlencoded(mock_request):
+    """Test run_init_stage with an XML request."""
+    mock_request.content_type = "application/x-www-form-urlencoded"
+    mock_request.body = "<root><key>value=2</key></root>"  # Example XML body
+    run_init_stage(mock_request)
+    # Assertions
+    context: Context = get_current_context()
+    assert context.body == "<root><key>value=2</key></root>"
+
+
 def test_run_init_stage_with_xml(mock_request):
     """Test run_init_stage with an XML request."""
     mock_request.content_type = "application/xml"
