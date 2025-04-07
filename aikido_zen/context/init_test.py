@@ -19,12 +19,14 @@ basic_wsgi_req = {
     "HTTP_USER_AGENT": "Mozilla/5.0",
 }
 
+
 @pytest.fixture(autouse=True)
 def run_around_tests():
     yield
     # Make sure to reset context after every test so it does not
     # interfere with other tests
     current_context.set(None)
+
 
 def test_get_current_context_no_context():
     # Test get_current_context() when no context is set
@@ -212,17 +214,20 @@ def test_valid_json_string_with_newlines():
     context.set_body('\r\n\r\n"hello"\r\n\r\n')
     assert context.body == "hello"
 
+
 def test_valid_json_string_with_spaces():
     context = Context(req=basic_wsgi_req, body=None, source="flask")
 
     context.set_body('"                    hello              "')
     assert context.body == "                    hello              "
-    
+
+
 def test_set_valid_json_with_newlines():
     context = Context(req=basic_wsgi_req, body=None, source="flask")
 
     context.set_body('\r\n\r\n{"key": [1, 2, 3]}\r\n\r\n')
     assert context.body == {"key": [1, 2, 3]}
+
 
 def test_set_valid_json_with_spaces_and_array():
     context = Context(req=basic_wsgi_req, body=None, source="flask")
