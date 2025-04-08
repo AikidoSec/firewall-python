@@ -58,9 +58,9 @@ def test_dangerous_response_with_form_header_but_json_body():
     events = fetch_events_from_mock("http://localhost:5000")
     attacks = filter_on_event_type(events, "detected_attack")
 
-    assert len(attacks) == 1
-    del attacks[0]["attack"]["stack"]
-    assert attacks[0]["attack"] == {
+    assert len(attacks) == 2
+    del attacks[1]["attack"]["stack"]
+    assert attacks[1]["attack"] == {
         "blocked": True,
         "kind": "sql_injection",
         "metadata": {
@@ -72,7 +72,6 @@ def test_dangerous_response_with_form_header_but_json_body():
         "source": "body",
         "user": None,
     }
-    del attacks[0]
 
 def test_dangerous_response_with_firewall_shell():
     dog_name = 'Dangerous bobby", 1); -- '
@@ -82,9 +81,9 @@ def test_dangerous_response_with_firewall_shell():
     events = fetch_events_from_mock("http://localhost:5000")
     attacks = filter_on_event_type(events, "detected_attack")
     
-    assert len(attacks) == 1
-    del attacks[0]["attack"]["stack"]
-    assert attacks[0]["attack"] == {
+    assert len(attacks) == 3
+    del attacks[2]["attack"]["stack"]
+    assert attacks[2]["attack"] == {
         "blocked": True,
         "kind": "shell_injection",
         'metadata': {'command': 'ls -la'},
@@ -94,7 +93,6 @@ def test_dangerous_response_with_firewall_shell():
         'source': "route_params",
         'user': None
     }
-    del attacks[0]
 
 def test_dangerous_response_without_firewall():
     dog_name = 'Dangerous bobby", 1); -- '
