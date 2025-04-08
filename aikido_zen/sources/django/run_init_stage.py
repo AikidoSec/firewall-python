@@ -14,10 +14,10 @@ def run_init_stage(request):
             body = json.loads(request.body)
         except Exception:
             pass
-        
+
         if body is None or len(body) == 0:
             # try-catch loading of form parameters, this is to fix issue with DATA_UPLOAD_MAX_NUMBER_FIELDS :
-            try: 
+            try:
                 body = request.POST.dict()
                 if len(body) == 0:
                     body = None  # Reset
