@@ -57,7 +57,8 @@ def test_dangerous_response_with_form_header_but_json_body():
     events = fetch_events_from_mock("http://localhost:5000")
     attacks = filter_on_event_type(events, "detected_attack")
 
-    assert len(attacks) == 1
+    assert len(attacks) == 2
+    del attacks[0] # Previous attack
     del attacks[0]["attack"]["stack"]
     assert attacks[0]["attack"] == {
         "blocked": True,
@@ -80,7 +81,7 @@ def test_dangerous_response_with_firewall_shell():
     events = fetch_events_from_mock("http://localhost:5000")
     attacks = filter_on_event_type(events, "detected_attack")
     
-    assert len(attacks) == 2
+    assert len(attacks) == 3
     del attacks[0] # Previous attack
     del attacks[0]["attack"]["stack"]
     assert attacks[0]["attack"] == {
