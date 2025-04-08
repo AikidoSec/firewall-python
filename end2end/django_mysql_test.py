@@ -50,7 +50,7 @@ def test_dangerous_response_with_form_header_but_json_body():
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
     json_body = json.dumps({"dog_name": 'Dangerous bobby", 1); -- '})
 
-    res = requests.post(base_url_fw + "/create", headers=headers, data=json_body)
+    res = requests.post(base_url_fw + "/json/create", headers=headers, data=json_body)
     assert res.status_code == 500
     time.sleep(5)
 
