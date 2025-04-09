@@ -45,7 +45,6 @@ def test_dangerous_response_with_firewall():
         'source': "body",
         'user': None
     }
-    del attacks[0]
 
 def test_dangerous_response_with_form_header_but_json_body():
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
