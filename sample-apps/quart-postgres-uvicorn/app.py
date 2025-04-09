@@ -64,7 +64,7 @@ async def create_dog():
 
     return jsonify({"message": f'Dog {dog_name} created successfully'}), 201
 
-@app.route("/json/create", methods=['POST'])
+@app.route("/create/json", methods=['POST'])
 async def create_dog_json():
     data = await request.get_json(force=True)
     dog_name = data.get('dog_name')
