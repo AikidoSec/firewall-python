@@ -1,5 +1,6 @@
 import time
 import pytest
+import json
 import requests
 from .server.check_events_from_mock import fetch_events_from_mock, validate_started_event, filter_on_event_type
 
@@ -45,6 +46,31 @@ def test_dangerous_response_with_firewall():
     assert attacks[0]["attack"]["user"]["id"] == "user123"
     assert attacks[0]["attack"]["user"]["name"] == "John Doe"
 
+def test_dangerous_response_with_form_header_but_json_body():
+    headers = {"Content-Type": "application/x-www-form-urlencoded"}
+    json_body = json.dumps({"dog_name": 'Dangerous bobby", 1); -- '})
+
+    res = requests.post(post_url_fw + "/json/create", headers=headers, data=json_body)
+    assert res.status_code == 500
+    time.sleep(5)
+
+    events = fetch_events_from_mock("http://localhost:5000")
+    attacks = filter_on_event_type(events, "detected_attack")
+
+    assert len(attacks) == 2
+    del attacks[1]["attack"]["stack"]
+    assert attacks[1]["attack"] == {
+        "blocked": True,
+        "kind": "sql_injection",
+        "metadata": {
+            "sql": 'INSERT INTO sample_app_dogs (dog_name, dog_boss) VALUES ("Dangerous bobby", 1); -- ", "N/A")'
+        },
+        "operation": "asyncpg.connection.Connection.execute",
+        "pathToPayload": ".dog_name",
+        "payload": '"Dangerous bobby\\", 1); -- "',
+        "source": "body",
+        "user": None,
+    }
 
 def test_dangerous_response_without_firewall():
     dog_name = "Dangerous Bobby', TRUE); -- "

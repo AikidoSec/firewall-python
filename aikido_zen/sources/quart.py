@@ -36,14 +36,20 @@ async def handle_request_wrapper(former_handle_request, quart_app, req):
     try:
         context = get_current_context()
         if context:
+            body = None
+            try:
+                body = await req.get_json(force=True)
+            except Exception:
+                pass
+
             form = await req.form
-            if req.is_json:
-                context.set_body(await req.get_json())
-            elif form:
-                context.set_body(form)
+            if form and body is None:
+                body = form
             else:
                 data = await req.data
-                context.set_body(data.decode("utf-8"))
+                body = data.decode("utf-8")
+
+            context.set_body(body)
             context.cookies = req.cookies.to_dict()
             context.set_as_current_context()
     except Exception as e:
