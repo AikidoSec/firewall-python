@@ -1,6 +1,5 @@
 """Exports request_handler function"""
 
-import aikido_zen.background_process as communications
 import aikido_zen.context as ctx
 from aikido_zen.api_discovery.get_api_info import get_api_info
 from aikido_zen.api_discovery.update_route_info import update_route_info
@@ -15,12 +14,9 @@ def request_handler(stage, status_code=0):
     """This will check for rate limiting, Allowed IP's, useful routes, etc."""
     try:
         if stage == "init":
-            # Initial stage of the request, called after context is stored.
             thread_cache = get_cache()
-            thread_cache.renew_if_ttl_expired()  # Only check TTL at the start of a request.
             if ctx.get_current_context() and thread_cache:
                 thread_cache.increment_stats()  # Increment request statistics if a context exists.
-
         if stage == "pre_response":
             return pre_response()
         if stage == "post_response":
@@ -76,9 +72,10 @@ def pre_response():
 def post_response(status_code):
     """Checks if the current route is useful"""
     context = ctx.get_current_context()
-    comms = communications.get_comms()
-    if not context or not comms:
+    if not context:
         return
+    route_metadata = context.get_route_metadata()
+
     is_curr_route_useful = is_useful_route(
         status_code,
         context.route,
@@ -86,17 +83,12 @@ def post_response(status_code):
     )
     if not is_curr_route_useful:
         return
-    route_metadata = context.get_route_metadata()
+
     cache = get_cache()
     if cache:
-        route = cache.routes.get(route_metadata)
-        if not route:
-            # This route does not exist yet, initialize it:
-            cache.routes.initialize_route(route_metadata)
-            comms.send_data_to_bg_process("INITIALIZE_ROUTE", route_metadata)
+        cache.routes.increment_route(route_metadata)
+
         # Run API Discovery :
         update_route_info(
             new_apispec=get_api_info(context), route=cache.routes.get(route_metadata)
         )
-        # Add hit :
-        cache.routes.increment_route(route_metadata)

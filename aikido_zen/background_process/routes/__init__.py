@@ -19,20 +19,17 @@ class Routes:
 
     def initialize_route(self, route_metadata):
         """
-        Initializes a route for the first time.
+        Initializes a route for the first time. `hits_delta_since_sync` counts delta between syncs.
         """
         self.manage_routes_size()
         key = route_to_key(route_metadata)
-        if self.routes.get(key):
-            return
         self.routes[key] = {
             "method": route_metadata.get("method"),
             "path": route_metadata.get("route"),
             "hits": 0,
+            "hits_delta_since_sync": 0,
             "apispec": {},
         }
-        # This field counts the difference in hits in between synchronisation for threads :
-        self.routes[key]["hits_delta_since_sync"] = 0
 
     def increment_route(self, route_metadata):
         """
@@ -41,8 +38,8 @@ class Routes:
         """
         key = route_to_key(route_metadata)
         if not self.routes.get(key):
-            return
-        # Add a hit to the route :
+            self.initialize_route(route_metadata)
+        # Add hits to
         route = self.routes.get(key)
         route["hits"] += 1
         route["hits_delta_since_sync"] += 1
