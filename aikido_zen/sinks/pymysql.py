@@ -5,7 +5,7 @@ Sink module for `pymysql`
 import copy
 import logging
 import aikido_zen.importhook as importhook
-from aikido_zen.background_process.packages import pkg_compat_check
+from aikido_zen.background_process.packages import is_package_compatible
 import aikido_zen.vulnerabilities as vulns
 
 logger = logging.getLogger("aikido_zen")
@@ -21,7 +21,7 @@ def on_pymysql_import(mysql):
     https://github.com/PyMySQL/PyMySQL/blob/95635f587ba9076e71a223b113efb08ac34a361d/pymysql/cursors.py#L133
     Returns : Modified pymysql.cursors object
     """
-    if not pkg_compat_check("pymysql", REQUIRED_PYMYSQL_VERSION):
+    if not is_package_compatible("pymysql", REQUIRED_PYMYSQL_VERSION):
         return mysql
     modified_mysql = importhook.copy_module(mysql)
 

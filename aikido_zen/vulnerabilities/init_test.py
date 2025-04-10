@@ -4,8 +4,7 @@ from . import run_vulnerability_scan
 from aikido_zen.context import current_context, Context
 from aikido_zen.errors import AikidoSQLInjection
 from aikido_zen.thread.thread_cache import ThreadCache, threadlocal_storage
-from aikido_zen.helpers.blocklist import BlockList
-from aikido_zen.helpers.add_ip_address_to_blocklist import add_ip_address_to_blocklist
+from aikido_zen.helpers.iplist import IPList
 
 
 @pytest.fixture(autouse=True)
@@ -84,8 +83,8 @@ def test_ssrf(caplog, get_context):
 def test_lifecycle_cache_bypassed_ip(caplog, get_context):
     get_context.set_as_current_context()
     cache = ThreadCache()
-    cache.config.bypassed_ips = BlockList()
-    add_ip_address_to_blocklist("198.51.100.23", cache.config.bypassed_ips)
+    cache.config.bypassed_ips = IPList()
+    cache.config.bypassed_ips.add("198.51.100.23")
     assert cache.is_bypassed_ip("198.51.100.23")
     run_vulnerability_scan(kind="test", op="test", args=tuple())
     assert len(caplog.text) == 0
@@ -155,3 +154,27 @@ def test_ssrf_with_comms_hostnames_add(caplog, get_context, monkeypatch):
         mock_comms.send_data_to_bg_process.assert_any_call(
             "HOSTNAMES_ADD", ("test-hostname", 8097)
         )
+
+
+def test_ssrf_with_comms_hostnames_add_port_zero(caplog, get_context, monkeypatch):
+    get_context.set_as_current_context()
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
+    with patch("aikido_zen.background_process.comms.get_comms") as mock_get_comms:
+        # Create a mock comms object
+        mock_comms = MagicMock()
+        mock_get_comms.return_value = mock_comms  # Set the return value of get_comms
+        run_vulnerability_scan(
+            kind="ssrf",
+            op="test_op",
+            args=([], "test-hostname", 0),
+        )
+
+        call_was_made = True
+        try:
+            mock_comms.send_data_to_bg_process.assert_any_call(
+                "HOSTNAMES_ADD", ("test-hostname", 0)
+            )
+        except AssertionError:
+            call_was_made = False
+
+        assert not call_was_made  # No calls were made to HOSTNAMES_ADD

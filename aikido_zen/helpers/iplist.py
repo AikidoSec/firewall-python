@@ -14,12 +14,17 @@ def get_ip_address_type(ip):
         return None
 
 
-class BlockList:
+class IPList:
     """A blocklist, where you can add subnets and addresses"""
 
-    def __init__(self):
+    def __init__(self, ip_list=None):
+        """Initializes the IPList, optionally with a list of IPs or CIDRs"""
         self.blocked_addresses = set()
         self.blocked_subnets = []
+
+        if ip_list:
+            for ip_or_cidr in ip_list:
+                self.add(ip_or_cidr)
 
     def add_address(self, ip: str, ip_type: str):
         self.blocked_addresses.add((ip, ip_type))
@@ -27,7 +32,27 @@ class BlockList:
     def add_subnet(self, plain_ip: str, ip_range: int, ip_type: str):
         self.blocked_subnets.append((plain_ip, ip_range, ip_type))
 
-    def is_blocked(self, ip: str) -> bool:
+    def add(self, ip_or_cidr):
+        """
+        Checks whether ip_or_cidr is an IP address or is a subnet, and decides the correct IP type (IPv4 or IPv6)
+        """
+        if "/" not in ip_or_cidr:  # IP Address
+            ip_type = get_ip_address_type(ip_or_cidr)
+            if ip_type:
+                self.add_address(ip_or_cidr, ip_type)
+        else:  # Subnet
+            plain_ip, range_str = ip_or_cidr.split("/")
+            try:
+                ip_range = int(range_str)
+            except ValueError:
+                return
+            ip_type = get_ip_address_type(plain_ip)
+            if not ip_type:
+                return
+
+            self.add_subnet(plain_ip, ip_range, ip_type)
+
+    def matches(self, ip: str) -> bool:
         ip_type = get_ip_address_type(ip)
         if not ip_type:
             return False

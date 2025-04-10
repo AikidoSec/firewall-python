@@ -7,7 +7,7 @@ import sys
 import os
 
 
-APPLICATION_NAME = "aikido_zen"
+APPLICATION_NAME = "Zen"
 
 # Set log level
 aikido_debug_env = os.getenv("AIKIDO_DEBUG")
@@ -20,7 +20,10 @@ if aikido_debug_env is not None:
 logger = logging.getLogger(APPLICATION_NAME)
 
 # Configure format
-fmt = logging.Formatter("%(name)s: %(asctime)s | %(levelname)s > %(message)s")
+fmt = logging.Formatter(
+    "%(name)s: %(asctime)s | %(levelname)s | %(processName)s > %(message)s",
+    datefmt="%H:%M:%S",
+)
 # Get stdout handler
 stdout = logging.StreamHandler(stream=sys.stdout)
 stdout.setLevel(LOG_LEVEL)

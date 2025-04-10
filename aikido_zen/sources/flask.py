@@ -6,7 +6,7 @@ import copy
 import aikido_zen.importhook as importhook
 from aikido_zen.helpers.logging import logger
 from aikido_zen.context import Context
-from aikido_zen.background_process.packages import pkg_compat_check, ANY_VERSION
+from aikido_zen.background_process.packages import is_package_compatible, ANY_VERSION
 from aikido_zen.context import get_current_context
 import aikido_zen.sources.functions.request_handler as funcs
 
@@ -52,7 +52,7 @@ def extract_view_args_from_flask_request_and_save_data(req):
             context.route_params = dict(req.view_args)
             context.set_as_current_context()
     except Exception as e:
-        logger.debug("Exception occured whilst extracting flask view args data: %s", e)
+        logger.debug("Exception occurred whilst extracting flask view args data: %s", e)
 
 
 def extract_form_data_from_flask_request_and_save_data(req):
@@ -66,7 +66,7 @@ def extract_form_data_from_flask_request_and_save_data(req):
                 context.set_body(req.data.decode("utf-8"))
             context.set_as_current_context()
     except Exception as e:
-        logger.debug("Exception occured whilst extracting flask body data: %s", e)
+        logger.debug("Exception occurred whilst extracting flask body data: %s", e)
 
 
 def extract_cookies_from_flask_request_and_save_data(req):
@@ -76,7 +76,7 @@ def extract_cookies_from_flask_request_and_save_data(req):
         context.cookies = req.cookies.to_dict()
         context.set_as_current_context()
     except Exception as e:
-        logger.debug("Exception occured whilst extracting flask cookie data: %s", e)
+        logger.debug("Exception occurred whilst extracting flask cookie data: %s", e)
 
 
 def aikido___call__(flask_app, environ, start_response):
@@ -103,7 +103,7 @@ def on_flask_import(flask):
     @app.route |-> `add_url_rule` |-> self.view_functions. these get called via
     full_dispatch_request, which we wrap. We also wrap __call__ to run our middleware.
     """
-    if not pkg_compat_check("flask", required_version=FLASK_REQUIRED_VERSION):
+    if not is_package_compatible("flask", required_version=FLASK_REQUIRED_VERSION):
         return flask
     modified_flask = importhook.copy_module(flask)
     former_fdr = copy.deepcopy(flask.Flask.full_dispatch_request)

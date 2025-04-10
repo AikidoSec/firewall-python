@@ -40,7 +40,7 @@ def on_pymongo_import(pymongo):
     https://github.com/mongodb/mongo-python-driver/blob/98658cfd1fea42680a178373333bf27f41153759/pymongo/synchronous/collection.py#L136
     Returns : Modified pymongo.collection.Collection object
     """
-    if not pkgs.pkg_compat_check("pymongo", REQUIRED_PYMONGO_VERSION):
+    if not pkgs.is_package_compatible("pymongo", REQUIRED_PYMONGO_VERSION):
         return pymongo
     modified_pymongo = importhook.copy_module(pymongo)
     for op_data in OPERATIONS_WITH_FILTER:

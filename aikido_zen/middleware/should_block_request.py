@@ -58,5 +58,5 @@ def should_block_request():
                     "ip": context.remote_address,
                 }
     except Exception as e:
-        logger.debug("Exception occured in should_block_request: %s", e)
+        logger.debug("Exception occurred in should_block_request: %s", e)
     return {"block": False}

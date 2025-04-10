@@ -87,14 +87,16 @@ def run_vulnerability_scan(kind, op, args):
                 dns_results=args[0], hostname=args[1], port=args[2]
             )
             error_type = AikidoSSRF
-            if comms:
+
+            # Check that port number is higher than zero before reporting :
+            if comms and args[2] > 0:
                 comms.send_data_to_bg_process("HOSTNAMES_ADD", (args[1], args[2]))
         else:
             logger.error(
                 "Vulnerability type %s currently has no scans implemented", kind
             )
     except Exception as e:  # pylint: disable=broad-exception-caught
-        logger.debug("Exception occured in run_vulnerability_scan : %s", e)
+        logger.debug("Exception occurred in run_vulnerability_scan : %s", e)
 
     if injection_results:
         logger.debug("Injection results : %s", serialize_to_json(injection_results))

@@ -1,13 +1,10 @@
 import pytest
 from unittest.mock import patch, MagicMock
 from aikido_zen.background_process.routes import Routes
-from aikido_zen.background_process.comms import get_comms
-from aikido_zen.helpers.get_current_unixtime_ms import get_unixtime_ms
 from .thread_cache import ThreadCache, THREAD_CONFIG_TTL_MS, threadlocal_storage
 from ..background_process.service_config import ServiceConfig
-from ..ratelimiting.get_ratelimited_endpoint_test import endpoints
-from aikido_zen.helpers.blocklist import BlockList
-from aikido_zen.helpers.add_ip_address_to_blocklist import add_ip_address_to_blocklist
+from ..context import current_context, Context
+from aikido_zen.helpers.iplist import IPList
 
 
 @pytest.fixture
@@ -16,18 +13,25 @@ def thread_cache():
     return ThreadCache()
 
 
+class Context2(Context):
+    def __init__(self):
+        pass
+
+
 @pytest.fixture(autouse=True)
 def run_around_tests():
+    Context2().set_as_current_context()
     yield
     # Make sure to reset thread cache after every test so it does not
     # interfere with other tests
     setattr(threadlocal_storage, "cache", None)
+    current_context.set(None)
 
 
 def test_initialization(thread_cache: ThreadCache):
     """Test that the ThreadCache initializes correctly."""
     assert isinstance(thread_cache.routes, Routes)
-    assert isinstance(thread_cache.config.bypassed_ips, BlockList)
+    assert isinstance(thread_cache.config.bypassed_ips, IPList)
     assert thread_cache.get_endpoints() == []
     assert thread_cache.config.blocked_uids == set()
     assert thread_cache.reqs == 0
@@ -36,10 +40,10 @@ def test_initialization(thread_cache: ThreadCache):
 
 def test_is_bypassed_ip(thread_cache: ThreadCache):
     """Test checking if an IP is bypassed."""
-    add_ip_address_to_blocklist("192.168.1.1", thread_cache.config.bypassed_ips)
+    thread_cache.config.bypassed_ips.add("192.168.1.1")
     assert thread_cache.is_bypassed_ip("192.168.1.1") is True
     assert thread_cache.is_bypassed_ip("192.168.1.2") is False
-    add_ip_address_to_blocklist("10.0.0.1/32", thread_cache.config.bypassed_ips)
+    thread_cache.config.bypassed_ips.add("10.0.0.1/32")
     assert thread_cache.is_bypassed_ip("10.0.0.1") is True
     assert thread_cache.is_bypassed_ip("10.0.0.2.2") is False
 
@@ -80,7 +84,6 @@ def test_renew_if_ttl_expired(
                 blocked_uids={"user123"},
                 last_updated_at=-1,
                 received_any_stats=True,
-                blocked_ips=[],
             ),
             "routes": {},
         },
@@ -118,11 +121,11 @@ def test_renew_if_ttl_not_expired(
 
 def test_reset(thread_cache: ThreadCache):
     """Test that reset empties the cache."""
-    add_ip_address_to_blocklist("192.168.1.1", thread_cache.config.bypassed_ips)
+    thread_cache.config.bypassed_ips.add("192.168.1.1")
     thread_cache.config.blocked_uids.add("user123")
     thread_cache.reset()
 
-    assert isinstance(thread_cache.config.bypassed_ips, BlockList)
+    assert isinstance(thread_cache.config.bypassed_ips, IPList)
     assert thread_cache.config.blocked_uids == set()
     assert thread_cache.reqs == 0
     assert thread_cache.last_renewal == 0
@@ -141,7 +144,7 @@ def test_renew_with_no_comms(thread_cache: ThreadCache):
     """Test that renew does not proceed if there are no communications available."""
     with patch("aikido_zen.background_process.comms.get_comms", return_value=None):
         thread_cache.renew()
-        assert isinstance(thread_cache.config.bypassed_ips, BlockList)
+        assert isinstance(thread_cache.config.bypassed_ips, IPList)
         assert thread_cache.get_endpoints() == []
         assert thread_cache.config.blocked_uids == set()
         assert thread_cache.reqs == 0
@@ -161,7 +164,7 @@ def test_renew_with_invalid_response(mock_get_comms, thread_cache: ThreadCache):
     }
 
     thread_cache.renew()
-    assert isinstance(thread_cache.config.bypassed_ips, BlockList)
+    assert isinstance(thread_cache.config.bypassed_ips, IPList)
     assert thread_cache.get_endpoints() == []
     assert thread_cache.config.blocked_uids == set()
     assert thread_cache.last_renewal > 0  # Should update last_renewal
@@ -169,7 +172,7 @@ def test_renew_with_invalid_response(mock_get_comms, thread_cache: ThreadCache):
 
 def test_is_bypassed_ip_case_insensitivity(thread_cache: ThreadCache):
     """Test that IP check is case-insensitive."""
-    add_ip_address_to_blocklist("192.168.1.1", thread_cache.config.bypassed_ips)
+    thread_cache.config.bypassed_ips.add("192.168.1.1")
     assert thread_cache.is_bypassed_ip("192.168.1.1") is True
     assert thread_cache.is_bypassed_ip("192.168.1.1".upper()) is True
 
@@ -220,7 +223,6 @@ def test_renew_if_ttl_expired_multiple_times(
                 blocked_uids={"user123"},
                 last_updated_at=-1,
                 received_any_stats=True,
-                blocked_ips=[],
             ),
             "routes": {},
         },
@@ -289,7 +291,6 @@ def test_parses_routes_correctly(
                 blocked_uids={"user123"},
                 last_updated_at=-1,
                 received_any_stats=True,
-                blocked_ips=[],
             ),
             "routes": {
                 "POST:/body": {

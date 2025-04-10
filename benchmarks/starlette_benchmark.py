@@ -18,7 +18,7 @@ def extract_requests_and_latency_tuple(output):
             latency_float *= 1000
         return (float(requests_sec), latency_float)
     else:
-        print("Error occured running benchmark command:")
+        print("Exception occurred running benchmark command:")
         print(output.stderr.strip())
         sys.exit(1)
 
