@@ -113,7 +113,7 @@ class Context:
             self.body = self.body.decode("utf-8")  # Decode byte input to string.
         if not isinstance(self.body, str):
             return
-        if self.body.strip()[0] in ["{", "["]:
+        if self.body.strip()[0] in ["{", "[", '"']:
             # Might be JSON, but might not have been parsed correctly by server because of wrong headers
             parsed_body = json.loads(self.body)
             if parsed_body:

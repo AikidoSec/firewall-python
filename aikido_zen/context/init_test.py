@@ -208,6 +208,20 @@ def test_set_valid_json_with_spaces():
     assert context.body == {"key": [1, 2, 3]}
 
 
+def test_valid_json_string_with_newlines():
+    context = Context(req=basic_wsgi_req, body=None, source="flask")
+
+    context.set_body('\r\n\r\n"hello"\r\n\r\n')
+    assert context.body == "hello"
+
+
+def test_valid_json_string_with_spaces():
+    context = Context(req=basic_wsgi_req, body=None, source="flask")
+
+    context.set_body('"                    hello              "')
+    assert context.body == "                    hello              "
+
+
 def test_set_valid_json_with_newlines():
     context = Context(req=basic_wsgi_req, body=None, source="flask")
 
