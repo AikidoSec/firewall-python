@@ -67,7 +67,7 @@ def test_dangerous_response_with_form_header_but_json_body():
         },
         "operation": "asyncpg.connection.Connection.execute",
         "pathToPayload": ".dog_name",
-        "payload": '"Dangerous bobby\\", 1); -- "',
+        "payload": '"Dangerous bobby\\', 1); -- "',
         "source": "body",
         "user": None,
     }
