@@ -64,6 +64,24 @@ async def create_dog():
 
     return jsonify({"message": f'Dog {dog_name} created successfully'}), 201
 
+@app.route("/create/json", methods=['POST'])
+async def create_dog_json():
+    data = await request.get_json(force=True)
+    dog_name = data.get('dog_name')
+
+    if not dog_name:
+        return jsonify({"error": "dog_name is required"}), 400
+
+    conn = await get_db_connection()
+    try:
+        await conn.execute(
+            f"INSERT INTO dogs (dog_name, isAdmin) VALUES ('%s', FALSE)" % dog_name
+        )
+    finally:
+        await conn.close()
+
+    return jsonify({"message": f'Dog {dog_name} created successfully'}), 201
+
 @app.route("/create_many", methods=['POST'])
 async def create_dog_many():
     data = await request.form
