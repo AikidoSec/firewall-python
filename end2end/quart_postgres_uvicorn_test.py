@@ -48,7 +48,7 @@ def test_dangerous_response_with_firewall():
 
 def test_dangerous_response_with_form_header_but_json_body():
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    json_body = json.dumps({"dog_name": 'Dangerous bobby", 1); -- '})
+    json_body = json.dumps({"dog_name": "Dangerous bobby', 1); -- "})
 
     res = requests.post(post_url_fw + "/json", headers=headers, data=json_body)
     assert res.status_code == 500
