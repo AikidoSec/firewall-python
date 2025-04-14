@@ -2,13 +2,12 @@
 Sink module for python's `shutil`
 """
 
-from wrapt import when_imported
-
 import aikido_zen.vulnerabilities as vulns
 from aikido_zen.helpers.get_argument import get_argument
-from aikido_zen.sinks import try_wrap_function_wrapper
+from aikido_zen.sinks import on_import, patch_function, before
 
 
+@before
 def _shutil_func(func, instance, args, kwargs):
     source = get_argument(args, kwargs, 0, "src")
     destination = get_argument(args, kwargs, 1, "dst")
@@ -20,17 +19,15 @@ def _shutil_func(func, instance, args, kwargs):
     if destination:
         vulns.run_vulnerability_scan(kind, op, (destination,))
 
-    return func(*args, **kwargs)
 
-
-@when_imported("shutil")
+@on_import("shutil")
 def patch(m):
     """
     patching module shutil
     - patches: copymode, copystat, copytree, move
     - does not patch: copyfile, copy, copy2 -> uses builtins.open
     """
-    try_wrap_function_wrapper(m, "copymode", _shutil_func)
-    try_wrap_function_wrapper(m, "copystat", _shutil_func)
-    try_wrap_function_wrapper(m, "copytree", _shutil_func)
-    try_wrap_function_wrapper(m, "move", _shutil_func)
+    patch_function(m, "copymode", _shutil_func)
+    patch_function(m, "copystat", _shutil_func)
+    patch_function(m, "copytree", _shutil_func)
+    patch_function(m, "move", _shutil_func)

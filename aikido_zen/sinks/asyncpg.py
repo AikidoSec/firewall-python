@@ -6,7 +6,7 @@ from wrapt import when_imported
 from aikido_zen.background_process.packages import is_package_compatible
 import aikido_zen.vulnerabilities as vulns
 from aikido_zen.helpers.get_argument import get_argument
-from aikido_zen.sinks import try_wrap_function_wrapper
+from aikido_zen.sinks import wrap_function_before
 
 REQUIRED_ASYNCPG_VERSION = "0.27.0"
 
@@ -23,9 +23,9 @@ def patch(m):
     if not is_package_compatible("asyncpg", REQUIRED_ASYNCPG_VERSION):
         return
 
-    try_wrap_function_wrapper(m, "Connection.execute", _execute)
-    try_wrap_function_wrapper(m, "Connection.executemany", _execute)
-    try_wrap_function_wrapper(m, "Connection._execute", _execute)
+    wrap_function_before(m, "Connection.execute", _execute)
+    wrap_function_before(m, "Connection.executemany", _execute)
+    wrap_function_before(m, "Connection._execute", _execute)
 
 
 def _execute(func, instance, args, kwargs):

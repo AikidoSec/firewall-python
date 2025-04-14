@@ -6,7 +6,7 @@ from pathlib import PurePath
 from wrapt import when_imported
 import aikido_zen.vulnerabilities as vulns
 from aikido_zen.helpers.get_argument import get_argument
-from aikido_zen.sinks import try_wrap_function_wrapper
+from aikido_zen.sinks import wrap_function_before
 
 
 def _open(func, instance, args, kwargs):
@@ -27,4 +27,4 @@ def patch(m):
     patching module builtins
     - patches builtins.open
     """
-    try_wrap_function_wrapper(m, "open", _open)
+    wrap_function_before(m, "open", _open)
