@@ -8,23 +8,7 @@ import aikido_zen.vulnerabilities as vulns
 from aikido_zen.helpers.get_argument import get_argument
 from aikido_zen.sinks import try_wrap_function_wrapper
 
-
 REQUIRED_PYMYSQL_VERSION = "0.9.0"
-
-
-@when_imported("pymysql.cursors")
-def patch(m):
-    """
-    patching `pymysql.cursors`
-    - patches Cursor.execute(query)
-    - patches Cursor.executemany(query)
-    https://github.com/PyMySQL/PyMySQL/blob/95635f587ba9076e71a223b113efb08ac34a361d/pymysql/cursors.py#L133
-    """
-    if not is_package_compatible("pymysql", REQUIRED_PYMYSQL_VERSION):
-        return
-
-    try_wrap_function_wrapper(m, "Cursor.execute", _execute)
-    try_wrap_function_wrapper(m, "Cursor.executemany", _executemany)
 
 
 def _execute(func, instance, args, kwargs):
@@ -48,3 +32,18 @@ def _executemany(func, instance, args, kwargs):
     )
 
     return func(*args, **kwargs)
+
+
+@when_imported("pymysql.cursors")
+def patch(m):
+    """
+    patching `pymysql.cursors`
+    - patches Cursor.execute(query)
+    - patches Cursor.executemany(query)
+    https://github.com/PyMySQL/PyMySQL/blob/95635f587ba9076e71a223b113efb08ac34a361d/pymysql/cursors.py#L133
+    """
+    if not is_package_compatible("pymysql", REQUIRED_PYMYSQL_VERSION):
+        return
+
+    try_wrap_function_wrapper(m, "Cursor.execute", _execute)
+    try_wrap_function_wrapper(m, "Cursor.executemany", _executemany)
