@@ -1,5 +1,4 @@
 from wrapt import wrap_object, FunctionWrapper, when_imported
-
 from aikido_zen.background_process.packages import ANY_VERSION, is_package_compatible
 from aikido_zen.errors import AikidoException
 from aikido_zen.helpers.logging import logger
