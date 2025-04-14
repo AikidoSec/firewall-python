@@ -2,51 +2,35 @@
 Sink module for python's `shutil`
 """
 
-import copy
-import aikido_zen.importhook as importhook
+from wrapt import when_imported
+
 import aikido_zen.vulnerabilities as vulns
-
-# File functions func(src, dst, *, **)
-SHUTIL_SRC_DST_FUNCTIONS = [
-    "copymode",
-    "copystat",
-    "copytree",
-    "move",
-]
-# shutil.copyfile(src, dst, *, **) => builtins.open
-# shutil.copy(src, dst, *, **) => builtins.open
-# shutil.copy2(src, dst, *, **) => builtins.open
+from aikido_zen.helpers.get_argument import get_argument
+from aikido_zen.sinks import try_wrap_function_wrapper
 
 
-def generate_aikido_function(aik_op, func):
+def _shutil_func(func, instance, args, kwargs):
+    source = get_argument(args, kwargs, 0, "src")
+    destination = get_argument(args, kwargs, 1, "dst")
+
+    kind = "path_traversal"
+    op = f"shutil.{func.__name__}"
+    if source:
+        vulns.run_vulnerability_scan(kind, op, (source,))
+    if destination:
+        vulns.run_vulnerability_scan(kind, op, (destination,))
+
+    return func(*args, **kwargs)
+
+
+@when_imported("shutil")
+def patch(m):
     """
-    Returns a generated aikido function given an operation
-    and the previous function
+    patching module shutil
+    - patches: copymode, copystat, copytree, move
+    - does not patch: copyfile, copy, copy2 -> uses builtins.open
     """
-
-    def wrapper(src, dst, *args, **kwargs):
-        kind = "path_traversal"
-        op = f"shutil.{aik_op}"
-        if src:
-            vulns.run_vulnerability_scan(kind, op, args=(src,))
-        if dst:
-            vulns.run_vulnerability_scan(kind, op, args=(dst,))
-        return func(src, dst, *args, **kwargs)
-
-    return wrapper
-
-
-@importhook.on_import("shutil")
-def on_shutil_import(shutil):
-    """
-    Hook 'n wrap on `shutil`, python's built-in functions
-    Our goal is to wrap functions found in SHUTIL_SRC_DST_FUNCTIONS
-    Returns : Modified shutil object
-    """
-    modified_shutil = importhook.copy_module(shutil)
-    for op in SHUTIL_SRC_DST_FUNCTIONS:
-        # Wrap shutil. functions
-        aikido_new_func = generate_aikido_function(op, getattr(shutil, op))
-        setattr(modified_shutil, op, aikido_new_func)
-
-    return modified_shutil
+    try_wrap_function_wrapper(m, "copymode", _shutil_func)
+    try_wrap_function_wrapper(m, "copystat", _shutil_func)
+    try_wrap_function_wrapper(m, "copytree", _shutil_func)
+    try_wrap_function_wrapper(m, "move", _shutil_func)
