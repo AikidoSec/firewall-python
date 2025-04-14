@@ -2,50 +2,34 @@
 Sink module for `psycopg`
 """
 
-import copy
-import aikido_zen.importhook as importhook
-from aikido_zen.background_process.packages import is_package_compatible
 import aikido_zen.vulnerabilities as vulns
+from aikido_zen.helpers.get_argument import get_argument
+from aikido_zen.sinks import patch_function, on_import, before
 
-REQUIRED_PSYCOPG_VERSION = "3.1.0"
 
-
-@importhook.on_import("psycopg.cursor")
-def on_psycopg_import(psycopg):
+@on_import("psycopg.cursor", "psycopg", version_requirement="3.1.0")
+def patch(m):
     """
-    Hook 'n wrap on `psycopg.connect` function, we modify the cursor_factory
-    of the result of this connect function.
+    patching module psycopg.cursor
+    - patches Cursor.copy
+    - patches Cursor.execute
+    - patches Cursor.executemany
     """
-    if not is_package_compatible("psycopg", REQUIRED_PSYCOPG_VERSION):
-        return psycopg
-    modified_psycopg = importhook.copy_module(psycopg)
-    former_copy_funtcion = copy.deepcopy(psycopg.Cursor.copy)
-    former_execute_function = copy.deepcopy(psycopg.Cursor.execute)
-    former_executemany_function = copy.deepcopy(psycopg.Cursor.executemany)
+    patch_function(m, "Cursor.copy", _copy)
+    patch_function(m, "Cursor.execute", _execute)
+    patch_function(m, "Cursor.executemany", _execute)
 
-    def aikido_copy(self, statement, params=None, *args, **kwargs):
-        sql = statement
-        vulns.run_vulnerability_scan(
-            kind="sql_injection", op="psycopg.Cursor.copy", args=(sql, "postgres")
-        )
-        return former_copy_funtcion(self, statement, params, *args, **kwargs)
 
-    def aikido_execute(self, query, params=None, *args, **kwargs):
-        sql = query
-        vulns.run_vulnerability_scan(
-            kind="sql_injection", op="psycopg.Cursor.execute", args=(sql, "postgres")
-        )
-        return former_execute_function(self, query, params, *args, **kwargs)
+@before
+def _copy(func, instance, args, kwargs):
+    statement = get_argument(args, kwargs, 0, "statement")
+    vulns.run_vulnerability_scan(
+        kind="sql_injection", op="psycopg.Cursor.copy", args=(statement, "postgres")
+    )
 
-    def aikido_executemany(self, query, params_seq):
-        args = (query, "postgres")
-        op = "psycopg.Cursor.executemany"
-        vulns.run_vulnerability_scan(kind="sql_injection", op=op, args=args)
-        return former_executemany_function(self, query, params_seq)
 
-    setattr(psycopg.Cursor, "copy", aikido_copy)  # pylint: disable=no-member
-    setattr(psycopg.Cursor, "execute", aikido_execute)  # pylint: disable=no-member
-    # pylint: disable=no-member
-    setattr(psycopg.Cursor, "executemany", aikido_executemany)
-
-    return modified_psycopg
+@before
+def _execute(func, instance, args, kwargs):
+    query = get_argument(args, kwargs, 0, "query")
+    op = f"psycopg.Cursor.{func.__name__}"
+    vulns.run_vulnerability_scan(kind="sql_injection", op=op, args=(query, "postgres"))
