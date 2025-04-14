@@ -10,20 +10,20 @@ def run_init_stage(request):
     """Parse request and body, run "init" stage with request_handler"""
     body = None
     try:
-        # try-catch loading of form parameters, this is to fix issue with DATA_UPLOAD_MAX_NUMBER_FIELDS :
         try:
-            body = request.POST.dict()
-            if len(body) == 0:
-                body = None  # Reset
+            body = json.loads(request.body)
         except Exception:
             pass
 
-        # Check for JSON or XML :
-        if body is None and request.content_type == "application/json":
+        if body is None or len(body) == 0:
+            # try-catch loading of form parameters, this is to fix issue with DATA_UPLOAD_MAX_NUMBER_FIELDS :
             try:
-                body = json.loads(request.body)
+                body = request.POST.dict()
+                if len(body) == 0:
+                    body = None  # Reset
             except Exception:
                 pass
+
         if body is None or len(body) == 0:
             # E.g. XML Data
             body = request.body

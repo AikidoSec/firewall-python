@@ -1,11 +1,12 @@
 from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.template import loader
 from .models import Dogs
 from django.db import connection
 from django.views.decorators.csrf import csrf_exempt
 # Create your views here.
 import subprocess
+import json
 
 def index(request):
     dogs = Dogs.objects.all()
@@ -37,3 +38,15 @@ def create_dogpage(request):
             print("QUERY : ", query)
             cursor.execute(query)
         return HttpResponse("Dog page created")
+
+@csrf_exempt
+def json_create_dog(request):
+    if request.method == 'POST':
+        body = request.body.decode('utf-8')
+        body_json = json.loads(body)
+        dog_name = body_json.get('dog_name')
+
+        with connection.cursor() as cursor:
+            query = 'INSERT INTO sample_app_dogs (dog_name, dog_boss) VALUES ("%s", "N/A")' % dog_name
+            cursor.execute(query)
+        return JsonResponse({"status": "Dog page created"})

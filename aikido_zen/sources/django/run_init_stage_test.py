@@ -40,6 +40,18 @@ def mock_request():
     return request
 
 
+@pytest.fixture
+def mock_request_form_body():
+    """Fixture to create a mock request object."""
+    request = MagicMock()
+    request.POST.dict.return_value = {"a": [1, 2], "b": [2, 3]}
+    request.content_type = "application/x-www-form-urlencoded"
+    request.body = "a[0]=1&a[1]=2&b[0]=2&b[1]=3"  # Example JSON body
+    request.META = wsgi_request
+    request.scope = None
+    return request
+
+
 @pytest.fixture(autouse=True)
 def run_around_tests():
     yield
@@ -57,10 +69,9 @@ def test_run_init_stage_with_json(mock_request):
     assert {"key": "value"} == context.body
 
 
-def test_run_init_stage_with_dict(mock_request):
+def test_run_init_stage_with_dict(mock_request_form_body):
     """Test run_init_stage with a JSON request."""
-    mock_request.POST.dict.return_value = {"a": [1, 2], "b": [2, 3]}
-    run_init_stage(mock_request)
+    run_init_stage(mock_request_form_body)
 
     # Assertions
     context: Context = get_current_context()
@@ -118,6 +129,36 @@ def test_run_init_stage_with_empty_body_string(mock_request):
     # Assertions
     context: Context = get_current_context()
     assert context.body is None
+
+
+def test_run_init_stage_with_json_wrong_content_type(mock_request):
+    """Test run_init_stage with an XML request."""
+    mock_request.content_type = "application/x-www-form-urlencoded"
+    mock_request.body = '{"key": "value"}'  # Example XML body
+    run_init_stage(mock_request)
+    # Assertions
+    context: Context = get_current_context()
+    assert context.body == {"key": "value"}
+
+
+def test_run_init_stage_with_xml_wrong_content_type(mock_request):
+    """Test run_init_stage with an XML request."""
+    mock_request.content_type = "application/json"
+    mock_request.body = "<root><key>value</key></root>"  # Example XML body
+    run_init_stage(mock_request)
+    # Assertions
+    context: Context = get_current_context()
+    assert context.body == "<root><key>value</key></root>"
+
+
+def test_run_init_stage_with_xml_wrong_content_type_form_urlencoded(mock_request):
+    """Test run_init_stage with an XML request."""
+    mock_request.content_type = "application/x-www-form-urlencoded"
+    mock_request.body = "<root><key>value=2</key></root>"  # Example XML body
+    run_init_stage(mock_request)
+    # Assertions
+    context: Context = get_current_context()
+    assert context.body == "<root><key>value=2</key></root>"
 
 
 def test_run_init_stage_with_xml(mock_request):
