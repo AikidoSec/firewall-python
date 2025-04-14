@@ -1,17 +1,11 @@
 """
 Sink module for `asyncpg`
 """
-
-from wrapt import when_imported
-from aikido_zen.background_process.packages import is_package_compatible
 import aikido_zen.vulnerabilities as vulns
 from aikido_zen.helpers.get_argument import get_argument
-from aikido_zen.sinks import wrap_function_before
+from aikido_zen.sinks import patch_function, before, on_import
 
-REQUIRED_ASYNCPG_VERSION = "0.27.0"
-
-
-@when_imported("asyncpg.connection")
+@on_import("asyncpg.connection", "asyncpg", version_requirement="0.27.0")
 def patch(m):
     """
     patching module asyncpg.connection
@@ -20,18 +14,13 @@ def patch(m):
     - doesn't patch Pool class -> uses Connection class
     src: https://github.com/MagicStack/asyncpg/blob/85d7eed40637e7cad73a44ed2439ffeb2a8dc1c2/asyncpg/connection.py#L43
     """
-    if not is_package_compatible("asyncpg", REQUIRED_ASYNCPG_VERSION):
-        return
+    patch_function(m, "Connection.execute", _execute)
+    patch_function(m, "Connection.executemany", _execute)
+    patch_function(m, "Connection._execute", _execute)
 
-    wrap_function_before(m, "Connection.execute", _execute)
-    wrap_function_before(m, "Connection.executemany", _execute)
-    wrap_function_before(m, "Connection._execute", _execute)
-
-
+@before
 def _execute(func, instance, args, kwargs):
     query = get_argument(args, kwargs, 0, "query")
 
     op = f"asyncpg.connection.Connection.{func.__name__}"
     vulns.run_vulnerability_scan(kind="sql_injection", op=op, args=(query, "postgres"))
-
-    return func(*args, **kwargs)
