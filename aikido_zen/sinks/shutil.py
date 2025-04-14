@@ -14,9 +14,9 @@ def _shutil_func(func, instance, args, kwargs):
 
     kind = "path_traversal"
     op = f"shutil.{func.__name__}"
-    if source:
+    if isinstance(source, str):
         vulns.run_vulnerability_scan(kind, op, (source,))
-    if destination:
+    if isinstance(source, str):
         vulns.run_vulnerability_scan(kind, op, (destination,))
 
 
