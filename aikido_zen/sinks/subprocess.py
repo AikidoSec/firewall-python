@@ -8,14 +8,11 @@ from aikido_zen.helpers.get_argument import get_argument
 from aikido_zen.sinks import try_wrap_function_wrapper
 
 
-@when_imported("subprocess")
-def patch(m):
-    """
-    patching subprocess module
-    - patches Popen.__init__ constructor
-    - does not patch: check_output, check_call, call, and run (call Popen class)
-    """
-    try_wrap_function_wrapper(m, "Popen.__init__", _subprocess_init)
+def try_join_iterable(iterable):
+    try:
+        return " ".join(iterable)
+    except Exception:
+        return None
 
 
 def _subprocess_init(func, instance, args, kwargs):
@@ -39,8 +36,11 @@ def _subprocess_init(func, instance, args, kwargs):
     return func(*args, **kwargs)
 
 
-def try_join_iterable(iterable):
-    try:
-        return " ".join(iterable)
-    except Exception:
-        return None
+@when_imported("subprocess")
+def patch(m):
+    """
+    patching subprocess module
+    - patches Popen.__init__ constructor
+    - does not patch: check_output, check_call, call, and run (call Popen class)
+    """
+    try_wrap_function_wrapper(m, "Popen.__init__", _subprocess_init)
