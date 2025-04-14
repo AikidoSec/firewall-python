@@ -2,64 +2,36 @@
 Sink module for `asyncpg`
 """
 
-import copy
-import aikido_zen.importhook as importhook
+from wrapt import when_imported
 from aikido_zen.background_process.packages import is_package_compatible
 import aikido_zen.vulnerabilities as vulns
-from aikido_zen.helpers.logging import logger
+from aikido_zen.helpers.get_argument import get_argument
+from aikido_zen.sinks import try_wrap_function_wrapper
 
 REQUIRED_ASYNCPG_VERSION = "0.27.0"
 
 
-@importhook.on_import("asyncpg.connection")
-def on_asyncpg_import(asyncpg):
+@when_imported("asyncpg.connection")
+def patch(m):
     """
-    Hook 'n wrap on `asyncpg.connection`
-    * the Cursor classes in asyncpg.cursor are only used to fetch data. (Currently not supported)
-    * Pool class uses Connection class (Wrapping supported for Connection class)
-    * _execute(...) get's called by all except execute and executemany
-    Our goal is to wrap the _execute(), execute(), executemany() functions in Connection class :
-    https://github.com/MagicStack/asyncpg/blob/85d7eed40637e7cad73a44ed2439ffeb2a8dc1c2/asyncpg/connection.py#L43
-    Returns : Modified asyncpg.connection object
+    patching module asyncpg.connection
+    - patches Connection.execute, Connection.executemany, Connection._execute
+    - doesn't patch Cursor class -> are only used to fetch data.
+    - doesn't patch Pool class -> uses Connection class
+    src: https://github.com/MagicStack/asyncpg/blob/85d7eed40637e7cad73a44ed2439ffeb2a8dc1c2/asyncpg/connection.py#L43
     """
     if not is_package_compatible("asyncpg", REQUIRED_ASYNCPG_VERSION):
-        return asyncpg
-    modified_asyncpg = importhook.copy_module(asyncpg)
+        return
 
-    # pylint: disable=protected-access # We need to wrap this function
-    former__execute = copy.deepcopy(asyncpg.Connection._execute)
-    former_executemany = copy.deepcopy(asyncpg.Connection.executemany)
-    former_execute = copy.deepcopy(asyncpg.Connection.execute)
+    try_wrap_function_wrapper(m, "Connection.execute", _execute)
+    try_wrap_function_wrapper(m, "Connection.executemany", _execute)
+    try_wrap_function_wrapper(m, "Connection._execute", _execute)
 
-    def aikido_new__execute(_self, query, *args, **kwargs):
-        vulns.run_vulnerability_scan(
-            kind="sql_injection",
-            op="asyncpg.connection.Connection._execute",
-            args=(query, "postgres"),
-        )
 
-        return former__execute(_self, query, *args, **kwargs)
+def _execute(func, instance, args, kwargs):
+    query = get_argument(args, kwargs, 0, "query")
 
-    def aikido_new_executemany(_self, query, *args, **kwargs):
-        # This query is just a string, not a list, see docs.
-        vulns.run_vulnerability_scan(
-            kind="sql_injection",
-            op="asyncpg.connection.Connection.executemany",
-            args=(query, "postgres"),
-        )
-        return former_executemany(_self, query, *args, **kwargs)
+    op = f"asyncpg.connection.Connection.{func.__name__}"
+    vulns.run_vulnerability_scan(kind="sql_injection", op=op, args=(query, "postgres"))
 
-    def aikido_new_execute(_self, query, *args, **kwargs):
-        vulns.run_vulnerability_scan(
-            kind="sql_injection",
-            op="asyncpg.connection.Connection.execute",
-            args=(query, "postgres"),
-        )
-        return former_execute(_self, query, *args, **kwargs)
-
-    # pylint: disable=no-member
-    setattr(asyncpg.Connection, "_execute", aikido_new__execute)
-    setattr(asyncpg.Connection, "executemany", aikido_new_executemany)
-    setattr(asyncpg.Connection, "execute", aikido_new_execute)
-
-    return modified_asyncpg
+    return func(*args, **kwargs)
