@@ -69,7 +69,7 @@ def test_dangerous_response_with_form_header_but_json_body():
         "pathToPayload": ".dog_name",
         "payload": '"Dangerous bobby\', 1); -- "',
         "source": "body",
-        "user": None,
+        "user": {'id': 'user123', 'lastIpAddress': '127.0.0.1', 'name': 'John Doe'},
     }
 
 def test_dangerous_response_without_firewall():
