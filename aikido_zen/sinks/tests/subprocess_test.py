@@ -171,7 +171,7 @@ def test_subprocess_check_output():
     ) as mock_run_vulnerability_scan:
         import subprocess
 
-        op = "subprocess.check_output"
+        op = "subprocess.Popen"
 
         subprocess.check_output(["ls", "-la"], shell=True)
         args = ("ls -la",)
@@ -198,7 +198,7 @@ def test_subprocess_check_output():
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
 
 
-def test_subprocess_check_output():
+def test_subprocess_check_output_2():
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
