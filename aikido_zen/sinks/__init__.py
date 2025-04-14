@@ -47,3 +47,24 @@ def before(wrapper):
         return func(*args, **kwargs)  # Call the original function
 
     return decorator
+
+
+def after(wrapper):
+    """
+    Surrounds a patch with try-except, calls the original function and gives the return value to the patch
+    """
+
+    def decorator(func, instance, args, kwargs):
+        return_value = func(*args, **kwargs)  # Call the original function
+        try:
+            wrapper(func, instance, args, kwargs, return_value)  # Call the patch
+        except AikidoException as e:
+            raise e  # Re-raise AikidoException
+        except Exception as e:
+            logger.debug(
+                "%s:%s wrapping-after error: %s", func.__module__, func.__name__, e
+            )
+        finally:
+            return return_value
+
+    return decorator
