@@ -11,7 +11,7 @@ from aikido_zen.sinks import patch_function, on_import, before
 @before
 def _open(func, instance, args, kwargs):
     filename = get_argument(args, kwargs, 0, "filename")
-    if filename is None or not isinstance(filename, (str, bytes, PurePath)):
+    if not isinstance(filename, (str, bytes, PurePath)):
         return
 
     vulns.run_vulnerability_scan(
