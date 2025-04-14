@@ -63,7 +63,7 @@ def test_dangerous_response_with_form_header_but_json_body():
         "blocked": True,
         "kind": "sql_injection",
         "metadata": {
-            "sql": 'INSERT INTO sample_app_dogs (dog_name, dog_boss) VALUES ("Dangerous bobby", 1); -- ", "N/A")'
+            "sql": "INSERT INTO dogs (dog_name, isAdmin) VALUES ('Dangerous bobby', 1); -- ', FALSE)"
         },
         "operation": "asyncpg.connection.Connection.execute",
         "pathToPayload": ".dog_name",
