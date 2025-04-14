@@ -1,9 +1,11 @@
 """
 Sink module for `asyncpg`
 """
+
 import aikido_zen.vulnerabilities as vulns
 from aikido_zen.helpers.get_argument import get_argument
 from aikido_zen.sinks import patch_function, before, on_import
+
 
 @on_import("asyncpg.connection", "asyncpg", version_requirement="0.27.0")
 def patch(m):
@@ -17,6 +19,7 @@ def patch(m):
     patch_function(m, "Connection.execute", _execute)
     patch_function(m, "Connection.executemany", _execute)
     patch_function(m, "Connection._execute", _execute)
+
 
 @before
 def _execute(func, instance, args, kwargs):
