@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 from unittest.mock import patch
 import aikido_zen.sinks.psycopg2
@@ -5,6 +7,9 @@ from aikido_zen.background_process.comms import reset_comms
 
 kind = "sql_injection"
 op = "pymysql.connections.query"
+
+# psycopg2 not working on python 3.13 for now
+skip_python_3_13 = sys.version_info[:2] == (3, 13)
 
 
 @pytest.fixture
@@ -33,6 +38,7 @@ def database_conn_empty_cursor():
     )
 
 
+@pytest.mark.skipif(skip_python_3_13, reason="Skipping test on Python 3.13")
 def test_cursor_execute(database_conn):
     reset_comms()
     with patch(
@@ -52,6 +58,7 @@ def test_cursor_execute(database_conn):
         mock_run_vulnerability_scan.assert_called_once()
 
 
+@pytest.mark.skipif(skip_python_3_13, reason="Skipping test on Python 3.13")
 def test_cursor_execute2(database_conn_empty_cursor):
     reset_comms()
     with patch(
@@ -71,6 +78,7 @@ def test_cursor_execute2(database_conn_empty_cursor):
         mock_run_vulnerability_scan.assert_called_once()
 
 
+@pytest.mark.skipif(skip_python_3_13, reason="Skipping test on Python 3.13")
 def test_cursor_execute_parameterized(database_conn):
     reset_comms()
     with patch(
@@ -87,6 +95,7 @@ def test_cursor_execute_parameterized(database_conn):
         database_conn.close()
 
 
+@pytest.mark.skipif(skip_python_3_13, reason="Skipping test on Python 3.13")
 def test_cursor_execute_parameterized2(database_conn_empty_cursor):
     reset_comms()
     with patch(
@@ -106,6 +115,7 @@ def test_cursor_execute_parameterized2(database_conn_empty_cursor):
         mock_run_vulnerability_scan.assert_called_once()
 
 
+@pytest.mark.skipif(skip_python_3_13, reason="Skipping test on Python 3.13")
 def test_cursor_executemany(database_conn):
     reset_comms()
     with patch(
@@ -130,6 +140,7 @@ def test_cursor_executemany(database_conn):
         database_conn.close()
 
 
+@pytest.mark.skipif(skip_python_3_13, reason="Skipping test on Python 3.13")
 def test_cursor_executemany2(database_conn_empty_cursor):
     reset_comms()
     with patch(
