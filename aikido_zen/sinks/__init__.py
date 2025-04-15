@@ -64,7 +64,7 @@ def after(wrapper):
             logger.debug(
                 "%s:%s wrapping-after error: %s", func.__module__, func.__name__, e
             )
-        finally:
-            return return_value
+
+        return return_value
 
     return decorator
