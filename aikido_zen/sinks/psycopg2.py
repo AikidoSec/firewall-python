@@ -6,7 +6,7 @@ from aikido_zen import logger
 from aikido_zen.background_process.packages import is_package_compatible
 import aikido_zen.vulnerabilities as vulns
 from aikido_zen.helpers.get_argument import get_argument
-from aikido_zen.sinks import on_import, before, patch_function
+from aikido_zen.sinks import on_import, before, patch_function, after
 
 
 @on_import("psycopg2")
@@ -27,27 +27,22 @@ def patch(m):
     patch_function(m, "connect", _connect)
 
 
-def _connect(func, instance, args, kwargs):
-    cursor_factory = get_argument(args, kwargs, 2, "cursor_factory")
-    if "cursor_factory" in kwargs:
-        del kwargs["cursor_factory"]
-    try:
-        if cursor_factory is None:
-            import psycopg2.extensions
+@after
+def _connect(func, instance, args, kwargs, rv):
+    """
+    the return value (rv) is the new connection object, we'll change the cursor_factory attribute here.
+    """
+    # Create new default cursor factory if not exists
+    if rv.cursor_factory is None:
+        import psycopg2.extensions
 
-            class AikidoDefaultCursor(psycopg2.extensions.cursor):
-                pass
+        class AikidoDefaultCursor(psycopg2.extensions.cursor):
+            pass
 
-            cursor_factory = AikidoDefaultCursor
+        rv.cursor_factory = AikidoDefaultCursor
 
-        # patch execute or executemany of an already existing cursor or of a new one
-        patch_function(cursor_factory, "execute", _execute)
-        patch_function(cursor_factory, "executemany", _execute)
-
-    except Exception as e:
-        logger.info("patch of psycopg2 failed: %s", e.msg)
-
-    return func(*args, cursor_factory=cursor_factory, **kwargs)
+    patch_function(rv.cursor_factory, "execute", _execute)
+    patch_function(rv.cursor_factory, "executemany", _execute)
 
 
 @before
