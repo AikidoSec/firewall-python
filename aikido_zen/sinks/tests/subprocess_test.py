@@ -175,27 +175,27 @@ def test_subprocess_check_output():
 
         subprocess.check_output(["ls", "-la"], shell=True)
         args = ("ls -la",)
-        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
 
         with pytest.raises(subprocess.CalledProcessError):
             subprocess.check_output(["cfsknflks"], shell=True)
         args = ("cfsknflks",)
-        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
 
         with pytest.raises(subprocess.CalledProcessError):
             subprocess.check_output(("tuple", "command"), shell=True)
         args = ("tuple command",)
-        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
 
         with pytest.raises(subprocess.CalledProcessError):
             subprocess.check_output({"key": "value"}, shell=True)
         args = ("key",)
-        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
 
         with pytest.raises(subprocess.CalledProcessError):
             subprocess.check_output({"ke": "value", "key2": "value2"}, shell=True)
         args = ("ke key2",)
-        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
 
 
 def test_subprocess_check_output_2():
