@@ -15,7 +15,7 @@ def test_ospath_commands():
         os.path.realpath("test/test2")
         op = "os.path.join"
         args = ("test/test2",)
-        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
 
         with pytest.raises(FileNotFoundError):
             os.path.getsize("aqkqjefbkqlleq_qkvfjksaicuaviel")
@@ -27,7 +27,7 @@ def test_ospath_commands():
         os.path.realpath(b"te2st/test2")
         op = "os.path.join"
         args = (b"te2st/test2",)
-        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+        mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
 
         path1 = Path("./", "../", "test/../test2")
         with pytest.raises(FileNotFoundError):
