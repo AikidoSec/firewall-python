@@ -17,7 +17,7 @@ def _os_patch(func, instance, args, kwargs):
             continue
         # change op if it's an os.path function
         op = f"os.{func.__name__}"
-        if func.__name__ in ("getsize", "join", "expanduser", "expandvars"):
+        if func.__name__ in ("getsize", "join", "expanduser", "expandvars", "realpath"):
             op = f"os.path.{func.__name__}"
 
         vulns.run_vulnerability_scan(kind="path_traversal", op=op, args=(path,))
@@ -55,3 +55,4 @@ def patch(m):
     patch_function(m, "path.join", _os_patch)
     patch_function(m, "path.expanduser", _os_patch)
     patch_function(m, "path.expandvars", _os_patch)
+    patch_function(m, "path.realpath", _os_patch)  # Python 3.13

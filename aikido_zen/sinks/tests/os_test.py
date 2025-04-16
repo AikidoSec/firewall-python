@@ -13,7 +13,7 @@ def test_ospath_commands():
         import os
 
         os.path.realpath("test/test2")
-        op = "os.path.join"
+        op = "os.path.realpath"
         args = ("test/test2",)
         mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
 
@@ -25,7 +25,7 @@ def test_ospath_commands():
         mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
 
         os.path.realpath(b"te2st/test2")
-        op = "os.path.join"
+        op = "os.path.realpath"
         args = (b"te2st/test2",)
         mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
 
