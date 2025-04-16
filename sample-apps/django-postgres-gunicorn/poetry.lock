@@ -2,7 +2,7 @@
 
 [[package]]
 name = "aikido-zen"
-version = "1.1.1"
+version = "1.0.0"
 description = "Aikido Zen for Python"
 optional = false
 python-versions = "^3.8"
@@ -15,6 +15,7 @@ packaging = "^24.1"
 python-dotenv = "^1.0.1"
 regex = "^2024.5.15"
 requests = "^2.32.3"
+wrapt = "^1.17"
 
 [package.source]
 type = "directory"

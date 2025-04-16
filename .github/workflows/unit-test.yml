@@ -10,7 +10,7 @@ jobs:
       # Don't cancel jobs if one fails
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -22,7 +22,7 @@ jobs:
       run: |
           sudo echo "127.0.0.1 local.aikido.io" | sudo tee -a /etc/hosts
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 

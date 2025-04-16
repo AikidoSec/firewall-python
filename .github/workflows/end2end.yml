@@ -35,7 +35,7 @@ jobs:
           - { name: flask-postgres-xml, testfile: end2end/flask_postgres_xml_lxml_test.py }
           - { name: quart-postgres-uvicorn, testfile: end2end/quart_postgres_uvicorn_test.py }
           - { name: starlette-postgres-uvicorn, testfile: end2end/starlette_postgres_uvicorn_test.py }
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
     steps:
       - name: Install packages
         run: sudo apt update && sudo apt install python3-dev libmysqlclient-dev
@@ -53,7 +53,7 @@ jobs:
             docker run --name mock_core -d -p 5000:5000 mock_core
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies

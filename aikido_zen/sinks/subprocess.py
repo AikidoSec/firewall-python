@@ -2,71 +2,42 @@
 Sink module for `subprocess`
 """
 
-import copy
-import aikido_zen.importhook as importhook
 import aikido_zen.vulnerabilities as vulns
 from aikido_zen.helpers.get_argument import get_argument
-
-SUBPROCESS_OPERATIONS = ["check_output"]
-# check_call, call, and run all call Popen class
+from aikido_zen.sinks import on_import, patch_function, before
 
 
-def generate_aikido_function(op, former_func):
-    """
-    Generates an aikido shell function given
-    an operation and a former function
-    """
-
-    def aikido_new_func(*args, op=op, former_func=former_func, **kwargs):
-        shell_enabled = kwargs.get("shell")
-
-        position = (
-            1 if op == "Popen" else 0
-        )  # If it's a constructor, first argument is self
-        shell_arguments = get_argument(args, kwargs, pos=position, name="args")
-
-        command = None
-        if isinstance(shell_arguments, str):
-            command = shell_arguments
-        elif hasattr(shell_arguments, "__iter__"):
-            # Check if args is an iterable i.e. list, dict, tuple
-            # If it is we join it with spaces to run the shell_injection algorithm.
-            command = " ".join(shell_arguments)
-
-        # For all operations above: call, run, check_call, Popen, check_output, default value
-        # of the shell property is False.
-        if command and shell_enabled:
-            vulns.run_vulnerability_scan(
-                kind="shell_injection",
-                op=f"subprocess.{op}",
-                args=(command,),
-            )
-        return former_func(*args, **kwargs)
-
-    return aikido_new_func
+def try_join_iterable(iterable):
+    try:
+        return " ".join(iterable)
+    except Exception:
+        return None
 
 
-@importhook.on_import("subprocess")
-def on_subprocess_import(subprocess):
-    """
-    Hook 'n wrap on `subproccess`, wrapping multiple functions
-    Returns : Modified subprocess object
-    """
-    modified_subprocess = importhook.copy_module(subprocess)
-    for op in SUBPROCESS_OPERATIONS:
-        former_func = copy.deepcopy(getattr(subprocess, op))
-        setattr(
-            modified_subprocess,
-            op,
-            generate_aikido_function(op=op, former_func=former_func),
-        )
+@before
+def _subprocess_init(func, instance, args, kwargs):
+    shell_arguments = get_argument(args, kwargs, 0, "args")
+    shell_enabled = get_argument(args, kwargs, 8, "shell")
+    if not shell_enabled:
+        return  # default shell property is False, we only want to scan if it's True
 
-    # Wrap Class Popen seperately:
-    former_popen_constructor = copy.deepcopy(subprocess.Popen.__init__)
-    setattr(
-        getattr(modified_subprocess, "Popen"),
-        "__init__",  # Popen is a class, modify it's constructor
-        generate_aikido_function(op="Popen", former_func=former_popen_constructor),
+    command = try_join_iterable(shell_arguments)
+    if isinstance(shell_arguments, str):
+        command = shell_arguments
+    if not command:
+        return
+    vulns.run_vulnerability_scan(
+        kind="shell_injection",
+        op=f"subprocess.Popen",
+        args=(command,),
     )
 
-    return modified_subprocess
+
+@on_import("subprocess")
+def patch(m):
+    """
+    patching subprocess module
+    - patches Popen.__init__ constructor
+    - does not patch: check_output, check_call, call, and run (call Popen class)
+    """
+    patch_function(m, "Popen.__init__", _subprocess_init)
