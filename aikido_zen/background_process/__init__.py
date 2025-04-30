@@ -59,6 +59,7 @@ def get_uds_filename():
     name = hash_aikido_token()
     return f"{temp_dir}/{prefix}_{name}.sock"
 
+
 def background_process_already_active(comms):
     res = comms.send_data_to_bg_process(action="PING", obj=tuple(), receive=True)
     if res["success"] and res["data"] == "Received":
