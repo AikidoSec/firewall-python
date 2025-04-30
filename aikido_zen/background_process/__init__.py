@@ -44,9 +44,6 @@ def start_background_process():
         if background_process_already_active(comms):
             return  # Don't start if the background process is already active
         os.remove(address)
-    else:
-        if background_process_already_active(comms):
-            return  # Don't start if the background process is already active
 
     #  Daemon is set to True so that the process kills itself when the main process dies
     background_process = Process(
