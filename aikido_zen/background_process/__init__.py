@@ -5,6 +5,8 @@ and listen for data sent by our sources and sinks
 
 import os
 from multiprocessing import Process
+import platform
+
 from aikido_zen.helpers.token import get_token_from_env
 from aikido_zen.helpers.get_temp_dir import get_temp_dir
 from aikido_zen.helpers.hash_aikido_token import hash_aikido_token
@@ -31,20 +33,17 @@ def start_background_process():
         )
         return
 
-    uds_filename = get_uds_filename()
-    comms = AikidoIPCCommunications(uds_filename, secret_key_bytes)
+    address = get_uds_filename()
+    if platform.system() == "Windows":
+        # Python does not support Windows UDS just yet, so we have to rely on INET
+        address = ("127.0.0.1", 49156)
 
-    if os.path.exists(uds_filename):
-        # Send out a PING to check if the daemon running is still active :
-        res = comms.send_data_to_bg_process(action="PING", obj=tuple(), receive=True)
-        if res["success"] and res["data"] == "Received":
-            # Ping is active, return.
-            logger.debug(
-                "A background agent is already running, not starting a new background agent."
-            )
-            return
-        # Ping must have failed, remove the existing file to ensure there is no corruption.
-        os.remove(uds_filename)
+    comms = AikidoIPCCommunications(address, secret_key_bytes)
+
+    if isinstance(address, str) and os.path.exists(address):
+        if background_process_already_active(comms):
+            return  # Don't start if the background process is already active
+        os.remove(address)
 
     #  Daemon is set to True so that the process kills itself when the main process dies
     background_process = Process(
@@ -59,3 +58,14 @@ def get_uds_filename():
     prefix = "aikido_python"
     name = hash_aikido_token()
     return f"{temp_dir}/{prefix}_{name}.sock"
+
+
+def background_process_already_active(comms):
+    res = comms.send_data_to_bg_process(action="PING", obj=tuple(), receive=True)
+    if res["success"] and res["data"] == "Received":
+        # Ping is active, return.
+        logger.debug(
+            "A background agent is already running, not starting a new background agent."
+        )
+        return True
+    return False
