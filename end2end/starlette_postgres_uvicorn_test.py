@@ -40,6 +40,7 @@ def test_dangerous_response_with_firewall():
     assert attacks[0]["attack"]["blocked"] == True
     assert attacks[0]["attack"]["kind"] == "sql_injection"
     assert attacks[0]["attack"]["metadata"]["sql"] == "INSERT INTO dogs (dog_name, isAdmin) VALUES ('Dangerous Bobby', TRUE); -- ', FALSE)"
+    assert attacks[0]["attack"]["metadata"]["dialect"] == "postgresql"
     assert attacks[0]["attack"]["operation"] == "asyncpg.connection.Connection.execute"
     assert attacks[0]["attack"]["pathToPayload"] == ".dog_name"
     assert attacks[0]["attack"]["payload"] == "\"Dangerous Bobby', TRUE); -- \""
