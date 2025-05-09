@@ -50,9 +50,6 @@ def protect(mode="daemon"):
     import aikido_zen.sources.xml_sources.xml
     import aikido_zen.sources.xml_sources.lxml
 
-    import aikido_zen.sources.gunicorn
-    import aikido_zen.sources.uwsgi
-
     # Import DB Sinks
     import aikido_zen.sinks.pymysql
     import aikido_zen.sinks.mysqlclient
