@@ -40,7 +40,8 @@ def set_context(body):
             "REMOTE_ADDR": "198.51.100.23",
             "HTTP_USER_AGENT": "Mozilla/5.0",
         },
-        body=body, source="django"
+        body=body,
+        source="django",
     ).set_as_current_context()
 
 
@@ -67,4 +68,9 @@ def test_parse_xml_with_set_context():
 
     # Check that no xml attribute was set on body
     context = get_current_context()
-    assert context.xml == {'attr': {'chill'}, 'smth': {'2'}, 'smthelse': {'2'}, 'test': {'test1'}}
+    assert context.xml == {
+        "attr": {"chill"},
+        "smth": {"2"},
+        "smthelse": {"2"},
+        "test": {"test1"},
+    }
