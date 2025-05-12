@@ -4,12 +4,14 @@ from ..functions.request_handler import request_handler
 from ...sinks import on_import, patch_function, before
 
 
-@before
 def _request_response(func, instance, args, kwargs):
     if kwargs and "func" in kwargs:
         kwargs["func"] = aik_route_func_wrapper(kwargs["func"])
     elif args and args[0]:
-        args[0] = aik_route_func_wrapper(args[0])
+        # Modify first element of a tuple, tuples are immutable
+        args = (aik_route_func_wrapper(args[0]),) + args[1:]
+
+    return func(*args, **kwargs)  # Call the original function
 
 
 @on_import("starlette.routing", "starlette")
