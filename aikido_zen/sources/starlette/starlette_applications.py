@@ -3,13 +3,13 @@
 from aikido_zen.context import Context
 from ..functions.request_handler import request_handler
 from ...helpers.get_argument import get_argument
-from ...sinks import on_import, patch_function, before_async
+from ...sinks import on_import, patch_function, before
 
 
-@before_async
-async def _call(func, instance, args, kwargs):
-    scope = get_argument(args, kwargs, 1, "scope")
-    if scope.get("type") != "http":
+@before
+def _call(func, instance, args, kwargs):
+    scope = get_argument(args, kwargs, 0, "scope")
+    if not hasattr(scope, "get") or scope.get("type") != "http":
         return
 
     new_context = Context(req=scope, source="starlette")
