@@ -11,10 +11,17 @@ def on_import(name, package="", version_requirement=ANY_VERSION):
     """
 
     def decorator(func):
-        if package and not is_package_compatible(package, version_requirement):
-            return
+        def check_pkg_wrapper(f):
+            def wrapper(*args, **kwargs):
+                # This code runs only on import
+                if package and not is_package_compatible(package, version_requirement):
+                    return
+                return f(*args, **kwargs)
 
-        when_imported(name)(func)  # Register the function to be called on import
+            return wrapper
+
+        # Register the function to be called on import
+        when_imported(name)(check_pkg_wrapper(func))
 
     return decorator
 
