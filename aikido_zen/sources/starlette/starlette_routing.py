@@ -12,7 +12,7 @@ def _request_response(func, instance, args, kwargs):
         args[0] = aik_route_func_wrapper(args[0])
 
 
-@on_import("starlette.routing")
+@on_import("starlette.routing", "starlette")
 def patch(m):
     """
     patching module starlette.routing (for initial request_handler)
