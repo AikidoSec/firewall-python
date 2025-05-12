@@ -18,9 +18,9 @@ async def _call(func, instance, args, kwargs):
 
 
 @on_import("starlette.applications", "starlette")
-def on_starlette_import(starlette):
+def patch(m):
     """
-    patches `starlette.applications`
-    - patching Starlette.__call__
+    patching module starlette.applications
+    - patches: Starlette.__call__
     """
-    patch_function("Starlette", "__call__", _call)
+    patch_function(m, "Starlette.__call__", _call)
