@@ -78,7 +78,7 @@ def extract_cookies_from_flask_request_and_save_data(req):
 
 @before
 def _call(func, instance, args, kwargs):
-    environ = get_argument(args, kwargs, 1, "environ")
+    environ = get_argument(args, kwargs, 0, "environ")
     context1 = Context(req=environ, source="flask")
     context1.set_as_current_context()
     funcs.request_handler(stage="init")
