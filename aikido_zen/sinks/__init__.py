@@ -56,6 +56,25 @@ def before(wrapper):
     return decorator
 
 
+def before_async(wrapper):
+    """
+    Surrounds an async patch with try-except and calls the original asynchronous function at the end
+    """
+
+    async def decorator(func, instance, args, kwargs):
+        try:
+            await wrapper(func, instance, args, kwargs)  # Call the patch
+        except AikidoException as e:
+            raise e  # Re-raise AikidoException
+        except Exception as e:
+            logger.debug(
+                "%s:%s wrapping-before error: %s", func.__module__, func.__name__, e
+            )
+        return await func(*args, **kwargs)  # Call the original function
+
+    return decorator
+
+
 def before_modify_return(wrapper):
     """
     Surrounds a patch with try-except and calls the original function at the end unless a return value is present.
