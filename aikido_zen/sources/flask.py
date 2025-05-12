@@ -26,15 +26,11 @@ def _full_dispatch_request_before(func, instance, args, kwargs):
     if not pre_response:
         return None
     # This happens when a route is rate limited, a user blocked, etc...
-    res = Response(pre_response[0], status=pre_response[1], mimetype="text/plain")
-    res.is_aikido_response = True  # Use this in the @after
-    return res
+    return Response(pre_response[0], status=pre_response[1], mimetype="text/plain")
 
 
 @after
 def _full_dispatch_request_after(func, instance, args, kwargs, return_value):
-    if hasattr(return_value, "is_aikido_response") and return_value.is_aikido_response:
-        return  # We wrote this response, so the status code is not reflective of the route
     if not hasattr(return_value, "status_code"):
         return
     funcs.request_handler(stage="post_response", status_code=return_value.status_code)
