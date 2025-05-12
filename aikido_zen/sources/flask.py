@@ -1,19 +1,13 @@
-"""
-Flask source module, intercepts flask import and adds Aikido middleware
-"""
-
-import aikido_zen.importhook as importhook
 from aikido_zen.helpers.get_argument import get_argument
 from aikido_zen.helpers.logging import logger
 from aikido_zen.context import Context
-from aikido_zen.background_process.packages import is_package_compatible, ANY_VERSION
 from aikido_zen.context import get_current_context
 import aikido_zen.sources.functions.request_handler as funcs
 from aikido_zen.sinks import (
     on_import,
     patch_function,
     after,
-    before_modify_return,
+    before_modify_return,   
     before,
 )
 
