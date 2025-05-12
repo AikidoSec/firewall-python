@@ -24,7 +24,7 @@ def _get_response_after(func, instance, args, kwargs, return_value):
         request_handler(stage="post_response", status_code=return_value.status_code)
 
 
-@on_import("django.core.handlers.base")
+@on_import("django.core.handlers.base", "django")
 def patch(m):
     """
     Patch for _get_response (Synchronous/WSGI)
