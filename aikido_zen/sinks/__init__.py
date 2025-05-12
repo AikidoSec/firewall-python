@@ -51,8 +51,7 @@ def before(wrapper):
             logger.debug(
                 "%s:%s wrapping-before error: %s", func.__module__, func.__name__, e
             )
-        finally:
-            return func(*args, **kwargs)  # Call the original function
+        return func(*args, **kwargs)  # Call the original function
 
     return decorator
 
@@ -92,8 +91,7 @@ def before_async(wrapper):
             logger.debug(
                 "%s:%s wrapping-before error: %s", func.__module__, func.__name__, e
             )
-        finally:
-            return await func(*args, **kwargs)  # Call the original function
+        return await func(*args, **kwargs)  # Call the original function
 
     return decorator
 
