@@ -44,8 +44,28 @@ def before(wrapper):
             logger.debug(
                 "%s:%s wrapping-before error: %s", func.__module__, func.__name__, e
             )
+        finally:
+            return func(*args, **kwargs)  # Call the original function
 
-        return func(*args, **kwargs)  # Call the original function
+    return decorator
+
+
+def before_async(wrapper):
+    """
+    Surrounds a patch with try-except and calls the original function at the end (async)
+    """
+
+    async def decorator(func, instance, args, kwargs):
+        try:
+            await wrapper(func, instance, args, kwargs)  # Call the patch
+        except AikidoException as e:
+            raise e  # Re-raise AikidoException
+        except Exception as e:
+            logger.debug(
+                "%s:%s wrapping-before error: %s", func.__module__, func.__name__, e
+            )
+        finally:
+            return await func(*args, **kwargs)  # Call the original function
 
     return decorator
 
