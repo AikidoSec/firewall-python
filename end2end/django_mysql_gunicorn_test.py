@@ -51,8 +51,8 @@ def test_dangerous_response_with_firewall():
     }
 
     assert attacks[0]["request"]["source"] == "django"
-    assert attacks[0]["request"]["route"] == "/app/create/"
-    assert attacks[0]["request"]["userAgent"] == ""
+    assert attacks[0]["request"]["route"] == "/app/create"
+    assert attacks[0]["request"]["userAgent"] == "python-requests/2.32.3"
 
 def test_dangerous_response_without_firewall():
     dog_name = 'Dangerous bobby", 1); -- '

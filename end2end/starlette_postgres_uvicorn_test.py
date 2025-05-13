@@ -50,7 +50,7 @@ def test_dangerous_response_with_firewall():
 
     assert attacks[0]["request"]["source"] == "starlette"
     assert attacks[0]["request"]["route"] == "/create"
-    assert attacks[0]["request"]["userAgent"] == ""
+    assert attacks[0]["request"]["userAgent"] == "python-requests/2.32.3"
 
 
 def test_dangerous_response_without_firewall():
