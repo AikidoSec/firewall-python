@@ -48,7 +48,7 @@ class ThreadCache:
         res = comms.get_comms().send_data_to_bg_process(
             action="SYNC_DATA",
             obj={
-                "current_routes": dict(self.routes.routes),
+                "current_routes": self.routes.get_routes_with_hits(),
                 "reqs": self.reqs,
                 "middleware_installed": self.middleware_installed,
             },
