@@ -4,9 +4,7 @@ Sink module for python's `os`
 
 from pathlib import PurePath
 import aikido_zen.vulnerabilities as vulns
-from aikido_zen.errors import AikidoException
-from aikido_zen.importhook import on_import
-from aikido_zen.sinks import before, patch_function
+from aikido_zen.sinks import before, patch_function, on_import
 
 
 @before
