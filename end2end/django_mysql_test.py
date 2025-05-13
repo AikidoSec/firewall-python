@@ -37,7 +37,10 @@ def test_dangerous_response_with_firewall():
     assert attacks[0]["attack"] == {
         "blocked": True,
         "kind": "sql_injection",
-        'metadata': {'sql': 'INSERT INTO sample_app_dogs (dog_name, dog_boss) VALUES ("Dangerous bobby", 1); -- ", "N/A")'},
+        'metadata': {
+            'dialect': 'mysql',
+            'sql': 'INSERT INTO sample_app_dogs (dog_name, dog_boss) VALUES ("Dangerous bobby", 1); -- ", "N/A")'
+        },
         'operation': 'MySQLdb.Cursor.execute',
         'pathToPayload': '.dog_name',
         'payload': '"Dangerous bobby\\", 1); -- "',
