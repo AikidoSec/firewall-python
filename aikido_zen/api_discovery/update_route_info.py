@@ -1,21 +1,19 @@
 """Exports update_route_info function"""
 
 from aikido_zen.helpers.logging import logger
-from .get_api_info import get_api_info
 from .merge_data_schemas import merge_data_schemas
 from .merge_auth_types import merge_auth_types
 
 ANALYSIS_ON_FIRST_X_ROUTES = 20
 
 
-def update_route_info(context, route):
+def update_route_info(new_apispec, route):
     """
     Checks if a route still needs to be updated (only analyzes first x routes),
     and if so, updates route using update_api_info
     """
     if route["hits"] <= ANALYSIS_ON_FIRST_X_ROUTES:
         # Only analyze the first x routes for api discovery
-        new_apispec = get_api_info(context)
         route["apispec"] = update_api_info(new_apispec, route["apispec"])
 
 
