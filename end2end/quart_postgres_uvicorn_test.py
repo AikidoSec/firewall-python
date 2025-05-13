@@ -46,6 +46,10 @@ def test_dangerous_response_with_firewall():
     assert attacks[0]["attack"]["user"]["id"] == "user123"
     assert attacks[0]["attack"]["user"]["name"] == "John Doe"
 
+    assert attacks[0]["request"]["source"] == "quart"
+    assert attacks[0]["request"]["route"] == "/create"
+    assert attacks[0]["request"]["userAgent"] == ""
+
 
 def test_dangerous_response_without_firewall():
     dog_name = "Dangerous Bobby', TRUE); -- "
