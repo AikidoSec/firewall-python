@@ -1,47 +1,31 @@
-"""
-Sink module for `xml`, python's built-in function
-"""
-
-import copy
-import aikido_zen.importhook as importhook
 from aikido_zen.helpers.extract_data_from_xml_body import (
     extract_data_from_xml_body,
 )
-from aikido_zen.background_process.packages import is_package_compatible, ANY_VERSION
+from aikido_zen.helpers.get_argument import get_argument
+from aikido_zen.sinks import on_import, after, patch_function
 
 
-@importhook.on_import("lxml.etree")
-def on_lxml_import(eltree):
+@after
+def _fromstring(func, instance, args, kwargs, return_value):
+    text = get_argument(args, kwargs, 0, "text")
+    if text:
+        extract_data_from_xml_body(user_input=text, root_element=return_value)
+
+
+@after
+def _fromstringlist(func, instance, args, kwargs, return_value):
+    strings = get_argument(args, kwargs, 0, "strings")
+    for text in strings:
+        extract_data_from_xml_body(user_input=text, root_element=return_value)
+
+
+@on_import("lxml.etree", "lxml")
+def patch(m):
     """
-    Hook 'n wrap on `lxml.etree`.
-    - Wrap on fromstring() function
-    - Wrap on
-    Returns : Modified `lxml.etree` object
+    patching module lxml.etree
+    - patches function fromstring(text, ...)
+    - patches function fromstringlist(strings, ...)
+    (github src: https://github.com/lxml/lxml/blob/fe271a4b5a32e6e54d10983683f2f32b0647209a/src/lxml/etree.pyx#L3411)
     """
-    if not is_package_compatible("lxml", required_version=ANY_VERSION):
-        return eltree
-    modified_eltree = importhook.copy_module(eltree)
-
-    former_fromstring = copy.deepcopy(eltree.fromstring)
-
-    def aikido_fromstring(text, *args, **kwargs):
-        res = former_fromstring(text, *args, **kwargs)
-        extract_data_from_xml_body(user_input=text, root_element=res)
-        return res
-
-    former_fromstringlist = copy.deepcopy(eltree.fromstringlist)
-
-    def aikido_fromstringlist(strings, *args, **kwargs):
-        res = former_fromstringlist(strings, *args, **kwargs)
-        for string in strings:
-            extract_data_from_xml_body(user_input=string, root_element=res)
-        return res
-
-    # pylint: disable=no-member
-    setattr(eltree, "fromstring", aikido_fromstring)
-    setattr(modified_eltree, "fromstring", aikido_fromstring)
-
-    # pylint: disable=no-member
-    setattr(eltree, "fromstringlist", aikido_fromstringlist)
-    setattr(modified_eltree, "fromstringlist", aikido_fromstringlist)
-    return modified_eltree
+    patch_function(m, "fromstring", _fromstring)
+    patch_function(m, "fromstringlist", _fromstringlist)
