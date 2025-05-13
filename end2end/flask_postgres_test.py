@@ -85,7 +85,10 @@ def test_attacks_detected():
     assert attacks[0]["attack"] == {
         "blocked": True,
         "kind": "sql_injection",
-        'metadata': {'sql': "INSERT INTO dogs (dog_name, isAdmin) VALUES ('Dangerous Bobby', TRUE); -- ', FALSE)"},
+        'metadata': {
+            'dialect': "postgres",
+            'sql': "INSERT INTO dogs (dog_name, isAdmin) VALUES ('Dangerous Bobby', TRUE); -- ', FALSE)"
+        },
         'operation': "psycopg2.Connection.Cursor.execute",
         'pathToPayload': '.dog_name',
         'payload':  '"Dangerous Bobby\', TRUE); -- "',
@@ -95,7 +98,10 @@ def test_attacks_detected():
     assert attacks[1]["attack"] == {
         "blocked": True,
         "kind": "sql_injection",
-        'metadata': {'sql': "INSERT INTO dogs (dog_name, isAdmin) VALUES ('Bobby', TRUE) --', FALSE)"},
+        'metadata': {
+            'dialect': "postgres",
+            'sql': "INSERT INTO dogs (dog_name, isAdmin) VALUES ('Bobby', TRUE) --', FALSE)"
+        },
         'operation': "psycopg2.Connection.Cursor.execute",
         'pathToPayload': '.dog_name',
         'payload': "\"Bobby', TRUE) --\"",
