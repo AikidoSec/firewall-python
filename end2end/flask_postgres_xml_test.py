@@ -39,7 +39,10 @@ def test_dangerous_response_with_firewall():
     assert attacks[0]["attack"] == {
         "blocked": True,
         "kind": "sql_injection",
-        'metadata': {'sql': "INSERT INTO dogs (dog_name, isAdmin) VALUES ('Malicious dog', TRUE); -- ', FALSE)"},
+        'metadata': {
+            'dialect': "postgres",
+            'sql': "INSERT INTO dogs (dog_name, isAdmin) VALUES ('Malicious dog', TRUE); -- ', FALSE)"
+        },
         'operation': "psycopg2.Connection.Cursor.execute",
         'pathToPayload': ".dog_name.[0]",
         'payload': "\"Malicious dog', TRUE); -- \"",

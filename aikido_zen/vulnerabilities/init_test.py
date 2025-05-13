@@ -133,6 +133,7 @@ def test_sql_injection_with_comms(caplog, get_context, monkeypatch):
             call_args[1][0]["metadata"]["sql"]
             == "INSERT * INTO VALUES ('doggoss2', TRUE);"
         )
+        assert call_args[1][0]["metadata"]["dialect"] == "mysql"
 
 
 def test_ssrf_with_comms_hostnames_add(caplog, get_context, monkeypatch):
