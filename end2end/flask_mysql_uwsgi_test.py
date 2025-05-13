@@ -39,7 +39,10 @@ def test_dangerous_response_with_firewall():
     assert attacks[0]["attack"] == {
         "blocked": True,
         "kind": "sql_injection",
-        'metadata': {'sql': 'INSERT INTO dogs (dog_name, isAdmin) VALUES ("Dangerous bobby", 1); -- ", 0)'},
+        'metadata': {
+            'dialect': 'mysql',
+            'sql': 'INSERT INTO dogs (dog_name, isAdmin) VALUES ("Dangerous bobby", 1); -- ", 0)'
+        },
         'operation': 'pymysql.Cursor.execute',
         'pathToPayload': '.dog_name',
         'payload': '"Dangerous bobby\\", 1); -- "',
