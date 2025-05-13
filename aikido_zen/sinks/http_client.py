@@ -3,8 +3,7 @@ Sink module for `http`
 """
 
 from aikido_zen.helpers.get_argument import get_argument
-from aikido_zen.importhook import on_import
-from aikido_zen.sinks import before, after, patch_function
+from aikido_zen.sinks import before, after, patch_function, on_import
 from aikido_zen.vulnerabilities.ssrf.handle_http_response import (
     handle_http_response,
 )
