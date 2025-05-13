@@ -89,6 +89,4 @@ def post_response(status_code):
         cache.routes.increment_route(route_metadata)
 
         # Run API Discovery :
-        update_route_info(
-            new_apispec=get_api_info(context), route=cache.routes.get(route_metadata)
-        )
+        update_route_info(context, route=cache.routes.get(route_metadata))
