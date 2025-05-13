@@ -205,7 +205,6 @@ def test_parses_routes_correctly(
     ]
 
 
-
 @patch("aikido_zen.background_process.comms.get_comms")
 def test_renew_called_with_correct_args(mock_get_comms, thread_cache: ThreadCache):
     """Test that renew calls send_data_to_bg_process with correct arguments."""
@@ -239,6 +238,7 @@ def test_renew_called_with_correct_args(mock_get_comms, thread_cache: ThreadCach
         receive=True,
     )
 
+
 @patch("aikido_zen.background_process.comms.get_comms")
 def test_renew_called_with_empty_routes(mock_get_comms, thread_cache: ThreadCache):
     """Test that renew calls send_data_to_bg_process with empty routes."""
@@ -258,6 +258,7 @@ def test_renew_called_with_empty_routes(mock_get_comms, thread_cache: ThreadCach
         },
         receive=True,
     )
+
 
 @patch("aikido_zen.background_process.comms.get_comms")
 def test_renew_called_with_no_requests(mock_get_comms, thread_cache: ThreadCache):
