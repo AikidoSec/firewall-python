@@ -1,8 +1,7 @@
 """Exports request_handler function"""
 
 import aikido_zen.context as ctx
-from aikido_zen.api_discovery.get_api_info import get_api_info
-from aikido_zen.api_discovery.update_route_info import update_route_info
+from aikido_zen.api_discovery.update_route_info import update_route_info_from_context
 from aikido_zen.helpers.is_useful_route import is_useful_route
 from aikido_zen.helpers.logging import logger
 from aikido_zen.thread.thread_cache import get_cache
@@ -88,7 +87,5 @@ def post_response(status_code):
     if cache:
         cache.routes.increment_route(route_metadata)
 
-        # Run API Discovery :
-        update_route_info(
-            new_apispec=get_api_info(context), route=cache.routes.get(route_metadata)
-        )
+        # Run API Discovery
+        update_route_info_from_context(context, route=cache.routes.get(route_metadata))
