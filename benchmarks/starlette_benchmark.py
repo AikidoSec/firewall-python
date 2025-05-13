@@ -5,7 +5,7 @@ import time
 
 def generate_wrk_command_for_url(url):
     # Define the command with awk included
-    return "wrk -t4 -c400 -d15s " + url
+    return "wrk -t5 -c200 -d15s " + url
 
 def extract_requests_and_latency_tuple(output):
     if output.returncode == 0:
