@@ -1,8 +1,5 @@
 """ This file simply exports the CloudConnectionManager class"""
 
-import time
-from aikido_zen.helpers.token import Token
-from aikido_zen.helpers.get_current_unixtime_ms import get_unixtime_ms
 from aikido_zen.background_process.heartbeats import send_heartbeats_every_x_secs
 from aikido_zen.background_process.routes import Routes
 from aikido_zen.ratelimiting.rate_limiter import RateLimiter
@@ -11,7 +8,7 @@ from .update_firewall_lists import update_firewall_lists
 from ..api.http_api import ReportingApiHTTP
 from ..service_config import ServiceConfig
 from ..users import Users
-from ..hostnames import Hostnames
+from aikido_zen.storage.hostnames import Hostnames
 from ..realtime.start_polling_for_changes import start_polling_for_changes
 from ..statistics import Statistics
 

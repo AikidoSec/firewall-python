@@ -59,6 +59,15 @@ class Routes:
         key = route_to_key(route_metadata)
         return self.routes.get(key)
 
+    def get_routes_with_hits(self):
+        """Gets you all routes with a positive hits delta"""
+        result = dict()
+        for key, route in self.routes.items():
+            if route["hits_delta_since_sync"] <= 0:
+                continue  # do not add routes without a hit delta
+            result[key] = route
+        return result
+
     def clear(self):
         """Deletes all routes"""
         self.routes = {}
