@@ -234,6 +234,7 @@ def test_renew_called_with_correct_args(mock_get_comms, thread_cache: ThreadCach
             },
             "reqs": 1,
             "middleware_installed": False,
+            "hostnames": [],
         },
         receive=True,
     )
@@ -255,6 +256,7 @@ def test_renew_called_with_empty_routes(mock_get_comms, thread_cache: ThreadCach
             "current_routes": {},
             "reqs": 0,
             "middleware_installed": False,
+            "hostnames": [],
         },
         receive=True,
     )
@@ -279,6 +281,7 @@ def test_renew_called_with_no_requests(mock_get_comms, thread_cache: ThreadCache
             "current_routes": {},
             "reqs": 0,
             "middleware_installed": False,
+            "hostnames": [],
         },
         receive=True,
     )
