@@ -3,7 +3,7 @@ from aikido_zen.helpers.token import Token
 from aikido_zen.background_process.api.http_api import ReportingApiHTTP
 from aikido_zen.background_process.service_config import ServiceConfig
 from aikido_zen.background_process.users import Users
-from aikido_zen.background_process.hostnames import Hostnames
+from aikido_zen.storage.hostnames import Hostnames
 from aikido_zen.ratelimiting.rate_limiter import RateLimiter
 from aikido_zen.background_process.statistics import Statistics
 from . import CloudConnectionManager
