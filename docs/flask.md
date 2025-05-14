@@ -1,8 +1,5 @@
 # Flask
 
-> [!WARNING]
-> The Flask development server is not fully supported and may report incomplete data, we recommend using a web server like [gUnicorn](./gunicorn.md) to test all features Zen has to offer.
-
 ## Installation
 
 1. Install `aikido_zen` package with pip :
