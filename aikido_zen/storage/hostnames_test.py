@@ -65,6 +65,20 @@ def test_as_array():
     assert isinstance(hostnames.as_array(), list)
 
 
+def test_hostnames_add_multiple():
+    """Test the as_array method."""
+    hostnames = Hostnames(max_entries=3)
+    hostnames.add("example.com", 80, 20)
+    hostnames.add("test.com", 443)
+    hostnames.add("test.com", 443, 4)
+    expected_array = [
+        {"hostname": "example.com", "port": 80, "hits": 20},
+        {"hostname": "test.com", "port": 443, "hits": 5},
+    ]
+    assert hostnames.as_array() == expected_array
+    assert isinstance(hostnames.as_array(), list)
+
+
 def test_clear():
     """Test the clear method."""
     hostnames = Hostnames(max_entries=3)
