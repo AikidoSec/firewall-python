@@ -203,3 +203,82 @@ def test_parses_routes_correctly(
             "apispec": {},
         },
     ]
+
+
+@patch("aikido_zen.background_process.comms.get_comms")
+def test_renew_called_with_correct_args(mock_get_comms, thread_cache: ThreadCache):
+    """Test that renew calls send_data_to_bg_process with correct arguments."""
+    mock_comms = MagicMock()
+    mock_get_comms.return_value = mock_comms
+
+    # Setup initial state
+    thread_cache.increment_stats()
+    thread_cache.routes.initialize_route({"method": "GET", "route": "/test"})
+    thread_cache.routes.increment_route({"method": "GET", "route": "/test"})
+
+    # Call renew
+    thread_cache.renew()
+
+    # Assert that send_data_to_bg_process was called with the correct arguments
+    mock_comms.send_data_to_bg_process.assert_called_once_with(
+        action="SYNC_DATA",
+        obj={
+            "current_routes": {
+                "GET:/test": {
+                    "method": "GET",
+                    "path": "/test",
+                    "hits": 1,
+                    "hits_delta_since_sync": 1,
+                    "apispec": {},
+                }
+            },
+            "reqs": 1,
+            "middleware_installed": False,
+        },
+        receive=True,
+    )
+
+
+@patch("aikido_zen.background_process.comms.get_comms")
+def test_renew_called_with_empty_routes(mock_get_comms, thread_cache: ThreadCache):
+    """Test that renew calls send_data_to_bg_process with empty routes."""
+    mock_comms = MagicMock()
+    mock_get_comms.return_value = mock_comms
+
+    # Call renew without initializing any routes
+    thread_cache.renew()
+
+    # Assert that send_data_to_bg_process was called with the correct arguments
+    mock_comms.send_data_to_bg_process.assert_called_once_with(
+        action="SYNC_DATA",
+        obj={
+            "current_routes": {},
+            "reqs": 0,
+            "middleware_installed": False,
+        },
+        receive=True,
+    )
+
+
+@patch("aikido_zen.background_process.comms.get_comms")
+def test_renew_called_with_no_requests(mock_get_comms, thread_cache: ThreadCache):
+    """Test that renew calls send_data_to_bg_process with zero requests."""
+    mock_comms = MagicMock()
+    mock_get_comms.return_value = mock_comms
+
+    # Setup initial state with a route but no requests
+    thread_cache.routes.initialize_route({"method": "GET", "route": "/test"})
+
+    # Call renew
+    thread_cache.renew()
+
+    # Assert that send_data_to_bg_process was called with the correct arguments
+    mock_comms.send_data_to_bg_process.assert_called_once_with(
+        action="SYNC_DATA",
+        obj={
+            "current_routes": {},
+            "reqs": 0,
+            "middleware_installed": False,
+        },
+        receive=True,
+    )
