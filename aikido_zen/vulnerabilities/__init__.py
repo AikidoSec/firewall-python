@@ -86,7 +86,6 @@ def run_vulnerability_scan(kind, op, args):
             injection_results = inspect_getaddrinfo_result(dns_results, hostname, port)
             error_type = AikidoSSRF
 
-            # Check that port number is higher than zero before reporting :
             if thread_cache and port > 0:
                 thread_cache.hostnames.add(hostname, port)
         else:
