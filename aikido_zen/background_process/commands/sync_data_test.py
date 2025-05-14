@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from .sync_data import process_sync_data
 from aikido_zen.background_process.routes import Routes
 from aikido_zen.helpers.iplist import IPList
+from ...storage.hostnames import Hostnames
 
 
 @pytest.fixture
@@ -12,6 +13,7 @@ def setup_connection_manager():
     """Fixture to set up a mock connection manager."""
     connection_manager = MagicMock()
     connection_manager.routes = Routes()
+    connection_manager.hostnames = Hostnames()
     connection_manager.conf.endpoints = ["endpoint1", "endpoint2"]
 
     connection_manager.conf.bypassed_ips = IPList()
@@ -26,6 +28,10 @@ def setup_connection_manager():
 def test_process_sync_data_initialization(setup_connection_manager):
     """Test the initialization of routes and hits update."""
     connection_manager = setup_connection_manager
+    test_hostnames = Hostnames()
+    test_hostnames.add("example2.com", 443, 15)
+    test_hostnames.add("bumblebee.com", 8080)
+
     data = {
         "current_routes": {
             "route1": {
@@ -43,6 +49,7 @@ def test_process_sync_data_initialization(setup_connection_manager):
         },
         "reqs": 10,  # Total requests to be added
         "middleware_installed": False,
+        "hostnames": test_hostnames.as_array(),
     }
 
     result = process_sync_data(connection_manager, data, None)
@@ -69,6 +76,10 @@ def test_process_sync_data_initialization(setup_connection_manager):
     assert result["routes"] == dict(connection_manager.routes.routes)
     assert result["config"] == connection_manager.conf
     assert connection_manager.middleware_installed == False
+    assert connection_manager.hostnames.as_array() == [
+        {"hits": 15, "hostname": "example2.com", "port": 443},
+        {"hits": 1, "hostname": "bumblebee.com", "port": 8080},
+    ]
 
 
 def test_process_sync_data_with_last_updated_at_below_zero(setup_connection_manager):
@@ -114,13 +125,22 @@ def test_process_sync_data_with_last_updated_at_below_zero(setup_connection_mana
     # Check that the total requests were updated
     assert connection_manager.statistics.requests["total"] == 10
     assert connection_manager.middleware_installed == True
+    assert len(connection_manager.hostnames.as_array()) == 0
     # Check that the return value is correct
     assert result == {}
 
 
-def test_process_sync_data_existing_route(setup_connection_manager):
+def test_process_sync_data_existing_route_and_hostnames(setup_connection_manager):
     """Test updating an existing route's hit count."""
     connection_manager = setup_connection_manager
+    connection_manager.hostnames.add("example.com", 443, 200)
+    connection_manager.hostnames.add("example.org", 443)
+    connection_manager.hostnames.add("a.com", 443)
+
+    hostnames_sync = Hostnames()
+    hostnames_sync.add("example.com", 443, 15)
+    hostnames_sync.add("c.com", 443)
+
     data = {
         "current_routes": {
             "route1": {
@@ -131,6 +151,7 @@ def test_process_sync_data_existing_route(setup_connection_manager):
             }
         },
         "reqs": 5,  # Total requests to be added
+        "hostnames": hostnames_sync.as_array(),
     }
 
     # First call to initialize the route
@@ -162,6 +183,12 @@ def test_process_sync_data_existing_route(setup_connection_manager):
     # Check that the total requests were updated
     assert connection_manager.statistics.requests["total"] == 20  # 5 + 15
     assert connection_manager.middleware_installed == False
+    assert connection_manager.hostnames.as_array() == [
+        {"hits": 215, "hostname": "example.com", "port": 443},
+        {"hits": 1, "hostname": "example.org", "port": 443},
+        {"hits": 1, "hostname": "a.com", "port": 443},
+        {"hits": 1, "hostname": "c.com", "port": 443},
+    ]
 
     # Check that the return value is correct
     assert result["routes"] == dict(connection_manager.routes.routes)

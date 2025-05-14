@@ -1,10 +1,10 @@
 """Mainly exports on_detected_attack"""
 
 import json
+
 from aikido_zen.helpers.get_current_unixtime_ms import get_unixtime_ms
 from aikido_zen.helpers.logging import logger
 from aikido_zen.helpers.limit_length_metadata import limit_length_metadata
-from aikido_zen.helpers.get_ua_from_context import get_ua_from_context
 from aikido_zen.helpers.serialize_to_json import serialize_to_json
 
 
@@ -31,7 +31,7 @@ def on_detected_attack(connection_manager, attack, context, blocked, stack):
                 "method": context.method,
                 "url": context.url,
                 "ipAddress": context.remote_address,
-                "userAgent": get_ua_from_context(context),
+                "userAgent": context.get_user_agent(),
                 "body": context.body,
                 "headers": context.headers,
                 "source": context.source,
