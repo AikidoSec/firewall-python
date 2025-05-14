@@ -8,7 +8,7 @@ def process_sync_data(connection_manager, data, conn, queue=None):
     """
     Synchronizes data between the thread-local cache (with a TTL of usually 1 minute) and the
     background thread. Which data gets synced?
-    Thread -> BG Process : Hits, request statistics, api specs
+    Thread -> BG Process : Hits, request statistics, api specs, hostnames
     BG Process -> Thread : Routes, endpoints, bypasssed ip's, blocked users
     """
     routes = connection_manager.routes
