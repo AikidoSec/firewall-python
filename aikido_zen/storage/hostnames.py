@@ -8,7 +8,7 @@ class Hostnames:
         self.max_entries = max_entries
         self.map = {}
 
-    def add(self, hostname, port):
+    def add(self, hostname, port, hits=1):
         """Add a hostname and port to the map"""
         key = get_key(hostname, port)
         if not self.map.get(key):
@@ -17,7 +17,7 @@ class Hostnames:
             # Remove the first added hostname
             first_added = next(iter(self.map))
             del self.map[first_added]
-        self.map[key]["hits"] += 1
+        self.map[key]["hits"] += hits
 
     def as_array(self):
         """Exports the contents as an array"""

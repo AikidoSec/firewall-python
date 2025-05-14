@@ -136,42 +136,47 @@ def test_sql_injection_with_comms(caplog, get_context, monkeypatch):
         assert call_args[1][0]["metadata"]["dialect"] == "mysql"
 
 
-def test_ssrf_with_comms_hostnames_add(caplog, get_context, monkeypatch):
+def test_ssrf_vulnerability_scan_adds_hostname(get_context):
     get_context.set_as_current_context()
-    monkeypatch.setenv("AIKIDO_BLOCK", "1")
-    with patch("aikido_zen.background_process.comms.get_comms") as mock_get_comms:
-        # Create a mock comms object
-        mock_comms = MagicMock()
-        mock_get_comms.return_value = mock_comms  # Set the return value of get_comms
-        run_vulnerability_scan(
-            kind="ssrf",
-            op="test_op",
-            args=([], "test-hostname", 8097),
-        )
-        mock_comms.send_data_to_bg_process.assert_any_call(
-            "HOSTNAMES_ADD", ("test-hostname", 8097)
-        )
+
+    dns_results = MagicMock()
+    hostname = "example.com"
+    port = 80
+
+    run_vulnerability_scan(kind="ssrf", op="test", args=(dns_results, hostname, port))
+
+    # Verify that hostnames.add was called with the correct arguments
+    assert get_cache().hostnames.as_array() == [
+        {"hits": 1, "hostname": "example.com", "port": 80}
+    ]
+    run_vulnerability_scan(kind="ssrf", op="test", args=(dns_results, hostname, port))
+    assert get_cache().hostnames.as_array() == [
+        {"hits": 2, "hostname": "example.com", "port": 80}
+    ]
 
 
-def test_ssrf_with_comms_hostnames_add_port_zero(caplog, get_context, monkeypatch):
+def test_ssrf_vulnerability_scan_no_port(get_context):
     get_context.set_as_current_context()
-    monkeypatch.setenv("AIKIDO_BLOCK", "1")
-    with patch("aikido_zen.background_process.comms.get_comms") as mock_get_comms:
-        # Create a mock comms object
-        mock_comms = MagicMock()
-        mock_get_comms.return_value = mock_comms  # Set the return value of get_comms
-        run_vulnerability_scan(
-            kind="ssrf",
-            op="test_op",
-            args=([], "test-hostname", 0),
-        )
 
-        call_was_made = True
-        try:
-            mock_comms.send_data_to_bg_process.assert_any_call(
-                "HOSTNAMES_ADD", ("test-hostname", 0)
-            )
-        except AssertionError:
-            call_was_made = False
+    dns_results = MagicMock()
+    hostname = "example.com"
+    port = 0  # Port is zero, should not add to hostnames
 
-        assert not call_was_made  # No calls were made to HOSTNAMES_ADD
+    run_vulnerability_scan(kind="ssrf", op="test", args=(dns_results, hostname, port))
+
+    assert get_cache().hostnames.as_array() == []
+
+
+def test_ssrf_vulnerability_scan_bypassed_ip(get_context):
+    get_context.set_as_current_context()
+    get_cache().config.bypassed_ips = IPList()
+    get_cache().config.bypassed_ips.add("198.51.100.23")
+
+    dns_results = MagicMock()
+    hostname = "example.com"
+    port = 80
+
+    run_vulnerability_scan(kind="ssrf", op="test", args=(dns_results, hostname, port))
+
+    # Verify that hostnames.add was not called due to bypassed IP
+    assert get_cache().hostnames.as_array() == []

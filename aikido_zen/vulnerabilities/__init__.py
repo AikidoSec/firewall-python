@@ -82,15 +82,12 @@ def run_vulnerability_scan(kind, op, args):
             )
             error_type = AikidoPathTraversal
         elif kind == "ssrf":
-            # args[0] : DNS Results, args[1] : Hostname, args[2] : Port
-            injection_results = inspect_getaddrinfo_result(
-                dns_results=args[0], hostname=args[1], port=args[2]
-            )
+            dns_results, hostname, port = args
+            injection_results = inspect_getaddrinfo_result(dns_results, hostname, port)
             error_type = AikidoSSRF
 
-            # Check that port number is higher than zero before reporting :
-            if comms and args[2] > 0:
-                comms.send_data_to_bg_process("HOSTNAMES_ADD", (args[1], args[2]))
+            if thread_cache and port > 0:
+                thread_cache.hostnames.add(hostname, port)
         else:
             logger.error(
                 "Vulnerability type %s currently has no scans implemented", kind
