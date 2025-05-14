@@ -31,6 +31,15 @@ def process_sync_data(connection_manager, data, conn, queue=None):
     # Save middleware installed :
     if data.get("middleware_installed", False):
         connection_manager.middleware_installed = True
+
+    # Sync hostnames
+    for hostnames_entry in data.get("hostnames", list()):
+        connection_manager.hostnames.add(
+            hostnames_entry["hostname"],
+            hostnames_entry["port"],
+            hostnames_entry["hits"],
+        )
+
     if connection_manager.conf.last_updated_at > 0:
         # Only report data if the config has been fetched.
         return {
