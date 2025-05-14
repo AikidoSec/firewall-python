@@ -93,7 +93,7 @@ def aikido___call__(flask_app, environ, start_response):
     return res
 
 
-FLASK_REQUIRED_VERSION = "2.3.0"
+FLASK_REQUIRED_VERSION = "2.2.4"
 
 
 @importhook.on_import("flask.app")
