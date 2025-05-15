@@ -18,6 +18,7 @@ from .get_manager_info import get_manager_info
 from .update_service_config import update_service_config
 from .on_start import on_start
 from .send_heartbeat import send_heartbeat
+from ...helpers.check_env_for_blocking import check_env_for_blocking
 
 
 class CloudConnectionManager:
@@ -27,8 +28,7 @@ class CloudConnectionManager:
     heartbeat_secs = 600  # Heartbeat every 10 minutes
     initial_stats_timeout = 60  # Wait 60 seconds after startup for initial stats
 
-    def __init__(self, block, api, token, serverless):
-        self.block = block
+    def __init__(self, api, token, serverless):
         self.api: ReportingApiHTTP = api
         self.token = token  # Should be instance of the Token class!
         self.routes = Routes(200)
@@ -39,6 +39,7 @@ class CloudConnectionManager:
             blocked_uids=[],
             bypassed_ips=[],
             received_any_stats=True,
+            blocking=check_env_for_blocking(),
         )
         self.rate_limiter = RateLimiter(
             max_items=5000, time_to_live_in_ms=120 * 60 * 1000  # 120 minutes

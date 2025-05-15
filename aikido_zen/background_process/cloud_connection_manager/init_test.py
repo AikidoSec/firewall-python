@@ -11,11 +11,10 @@ from . import CloudConnectionManager
 
 @pytest.fixture
 def setup_cloud_connection_manager():
-    block = None  # Replace with appropriate mock or object if needed
     api = ReportingApiHTTP(None)  # Mock or create an instance of ReportingApiHTTP
     token = Token("AIK_TOKEN_TEST")  # Mock or create an instance of Token
     serverless = "some_value"  # Valid serverless value
-    return CloudConnectionManager(block, api, token, serverless)
+    return CloudConnectionManager(api, token, serverless)
 
 
 def test_cloud_connection_manager_initialization(setup_cloud_connection_manager):
@@ -36,13 +35,12 @@ def test_cloud_connection_manager_initialization(setup_cloud_connection_manager)
 
 
 def test_cloud_connection_manager_empty_serverless():
-    block = None  # Replace with appropriate mock or object if needed
     api = ReportingApiHTTP(None)  # Mock or create an instance of ReportingApiHTTP
     token = Token("Hellow")  # Mock or create an instance of Token
     serverless = ""  # Invalid serverless value
 
     with pytest.raises(ValueError, match="Serverless cannot be an empty string"):
-        CloudConnectionManager(block, api, token, serverless)
+        CloudConnectionManager(api, token, serverless)
 
 
 # Additional tests can be added here for other edge cases or scenarios

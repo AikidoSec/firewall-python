@@ -80,7 +80,6 @@ class AikidoBackgroundProcess:
         )
         # We need to pass along the scheduler so that the heartbeat also gets sent
         self.connection_manager = CloudConnectionManager(
-            block=check_env_for_blocking(),
             api=api,
             token=get_token_from_env(),
             serverless=False,

@@ -81,9 +81,7 @@ def connection_manager():
         """A test version of CloudConnectionManager with a mock API."""
 
         def __init__(self, token, serverless):
-            super().__init__(
-                block=False, api=MockApi(), token=token, serverless=serverless
-            )
+            super().__init__(api=MockApi(), token=token, serverless=serverless)
 
     return TestCloudConnectionManager(token="valid_token", serverless=False)
 
