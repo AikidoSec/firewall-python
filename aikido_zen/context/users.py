@@ -3,10 +3,9 @@ Users file
 """
 
 from aikido_zen.helpers.logging import logger
-from aikido_zen.background_process import get_comms
 from . import get_current_context
-from aikido_zen.thread.thread_cache import get_cache
-from ..helpers.get_current_unixtime_ms import get_unixtime_ms
+import aikido_zen.thread.thread_cache as thread_cache
+import aikido_zen.helpers.get_current_unixtime_ms as t
 
 
 def set_user(user):
@@ -32,13 +31,13 @@ def set_user(user):
     context.user = validated_user
 
     # Send validated_user object to background process :
-    cache = get_cache()
+    cache = thread_cache.get_cache()
     if cache:
         cache.users.add_user(
             user_id=validated_user["id"],
             user_name=validated_user["name"],
             user_ip=validated_user["lastIpAddress"],
-            current_time=get_unixtime_ms(),
+            current_time=t.get_unixtime_ms(),
         )
 
 
