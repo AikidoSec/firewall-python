@@ -11,7 +11,7 @@ def get_manager_info(connection_manager):
     This returns info about the connection_manager
     """
     return {
-        "dryMode": not connection_manager.block,
+        "dryMode": not connection_manager.conf.blocking,
         "hostname": socket.gethostname(),
         "version": config.PKG_VERSION,
         "library": "firewall-python",
