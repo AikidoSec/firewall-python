@@ -40,6 +40,10 @@ def process_sync_data(connection_manager, data, conn, queue=None):
             hostnames_entry["hits"],
         )
 
+    # Sync users
+    for user_entry in data.get("users", list()):
+        connection_manager.users.add_user_from_entry(user_entry)
+
     if connection_manager.conf.last_updated_at > 0:
         # Only report data if the config has been fetched.
         return {
