@@ -6,6 +6,7 @@ from aikido_zen.background_process.service_config import ServiceConfig
 from aikido_zen.context import get_current_context
 from aikido_zen.helpers.logging import logger
 from aikido_zen.storage.hostnames import Hostnames
+from aikido_zen.storage.users import Users
 from aikido_zen.thread import process_worker_loader
 
 
@@ -16,6 +17,7 @@ class ThreadCache:
 
     def __init__(self):
         self.hostnames = Hostnames(200)
+        self.users = Users(1000)
         self.reset()  # Initialize values
 
     def is_bypassed_ip(self, ip):
@@ -42,6 +44,7 @@ class ThreadCache:
         self.reqs = 0
         self.middleware_installed = False
         self.hostnames.clear()
+        self.users.clear()
 
     def renew(self):
         if not comms.get_comms():
@@ -55,6 +58,7 @@ class ThreadCache:
                 "reqs": self.reqs,
                 "middleware_installed": self.middleware_installed,
                 "hostnames": self.hostnames.as_array(),
+                "users": self.users.as_array(),
             },
             receive=True,
         )
