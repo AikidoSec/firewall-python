@@ -6,7 +6,6 @@ from .read_property import process_read_property
 from .user import process_user
 from .should_ratelimit import process_should_ratelimit
 from .kill import process_kill
-from .statistics import process_statistics
 from .ping import process_ping
 from .sync_data import process_sync_data
 
@@ -16,7 +15,6 @@ commands_map = {
     "ATTACK": (process_attack, False),
     "USER": (process_user, False),
     "KILL": (process_kill, False),
-    "STATISTICS": (process_statistics, False),
     # Commands that return data :
     "SYNC_DATA": (process_sync_data, True),
     "READ_PROPERTY": (process_read_property, True),
