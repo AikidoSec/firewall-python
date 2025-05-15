@@ -20,6 +20,7 @@ class ServiceConfig:
         blocked_uids,
         bypassed_ips,
         received_any_stats: bool,
+        blocking: bool,
     ):
         # Init the class using update function :
         self.update(
@@ -28,6 +29,7 @@ class ServiceConfig:
         self.blocked_ips = []
         self.allowed_ips = []
         self.blocked_user_agent_regex: Pattern = None
+        self.blocking = blocking
 
     def update(
         self,
@@ -36,12 +38,14 @@ class ServiceConfig:
         blocked_uids,
         bypassed_ips,
         received_any_stats: bool,
+        blocking: bool,
     ):
         self.last_updated_at = last_updated_at
         self.received_any_stats = bool(received_any_stats)
         self.blocked_uids = set(blocked_uids)
         self.set_endpoints(endpoints)
         self.set_bypassed_ips(bypassed_ips)
+        self.blocking = blocking
 
     def set_endpoints(self, endpoints):
         """Sets non-graphql endpoints"""

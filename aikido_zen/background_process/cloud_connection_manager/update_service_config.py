@@ -11,9 +11,6 @@ def update_service_config(connection_manager, res):
     if res.get("success", False) is False:
         logger.debug(res)
         return
-    if "block" in res.keys() and res["block"] != connection_manager.block:
-        logger.debug("Updating blocking, setting blocking to : %s", res["block"])
-        connection_manager.block = bool(res["block"])
 
     connection_manager.conf.update(
         endpoints=res.get("endpoints", []),
@@ -21,4 +18,5 @@ def update_service_config(connection_manager, res):
         blocked_uids=res.get("blockedUserIds", []),
         bypassed_ips=res.get("allowedIPAddresses", []),
         received_any_stats=res.get("receivedAnyStats", True),
+        blocking=res.get("block", connection_manager.conf.blocking),
     )
