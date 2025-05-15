@@ -1,3 +1,5 @@
+import time
+
 import pytest
 from datetime import datetime
 from .users import Users
@@ -217,3 +219,87 @@ def test_add_user_with_empty_ip(users):
 
     assert user_id in users.users
     assert users.users[user_id]["lastIpAddress"] == user_ip
+
+
+def test_add_user_from_entry_new_user(users):
+    user_entry = {
+        "id": "1",
+        "name": "Test User",
+        "lastIpAddress": "127.0.0.1",
+        "firstSeenAt": datetime.now(),
+        "lastSeenAt": datetime.now(),
+    }
+
+    users.add_user_from_entry(user_entry)
+
+    assert "1" in users.users
+    assert users.users["1"]["name"] == "Test User"
+    assert users.users["1"]["lastIpAddress"] == "127.0.0.1"
+
+
+def test_add_user_from_entry_existing_user(users):
+    user_id = "1"
+    user_name = "Test User"
+    user_ip = "127.0.0.1"
+    current_time = datetime.now()
+
+    users.add_user(user_id, user_name, user_ip, current_time)
+
+    new_user_entry = {
+        "id": "1",
+        "name": "Updated User",
+        "lastIpAddress": "192.168.1.1",
+        "firstSeenAt": datetime.now(),
+        "lastSeenAt": datetime.now(),
+    }
+    time.sleep(0.2)
+    users.add_user_from_entry(new_user_entry)
+
+    assert "1" in users.users
+    assert users.users["1"]["name"] == "Updated User"
+    assert users.users["1"]["lastIpAddress"] == "192.168.1.1"
+    assert users.users["1"]["firstSeenAt"] == current_time
+
+
+def test_add_user_from_entry_ensure_max_entries(users):
+    user_entry_1 = {
+        "id": "1",
+        "name": "Test User 1",
+        "lastIpAddress": "127.0.0.1",
+        "firstSeenAt": datetime.now(),
+        "lastSeenAt": datetime.now(),
+    }
+
+    user_entry_2 = {
+        "id": "2",
+        "name": "Test User 2",
+        "lastIpAddress": "192.168.1.1",
+        "firstSeenAt": datetime.now(),
+        "lastSeenAt": datetime.now(),
+    }
+
+    user_entry_3 = {
+        "id": "3",
+        "name": "Test User 3",
+        "lastIpAddress": "10.0.0.1",
+        "firstSeenAt": datetime.now(),
+        "lastSeenAt": datetime.now(),
+    }
+
+    user_entry_4 = {
+        "id": "4",
+        "name": "Test User 4",
+        "lastIpAddress": "172.16.0.1",
+        "firstSeenAt": datetime.now(),
+        "lastSeenAt": datetime.now(),
+    }
+
+    users.add_user_from_entry(user_entry_1)
+    users.add_user_from_entry(user_entry_2)
+    users.add_user_from_entry(user_entry_3)
+    users.add_user_from_entry(user_entry_4)
+
+    assert "1" not in users.users
+    assert "2" in users.users
+    assert "3" in users.users
+    assert "4" in users.users

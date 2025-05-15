@@ -19,6 +19,16 @@ class Users:
             "lastSeenAt": current_time,
         }
 
+    def add_user_from_entry(self, user_entry):
+        self.ensure_max_entries()
+
+        existing_user = self.users.get(user_entry["id"])
+        if existing_user:
+            # Use the firstSeenAt timestamp of the existing user
+            user_entry["firstSeenAt"] = existing_user["firstSeenAt"]
+
+        self.users[user_entry["id"]] = user_entry
+
     def ensure_max_entries(self):
         if len(self.users) >= self.max_entries:
             # Remove the first added user (FIFO)
