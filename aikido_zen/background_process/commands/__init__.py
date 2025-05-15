@@ -2,7 +2,6 @@
 
 from aikido_zen.helpers.logging import logger
 from .attack import process_attack
-from .read_property import process_read_property
 from .user import process_user
 from .should_ratelimit import process_should_ratelimit
 from .ping import process_ping
@@ -15,7 +14,6 @@ commands_map = {
     "USER": (process_user, False),
     # Commands that return data :
     "SYNC_DATA": (process_sync_data, True),
-    "READ_PROPERTY": (process_read_property, True),
     "SHOULD_RATELIMIT": (process_should_ratelimit, True),
     "PING": (process_ping, True),
 }
