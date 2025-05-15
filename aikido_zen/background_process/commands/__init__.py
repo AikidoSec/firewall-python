@@ -3,7 +3,6 @@
 from aikido_zen.helpers.logging import logger
 from .attack import process_attack
 from .read_property import process_read_property
-from .user import process_user
 from .should_ratelimit import process_should_ratelimit
 from .kill import process_kill
 from .statistics import process_statistics
@@ -14,7 +13,6 @@ commands_map = {
     # This maps to a tuple : (function, returns_data?)
     # Commands that don't return data :
     "ATTACK": (process_attack, False),
-    "USER": (process_user, False),
     "KILL": (process_kill, False),
     "STATISTICS": (process_statistics, False),
     # Commands that return data :
