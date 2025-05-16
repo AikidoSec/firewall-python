@@ -1,16 +1,21 @@
+import time
+
 import pytest
 
 from . import current_context, Context
 from .users import validate_user, set_user
 from .. import should_block_request
+from ..thread.thread_cache import get_cache
 
 
 @pytest.fixture(autouse=True)
 def run_around_tests():
+    get_cache().reset()
     yield
     # Make sure to reset context and cache after every test so it does not
     # interfere with other tests
     current_context.set(None)
+    get_cache().reset()
 
 
 def set_context_and_lifecycle():
@@ -115,6 +120,13 @@ def test_set_valid_user():
         "lastIpAddress": "198.51.100.23",
     }
 
+    assert len(get_cache().users.as_array()) == 1
+    user_1 = get_cache().users.as_array()[0]
+    assert user_1["id"] == "456"
+    assert user_1["lastIpAddress"] == "198.51.100.23"
+    assert user_1["name"] == "Bob"
+    assert user_1["firstSeenAt"] == user_1["lastSeenAt"]
+
 
 def test_re_set_valid_user():
     context1 = set_context_and_lifecycle()
@@ -128,6 +140,12 @@ def test_re_set_valid_user():
         "name": "Bob",
         "lastIpAddress": "198.51.100.23",
     }
+    assert len(get_cache().users.as_array()) == 1
+    user_1 = get_cache().users.as_array()[0]
+    assert user_1["id"] == "456"
+    assert user_1["lastIpAddress"] == "198.51.100.23"
+    assert user_1["name"] == "Bob"
+    assert user_1["firstSeenAt"] == user_1["lastSeenAt"]
 
     user = {"id": "1000", "name": "Alice"}
     set_user(user)
@@ -137,6 +155,14 @@ def test_re_set_valid_user():
         "name": "Alice",
         "lastIpAddress": "198.51.100.23",
     }
+
+    assert len(get_cache().users.as_array()) == 2
+    assert get_cache().users.as_array()[0] == user_1
+    user_2 = get_cache().users.as_array()[1]
+    assert user_2["id"] == "1000"
+    assert user_2["lastIpAddress"] == "198.51.100.23"
+    assert user_2["name"] == "Alice"
+    assert user_2["firstSeenAt"] == user_1["lastSeenAt"]
 
 
 def test_after_middleware(caplog):
@@ -154,3 +180,30 @@ def test_after_middleware(caplog):
         "name": "Bob",
         "lastIpAddress": "198.51.100.23",
     }
+
+
+def test_set_valid_user_twice():
+    context1 = set_context_and_lifecycle()
+    assert context1.user is None
+
+    user = {"id": 456, "name": "Bob"}
+    set_user(user)
+
+    assert context1.user == {
+        "id": "456",
+        "name": "Bob",
+        "lastIpAddress": "198.51.100.23",
+    }
+    assert len(get_cache().users.as_array()) == 1
+    first_seen_at = int(get_cache().users.as_array()[0]["firstSeenAt"])
+
+    time.sleep(1)
+    set_user(user)  # 2nd time
+
+    assert len(get_cache().users.as_array()) == 1
+    user_1 = get_cache().users.as_array()[0]
+    assert user_1["id"] == "456"
+    assert user_1["lastIpAddress"] == "198.51.100.23"
+    assert user_1["name"] == "Bob"
+    assert user_1["firstSeenAt"] != user_1["lastSeenAt"]
+    assert user_1["firstSeenAt"] == first_seen_at
