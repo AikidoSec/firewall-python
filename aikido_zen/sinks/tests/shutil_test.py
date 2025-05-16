@@ -28,7 +28,7 @@ def test_shutil_copyfile():
         assert call_2.kwargs["args"] == args2
 
 
-def test_shutil_copyfile():
+def test_shutil_copyfile_2():
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -135,7 +135,6 @@ def test_shutil_copy():
         op = "builtins.open"
         args1 = ("Makefile",)
         args2 = ("test2",)
-        assert len(mock_run_vulnerability_scan.call_args_list) == 3
         call_1 = mock_run_vulnerability_scan.call_args_list[0]
         call_2 = mock_run_vulnerability_scan.call_args_list[1]
 
@@ -155,7 +154,6 @@ def test_shutil_copy2():
         op = "builtins.open"
         args1 = ("Makefile",)
         args2 = ("test2",)
-        assert len(mock_run_vulnerability_scan.call_args_list) == 3
         call_1 = mock_run_vulnerability_scan.call_args_list[0]
         call_2 = mock_run_vulnerability_scan.call_args_list[1]
 

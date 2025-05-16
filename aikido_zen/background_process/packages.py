@@ -39,7 +39,7 @@ def is_package_compatible(package=None, required_version=ANY_VERSION, packages=N
                 return True
 
         # No match found
-        logger.info("Zen does not support %s", packages)
+        logger.info("Zen does not support current version of %s", "/".join(packages))
         return False
     except Exception as e:
         logger.debug("Exception occurred in is_package_compatible: %s", e)

@@ -2,43 +2,38 @@
 Sink module for `mysqlclient`
 """
 
-import copy
-import aikido_zen.importhook as importhook
-from aikido_zen.background_process.packages import is_package_compatible
-from aikido_zen.helpers.logging import logger
+from aikido_zen.helpers.get_argument import get_argument
 import aikido_zen.vulnerabilities as vulns
+from aikido_zen.sinks import patch_function, on_import, before
 
-REQUIRED_MYSQLCLIENT_VERSION = "1.5.0"
 
-
-@importhook.on_import("MySQLdb.cursors")
-def on_mysqlclient_import(mysql):
+@on_import("MySQLdb.cursors", "mysqlclient", version_requirement="1.5.0")
+def patch(m):
     """
-    Hook 'n wrap on `MySQLdb.cursors`
-    Our goal is to wrap the query() function of the Connection class :
-    https://github.com/PyMySQL/mysqlclient/blob/9fd238b9e3105dcbed2b009a916828a38d1f0904/src/MySQLdb/connections.py#L257
-    Returns : Modified MySQLdb.connections object
+    patching MySQLdb.cursors (mysqlclient)
+    - patches Cursor.execute(query, ...)
+    - patches Cursor.executemany(query, ...)
     """
-    if not is_package_compatible("mysqlclient", REQUIRED_MYSQLCLIENT_VERSION):
-        return mysql
-    modified_mysql = importhook.copy_module(mysql)
-    prev_execute_func = copy.deepcopy(mysql.Cursor.execute)
-    prev_executemany_func = copy.deepcopy(mysql.Cursor.executemany)
+    patch_function(m, "Cursor.execute", _execute)
+    patch_function(m, "Cursor.executemany", _executemany)
 
-    def aikido_new_execute(self, query, args=None):
-        if isinstance(query, bytearray):
-            logger.debug("Query is bytearray, normally comes from executemany.")
-            return prev_execute_func(self, query, args)
-        vulns.run_vulnerability_scan(
-            kind="sql_injection", op="MySQLdb.Cursor.execute", args=(query, "mysql")
-        )
-        return prev_execute_func(self, query, args)
 
-    def aikido_new_executemany(self, query, args):
-        op = "MySQLdb.Cursor.executemany"
-        vulns.run_vulnerability_scan(kind="sql_injection", op=op, args=(query, "mysql"))
-        return prev_executemany_func(self, query, args)
+@before
+def _execute(func, instance, args, kwargs):
+    query = get_argument(args, kwargs, 0, "query")
+    if isinstance(query, bytearray):
+        # If query is type bytearray, it will be picked up by our wrapping of executemany
+        return
 
-    setattr(mysql.Cursor, "execute", aikido_new_execute)
-    setattr(mysql.Cursor, "executemany", aikido_new_executemany)
-    return modified_mysql
+    vulns.run_vulnerability_scan(
+        kind="sql_injection", op="MySQLdb.Cursor.execute", args=(query, "mysql")
+    )
+
+
+@before
+def _executemany(func, instance, args, kwargs):
+    query = get_argument(args, kwargs, 0, "query")
+
+    vulns.run_vulnerability_scan(
+        kind="sql_injection", op="MySQLdb.Cursor.executemany", args=(query, "mysql")
+    )

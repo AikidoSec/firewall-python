@@ -2,47 +2,39 @@
 Sink module for `pymysql`
 """
 
-import copy
-import logging
-import aikido_zen.importhook as importhook
-from aikido_zen.background_process.packages import is_package_compatible
 import aikido_zen.vulnerabilities as vulns
-
-logger = logging.getLogger("aikido_zen")
-
-REQUIRED_PYMYSQL_VERSION = "0.9.0"
+from aikido_zen.helpers.get_argument import get_argument
+from aikido_zen.sinks import patch_function, on_import, before
 
 
-@importhook.on_import("pymysql.cursors")
-def on_pymysql_import(mysql):
+@before
+def _execute(func, instance, args, kwargs):
+    query = get_argument(args, kwargs, 0, "query")
+    if isinstance(query, bytearray):
+        # If query is type bytearray, it will be picked up by our wrapping of executemany
+        return
+
+    vulns.run_vulnerability_scan(
+        kind="sql_injection", op="pymysql.Cursor.execute", args=(query, "mysql")
+    )
+
+
+@before
+def _executemany(func, instance, args, kwargs):
+    query = get_argument(args, kwargs, 0, "query")
+
+    vulns.run_vulnerability_scan(
+        kind="sql_injection", op="pymysql.Cursor.executemany", args=(query, "mysql")
+    )
+
+
+@on_import("pymysql.cursors", "pymysql", version_requirement="0.9.0")
+def patch(m):
     """
-    Hook 'n wrap on `pymysql.cursors`
-    Our goal is to wrap execute() and executemany() on Cursor class
+    patching `pymysql.cursors`
+    - patches Cursor.execute(query)
+    - patches Cursor.executemany(query)
     https://github.com/PyMySQL/PyMySQL/blob/95635f587ba9076e71a223b113efb08ac34a361d/pymysql/cursors.py#L133
-    Returns : Modified pymysql.cursors object
     """
-    if not is_package_compatible("pymysql", REQUIRED_PYMYSQL_VERSION):
-        return mysql
-    modified_mysql = importhook.copy_module(mysql)
-
-    prev_execute_func = copy.deepcopy(mysql.Cursor.execute)
-    prev_executemany_func = copy.deepcopy(mysql.Cursor.executemany)
-
-    def aikido_new_execute(self, query, args=None):
-        if isinstance(query, bytearray):
-            logger.debug("Query is bytearray, normally comes from executemany.")
-            return prev_execute_func(self, query, args)
-        vulns.run_vulnerability_scan(
-            kind="sql_injection", op="pymysql.Cursor.execute", args=(query, "mysql")
-        )
-        return prev_execute_func(self, query, args)
-
-    def aikido_new_executemany(self, query, args):
-        op = "pymysql.Cursor.executemany"
-        vulns.run_vulnerability_scan(kind="sql_injection", op=op, args=(query, "mysql"))
-        return prev_executemany_func(self, query, args)
-
-    setattr(mysql.Cursor, "execute", aikido_new_execute)
-    setattr(mysql.Cursor, "executemany", aikido_new_executemany)
-
-    return modified_mysql
+    patch_function(m, "Cursor.execute", _execute)
+    patch_function(m, "Cursor.executemany", _executemany)
