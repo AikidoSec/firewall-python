@@ -7,7 +7,7 @@ from aikido_zen.helpers.logging import logger
 from .update_firewall_lists import update_firewall_lists
 from ..api.http_api import ReportingApiHTTP
 from ..service_config import ServiceConfig
-from ..users import Users
+from aikido_zen.storage.users import Users
 from aikido_zen.storage.hostnames import Hostnames
 from ..realtime.start_polling_for_changes import start_polling_for_changes
 from ..statistics import Statistics
