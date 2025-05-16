@@ -6,14 +6,25 @@ from aikido_zen.sinks import on_import, patch_function, after
 
 
 @after
-def _feed(func, instance, args, kwargs, return_value):
-    # Fetches XML data, this should just return an internal attribute
-    # and not close a stream or something that is noticable by the end-user
-    parsed_xml = instance.target.close()
-    data = get_argument(args, kwargs, 0, "data")
-    extract_data_from_xml_body(user_input=data, root_element=parsed_xml)
+def _fromstring(func, instance, args, kwargs, return_value):
+    text = get_argument(args, kwargs, 0, "text")
+    extract_data_from_xml_body(user_input=text, root_element=return_value)
+
+
+@after
+def _fromstringlist(func, instance, args, kwargs, return_value):
+    strings = get_argument(args, kwargs, 0, "sequence")
+    for text in strings:
+        extract_data_from_xml_body(user_input=text, root_element=return_value)
 
 
 @on_import("xml.etree.ElementTree")
 def patch(m):
-    patch_function(m, "XMLParser.feed", _feed)
+    """
+    patching module xml.etree.ElementTree
+    - patches function fromstring(text, ...)
+    - patches function fromstringlist(sequence, ...)
+    (src: https://github.com/python/cpython/blob/bc1a6ecfab02075acea79f8460a2dce70c61b2fd/Lib/xml/etree/ElementTree.py#L1370)
+    """
+    patch_function(m, "fromstring", _fromstring)
+    patch_function(m, "fromstringlist", _fromstringlist)
