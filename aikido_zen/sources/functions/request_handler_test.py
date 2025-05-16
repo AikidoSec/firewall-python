@@ -17,6 +17,7 @@ def mock_context():
         "method": "GET",
         "url": "http://localhost:8080/test/route",
     }
+    context.body = {}
     return context
 
 
@@ -34,18 +35,40 @@ def test_post_response_useful_route(mock_context):
 
     cache = get_cache()  # Creates a new cache
     assert cache.routes.routes == {}
-    with patch("aikido_zen.context.get_current_context", return_value=mock_context):
-        request_handler("post_response", status_code=200)
+    for i in range(25):
+        with patch("aikido_zen.context.get_current_context", return_value=mock_context):
+            mock_context.body[str(i + 1)] = i + 1
+            request_handler("post_response", status_code=200)
 
     # Check that the route was initialized and updated
-    assert cache.routes.routes == {
-        "GET:/test/route": {
-            "apispec": {},
-            "hits": 1,
-            "method": "GET",
-            "path": "/test/route",
-            "hits_delta_since_sync": 1,
-        }
+    route = cache.routes.routes.get("GET:/test/route")
+    assert route["hits"] == route["hits_delta_since_sync"] == 25
+    assert route["method"] == "GET"
+    assert route["path"] == "/test/route"
+
+    # Test only updates on first 20 hits
+    body_props = route["apispec"]["body"]["schema"]["properties"]
+    assert body_props == {
+        "1": {"type": "number"},
+        "2": {"type": "number", "optional": True},
+        "3": {"type": "number", "optional": True},
+        "4": {"type": "number", "optional": True},
+        "5": {"type": "number", "optional": True},
+        "6": {"type": "number", "optional": True},
+        "7": {"type": "number", "optional": True},
+        "8": {"type": "number", "optional": True},
+        "9": {"type": "number", "optional": True},
+        "10": {"type": "number", "optional": True},
+        "11": {"type": "number", "optional": True},
+        "12": {"type": "number", "optional": True},
+        "13": {"type": "number", "optional": True},
+        "14": {"type": "number", "optional": True},
+        "15": {"type": "number", "optional": True},
+        "16": {"type": "number", "optional": True},
+        "17": {"type": "number", "optional": True},
+        "18": {"type": "number", "optional": True},
+        "19": {"type": "number", "optional": True},
+        "20": {"type": "number", "optional": True},
     }
 
 

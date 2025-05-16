@@ -2,6 +2,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 from aikido_zen.background_process.routes import Routes
 from .thread_cache import ThreadCache, get_cache
+from .. import set_user
 from ..background_process.service_config import ServiceConfig
 from ..context import current_context, Context
 from aikido_zen.helpers.iplist import IPList
@@ -15,7 +16,8 @@ def thread_cache():
 
 class Context2(Context):
     def __init__(self):
-        pass
+        self.executed_middleware = False
+        self.remote_address = "5.6.7.8"
 
 
 @pytest.fixture(autouse=True)
@@ -235,6 +237,55 @@ def test_renew_called_with_correct_args(mock_get_comms, thread_cache: ThreadCach
             "reqs": 1,
             "middleware_installed": False,
             "hostnames": [],
+            "users": [],
+        },
+        receive=True,
+    )
+
+
+@patch("aikido_zen.background_process.comms.get_comms")
+def test_sync_data_for_users(mock_get_comms, thread_cache: ThreadCache):
+    """Test that renew calls send_data_to_bg_process with correct arguments."""
+    mock_comms = MagicMock()
+    mock_get_comms.return_value = mock_comms
+    Context2().set_as_current_context()
+
+    # Setup initial state
+    thread_cache.increment_stats()
+    with patch("aikido_zen.thread.thread_cache.get_cache", return_value=thread_cache):
+        with patch(
+            "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms", return_value=1
+        ):
+            set_user({"id": "123", "name": "test"})
+            set_user({"id": "567", "name": "test"})
+
+    # Call renew
+    thread_cache.renew()
+
+    # Assert that send_data_to_bg_process was called with the correct arguments
+    mock_comms.send_data_to_bg_process.assert_called_once_with(
+        action="SYNC_DATA",
+        obj={
+            "current_routes": {},
+            "reqs": 1,
+            "middleware_installed": False,
+            "hostnames": [],
+            "users": [
+                {
+                    "id": "123",
+                    "name": "test",
+                    "lastIpAddress": "5.6.7.8",
+                    "firstSeenAt": 1,
+                    "lastSeenAt": 1,
+                },
+                {
+                    "id": "567",
+                    "name": "test",
+                    "lastIpAddress": "5.6.7.8",
+                    "firstSeenAt": 1,
+                    "lastSeenAt": 1,
+                },
+            ],
         },
         receive=True,
     )
@@ -257,6 +308,7 @@ def test_renew_called_with_empty_routes(mock_get_comms, thread_cache: ThreadCach
             "reqs": 0,
             "middleware_installed": False,
             "hostnames": [],
+            "users": [],
         },
         receive=True,
     )
@@ -282,6 +334,7 @@ def test_renew_called_with_no_requests(mock_get_comms, thread_cache: ThreadCache
             "reqs": 0,
             "middleware_installed": False,
             "hostnames": [],
+            "users": [],
         },
         receive=True,
     )
