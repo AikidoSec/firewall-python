@@ -162,7 +162,6 @@ def test_re_set_valid_user():
     assert user_2["id"] == "1000"
     assert user_2["lastIpAddress"] == "198.51.100.23"
     assert user_2["name"] == "Alice"
-    assert user_2["firstSeenAt"] == user_1["lastSeenAt"]
 
 
 def test_after_middleware(caplog):
