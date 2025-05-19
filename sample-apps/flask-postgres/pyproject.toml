@@ -5,7 +5,7 @@ description = ""
 readme = "README.md"
 requires-python = ">3.9.1,<4.0"
 dependencies = [
-    "flask (>=3.1.0,<4.0.0)",
+    "flask (==2.2.4)",
     "psycopg2-binary (>=2.9.10,<3.0.0)",
     "cryptography (>=44.0.0,<45.0.0)",
     "aikido_zen"
