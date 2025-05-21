@@ -59,7 +59,6 @@ def test_cursor_execute(database_conn):
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
         cursor = database_conn.cursor()
-        print(cursor)
         query = "SELECT * FROM dogs"
         cursor.execute(query)
 
