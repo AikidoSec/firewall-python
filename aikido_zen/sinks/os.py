@@ -2,78 +2,55 @@
 Sink module for python's `os`
 """
 
-import copy
 from pathlib import PurePath
-import aikido_zen.importhook as importhook
 import aikido_zen.vulnerabilities as vulns
-
-# os.func(...) functions, can have a filename and destination.
-OS_FILE_FUNCTIONS = [
-    "access",
-    "chmod",
-    "chown",
-    "mkdir",
-    "listdir",
-    "readlink",
-    "unlink",
-    "rename",
-    "rmdir",
-    "remove",
-    "symlink",
-    "link",
-    "walk",
-    "open",
-]
-
-# os.path.realpath, os.path.abspath aren't wrapped, since they use os.path.join
-OS_PATH_FUNCTIONS = ["getsize", "join", "expanduser", "expandvars"]
-
-# os.makedirs() is not wrapped since it uses os.mkdir() which we wrap
-# os.path.exists() and functions alike are not wrapped for performance reasons.
-# We also don't wrap the stat library : https://docs.python.org/3/library/stat.html
+from aikido_zen.sinks import before, patch_function, on_import
 
 
-def generate_aikido_function(op, former_func):
+@before
+def _os_patch(func, instance, args, kwargs):
+    possible_paths = args + tuple(kwargs.values())
+    for path in possible_paths:
+        if not isinstance(path, (str, bytes, PurePath)):
+            continue
+        # change op if it's an os.path function
+        op = f"os.{func.__name__}"
+        if func.__name__ in ("getsize", "join", "expanduser", "expandvars", "realpath"):
+            op = f"os.path.{func.__name__}"
+
+        vulns.run_vulnerability_scan(kind="path_traversal", op=op, args=(path,))
+
+
+@on_import("os")
+def patch(m):
     """
-    Returns a generated aikido function given an operation
-    and the previous function
+    patching module os
+    - patches os.* functions that take in paths
+    - patches os.path.* functions that take in paths
+    - doesn't patch os.makedirs -> uses os.mkdir
+    - doesn't patch os.path.abspath -> uses os.path.join
+    - doesn't patch os.path.exists and others -> to big of a performance impact
+    - doesn't patch stat library https://docs.python.org/3/library/stat.html
     """
+    # os.*(...) patches
+    patch_function(m, "access", _os_patch)
+    patch_function(m, "chmod", _os_patch)
+    patch_function(m, "chown", _os_patch)
+    patch_function(m, "mkdir", _os_patch)
+    patch_function(m, "listdir", _os_patch)
+    patch_function(m, "readlink", _os_patch)
+    patch_function(m, "unlink", _os_patch)
+    patch_function(m, "rename", _os_patch)
+    patch_function(m, "rmdir", _os_patch)
+    patch_function(m, "remove", _os_patch)
+    patch_function(m, "symlink", _os_patch)
+    patch_function(m, "link", _os_patch)
+    patch_function(m, "walk", _os_patch)
+    patch_function(m, "open", _os_patch)
 
-    def aikido_new_func(*args, op=op, former_func=former_func, **kwargs):
-        for arg in args:
-            if isinstance(arg, (str, bytes, PurePath)):
-                vulns.run_vulnerability_scan(
-                    kind="path_traversal", op=f"os.{op}", args=(arg,)
-                )
-        return former_func(*args, **kwargs)
-
-    return aikido_new_func
-
-
-@importhook.on_import("os")
-def on_os_import(os):
-    """
-    Hook 'n wrap on `os` module, wrapping os.func(...) and os.path.func(...)
-    Returns : Modified os object
-    """
-    modified_os = importhook.copy_module(os)
-    for op in OS_FILE_FUNCTIONS:
-        # Wrap os. functions
-        if not hasattr(os, op):
-            continue  # Don't wrap methods that are specific to the OS (e.g. chown)
-        former_func = copy.deepcopy(getattr(os, op))
-        aikido_new_func = generate_aikido_function(op, former_func)
-        setattr(os, op, aikido_new_func)
-        setattr(modified_os, op, aikido_new_func)
-
-    for op in OS_PATH_FUNCTIONS:
-        # Wrap os.path functions
-        if not hasattr(os.path, op):
-            continue  # Don't wrap methods that are specific to the OS
-        former_func = copy.deepcopy(getattr(os.path, op))
-        aikido_new_func = generate_aikido_function(f"path.{op}", former_func)
-        setattr(os.path, op, aikido_new_func)
-        # pylint: disable=no-member
-        setattr(modified_os.path, op, aikido_new_func)
-
-    return modified_os
+    # os.path.*(...) patches
+    patch_function(m, "path.getsize", _os_patch)
+    patch_function(m, "path.join", _os_patch)
+    patch_function(m, "path.expanduser", _os_patch)
+    patch_function(m, "path.expandvars", _os_patch)
+    patch_function(m, "path.realpath", _os_patch)  # Python 3.13

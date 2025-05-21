@@ -60,6 +60,7 @@ python-dotenv = "^1.0.1"
 regex = "^2024.5.15"
 requests = "^2.32.3"
 packaging = "^24.1"
+wrapt = "^1.17.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"

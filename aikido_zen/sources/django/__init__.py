@@ -1,42 +1,36 @@
 """`Django` source module"""
 
-import copy
-import aikido_zen.importhook as importhook
-from aikido_zen.helpers.logging import logger
-from aikido_zen.background_process.packages import is_package_compatible, ANY_VERSION
 from ..functions.request_handler import request_handler
 from .run_init_stage import run_init_stage
 from .pre_response_middleware import pre_response_middleware
+from ...helpers.get_argument import get_argument
+from ...sinks import on_import, patch_function, before, after
 
 
-@importhook.on_import("django.core.handlers.base")
-def on_django_gunicorn_import(django):
+@before
+def _get_response_before(func, instance, args, kwargs):
+    request = get_argument(args, kwargs, 0, "request")
+
+    run_init_stage(request)
+
+    if pre_response_middleware not in instance._view_middleware:
+        # The rate limiting middleware needs to be last in the chain.
+        instance._view_middleware += [pre_response_middleware]
+
+
+@after
+def _get_response_after(func, instance, args, kwargs, return_value):
+    if hasattr(return_value, "status_code"):
+        request_handler(stage="post_response", status_code=return_value.status_code)
+
+
+@on_import("django.core.handlers.base", "django")
+def patch(m):
     """
-    Hook 'n wrap on `django.core.handlers.base`
-    Our goal is to wrap the `_get_response` function
+    Patch for _get_response (Synchronous/WSGI)
+    - before: Parse body, create context & add middleware to run before a response
+    - after: Check respone code to see if route should be analyzed
     # https://github.com/django/django/blob/5865ff5adcf64da03d306dc32b36e87ae6927c85/django/core/handlers/base.py#L174
-    Returns : Modified django.core.handlers.base object
     """
-    if not is_package_compatible("django", required_version=ANY_VERSION):
-        return django
-    modified_django = importhook.copy_module(django)
-
-    former__get_response = copy.deepcopy(django.BaseHandler._get_response)
-
-    def aikido__get_response(self, request):  # Synchronous (WSGI)
-        run_init_stage(request)  # We do some initial request handling
-
-        if pre_response_middleware not in self._view_middleware:
-            # The rate limiting middleware needs to be last in the chain.
-            self._view_middleware += [pre_response_middleware]
-
-        res = former__get_response(self, request)
-        if hasattr(res, "status_code"):
-            request_handler(stage="post_response", status_code=res.status_code)
-        return res
-
-    # pylint: disable=no-member
-    setattr(modified_django.BaseHandler, "_get_response", aikido__get_response)
-    setattr(django.BaseHandler, "_get_response", aikido__get_response)
-
-    return modified_django
+    patch_function(m, "BaseHandler._get_response", _get_response_before)
+    patch_function(m, "BaseHandler._get_response", _get_response_after)
