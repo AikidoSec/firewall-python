@@ -7,17 +7,6 @@ import aikido_zen.vulnerabilities as vulns
 from aikido_zen.sinks import patch_function, on_import, before
 
 
-@on_import("MySQLdb.cursors", "mysqlclient", version_requirement="1.5.0")
-def patch(m):
-    """
-    patching MySQLdb.cursors (mysqlclient)
-    - patches Cursor.execute(query, ...)
-    - patches Cursor.executemany(query, ...)
-    """
-    patch_function(m, "Cursor.execute", _execute)
-    patch_function(m, "Cursor.executemany", _executemany)
-
-
 @before
 def _execute(func, instance, args, kwargs):
     query = get_argument(args, kwargs, 0, "query")
@@ -37,3 +26,14 @@ def _executemany(func, instance, args, kwargs):
     vulns.run_vulnerability_scan(
         kind="sql_injection", op="MySQLdb.Cursor.executemany", args=(query, "mysql")
     )
+
+
+@on_import("MySQLdb.cursors", "mysqlclient", version_requirement="1.5.0")
+def patch(m):
+    """
+    patching MySQLdb.cursors (mysqlclient)
+    - patches Cursor.execute(query, ...)
+    - patches Cursor.executemany(query, ...)
+    """
+    patch_function(m, "Cursor.execute", _execute)
+    patch_function(m, "Cursor.executemany", _executemany)

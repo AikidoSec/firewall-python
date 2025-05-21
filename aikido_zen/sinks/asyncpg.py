@@ -7,6 +7,14 @@ from aikido_zen.helpers.get_argument import get_argument
 from aikido_zen.sinks import patch_function, before, on_import
 
 
+@before
+def _execute(func, instance, args, kwargs):
+    query = get_argument(args, kwargs, 0, "query")
+
+    op = f"asyncpg.connection.Connection.{func.__name__}"
+    vulns.run_vulnerability_scan(kind="sql_injection", op=op, args=(query, "postgres"))
+
+
 @on_import("asyncpg.connection", "asyncpg", version_requirement="0.27.0")
 def patch(m):
     """
@@ -19,11 +27,3 @@ def patch(m):
     patch_function(m, "Connection.execute", _execute)
     patch_function(m, "Connection.executemany", _execute)
     patch_function(m, "Connection._execute", _execute)
-
-
-@before
-def _execute(func, instance, args, kwargs):
-    query = get_argument(args, kwargs, 0, "query")
-
-    op = f"asyncpg.connection.Connection.{func.__name__}"
-    vulns.run_vulnerability_scan(kind="sql_injection", op=op, args=(query, "postgres"))
