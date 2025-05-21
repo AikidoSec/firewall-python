@@ -16,7 +16,7 @@ def _shutil_func(func, instance, args, kwargs):
     op = f"shutil.{func.__name__}"
     if isinstance(source, str):
         vulns.run_vulnerability_scan(kind, op, args=(source,))
-    if isinstance(source, str):
+    if isinstance(destination, str):
         vulns.run_vulnerability_scan(kind, op, args=(destination,))
 
 
