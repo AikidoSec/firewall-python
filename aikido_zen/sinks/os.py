@@ -28,7 +28,7 @@ def patch(m):
     - patches os.* functions that take in paths
     - patches os.path.* functions that take in paths
     - doesn't patch os.makedirs -> uses os.mkdir
-    - doesn't patch os.path.realpath or os.path.abspath -> uses os.path.join
+    - doesn't patch os.path.abspath -> uses os.path.join
     - doesn't patch os.path.exists and others -> to big of a performance impact
     - doesn't patch stat library https://docs.python.org/3/library/stat.html
     """
