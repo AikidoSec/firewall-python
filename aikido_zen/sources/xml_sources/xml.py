@@ -1,51 +1,30 @@
-"""
-Sink module for `xml`, python's built-in function
-"""
-
-import copy
-import aikido_zen.importhook as importhook
-from aikido_zen.helpers.logging import logger
 from aikido_zen.helpers.extract_data_from_xml_body import (
     extract_data_from_xml_body,
 )
+from aikido_zen.helpers.get_argument import get_argument
+from aikido_zen.sinks import on_import, patch_function, after
 
 
-@importhook.on_import("xml.etree.ElementTree")
-def on_xml_import(eltree):
+@after
+def _fromstring(func, instance, args, kwargs, return_value):
+    text = get_argument(args, kwargs, 0, "text")
+    extract_data_from_xml_body(user_input=text, root_element=return_value)
+
+
+@after
+def _fromstringlist(func, instance, args, kwargs, return_value):
+    strings = get_argument(args, kwargs, 0, "sequence")
+    for text in strings:
+        extract_data_from_xml_body(user_input=text, root_element=return_value)
+
+
+@on_import("xml.etree.ElementTree")
+def patch(m):
     """
-    Hook 'n wrap on `xml.etree.ElementTree`, python's built-in xml lib
-    Our goal is to create a new and mutable aikido parser class
-    Returns : Modified ElementTree object
+    patching module xml.etree.ElementTree
+    - patches function fromstring(text, ...)
+    - patches function fromstringlist(sequence, ...)
+    (src: https://github.com/python/cpython/blob/bc1a6ecfab02075acea79f8460a2dce70c61b2fd/Lib/xml/etree/ElementTree.py#L1370)
     """
-    modified_eltree = importhook.copy_module(eltree)
-    copy_xml_parser = copy.deepcopy(eltree.XMLParser)
-
-    class MutableAikidoXMLParser:
-        """Mutable connection class used to instrument `xml` by Zen"""
-
-        def __init__(self, *args, **kwargs):
-            self._former_xml_parser = copy_xml_parser(*args, **kwargs)
-            self._feed_func_copy = copy.deepcopy(self._former_xml_parser.feed)
-
-        def __getattr__(self, name):
-            if name != "feed":
-                return getattr(self._former_xml_parser, name)
-
-            # Return aa function dynamically
-            def feed(data):
-                former_feed_result = self._feed_func_copy(data)
-
-                # Fetch the data, this should just return an internal attribute
-                # and not close a stream or something that is noticable by the end-user
-                parsed_xml = self.target.close()
-                extract_data_from_xml_body(user_input=data, root_element=parsed_xml)
-
-                return former_feed_result
-
-            return feed
-
-    # pylint: disable=no-member
-    setattr(eltree, "XMLParser", MutableAikidoXMLParser)
-    setattr(modified_eltree, "XMLParser", MutableAikidoXMLParser)
-
-    return modified_eltree
+    patch_function(m, "fromstring", _fromstring)
+    patch_function(m, "fromstringlist", _fromstringlist)

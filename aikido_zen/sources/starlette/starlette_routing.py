@@ -1,37 +1,30 @@
-"""
-Wraps starlette.applications for initial request_handler
-Attention: We will be using rr to refer to request_response. It's used a lot and
-readability would be impaired if we did not abbreviate this
-"""
-
-import copy
-import aikido_zen.importhook as importhook
 from aikido_zen.helpers.logging import logger
 from .extract_data_from_request import extract_data_from_request
 from ..functions.request_handler import request_handler
+from ...sinks import on_import, patch_function, before
 
 
-@importhook.on_import("starlette.routing")
-def on_starlette_import(routing):
+def _request_response(func, instance, args, kwargs):
+    if kwargs and "func" in kwargs:
+        kwargs["func"] = aik_route_func_wrapper(kwargs["func"])
+    elif args and args[0]:
+        # Modify first element of a tuple, tuples are immutable
+        args = (aik_route_func_wrapper(args[0]),) + args[1:]
+
+    return func(*args, **kwargs)  # Call the original function
+
+
+@on_import("starlette.routing", "starlette")
+def patch(m):
     """
-    Hook 'n wrap on `starlette.routing`
-    Wraps the request_response function so we can wrap the function given to request_response
+    patching module starlette.routing (for initial request_handler)
+    - patches: request_response
+    (github src: https://github.com/encode/starlette/blob/4acf1d1ca3e8aa767567cb4e6e12f093f066553b/starlette/routing.py#L58)
     """
-    modified_routing = importhook.copy_module(routing)
-    former_rr_func = copy.deepcopy(routing.request_response)
-
-    def aikido_rr_func(func):
-        wrapped_route_func = aik_route_func_wrapper(func)
-        return former_rr_func(wrapped_route_func)
-
-    setattr(routing, "request_response", aikido_rr_func)
-    setattr(modified_routing, "request_response", aikido_rr_func)
-    return modified_routing
+    patch_function(m, "request_response", _request_response)
 
 
 def aik_route_func_wrapper(func):
-    """Aikido's __call__ wrapper"""
-
     async def aikido_route_func(*args, **kwargs):
         # Code before response (pre_response stage)
         try:

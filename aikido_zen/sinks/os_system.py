@@ -2,28 +2,28 @@
 Sink module for `os`, wrapping os.system
 """
 
-import aikido_zen.importhook as importhook
 import aikido_zen.vulnerabilities as vulns
+from aikido_zen.helpers.get_argument import get_argument
+from aikido_zen.sinks import patch_function, before, on_import
 
 
-@importhook.on_import("os")
-def on_os_import(os):
+@before
+def _system(func, instance, args, kwargs):
+    command = get_argument(args, kwargs, 0, "command")
+    if not isinstance(command, str):
+        return
+
+    vulns.run_vulnerability_scan(
+        kind="shell_injection", op="os.system", args=(command,)
+    )
+
+
+@on_import("os")
+def patch(m):
     """
-    Hook 'n wrap on `os.system()` function
-    Returns : Modified os object
-    We don't wrap os.popen() since this command uses subprocess.Popen, which we
-    already wrap and protect in the subprocess.py sink.
-    We also don't wrap os.execl, os.execle, os.execlp, ... because these should only be vulnerable
-    to argument injection, which we currently don't protect against.
+    patching os module
+    - patches os.system for shell injection
+    - does not patch: os.popen -> uses subprocess.Popen
+    - does not patch: os.execl, os.execle, os.execlp, ... -> only argument injection
     """
-    modified_os = importhook.copy_module(os)
-
-    def aikido_new_system(command, *args, **kwargs):
-        if isinstance(command, str):
-            vulns.run_vulnerability_scan(
-                kind="shell_injection", op="os.system", args=(command,)
-            )
-        return os.system(command, *args, **kwargs)
-
-    setattr(modified_os, "system", aikido_new_system)
-    return modified_os
+    patch_function(m, "system", _system)
