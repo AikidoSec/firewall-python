@@ -13,7 +13,8 @@ def patch(m):
     """
     patching module psycopg2
     - patches psycopg2.connect
-    Warning: cannot set 'execute' attribute of immutable type 'psycopg2.extensions.cursor'
+    cannot set 'execute' attribute of immutable type 'psycopg2.extensions.cursor',
+    so we create our own cursor factory to bypass this limitation.
     """
     compatible = is_package_compatible(
         required_version="2.9.2", packages=["psycopg2", "psycopg2-binary"]
