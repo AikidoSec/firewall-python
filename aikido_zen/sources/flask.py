@@ -80,7 +80,7 @@ def _call(func, instance, args, kwargs):
     funcs.request_handler(stage="init")
 
 
-@on_import("flask.app", "flask", version_requirement="2.3.0")
+@on_import("flask.app", "flask", version_requirement="2.2.4")
 def patch(m):
     """
     patching module flask.appimport
