@@ -34,7 +34,7 @@ Zen for Python 3 is compatible with:
 ### Web frameworks
 
 * ✅ [Django](docs/django.md)
-* ✅ [Flask](docs/flask.md)
+* ✅ [Flask](docs/flask.md) ^2.2.4
 * ✅ [Quart](docs/quart.md)
 * ✅ [Starlette](docs/starlette.md)
 * ✅ [FastAPI](docs/fastapi.md)
