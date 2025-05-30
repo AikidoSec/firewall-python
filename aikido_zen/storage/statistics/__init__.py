@@ -47,3 +47,10 @@ class Statistics:
         self.total_hits += record.get("requests", {}).get("total", 0)
         self.attacks_detected += attacks_detected.get("total", 0)
         self.attacks_blocked += attacks_detected.get("blocked", 0)
+
+    def empty(self):
+        if self.total_hits > 0:
+            return False
+        if self.attacks_detected > 0:
+            return False
+        return True
