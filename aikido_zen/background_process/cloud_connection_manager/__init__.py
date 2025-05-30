@@ -10,7 +10,7 @@ from ..service_config import ServiceConfig
 from aikido_zen.storage.users import Users
 from aikido_zen.storage.hostnames import Hostnames
 from ..realtime.start_polling_for_changes import start_polling_for_changes
-from ..statistics import Statistics
+from ...storage.statistics import Statistics
 
 # Import functions :
 from .on_detected_attack import on_detected_attack
@@ -45,9 +45,7 @@ class CloudConnectionManager:
         )
         self.users = Users(1000)
         self.packages = {}
-        self.statistics = Statistics(
-            max_perf_samples_in_mem=5000, max_compressed_stats_in_mem=100
-        )
+        self.statistics = Statistics()
         self.middleware_installed = False
 
         if isinstance(serverless, str) and len(serverless) == 0:
@@ -71,12 +69,8 @@ class CloudConnectionManager:
         This is run 1m after startup, and checks if we should send out
         a preliminary heartbeat with some stats.
         """
-        data_is_available = not (
-            self.statistics.is_empty() and len(self.routes.routes) <= 0
-        )
-        should_report_initial_stats = (
-            data_is_available and not self.conf.received_any_stats
-        )
+        data_present = not self.statistics.empty() or len(self.routes.routes) > 0
+        should_report_initial_stats = data_present and not self.conf.received_any_stats
         if should_report_initial_stats:
             self.send_heartbeat()
 
