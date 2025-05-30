@@ -11,7 +11,10 @@ from aikido_zen.helpers.iplist import IPList
 @pytest.fixture
 def thread_cache():
     """Fixture to create a ThreadCache instance."""
-    return ThreadCache()
+    with patch(
+        "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms", return_value=-1
+    ):
+        return ThreadCache()
 
 
 class Context2(Context):
@@ -36,7 +39,11 @@ def test_initialization(thread_cache: ThreadCache):
     assert isinstance(thread_cache.config.bypassed_ips, IPList)
     assert thread_cache.get_endpoints() == []
     assert thread_cache.config.blocked_uids == set()
-    assert thread_cache.reqs == 0
+    assert thread_cache.stats.get_record()["requests"] == {
+        "total": 0,
+        "aborted": 0,
+        "attacksDetected": {"total": 0, "blocked": 0},
+    }
 
 
 def test_is_bypassed_ip(thread_cache: ThreadCache):
@@ -60,20 +67,27 @@ def test_reset(thread_cache: ThreadCache):
     """Test that reset empties the cache."""
     thread_cache.config.bypassed_ips.add("192.168.1.1")
     thread_cache.config.blocked_uids.add("user123")
+    thread_cache.stats.increment_total_hits()
+    thread_cache.stats.on_detected_attack(blocked=True)
+
     thread_cache.reset()
 
     assert isinstance(thread_cache.config.bypassed_ips, IPList)
     assert thread_cache.config.blocked_uids == set()
-    assert thread_cache.reqs == 0
+    assert thread_cache.stats.get_record()["requests"] == {
+        "total": 0,
+        "aborted": 0,
+        "attacksDetected": {"total": 0, "blocked": 0},
+    }
 
 
-def test_increment_stats(thread_cache):
+def test_increment_total_hits(thread_cache):
     """Test that incrementing stats works correctly."""
-    assert thread_cache.reqs == 0
-    thread_cache.increment_stats()
-    assert thread_cache.reqs == 1
-    thread_cache.increment_stats()
-    assert thread_cache.reqs == 2
+    assert thread_cache.stats.get_record()["requests"]["total"] == 0
+    thread_cache.stats.increment_total_hits()
+    assert thread_cache.stats.get_record()["requests"]["total"] == 1
+    thread_cache.stats.increment_total_hits()
+    assert thread_cache.stats.get_record()["requests"]["total"] == 2
 
 
 def test_renew_with_no_comms(thread_cache: ThreadCache):
@@ -83,7 +97,11 @@ def test_renew_with_no_comms(thread_cache: ThreadCache):
         assert isinstance(thread_cache.config.bypassed_ips, IPList)
         assert thread_cache.get_endpoints() == []
         assert thread_cache.config.blocked_uids == set()
-        assert thread_cache.reqs == 0
+        assert thread_cache.stats.get_record()["requests"] == {
+            "total": 0,
+            "aborted": 0,
+            "attacksDetected": {"total": 0, "blocked": 0},
+        }
 
 
 @patch("aikido_zen.background_process.comms.get_comms")
@@ -117,7 +135,7 @@ def test_increment_stats_thread_safety(thread_cache):
 
     def increment_in_thread():
         for _ in range(100):
-            thread_cache.increment_stats()
+            thread_cache.stats.increment_total_hits()
 
     threads = [Thread(target=increment_in_thread) for _ in range(10)]
     for thread in threads:
@@ -125,7 +143,9 @@ def test_increment_stats_thread_safety(thread_cache):
     for thread in threads:
         thread.join()
 
-    assert thread_cache.reqs == 1000  # 10 threads incrementing 100 times
+    assert (
+        thread_cache.stats.get_record()["requests"]["total"] == 1000
+    )  # 10 threads incrementing 100 times
 
 
 @patch("aikido_zen.background_process.comms.get_comms")
@@ -214,12 +234,19 @@ def test_renew_called_with_correct_args(mock_get_comms, thread_cache: ThreadCach
     mock_get_comms.return_value = mock_comms
 
     # Setup initial state
-    thread_cache.increment_stats()
+    thread_cache.stats.increment_total_hits()
+    thread_cache.stats.increment_total_hits()
+    thread_cache.stats.on_detected_attack(blocked=True)
+    thread_cache.stats.on_detected_attack(blocked=False)
+    thread_cache.stats.on_detected_attack(blocked=False)
     thread_cache.routes.initialize_route({"method": "GET", "route": "/test"})
     thread_cache.routes.increment_route({"method": "GET", "route": "/test"})
 
     # Call renew
-    thread_cache.renew()
+    with patch(
+        "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms", return_value=-1
+    ):
+        thread_cache.renew()
 
     # Assert that send_data_to_bg_process was called with the correct arguments
     mock_comms.send_data_to_bg_process.assert_called_once_with(
@@ -234,7 +261,15 @@ def test_renew_called_with_correct_args(mock_get_comms, thread_cache: ThreadCach
                     "apispec": {},
                 }
             },
-            "reqs": 1,
+            "stats": {
+                "startedAt": -1,
+                "endedAt": -1,
+                "requests": {
+                    "total": 2,
+                    "aborted": 0,
+                    "attacksDetected": {"blocked": 1, "total": 3},
+                },
+            },
             "middleware_installed": False,
             "hostnames": [],
             "users": [],
@@ -251,7 +286,7 @@ def test_sync_data_for_users(mock_get_comms, thread_cache: ThreadCache):
     Context2().set_as_current_context()
 
     # Setup initial state
-    thread_cache.increment_stats()
+    thread_cache.stats.increment_total_hits()
     with patch("aikido_zen.thread.thread_cache.get_cache", return_value=thread_cache):
         with patch(
             "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms", return_value=1
@@ -260,14 +295,25 @@ def test_sync_data_for_users(mock_get_comms, thread_cache: ThreadCache):
             set_user({"id": "567", "name": "test"})
 
     # Call renew
-    thread_cache.renew()
+    with patch(
+        "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms", return_value=-1
+    ):
+        thread_cache.renew()
 
     # Assert that send_data_to_bg_process was called with the correct arguments
     mock_comms.send_data_to_bg_process.assert_called_once_with(
         action="SYNC_DATA",
         obj={
             "current_routes": {},
-            "reqs": 1,
+            "stats": {
+                "startedAt": -1,
+                "endedAt": -1,
+                "requests": {
+                    "total": 1,
+                    "aborted": 0,
+                    "attacksDetected": {"total": 0, "blocked": 0},
+                },
+            },
             "middleware_installed": False,
             "hostnames": [],
             "users": [
@@ -298,14 +344,25 @@ def test_renew_called_with_empty_routes(mock_get_comms, thread_cache: ThreadCach
     mock_get_comms.return_value = mock_comms
 
     # Call renew without initializing any routes
-    thread_cache.renew()
+    with patch(
+        "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms", return_value=-1
+    ):
+        thread_cache.renew()
 
     # Assert that send_data_to_bg_process was called with the correct arguments
     mock_comms.send_data_to_bg_process.assert_called_once_with(
         action="SYNC_DATA",
         obj={
             "current_routes": {},
-            "reqs": 0,
+            "stats": {
+                "startedAt": -1,
+                "endedAt": -1,
+                "requests": {
+                    "total": 0,
+                    "aborted": 0,
+                    "attacksDetected": {"total": 0, "blocked": 0},
+                },
+            },
             "middleware_installed": False,
             "hostnames": [],
             "users": [],
@@ -324,14 +381,25 @@ def test_renew_called_with_no_requests(mock_get_comms, thread_cache: ThreadCache
     thread_cache.routes.initialize_route({"method": "GET", "route": "/test"})
 
     # Call renew
-    thread_cache.renew()
+    with patch(
+        "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms", return_value=-1
+    ):
+        thread_cache.renew()
 
     # Assert that send_data_to_bg_process was called with the correct arguments
     mock_comms.send_data_to_bg_process.assert_called_once_with(
         action="SYNC_DATA",
         obj={
             "current_routes": {},
-            "reqs": 0,
+            "stats": {
+                "startedAt": -1,
+                "endedAt": -1,
+                "requests": {
+                    "total": 0,
+                    "aborted": 0,
+                    "attacksDetected": {"total": 0, "blocked": 0},
+                },
+            },
             "middleware_installed": False,
             "hostnames": [],
             "users": [],
