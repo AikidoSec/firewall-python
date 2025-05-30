@@ -5,7 +5,7 @@ from aikido_zen.background_process.service_config import ServiceConfig
 from aikido_zen.storage.users import Users
 from aikido_zen.storage.hostnames import Hostnames
 from aikido_zen.ratelimiting.rate_limiter import RateLimiter
-from aikido_zen.background_process.statistics import Statistics
+from aikido_zen.storage.statistics import Statistics
 from . import CloudConnectionManager
 
 
