@@ -93,12 +93,30 @@ def test_lifecycle_cache_bypassed_ip(caplog, get_context):
 def test_sql_injection(caplog, get_context, monkeypatch):
     get_context.set_as_current_context()
     monkeypatch.setenv("AIKIDO_BLOCK", "1")
+
+    assert get_cache().stats.get_record()["requests"]["attacksDetected"]["total"] == 0
     with pytest.raises(AikidoSQLInjection):
         run_vulnerability_scan(
             kind="sql_injection",
             op="test_op",
             args=("INSERT * INTO VALUES ('doggoss2', TRUE);", "mysql"),
         )
+    assert get_cache().stats.get_record()["requests"]["attacksDetected"]["total"] == 1
+    assert get_cache().stats.get_record()["requests"]["attacksDetected"]["blocked"] == 1
+
+
+def test_sql_injection_but_blocking_off(caplog, get_context, monkeypatch):
+    get_context.set_as_current_context()
+    monkeypatch.setenv("AIKIDO_BLOCK", "0")
+
+    assert get_cache().stats.get_record()["requests"]["attacksDetected"]["total"] == 0
+    run_vulnerability_scan(
+        kind="sql_injection",
+        op="test_op",
+        args=("INSERT * INTO VALUES ('doggoss2', TRUE);", "mysql"),
+    )
+    assert get_cache().stats.get_record()["requests"]["attacksDetected"]["total"] == 1
+    assert get_cache().stats.get_record()["requests"]["attacksDetected"]["blocked"] == 0
 
 
 def test_sql_injection_with_route_params(caplog, get_context, monkeypatch):
@@ -162,7 +180,9 @@ def test_ssrf_vulnerability_scan_no_port(get_context):
     hostname = "example.com"
     port = 0  # Port is zero, should not add to hostnames
 
+    assert get_cache().stats.get_record()["requests"]["attacksDetected"]["total"] == 0
     run_vulnerability_scan(kind="ssrf", op="test", args=(dns_results, hostname, port))
+    assert get_cache().stats.get_record()["requests"]["attacksDetected"]["total"] == 0
 
     assert get_cache().hostnames.as_array() == []
 
@@ -176,7 +196,9 @@ def test_ssrf_vulnerability_scan_bypassed_ip(get_context):
     hostname = "example.com"
     port = 80
 
+    assert get_cache().stats.get_record()["requests"]["attacksDetected"]["total"] == 0
     run_vulnerability_scan(kind="ssrf", op="test", args=(dns_results, hostname, port))
+    assert get_cache().stats.get_record()["requests"]["attacksDetected"]["total"] == 0
 
     # Verify that hostnames.add was not called due to bypassed IP
     assert get_cache().hostnames.as_array() == []
