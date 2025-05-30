@@ -97,8 +97,12 @@ def run_vulnerability_scan(kind, op, args):
 
     if injection_results:
         logger.debug("Injection results : %s", serialize_to_json(injection_results))
+
         blocked = is_blocking_enabled()
+        thread_cache.stats.on_detected_attack(blocked)
+
         stack = get_clean_stacktrace()
+
         if comms:
             comms.send_data_to_bg_process(
                 "ATTACK", (injection_results, context, blocked, stack)

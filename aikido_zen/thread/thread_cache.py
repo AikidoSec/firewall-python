@@ -6,6 +6,7 @@ from aikido_zen.background_process.service_config import ServiceConfig
 from aikido_zen.context import get_current_context
 from aikido_zen.helpers.logging import logger
 from aikido_zen.storage.hostnames import Hostnames
+from aikido_zen.storage.statistics import Statistics
 from aikido_zen.storage.users import Users
 from aikido_zen.thread import process_worker_loader
 
@@ -18,6 +19,7 @@ class ThreadCache:
     def __init__(self):
         self.hostnames = Hostnames(200)
         self.users = Users(1000)
+        self.stats = Statistics()
         self.reset()  # Initialize values
 
     def is_bypassed_ip(self, ip):
@@ -41,10 +43,10 @@ class ThreadCache:
             last_updated_at=-1,
             received_any_stats=False,
         )
-        self.reqs = 0
         self.middleware_installed = False
         self.hostnames.clear()
         self.users.clear()
+        self.stats.clear()
 
     def renew(self):
         if not comms.get_comms():
@@ -55,10 +57,10 @@ class ThreadCache:
             action="SYNC_DATA",
             obj={
                 "current_routes": self.routes.get_routes_with_hits(),
-                "reqs": self.reqs,
                 "middleware_installed": self.middleware_installed,
                 "hostnames": self.hostnames.as_array(),
                 "users": self.users.as_array(),
+                "stats": self.stats.get_record(),
             },
             receive=True,
         )
@@ -75,10 +77,6 @@ class ThreadCache:
             self.routes.routes = res["data"]["routes"]
             for route in self.routes.routes.values():
                 route["hits_delta_since_sync"] = 0
-
-    def increment_stats(self):
-        """Increments the requests"""
-        self.reqs += 1
 
 
 # For these 2 functions and the data they process, we rely on Python's GIL

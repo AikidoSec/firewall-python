@@ -20,18 +20,6 @@ def test_process_attack_adds_data_to_queue():
     assert queue.get() == data
 
 
-def test_process_attack_statistics_called_when_enabled():
-    queue = Queue()
-    connection_manager = MockCloudConnectionManager()
-    data = ("injection_results", "context", True, "stacktrace")  # Example data
-    process_attack(connection_manager, data, queue)
-
-    # Check if on_detected_attack was called
-    connection_manager.statistics.on_detected_attack.assert_called_once_with(
-        blocked=True
-    )
-
-
 def test_process_attack_statistics_not_called_when_disabled():
     queue = Queue()
     connection_manager = MockCloudConnectionManager()

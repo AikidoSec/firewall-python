@@ -6,6 +6,7 @@ from .sync_data import process_sync_data
 from aikido_zen.background_process.routes import Routes
 from aikido_zen.helpers.iplist import IPList
 from ...storage.hostnames import Hostnames
+from ...storage.statistics import Statistics
 
 
 @pytest.fixture
@@ -20,7 +21,7 @@ def setup_connection_manager():
     connection_manager.conf.bypassed_ips.add("192.168.1.1")
     connection_manager.conf.blocked_uids = ["user1", "user2"]
     connection_manager.conf.last_updated_at = 200
-    connection_manager.statistics.requests = {"total": 0}  # Initialize total requests
+    connection_manager.statistics = Statistics()
     connection_manager.middleware_installed = False
     return connection_manager
 
@@ -47,7 +48,18 @@ def test_process_sync_data_initialization(setup_connection_manager):
                 "apispec": {"info": "API spec for resource"},
             },
         },
-        "reqs": 10,  # Total requests to be added
+        "stats": {
+            "startedAt": 1,
+            "endedAt": 1,
+            "requests": {
+                "total": 10,
+                "aborted": 0,
+                "attacksDetected": {
+                    "total": 5,
+                    "blocked": 0,
+                },
+            },
+        },
         "middleware_installed": False,
         "hostnames": test_hostnames.as_array(),
     }
@@ -70,7 +82,11 @@ def test_process_sync_data_initialization(setup_connection_manager):
     )
 
     # Check that the total requests were updated
-    assert connection_manager.statistics.requests["total"] == 10
+    assert connection_manager.statistics.get_record()["requests"] == {
+        "aborted": 0,
+        "attacksDetected": {"blocked": 0, "total": 5},
+        "total": 10,
+    }
 
     # Check that the return value is correct
     assert result["routes"] == dict(connection_manager.routes.routes)
@@ -101,7 +117,18 @@ def test_process_sync_data_with_last_updated_at_below_zero(setup_connection_mana
                 "apispec": {"info": "API spec for resource"},
             },
         },
-        "reqs": 10,  # Total requests to be added
+        "stats": {
+            "startedAt": 1,
+            "endedAt": 1,
+            "requests": {
+                "total": 10,
+                "aborted": 0,
+                "attacksDetected": {
+                    "total": 5,
+                    "blocked": 0,
+                },
+            },
+        },
         "middleware_installed": True,
     }
 
@@ -123,7 +150,11 @@ def test_process_sync_data_with_last_updated_at_below_zero(setup_connection_mana
     )
 
     # Check that the total requests were updated
-    assert connection_manager.statistics.requests["total"] == 10
+    assert connection_manager.statistics.get_record()["requests"] == {
+        "aborted": 0,
+        "attacksDetected": {"blocked": 0, "total": 5},
+        "total": 10,
+    }
     assert connection_manager.middleware_installed == True
     assert len(connection_manager.hostnames.as_array()) == 0
     # Check that the return value is correct
@@ -150,7 +181,18 @@ def test_process_sync_data_existing_route_and_hostnames(setup_connection_manager
                 "apispec": {"info": "API spec for resource"},
             }
         },
-        "reqs": 5,  # Total requests to be added
+        "stats": {
+            "startedAt": 1,
+            "endedAt": 1,
+            "requests": {
+                "total": 5,
+                "aborted": 0,
+                "attacksDetected": {
+                    "total": 5,
+                    "blocked": 0,
+                },
+            },
+        },
         "hostnames": hostnames_sync.as_array(),
     }
 
@@ -167,7 +209,18 @@ def test_process_sync_data_existing_route_and_hostnames(setup_connection_manager
                 "apispec": {"info": "Updated API spec for resource"},
             }
         },
-        "reqs": 15,  # Additional requests to be added
+        "stats": {
+            "startedAt": 1,
+            "endedAt": 1,
+            "requests": {
+                "total": 15,
+                "aborted": 0,
+                "attacksDetected": {
+                    "total": 5,
+                    "blocked": 0,
+                },
+            },
+        },
     }
 
     result = process_sync_data(connection_manager, data_update, None)
@@ -181,7 +234,11 @@ def test_process_sync_data_existing_route_and_hostnames(setup_connection_manager
     )
 
     # Check that the total requests were updated
-    assert connection_manager.statistics.requests["total"] == 20  # 5 + 15
+    assert connection_manager.statistics.get_record()["requests"] == {
+        "aborted": 0,
+        "attacksDetected": {"blocked": 0, "total": 10},
+        "total": 20,
+    }
     assert connection_manager.middleware_installed == False
     assert connection_manager.hostnames.as_array() == [
         {"hits": 215, "hostname": "example.com", "port": 443},
