@@ -13,9 +13,9 @@ def request_handler(stage, status_code=0):
     """This will check for rate limiting, Allowed IP's, useful routes, etc."""
     try:
         if stage == "init":
-            thread_cache = get_cache()
-            if ctx.get_current_context() and thread_cache:
-                thread_cache.increment_stats()  # Increment request statistics if a context exists.
+            cache = get_cache()
+            if ctx.get_current_context() and cache:
+                cache.stats.increment_total_hits()
         if stage == "pre_response":
             return pre_response()
         if stage == "post_response":
