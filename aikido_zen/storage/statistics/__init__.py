@@ -1,4 +1,4 @@
-from aikido_zen.helpers.get_current_unixtime_ms import get_unixtime_ms
+import aikido_zen.helpers.get_current_unixtime_ms as t
 
 
 class Statistics:
@@ -11,13 +11,13 @@ class Statistics:
         self.total_hits = 0
         self.attacks_detected = 0
         self.attacks_blocked = 0
-        self.started_at = get_unixtime_ms()
+        self.started_at = t.get_unixtime_ms()
 
     def clear(self):
         self.total_hits = 0
         self.attacks_detected = 0
         self.attacks_blocked = 0
-        self.started_at = get_unixtime_ms()
+        self.started_at = t.get_unixtime_ms()
 
     def increment_total_hits(self):
         self.total_hits += 1
@@ -28,7 +28,7 @@ class Statistics:
             self.attacks_blocked += 1
 
     def get_record(self):
-        current_time = get_unixtime_ms()
+        current_time = t.get_unixtime_ms()
         return {
             "startedAt": self.started_at,
             "endedAt": current_time,
