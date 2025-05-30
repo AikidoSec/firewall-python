@@ -8,9 +8,11 @@ def process_sync_data(connection_manager, data, conn, queue=None):
     """
     Synchronizes data between the thread-local cache (with a TTL of usually 1 minute) and the
     background thread. Which data gets synced?
-    Thread -> BG Process : Hits, request statistics, api specs, hostnames
-    BG Process -> Thread : Routes, endpoints, bypasssed ip's, blocked users
+    Thread -> BG Process : Routes, Hostnames, Users, Stats & middleware installed
+    BG Process -> Thread : Routes and config
     """
+
+    # Sync routes
     routes = connection_manager.routes
     for route in data.get("current_routes", {}).values():
         route_metadata = {"method": route["method"], "route": route["path"]}
@@ -24,9 +26,6 @@ def process_sync_data(connection_manager, data, conn, queue=None):
 
         # Update API Spec :
         update_route_info(route["apispec"], existing_route)
-
-    # Save request data :
-    connection_manager.statistics.requests["total"] += data.get("reqs", 0)
 
     # Save middleware installed :
     if data.get("middleware_installed", False):
@@ -43,6 +42,9 @@ def process_sync_data(connection_manager, data, conn, queue=None):
     # Sync users
     for user_entry in data.get("users", list()):
         connection_manager.users.add_user_from_entry(user_entry)
+
+    # Sync stats
+    connection_manager.statistics.import_from_record(data.get("stats", {}))
 
     if connection_manager.conf.last_updated_at > 0:
         # Only report data if the config has been fetched.
