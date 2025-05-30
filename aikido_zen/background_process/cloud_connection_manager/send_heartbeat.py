@@ -11,12 +11,12 @@ def send_heartbeat(connection_manager):
     if not connection_manager.token:
         return
     logger.debug("Aikido CloudConnectionManager : Sending out heartbeat")
-    stats = connection_manager.statistics.get_stats()
+    stats = connection_manager.statistics.get_record()
     users = connection_manager.users.as_array()
     routes = list(connection_manager.routes)
     outgoing_domains = connection_manager.hostnames.as_array()
 
-    connection_manager.statistics.reset()
+    connection_manager.statistics.clear()
     connection_manager.users.clear()
     connection_manager.routes.clear()
     connection_manager.hostnames.clear()
