@@ -10,6 +10,7 @@ from ..service_config import ServiceConfig
 from aikido_zen.storage.users import Users
 from aikido_zen.storage.hostnames import Hostnames
 from ..realtime.start_polling_for_changes import start_polling_for_changes
+from ...storage.packages import Packages
 from ...storage.statistics import Statistics
 
 # Import functions :
@@ -44,7 +45,7 @@ class CloudConnectionManager:
             max_items=5000, time_to_live_in_ms=120 * 60 * 1000  # 120 minutes
         )
         self.users = Users(1000)
-        self.packages = {}
+        self.packages = Packages()
         self.statistics = Statistics()
         self.middleware_installed = False
 
