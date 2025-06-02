@@ -7,7 +7,7 @@ from clickhouse_driver import Client
 app = Flask(__name__)
 
 # Configure ClickHouse client
-clickhouse_client = Client(host='127.0.0.1', port=8123, user='default', password='', database='db')
+clickhouse_client = Client(host='127.0.0.1', port=9000, user='default', password='', database='default')
 
 @app.route("/")
 def homepage():
@@ -15,10 +15,10 @@ def homepage():
     dogs = clickhouse_client.execute("SELECT * FROM dogs")
     return render_template('index.html', title='Homepage', dogs=dogs)
 
-@app.route('/dogpage/<int:dog_id>')
+@app.route('/dogpage/<string:dog_id>')
 def get_dogpage(dog_id):
     # Fetch a specific dog by ID from ClickHouse
-    dog = clickhouse_client.execute("SELECT * FROM dogs WHERE id = %s", (dog_id,))
+    dog = clickhouse_client.execute("SELECT * FROM dogs WHERE id = '{}'".format(dog_id))
     if dog:
         dog = dog[0]  # Get the first result
         return render_template('dogpage.html', title='Dog', dog=dog, isAdmin=("Yes" if dog[2] else "No"))
@@ -33,7 +33,7 @@ def show_create_dog_form():
 def create_dog():
     dog_name = request.form['dog_name']
     # Insert a new dog into ClickHouse
-    clickhouse_client.execute('INSERT INTO dogs (dog_name, isAdmin) VALUES', [(dog_name, 0)])
+    clickhouse_client.execute("INSERT INTO dogs (dog_name, isAdmin) VALUES ('{}' , 0)".format(dog_name))
     return f'Dog {dog_name} created successfully'
 
 if __name__ == '__main__':
