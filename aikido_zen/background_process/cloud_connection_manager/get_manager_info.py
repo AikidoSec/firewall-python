@@ -16,14 +16,8 @@ def get_manager_info(connection_manager):
         "version": config.PKG_VERSION,
         "library": "firewall-python",
         "ipAddress": h.get_ip(),
-        "packages": {
-            pkg: details["version"]
-            for pkg, details in connection_manager.packages.items()
-            if "version" in details and "supported" in details and details["supported"]
-        },
         "serverless": bool(connection_manager.serverless),
-        "stack": list(connection_manager.packages.keys())
-        + ([connection_manager.serverless] if connection_manager.serverless else []),
+        "stack": [connection_manager.serverless] if connection_manager.serverless else [],
         "os": {"name": platform.system(), "version": platform.release()},
         "preventedPrototypePollution": False,  # Get this out of the API maybe?
         "nodeEnv": "",
