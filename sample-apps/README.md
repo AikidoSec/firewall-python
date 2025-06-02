@@ -38,3 +38,6 @@ Overview :
 - `flask-mssql/` is a Flask app using MSSQL.
   - It runs **single-threaded**
   - Runs on 8104. Without Aikido runs on 8105
+- `flask-clickhouse-uwsgi/` is a Flask UWSGI app using Clickhouse
+  - It runs **multi-threaded**
+  - Runs on 8106. Without Aikido runs on 8107
