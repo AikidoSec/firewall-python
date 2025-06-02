@@ -11,15 +11,21 @@ def send_heartbeat(connection_manager):
     if not connection_manager.token:
         return
     logger.debug("Aikido CloudConnectionManager : Sending out heartbeat")
+
+    # Special rule for packages, populate before heartbeat
+    connection_manager.packages.populate()
+
     stats = connection_manager.statistics.get_record()
     users = connection_manager.users.as_array()
     routes = list(connection_manager.routes)
     outgoing_domains = connection_manager.hostnames.as_array()
+    packages = connection_manager.packages.as_array()
 
     connection_manager.statistics.clear()
     connection_manager.users.clear()
     connection_manager.routes.clear()
     connection_manager.hostnames.clear()
+    connection_manager.packages.clear() # Not sure we want this here?
     res = connection_manager.api.report(
         connection_manager.token,
         {
@@ -27,6 +33,7 @@ def send_heartbeat(connection_manager):
             "time": get_unixtime_ms(),
             "agent": connection_manager.get_manager_info(),
             "stats": stats,
+            "packages": packages,
             "hostnames": outgoing_domains,
             "routes": routes,
             "users": users,
