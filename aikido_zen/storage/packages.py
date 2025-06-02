@@ -46,3 +46,16 @@ class Packages:
             return  # Frozen packages means it did not come from an installed package, cannot get version.
 
         self.add_package(module, importlib.metadata.version(module))
+
+    def clear(self):
+        self.packages.clear()
+
+    def as_array(self):
+        self.populate()
+        return self.packages.values()
+
+    def import_from_array(self, imported_packages):
+        for package in imported_packages:
+            if package["name"] in self.packages.keys():
+                continue
+            self.packages[package["name"]] = package
