@@ -6,6 +6,7 @@ from aikido_zen.background_process.service_config import ServiceConfig
 from aikido_zen.context import get_current_context
 from aikido_zen.helpers.logging import logger
 from aikido_zen.storage.hostnames import Hostnames
+from aikido_zen.storage.packages import Packages
 from aikido_zen.storage.statistics import Statistics
 from aikido_zen.storage.users import Users
 from aikido_zen.thread import process_worker_loader
@@ -20,6 +21,7 @@ class ThreadCache:
         self.hostnames = Hostnames(200)
         self.users = Users(1000)
         self.stats = Statistics()
+        self.packages = Packages()
         self.reset()  # Initialize values
 
     def is_bypassed_ip(self, ip):
@@ -47,10 +49,14 @@ class ThreadCache:
         self.hostnames.clear()
         self.users.clear()
         self.stats.clear()
+        self.packages.clear()
 
     def renew(self):
         if not comms.get_comms():
             return
+
+        # Special condition only for packages
+        self.packages.populate()
 
         # send stored data and receive new config and routes
         res = comms.get_comms().send_data_to_bg_process(
@@ -61,6 +67,7 @@ class ThreadCache:
                 "hostnames": self.hostnames.as_array(),
                 "users": self.users.as_array(),
                 "stats": self.stats.get_record(),
+                "packages": self.packages.as_array()
             },
             receive=True,
         )
