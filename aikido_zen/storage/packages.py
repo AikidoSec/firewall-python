@@ -51,8 +51,7 @@ class Packages:
         self.packages.clear()
 
     def as_array(self):
-        self.populate()
-        return self.packages.values()
+        return list(self.packages.values())
 
     def import_from_array(self, imported_packages):
         for package in imported_packages:
