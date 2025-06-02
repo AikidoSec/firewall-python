@@ -54,8 +54,24 @@ services:
       - "1433:1433"
     volumes:
       - mssql_db_data:/var/opt/mssql
+  clickhouse_database:
+    image: yandex/clickhouse-server
+    container_name: sample_clickhouse_db
+    restart: always
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    environment:
+      CLICKHOUSE_USER: 'default'
+      CLICKHOUSE_PASSWORD: ''
+      CLICKHOUSE_DB: 'db'
+
+
 volumes:
   mysql_db_data:
   postgres_db_data:
   mongo_db_data:
   mssql_db_data:
+  clickhouse_data:
