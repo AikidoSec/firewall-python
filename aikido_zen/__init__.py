@@ -51,6 +51,8 @@ def protect(mode="daemon"):
     import aikido_zen.sinks.psycopg2
     import aikido_zen.sinks.psycopg
     import aikido_zen.sinks.asyncpg
+    import aikido_zen.sinks.clickhouse_driver
+
     import aikido_zen.sinks.builtins
     import aikido_zen.sinks.os
     import aikido_zen.sinks.shutil
