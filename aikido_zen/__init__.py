@@ -2,10 +2,6 @@
 Aggregates from the different modules
 """
 
-# pylint: disable=import-outside-toplevel
-
-from dotenv import load_dotenv
-
 # Re-export functions :
 from aikido_zen.context.users import set_user
 from aikido_zen.middleware import should_block_request
@@ -19,8 +15,6 @@ from aikido_zen.background_process import start_background_process
 # Load environment variables and constants
 from aikido_zen.config import PKG_VERSION
 from aikido_zen.helpers.aikido_disabled_flag_active import aikido_disabled_flag_active
-
-load_dotenv()
 
 
 def protect(mode="daemon"):
