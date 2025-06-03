@@ -16,5 +16,9 @@ def patch(m):
     """
     patching module clickhouse_driver
     - patches clickhouse_driver.Client.execute
+    - patches clickhouse_driver.Client.execute_iter
+    - patches clickhouse_driver.Client.execute_with_progress
     """
     patch_function(m, "Client.execute", _execute)
+    patch_function(m, "Client.execute_iter", _execute)
+    patch_function(m, "Client.execute_with_progress", _execute)
