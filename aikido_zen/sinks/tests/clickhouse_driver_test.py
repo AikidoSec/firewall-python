@@ -4,9 +4,6 @@ from aikido_zen.background_process import reset_comms
 from aikido_zen.context import Context
 from aikido_zen.errors import AikidoSQLInjection
 
-kind = "sql_injection"
-op = "pymysql.connections.query"
-
 
 class Context1(Context):
     def __init__(self, body):
@@ -62,3 +59,30 @@ def test_client_execute_unsafe(client, monkeypatch):
 
     monkeypatch.setenv("AIKIDO_BLOCK", "0")
     client.execute(sql)
+
+
+def test_cursor_execute_safe():
+    from clickhouse_driver import connect
+
+    conn = connect("clickhouse://localhost:9000")
+    reset_comms()
+    dog_name = "Steve"
+    sql = "INSERT INTO dogs (dog_name, isAdmin) VALUES ('{}' , 0)".format(dog_name)
+    Context1({"dog_name": dog_name}).set_as_current_context()
+    conn.cursor().execute(sql)
+
+
+def test_cursor_execute_unsafe(monkeypatch):
+    from clickhouse_driver import connect
+
+    conn = connect("clickhouse://localhost:9000")
+    reset_comms()
+    dog_name = "Malicious dog', 1); -- "
+    sql = "INSERT INTO dogs (dog_name, isAdmin) VALUES ('{}' , 0)".format(dog_name)
+    Context1({"dog_name": dog_name}).set_as_current_context()
+
+    with pytest.raises(AikidoSQLInjection):
+        conn.cursor().execute(sql)
+
+    monkeypatch.setenv("AIKIDO_BLOCK", "0")
+    conn.cursor().execute(sql)
