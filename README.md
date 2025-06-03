@@ -52,6 +52,7 @@ Zen for Python 3 is compatible with:
 * ✅ [`psycopg`](https://pypi.org/project/psycopg) ^3.1
 * ✅ [`asyncpg`](https://pypi.org/project/asyncpg) ^0.27
 * ✅ [`motor`](https://pypi.org/project/motor/) (See `pymongo` version)
+* ✅ [`clickhouse-driver`](https://pypi.org/project/clickhouse-driver)
 
 ## Reporting to your Aikido Security dashboard
 
