@@ -84,3 +84,19 @@ replace_version:
 	poetry version $(version)
 	sed -i.bak "s/1.0-REPLACE-VERSION/$$version/g" aikido_zen/config.py
 	rm aikido_zen/config.py.bak
+
+# Re-locking sample apps
+relock_sample_apps: build
+	cd sample-apps/django-mysql && poetry lock
+	cd sample-apps/django-mysql-gunicorn && poetry lock
+	cd sample-apps/django-postgres-gunicorn && poetry lock
+	cd sample-apps/fastapi-postgres-uvicorn && poetry lock
+	cd sample-apps/flask-mongo && poetry lock
+	cd sample-apps/flask-mssql && poetry lock
+	cd sample-apps/flask-mysql && poetry lock
+	cd sample-apps/flask-mysql-uwsgi && poetry lock
+	cd sample-apps/flask-postgres && poetry lock
+	cd sample-apps/flask-postgres-xml && poetry lock
+	cd sample-apps/quart-mongo && poetry lock
+	cd sample-apps/quart-postgres-uvicorn && poetry lock
+	cd sample-apps/starlette-postgres-uvicorn && poetry lock
