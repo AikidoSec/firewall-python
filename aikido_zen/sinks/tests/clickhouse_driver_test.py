@@ -86,3 +86,45 @@ def test_cursor_execute_unsafe(monkeypatch):
 
     monkeypatch.setenv("AIKIDO_BLOCK", "0")
     conn.cursor().execute(sql)
+
+
+def test_client_execute_with_progress_safe(client):
+    reset_comms()
+    dog_name = "Steve"
+    sql = "INSERT INTO dogs (dog_name, isAdmin) VALUES ('{}' , 0)".format(dog_name)
+    Context1({"dog_name": dog_name}).set_as_current_context()
+    client.execute_with_progress(sql)
+
+
+def test_client_execute_with_progress_unsafe(client, monkeypatch):
+    reset_comms()
+    dog_name = "Malicious dog', 1); -- "
+    sql = "INSERT INTO dogs (dog_name, isAdmin) VALUES ('{}' , 0)".format(dog_name)
+    Context1({"dog_name": dog_name}).set_as_current_context()
+
+    with pytest.raises(AikidoSQLInjection):
+        client.execute_with_progress(sql)
+
+    monkeypatch.setenv("AIKIDO_BLOCK", "0")
+    client.execute_with_progress(sql)
+
+
+def test_client_execute_iter_safe(client):
+    reset_comms()
+    dog_name = "Steve"
+    sql = "INSERT INTO dogs (dog_name, isAdmin) VALUES ('{}' , 0)".format(dog_name)
+    Context1({"dog_name": dog_name}).set_as_current_context()
+    client.execute_iter(sql)
+
+
+def test_client_execute_iter_unsafe(client, monkeypatch):
+    reset_comms()
+    dog_name = "Malicious dog', 1); -- "
+    sql = "INSERT INTO dogs (dog_name, isAdmin) VALUES ('{}' , 0)".format(dog_name)
+    Context1({"dog_name": dog_name}).set_as_current_context()
+
+    with pytest.raises(AikidoSQLInjection):
+        client.execute_iter(sql)
+
+    monkeypatch.setenv("AIKIDO_BLOCK", "0")
+    client.execute_iter(sql)
