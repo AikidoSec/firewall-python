@@ -45,7 +45,7 @@ def match_endpoints(route_metadata, endpoints):
 
     for wildcard in wildcards:
         route = wildcard["route"]
-        regex = re.compile(f"^{route.replace('*', '(.*)')}\/?$", re.IGNORECASE)
+        regex = re.compile(f"^{route.replace('*', '(.*)')}/?$", re.IGNORECASE)
 
         if regex.match(path):
             results.append(wildcard)
