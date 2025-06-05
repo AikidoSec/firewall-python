@@ -4,6 +4,7 @@ Sink module for python's `io`
 
 import aikido_zen.vulnerabilities as vulns
 from aikido_zen.helpers.get_argument import get_argument
+from aikido_zen.helpers.register_call import register_call
 from aikido_zen.sinks import patch_function, before, on_import
 
 
@@ -13,7 +14,10 @@ def _open(func, instance, args, kwargs):
     if not file:
         return
 
-    vulns.run_vulnerability_scan(kind="path_traversal", op="io.open", args=(file,))
+    op = "io.open"
+    register_call(op, "fs_op")
+
+    vulns.run_vulnerability_scan(kind="path_traversal", op=op, args=(file,))
 
 
 @before
@@ -22,7 +26,10 @@ def _open_code(func, instance, args, kwargs):
     if not path:
         return
 
-    vulns.run_vulnerability_scan(kind="path_traversal", op="io.open_code", args=(path,))
+    op = "io.open_code"
+    register_call(op, "fs_op")
+
+    vulns.run_vulnerability_scan(kind="path_traversal", op=op, args=(path,))
 
 
 @on_import("io")
