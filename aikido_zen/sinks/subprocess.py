@@ -4,6 +4,7 @@ Sink module for `subprocess`
 
 import aikido_zen.vulnerabilities as vulns
 from aikido_zen.helpers.get_argument import get_argument
+from aikido_zen.helpers.register_call import register_call
 from aikido_zen.sinks import on_import, patch_function, before
 
 
@@ -26,9 +27,13 @@ def _subprocess_init(func, instance, args, kwargs):
         command = shell_arguments
     if not command:
         return
+
+    op = "subprocess.Popen"
+    register_call(op, "exec_op")
+
     vulns.run_vulnerability_scan(
         kind="shell_injection",
-        op=f"subprocess.Popen",
+        op=op,
         args=(command,),
     )
 
