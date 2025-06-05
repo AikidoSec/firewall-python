@@ -4,6 +4,7 @@ Sink module for `asyncpg`
 
 import aikido_zen.vulnerabilities as vulns
 from aikido_zen.helpers.get_argument import get_argument
+from aikido_zen.helpers.register_call import register_call
 from aikido_zen.sinks import patch_function, before, on_import
 
 
@@ -12,6 +13,8 @@ def _execute(func, instance, args, kwargs):
     query = get_argument(args, kwargs, 0, "query")
 
     op = f"asyncpg.connection.Connection.{func.__name__}"
+    register_call(op, "sql_op")
+
     vulns.run_vulnerability_scan(kind="sql_injection", op=op, args=(query, "postgres"))
 
 
