@@ -5,6 +5,7 @@ Sink module for `pymongo`
 from aikido_zen.helpers.get_argument import get_argument
 import aikido_zen.vulnerabilities as vulns
 from . import patch_function, on_import, before
+from ..helpers.register_call import register_call
 
 
 @before
@@ -14,9 +15,12 @@ def _func_filter_first(func, instance, args, kwargs):
     if not nosql_filter:
         return
 
+    operation = f"pymongo.collection.Collection.{func.__name__}"
+    register_call(operation, "nosql_op")
+
     vulns.run_vulnerability_scan(
         kind="nosql_injection",
-        op=f"pymongo.collection.Collection.{func.__name__}",
+        op=operation,
         args=(nosql_filter,),
     )
 
@@ -28,9 +32,12 @@ def _func_filter_second(func, instance, args, kwargs):
     if not nosql_filter:
         return
 
+    operation = f"pymongo.collection.Collection.{func.__name__}"
+    register_call(operation, "nosql_op")
+
     vulns.run_vulnerability_scan(
         kind="nosql_injection",
-        op=f"pymongo.collection.Collection.{func.__name__}",
+        op=operation,
         args=(nosql_filter,),
     )
 
@@ -42,9 +49,12 @@ def _func_pipeline(func, instance, args, kwargs):
     if not nosql_pipeline:
         return
 
+    operation = f"pymongo.collection.Collection.{func.__name__}"
+    register_call(operation, "nosql_op")
+
     vulns.run_vulnerability_scan(
         kind="nosql_injection",
-        op=f"pymongo.collection.Collection.{func.__name__}",
+        op=operation,
         args=(nosql_pipeline,),
     )
 
@@ -53,12 +63,15 @@ def _func_pipeline(func, instance, args, kwargs):
 def _bulk_write(func, instance, args, kwargs):
     requests = get_argument(args, kwargs, 0, "requests")
 
+    operation = "pymongo.collection.Collection.bulk_write"
+    register_call(operation, "nosql_op")
+
     # Filter requests that contain "_filter"
     requests_with_filter = [req for req in requests if hasattr(req, "_filter")]
     for request in requests_with_filter:
         vulns.run_vulnerability_scan(
             kind="nosql_injection",
-            op="pymongo.collection.Collection.bulk_write",
+            op=operation,
             args=(request._filter,),
         )
 
