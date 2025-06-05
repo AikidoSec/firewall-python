@@ -4,14 +4,19 @@ Sink module for `psycopg`
 
 import aikido_zen.vulnerabilities as vulns
 from aikido_zen.helpers.get_argument import get_argument
+from aikido_zen.helpers.register_call import register_call
 from aikido_zen.sinks import patch_function, on_import, before
 
 
 @before
 def _copy(func, instance, args, kwargs):
     statement = get_argument(args, kwargs, 0, "statement")
+
+    op = "psycopg.Cursor.copy"
+    register_call(op, "sql_op")
+
     vulns.run_vulnerability_scan(
-        kind="sql_injection", op="psycopg.Cursor.copy", args=(statement, "postgres")
+        kind="sql_injection", op=op, args=(statement, "postgres")
     )
 
 
