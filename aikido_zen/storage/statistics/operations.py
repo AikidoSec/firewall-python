@@ -1,4 +1,11 @@
-SUPPORTED_KINDS = ["sql_op", "nosql_op", "outgoing_http_op", "fs_op", "exec_op"]
+SUPPORTED_KINDS = [
+    "sql_op",
+    "nosql_op",
+    "outgoing_http_op",
+    "fs_op",
+    "exec_op",
+    "deserialize_op",
+]
 
 
 class Operations(dict):
