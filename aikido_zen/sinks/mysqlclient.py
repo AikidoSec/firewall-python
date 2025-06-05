@@ -4,6 +4,7 @@ Sink module for `mysqlclient`
 
 from aikido_zen.helpers.get_argument import get_argument
 import aikido_zen.vulnerabilities as vulns
+from aikido_zen.helpers.register_call import register_call
 from aikido_zen.sinks import patch_function, on_import, before
 
 
@@ -14,6 +15,7 @@ def _execute(func, instance, args, kwargs):
         # If query is type bytearray, it will be picked up by our wrapping of executemany
         return
 
+    register_call("MySQLdb.Cursor.execute", "sql_op")
     vulns.run_vulnerability_scan(
         kind="sql_injection", op="MySQLdb.Cursor.execute", args=(query, "mysql")
     )
@@ -23,6 +25,7 @@ def _execute(func, instance, args, kwargs):
 def _executemany(func, instance, args, kwargs):
     query = get_argument(args, kwargs, 0, "query")
 
+    register_call("MySQLdb.Cursor.executemany", "sql_op")
     vulns.run_vulnerability_scan(
         kind="sql_injection", op="MySQLdb.Cursor.executemany", args=(query, "mysql")
     )
