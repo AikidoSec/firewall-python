@@ -29,3 +29,15 @@ class Operations(dict):
         self[operation]["attacksDetected"]["total"] += 1
         if blocked:
             self[operation]["attacksDetected"]["blocked"] += 1
+
+    def update(self, m, /, **kwargs):
+        for operation in m.keys():
+            self.ensure_operation(operation, kind=m[operation]["kind"])
+
+            self[operation]["total"] += m[operation]["total"]
+
+            imported_attacks_total = m[operation]["attacksDetected"]["total"]
+            self[operation]["attacksDetected"]["total"] += imported_attacks_total
+
+            imported_attacks_blocked = m[operation]["attacksDetected"]["blocked"]
+            self[operation]["attacksDetected"]["blocked"] += imported_attacks_blocked
