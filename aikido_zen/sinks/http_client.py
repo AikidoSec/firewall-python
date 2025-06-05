@@ -3,6 +3,7 @@ Sink module for `http`
 """
 
 from aikido_zen.helpers.get_argument import get_argument
+from aikido_zen.helpers.register_call import register_call
 from aikido_zen.sinks import before, after, patch_function, on_import
 from aikido_zen.vulnerabilities.ssrf.handle_http_response import (
     handle_http_response,
@@ -22,6 +23,9 @@ def _putrequest(func, instance, args, kwargs):
 def _getresponse(func, instance, args, kwargs, return_value):
     path = getattr(instance, "_aikido_var_path")
     source_url = try_parse_url(f"http://{instance.host}:{instance.port}{path}")
+
+    register_call("HTTPConnection.getresponse", "outgoing_http_op")
+
     handle_http_response(http_response=return_value, source=source_url)
 
 
