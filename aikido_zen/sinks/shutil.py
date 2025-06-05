@@ -4,6 +4,7 @@ Sink module for python's `shutil`
 
 import aikido_zen.vulnerabilities as vulns
 from aikido_zen.helpers.get_argument import get_argument
+from aikido_zen.helpers.register_call import register_call
 from aikido_zen.sinks import on_import, patch_function, before
 
 
@@ -12,8 +13,10 @@ def _shutil_func(func, instance, args, kwargs):
     source = get_argument(args, kwargs, 0, "src")
     destination = get_argument(args, kwargs, 1, "dst")
 
-    kind = "path_traversal"
     op = f"shutil.{func.__name__}"
+    register_call(op, "fs_op")
+
+    kind = "path_traversal"
     if isinstance(source, str):
         vulns.run_vulnerability_scan(kind, op, args=(source,))
     if isinstance(destination, str):
