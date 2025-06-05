@@ -44,7 +44,7 @@ class Statistics:
                     "blocked": self.attacks_blocked,
                 },
             },
-            "operations": self.operations,
+            "operations": dict(self.operations),
         }
 
     def import_from_record(self, record):
