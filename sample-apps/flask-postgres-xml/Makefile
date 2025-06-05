@@ -1,9 +1,5 @@
-.PHONY: clean
-clean:
-	@poetry env remove $(shell poetry env list | grep 'Activated' | awk '{print $$1}')
-
 .PHONY: install
-install: clean
+install:
 	poetry install
 
 .PHONY: run
