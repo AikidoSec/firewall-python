@@ -4,6 +4,7 @@ Sink module for python's `os`
 
 from pathlib import PurePath
 import aikido_zen.vulnerabilities as vulns
+from aikido_zen.helpers.register_call import register_call
 from aikido_zen.sinks import before, patch_function, on_import
 
 
@@ -17,6 +18,7 @@ def _os_patch(func, instance, args, kwargs):
         op = f"os.{func.__name__}"
         if func.__name__ in ("getsize", "join", "expanduser", "expandvars", "realpath"):
             op = f"os.path.{func.__name__}"
+        register_call(op, "fs_op")
 
         vulns.run_vulnerability_scan(kind="path_traversal", op=op, args=(path,))
 
