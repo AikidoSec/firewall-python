@@ -68,7 +68,7 @@ def test_reset(thread_cache: ThreadCache):
     thread_cache.config.bypassed_ips.add("192.168.1.1")
     thread_cache.config.blocked_uids.add("user123")
     thread_cache.stats.increment_total_hits()
-    thread_cache.stats.on_detected_attack(blocked=True)
+    thread_cache.stats.on_detected_attack(blocked=True, operation="test")
 
     thread_cache.reset()
 
@@ -236,9 +236,11 @@ def test_renew_called_with_correct_args(mock_get_comms, thread_cache: ThreadCach
     # Setup initial state
     thread_cache.stats.increment_total_hits()
     thread_cache.stats.increment_total_hits()
-    thread_cache.stats.on_detected_attack(blocked=True)
-    thread_cache.stats.on_detected_attack(blocked=False)
-    thread_cache.stats.on_detected_attack(blocked=False)
+    thread_cache.stats.operations.register_call("op1", "sql_op")
+    thread_cache.stats.operations.register_call("op2", "sql_op")
+    thread_cache.stats.on_detected_attack(blocked=True, operation="op1")
+    thread_cache.stats.on_detected_attack(blocked=False, operation="op1")
+    thread_cache.stats.on_detected_attack(blocked=False, operation="op2")
     thread_cache.routes.initialize_route({"method": "GET", "route": "/test"})
     thread_cache.routes.increment_route({"method": "GET", "route": "/test"})
 
@@ -268,6 +270,18 @@ def test_renew_called_with_correct_args(mock_get_comms, thread_cache: ThreadCach
                     "total": 2,
                     "aborted": 0,
                     "attacksDetected": {"blocked": 1, "total": 3},
+                },
+                "operations": {
+                    "op1": {
+                        "attacksDetected": {"blocked": 1, "total": 2},
+                        "kind": "sql_op",
+                        "total": 1,
+                    },
+                    "op2": {
+                        "attacksDetected": {"blocked": 0, "total": 1},
+                        "kind": "sql_op",
+                        "total": 1,
+                    },
                 },
             },
             "middleware_installed": False,
@@ -313,6 +327,7 @@ def test_sync_data_for_users(mock_get_comms, thread_cache: ThreadCache):
                     "aborted": 0,
                     "attacksDetected": {"total": 0, "blocked": 0},
                 },
+                "operations": {},
             },
             "middleware_installed": False,
             "hostnames": [],
@@ -362,6 +377,7 @@ def test_renew_called_with_empty_routes(mock_get_comms, thread_cache: ThreadCach
                     "aborted": 0,
                     "attacksDetected": {"total": 0, "blocked": 0},
                 },
+                "operations": {},
             },
             "middleware_installed": False,
             "hostnames": [],
@@ -399,6 +415,7 @@ def test_renew_called_with_no_requests(mock_get_comms, thread_cache: ThreadCache
                     "aborted": 0,
                     "attacksDetected": {"total": 0, "blocked": 0},
                 },
+                "operations": {},
             },
             "middleware_installed": False,
             "hostnames": [],
