@@ -1,14 +1,17 @@
 from aikido_zen.helpers.get_argument import get_argument
+from aikido_zen.helpers.register_call import register_call
 from aikido_zen.sinks import before, on_import, patch_function
 from aikido_zen.vulnerabilities import run_vulnerability_scan
 
 
 @before
 def _execute(func, instance, args, kwargs):
-    kind = "sql_injection"
-    op = "clickhouse_driver.Client.execute"
     query = get_argument(args, kwargs, 0, "query")
-    run_vulnerability_scan(kind, op, args=(query, "clickhouse"))
+
+    op = "clickhouse_driver.Client.execute"
+    register_call(op, "sql_op")
+
+    run_vulnerability_scan("sql_injection", op, args=(query, "clickhouse"))
 
 
 @on_import("clickhouse_driver", package="clickhouse_driver")
