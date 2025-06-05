@@ -99,7 +99,8 @@ def run_vulnerability_scan(kind, op, args):
         logger.debug("Injection results : %s", serialize_to_json(injection_results))
 
         blocked = is_blocking_enabled()
-        thread_cache.stats.on_detected_attack(blocked)
+        operation = injection_results["operation"]
+        thread_cache.stats.on_detected_attack(blocked, operation)
 
         stack = get_clean_stacktrace()
 
