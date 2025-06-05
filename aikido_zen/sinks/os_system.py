@@ -4,6 +4,7 @@ Sink module for `os`, wrapping os.system
 
 import aikido_zen.vulnerabilities as vulns
 from aikido_zen.helpers.get_argument import get_argument
+from aikido_zen.helpers.register_call import register_call
 from aikido_zen.sinks import patch_function, before, on_import
 
 
@@ -13,9 +14,10 @@ def _system(func, instance, args, kwargs):
     if not isinstance(command, str):
         return
 
-    vulns.run_vulnerability_scan(
-        kind="shell_injection", op="os.system", args=(command,)
-    )
+    op = "os.system"
+    register_call(op, "exec_op")
+
+    vulns.run_vulnerability_scan(kind="shell_injection", op=op, args=(command,))
 
 
 @on_import("os")
