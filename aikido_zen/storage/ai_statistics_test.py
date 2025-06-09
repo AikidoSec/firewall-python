@@ -9,7 +9,7 @@ def stats():
 
 def test_initializes_with_empty_state(stats):
     assert stats.get_stats() == []
-    assert stats.is_empty() is True
+    assert stats.empty() is True
 
 
 def test_tracks_basic_ai_calls(stats):
@@ -30,7 +30,7 @@ def test_tracks_basic_ai_calls(stats):
         },
     }
 
-    assert stats.is_empty() is False
+    assert stats.empty() is False
 
 
 def test_tracks_multiple_calls_to_same_provider_model(stats):
@@ -118,12 +118,12 @@ def test_resets_all_statistics(stats):
         provider="anthropic", model="claude-3", input_tokens=120, output_tokens=60
     )
 
-    assert stats.is_empty() is False
+    assert stats.empty() is False
     assert len(stats.get_stats()) == 2
 
     stats.clear()
 
-    assert stats.is_empty() is True
+    assert stats.empty() is True
     assert stats.get_stats() == []
 
 
@@ -142,13 +142,13 @@ def test_handles_zero_token_inputs(stats):
 def test_called_with_empty_provider(stats):
     stats.on_ai_call(provider="", model="gpt-4", input_tokens=100, output_tokens=50)
 
-    assert stats.is_empty() is True
+    assert stats.empty() is True
 
 
 def test_called_with_empty_model(stats):
     stats.on_ai_call(provider="openai", model="", input_tokens=100, output_tokens=50)
 
-    assert stats.is_empty() is True
+    assert stats.empty() is True
 
 
 def test_get_stats_returns_immutable_data(stats):
