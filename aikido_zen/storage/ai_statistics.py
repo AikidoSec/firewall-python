@@ -37,6 +37,16 @@ class AIStatistics:
     def get_stats(self):
         return [copy.deepcopy(stats) for stats in self.calls.values()]
 
+    def import_list(self, ai_stats_list):
+        for new_entry in ai_stats_list:
+            existing_entry = self.ensure_provider_stats(
+                new_entry["provider"], new_entry["model"]
+            )
+            existing_entry["calls"] += new_entry["calls"]
+            existing_entry["tokens"]["input"] = new_entry["tokens"]["input"]
+            existing_entry["tokens"]["output"] = new_entry["tokens"]["output"]
+            existing_entry["tokens"]["total"] = new_entry["tokens"]["total"]
+
     def clear(self):
         self.calls.clear()
 
