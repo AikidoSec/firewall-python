@@ -1,5 +1,7 @@
 import copy
 
+from aikido_zen.thread.thread_cache import get_cache
+
 
 class AIStatistics:
     def __init__(self):
@@ -44,3 +46,9 @@ class AIStatistics:
 
 def get_provider_key(provider, model):
     return f"{provider}:{model}"
+
+
+def on_ai_call(provider, model, input_tokens, output_tokens):
+    cache = get_cache()
+    if cache:
+        cache.ai_stats.on_ai_call(provider, model, input_tokens, output_tokens)
