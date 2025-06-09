@@ -38,7 +38,7 @@ class AIStatistics:
     def clear(self):
         self.calls.clear()
 
-    def is_empty(self):
+    def empty(self):
         return len(self.calls) == 0
 
 
