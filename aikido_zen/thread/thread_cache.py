@@ -3,8 +3,7 @@
 import aikido_zen.background_process.comms as comms
 from aikido_zen.background_process.routes import Routes
 from aikido_zen.background_process.service_config import ServiceConfig
-from aikido_zen.context import get_current_context
-from aikido_zen.helpers.logging import logger
+from aikido_zen.storage.ai_statistics import AIStatistics
 from aikido_zen.storage.hostnames import Hostnames
 from aikido_zen.storage.statistics import Statistics
 from aikido_zen.storage.users import Users
@@ -20,6 +19,7 @@ class ThreadCache:
         self.hostnames = Hostnames(200)
         self.users = Users(1000)
         self.stats = Statistics()
+        self.ai_stats = AIStatistics()
         self.reset()  # Initialize values
 
     def is_bypassed_ip(self, ip):
@@ -47,6 +47,7 @@ class ThreadCache:
         self.hostnames.clear()
         self.users.clear()
         self.stats.clear()
+        self.ai_stats.clear()
 
     def renew(self):
         if not comms.get_comms():
@@ -61,6 +62,7 @@ class ThreadCache:
                 "hostnames": self.hostnames.as_array(),
                 "users": self.users.as_array(),
                 "stats": self.stats.get_record(),
+                "ai_stats": self.ai_stats.get_stats(),
             },
             receive=True,
         )
