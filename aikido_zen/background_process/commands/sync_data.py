@@ -46,6 +46,9 @@ def process_sync_data(connection_manager, data, conn, queue=None):
     # Sync stats
     connection_manager.statistics.import_from_record(data.get("stats", {}))
 
+    # Sync ai stats
+    connection_manager.ai_stats.import_list(data.get("ai_stats", []))
+
     if connection_manager.conf.last_updated_at > 0:
         # Only report data if the config has been fetched.
         return {
