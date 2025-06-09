@@ -64,4 +64,7 @@ def protect(mode="daemon"):
     import aikido_zen.sinks.os_system
     import aikido_zen.sinks.subprocess
 
+    # Import AI sinks
+    import aikido_zen.sinks.openai
+
     logger.info("Zen by Aikido v%s starting.", PKG_VERSION)
