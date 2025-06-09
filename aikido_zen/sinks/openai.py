@@ -1,6 +1,6 @@
+from aikido_zen.helpers.on_ai_call import on_ai_call
 from aikido_zen.helpers.register_call import register_call
 from aikido_zen.sinks import on_import, patch_function, after
-from aikido_zen.storage.ai_statistics import on_ai_call
 
 
 @after
