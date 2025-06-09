@@ -54,6 +54,9 @@ Zen for Python 3 is compatible with:
 * ✅ [`motor`](https://pypi.org/project/motor/) (See `pymongo` version)
 * ✅ [`clickhouse-driver`](https://pypi.org/project/clickhouse-driver)
 
+### AI SDKs
+* ✅ [`openai`](https://pypi.org/project/openai)
+
 ## Reporting to your Aikido Security dashboard
 
 > Aikido is your no nonsense application security platform. One central system that scans your source code & cloud, shows you what vulnerabilities matter, and how to fix them - fast. So you can get back to building.
