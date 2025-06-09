@@ -5,6 +5,7 @@ SUPPORTED_KINDS = [
     "fs_op",
     "exec_op",
     "deserialize_op",
+    "ai_op",
 ]
 
 
