@@ -35,7 +35,7 @@ def test_register_call(operations):
 
 def test_on_detected_attack(operations):
     operation = "test_op"
-    kind = "sql_op"
+    kind = "ai_op"
     operations.ensure_operation(operation, kind)
     operations.on_detected_attack(blocked=True, operation=operation)
     assert operations[operation]["attacksDetected"]["total"] == 1
