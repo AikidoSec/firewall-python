@@ -15,11 +15,13 @@ def send_heartbeat(connection_manager):
     users = connection_manager.users.as_array()
     routes = list(connection_manager.routes)
     outgoing_domains = connection_manager.hostnames.as_array()
+    ai_stats = connection_manager.ai_stats.get_stats()
 
     connection_manager.statistics.clear()
     connection_manager.users.clear()
     connection_manager.routes.clear()
     connection_manager.hostnames.clear()
+    connection_manager.ai_stats.clear()
     res = connection_manager.api.report(
         connection_manager.token,
         {
@@ -27,6 +29,7 @@ def send_heartbeat(connection_manager):
             "time": get_unixtime_ms(),
             "agent": connection_manager.get_manager_info(),
             "stats": stats,
+            "ai": ai_stats,
             "hostnames": outgoing_domains,
             "routes": routes,
             "users": users,
