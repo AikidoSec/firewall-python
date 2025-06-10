@@ -55,7 +55,7 @@ Zen for Python 3 is compatible with:
 * ✅ [`clickhouse-driver`](https://pypi.org/project/clickhouse-driver)
 
 ### AI SDKs
-* ✅ [`openai`](https://pypi.org/project/openai)
+* ✅ [`openai`](https://pypi.org/project/openai) ^1.0
 
 ## Reporting to your Aikido Security dashboard
 
