@@ -1,11 +1,17 @@
+"""
+patching module openai
+- patches function create(...) on Responses class, to inspect response
+- patches function create(...) on Completions class, to inspect response
+"""
+
 from aikido_zen.helpers.on_ai_call import on_ai_call
 from aikido_zen.helpers.register_call import register_call
 from aikido_zen.sinks import on_import, patch_function, after
 
 
 @after
-def _create(func, instance, args, kwargs, return_value):
-    op = "openai.resources.responses.responses.Responses.create"
+def _create_responses(func, instance, args, kwargs, return_value):
+    op = f"openai.resources.responses.responses.Responses.create"
     register_call(op, "ai_op")
 
     on_ai_call(
@@ -16,10 +22,24 @@ def _create(func, instance, args, kwargs, return_value):
     )
 
 
-@on_import("openai.resources.responses.responses", "openai", version_requirement="1.0")
-def patch(m):
-    """
-    patching module openai
-    - patches function create(...) on Responses class, to inspect response
-    """
-    patch_function(m, "Responses.create", _create)
+@after
+def _create_completions(func, instance, args, kwargs, return_value):
+    op = f"openai.resources.chat.completions.completions.Completions.create"
+    register_call(op, "ai_op")
+
+    on_ai_call(
+        provider="openai",
+        model=return_value.model,
+        input_tokens=return_value.usage.prompt_tokens,
+        output_tokens=return_value.usage.completion_tokens,
+    )
+
+
+@on_import("openai.resources.responses.responses", "openai", "1.0")
+def patch_responses(m):
+    patch_function(m, "Responses.create", _create_responses)
+
+
+@on_import("openai.resources.chat.completions.completions", "openai", "1.0")
+def patch_chat_completions(m):
+    patch_function(m, "Completions.create", _create_completions)
