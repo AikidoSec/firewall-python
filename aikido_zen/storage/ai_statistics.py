@@ -41,9 +41,9 @@ class AIStatistics:
                 new_entry["provider"], new_entry["model"]
             )
             existing_entry["calls"] += new_entry["calls"]
-            existing_entry["tokens"]["input"] = new_entry["tokens"]["input"]
-            existing_entry["tokens"]["output"] = new_entry["tokens"]["output"]
-            existing_entry["tokens"]["total"] = new_entry["tokens"]["total"]
+            existing_entry["tokens"]["input"] += new_entry["tokens"]["input"]
+            existing_entry["tokens"]["output"] += new_entry["tokens"]["output"]
+            existing_entry["tokens"]["total"] += new_entry["tokens"]["total"]
 
     def clear(self):
         self.calls.clear()
