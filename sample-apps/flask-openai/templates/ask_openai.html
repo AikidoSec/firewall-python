@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ask OpenAI</title>
+</head>
+<body>
+    <h1>Ask OpenAI</h1>
+    <form method="POST" action="/ask_openai">
+        <label for="question">Question:</label><br>
+        <input type="text" id="question" name="question" required><br>
+        <input type="submit" value="Submit">
+    </form>
+    {% if question %}
+        <h2>Question: {{ question }}</h2>
+        <p>Answer: {{ answer }}</p>
+    {% endif %}
+    <a href="/">Back to Homepage</a>
+</body>
+</html>
