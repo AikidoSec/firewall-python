@@ -5,6 +5,7 @@ import os
 from flask import Flask, render_template, request
 import psycopg2
 import openai
+from pydantic import BaseModel
 
 app = Flask(__name__)
 client = openai.OpenAI()
@@ -50,12 +51,14 @@ def create_dog():
     conn.close()
     return f'Dog {dog_name} created successfully'
 
-@app.route("/ask_openai", methods=['GET'])
-def show_ask_openai_form():
+# OpenAI
+
+@app.route("/openai/<string:subroute>", methods=['GET'])
+def show_ask_openai_form(subroute):
     return render_template('ask_openai.html')
 
-@app.route("/ask_openai", methods=['POST'])
-def ask_openai():
+@app.route("/openai/responses_create", methods=['POST'])
+def openai_responses_create():
     question = request.form['question']
 
     response = client.responses.create(
@@ -66,11 +69,30 @@ def ask_openai():
 
     return render_template('ask_openai.html', question=question, answer=answer)
 
-@app.route("/ask_openai_completions", methods=['GET'])
-def show_ask_openai_completions_form():
-    return render_template('ask_openai.html')
+@app.route("/openai/responses_parse", methods=['POST'])
+def openai_responses_parse():
+    question = request.form['question']
 
-@app.route("/ask_openai_completions", methods=['POST'])
+    class CalendarEvent(BaseModel):
+        name: str
+        date: str
+        participants: list[str]
+    response = client.responses.parse(
+        model="gpt-4o-2024-08-06",
+        input=[
+            {"role": "system", "content": "Extract the event information."},
+            {
+                "role": "user",
+                "content": question,
+            },
+        ],
+        text_format=CalendarEvent,
+    )
+    answer = f"{response.output_parsed.name} - On {response.output_parsed.date} | People: {response.output_parsed.participants}"
+
+    return render_template('ask_openai.html', question=question, answer=answer)
+
+@app.route("/openai/chat_completions_create", methods=['POST'])
 def ask_openai_completions():
     question = request.form['question']
 
