@@ -41,3 +41,6 @@ Overview :
 - `flask-clickhouse-uwsgi/` is a Flask UWSGI app using Clickhouse
   - It runs **multi-threaded**
   - Runs on 8106. Without Aikido runs on 8107
+- `flask-openai/` is a Flask app with openai
+  - it runs **multi-threaded**
+  - Runs on 8108. Without Aikido runs on 8109
