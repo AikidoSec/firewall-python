@@ -10,7 +10,7 @@ def _create(func, instance, args, kwargs, return_value):
 
     on_ai_call(
         provider="openai",
-        model=return_value.get("model", ""),
+        model=return_value.model,
         input_tokens=return_value.usage.input_tokens,
         output_tokens=return_value.usage.output_tokens,
     )
