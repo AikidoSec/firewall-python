@@ -11,7 +11,7 @@ from aikido_zen.sinks import on_import, patch_function, after
 
 @after
 def _create_responses(func, instance, args, kwargs, return_value):
-    op = f"openai.resources.responses.responses.Responses.create"
+    op = f"openai.resources.responses.responses.Responses.{func.__name__}"
     register_call(op, "ai_op")
 
     on_ai_call(
@@ -24,7 +24,7 @@ def _create_responses(func, instance, args, kwargs, return_value):
 
 @after
 def _create_completions(func, instance, args, kwargs, return_value):
-    op = f"openai.resources.chat.completions.completions.Completions.create"
+    op = f"openai.resources.chat.completions.completions.Completions.{func.__name__}"
     register_call(op, "ai_op")
 
     on_ai_call(
@@ -38,8 +38,10 @@ def _create_completions(func, instance, args, kwargs, return_value):
 @on_import("openai.resources.responses.responses", "openai", "1.0")
 def patch_responses(m):
     patch_function(m, "Responses.create", _create_responses)
+    patch_function(m, "Responses.parse", _create_responses)
 
 
 @on_import("openai.resources.chat.completions.completions", "openai", "1.0")
 def patch_chat_completions(m):
     patch_function(m, "Completions.create", _create_completions)
+    patch_function(m, "Completions.update", _create_completions)
