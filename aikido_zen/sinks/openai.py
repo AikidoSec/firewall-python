@@ -16,7 +16,7 @@ def _create(func, instance, args, kwargs, return_value):
     )
 
 
-@on_import("openai.resources.responses.responses")
+@on_import("openai.resources.responses.responses", "openai", version_requirement="1.0")
 def patch(m):
     """
     patching module openai
