@@ -243,12 +243,18 @@ def test_renew_called_with_correct_args(mock_get_comms, thread_cache: ThreadCach
     thread_cache.stats.on_detected_attack(blocked=False, operation="op2")
     thread_cache.routes.initialize_route({"method": "GET", "route": "/test"})
     thread_cache.routes.increment_route({"method": "GET", "route": "/test"})
+    thread_cache.ai_stats.on_ai_call("openai", "gpt-4o", 6427, 200)
+    thread_cache.ai_stats.on_ai_call("openai", "gpt-4o2", 424, 235)
+    thread_cache.ai_stats.on_ai_call("openai", "gpt-4o2", 232, 932)
+    thread_cache.ai_stats.on_ai_call("openai", "gpt-4o3", 8223, 173)
 
     # Call renew
     with patch(
         "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms", return_value=-1
     ):
         thread_cache.renew()
+
+    assert thread_cache.ai_stats.empty()
 
     # Assert that send_data_to_bg_process was called with the correct arguments
     mock_comms.send_data_to_bg_process.assert_called_once_with(
@@ -284,6 +290,26 @@ def test_renew_called_with_correct_args(mock_get_comms, thread_cache: ThreadCach
                     },
                 },
             },
+            "ai_stats": [
+                {
+                    "provider": "openai",
+                    "model": "gpt-4o",
+                    "calls": 1,
+                    "tokens": {"input": 6427, "output": 200, "total": 6627},
+                },
+                {
+                    "provider": "openai",
+                    "model": "gpt-4o2",
+                    "calls": 2,
+                    "tokens": {"input": 656, "output": 1167, "total": 1823},
+                },
+                {
+                    "provider": "openai",
+                    "model": "gpt-4o3",
+                    "calls": 1,
+                    "tokens": {"input": 8223, "output": 173, "total": 8396},
+                },
+            ],
             "middleware_installed": False,
             "hostnames": [],
             "users": [],
@@ -331,6 +357,7 @@ def test_sync_data_for_users(mock_get_comms, thread_cache: ThreadCache):
             },
             "middleware_installed": False,
             "hostnames": [],
+            "ai_stats": [],
             "users": [
                 {
                     "id": "123",
@@ -382,6 +409,7 @@ def test_renew_called_with_empty_routes(mock_get_comms, thread_cache: ThreadCach
             "middleware_installed": False,
             "hostnames": [],
             "users": [],
+            "ai_stats": [],
         },
         receive=True,
     )
@@ -420,6 +448,7 @@ def test_renew_called_with_no_requests(mock_get_comms, thread_cache: ThreadCache
             "middleware_installed": False,
             "hostnames": [],
             "users": [],
+            "ai_stats": [],
         },
         receive=True,
     )
