@@ -38,11 +38,10 @@
 </head>
 <body>
     <h1>{{ title }}</h1>
-    <h2>List</h2>
     <ul>
-        {% for dog in dogs %}
-            <li><a href="/dogpage/{{ dog[0] }}">{{ dog[1] }}</a></li>
-        {% endfor %}
+        <li><a href="/openai/responses_create">client.responses.create</a></li>
+        <li><a href="/openai/responses_parse">client.responses.parse</a></li>
+        <li><a href="/openai/chat_completions_create">client.chat.completions.create</a></li>
     </ul>
 </body>
 </html>
