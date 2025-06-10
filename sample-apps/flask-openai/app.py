@@ -1,13 +1,13 @@
-import os
-import json
-
 import aikido_zen # Aikido package import
 aikido_zen.protect()
 
+import os
 from flask import Flask, render_template, request
 import psycopg2
+import openai
 
 app = Flask(__name__)
+client = openai.OpenAI()
 
 def get_db_connection():
     return psycopg2.connect(
@@ -50,26 +50,18 @@ def create_dog():
     conn.close()
     return f'Dog {dog_name} created successfully'
 
-@app.route("/create/:id", methods=["GET"])
-@app.route("/create_many", methods=['POST'])
-def create_dog_many():
-    dog_name = request.form['dog_name']
-    conn = get_db_connection()
-    cursor =  conn.cursor()
-    cursor.executemany([f"INSERT INTO dogs (dog_name, isAdmin) VALUES ('%s', FALSE)" % (dog_name)], [])
-    conn.commit()
-    cursor.close()
-    conn.close()
-    return f'Dog {dog_name} created successfully'
+@app.route("/ask_openai", methods=['GET'])
+def show_ask_openai_form():
+    return render_template('ask_openai.html')
 
-@app.route("/create_with_cookie", methods=['GET'])
-def create_dog_with_cookie():
-    dog_name = request.cookies.get('dog_name')
+@app.route("/ask_openai", methods=['POST'])
+def ask_openai():
+    question = request.form['question']
 
-    conn = get_db_connection()
-    cursor =  conn.cursor()
-    cursor.execute(f"INSERT INTO dogs (dog_name, isAdmin) VALUES ('%s', FALSE)" % (dog_name))
-    conn.commit()
-    cursor.close()
-    conn.close()
-    return f'Dog {dog_name} created successfully'
+    response = client.responses.create(
+        model="gpt-4.1",
+        input=question
+    )
+    answer = response.output_text
+
+    return render_template('ask_openai.html', question=question, answer=answer)
