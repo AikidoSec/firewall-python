@@ -65,3 +65,25 @@ def ask_openai():
     answer = response.output_text
 
     return render_template('ask_openai.html', question=question, answer=answer)
+
+@app.route("/ask_openai_completions", methods=['GET'])
+def show_ask_openai_completions_form():
+    return render_template('ask_openai.html')
+
+@app.route("/ask_openai_completions", methods=['POST'])
+def ask_openai_completions():
+    question = request.form['question']
+
+    completion = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "developer", "content": "Talk like a pirate."},
+            {
+                "role": "user",
+                "content": question,
+            },
+        ],
+    )
+    answer = completion.choices[0].message.content
+
+    return render_template('ask_openai.html', question=question, answer=answer)
