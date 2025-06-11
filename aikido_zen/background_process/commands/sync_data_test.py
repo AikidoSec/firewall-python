@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from .sync_data import process_sync_data
 from aikido_zen.background_process.routes import Routes
 from aikido_zen.helpers.iplist import IPList
+from ..packages import PackagesStore
 from ...storage.hostnames import Hostnames
 from ...storage.statistics import Statistics
 
@@ -62,6 +63,13 @@ def test_process_sync_data_initialization(setup_connection_manager):
         },
         "middleware_installed": False,
         "hostnames": test_hostnames.as_array(),
+        "packages": [
+            {
+                "name": "test-package",
+                "version": "2.2.0",
+                "cleared": False,
+            }
+        ],
     }
 
     result = process_sync_data(connection_manager, data, None)
@@ -96,6 +104,11 @@ def test_process_sync_data_initialization(setup_connection_manager):
         {"hits": 15, "hostname": "example2.com", "port": 443},
         {"hits": 1, "hostname": "bumblebee.com", "port": 8080},
     ]
+    assert PackagesStore.get_package("test-package") == {
+        "name": "test-package",
+        "version": "2.2.0",
+        "cleared": False,
+    }
 
 
 def test_process_sync_data_with_last_updated_at_below_zero(setup_connection_manager):
