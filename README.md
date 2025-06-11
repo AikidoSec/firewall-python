@@ -56,6 +56,7 @@ Zen for Python 3 is compatible with:
 
 ### AI SDKs
 * ✅ [`openai`](https://pypi.org/project/openai) ^1.0
+* ✅ [`anthropic`](https://pypi.org/project/anthropic/)
 
 ## Reporting to your Aikido Security dashboard
 
