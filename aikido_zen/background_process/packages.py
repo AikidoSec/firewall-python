@@ -22,7 +22,8 @@ def is_package_compatible(package=None, required_version=ANY_VERSION, packages=N
         for package in packages:
             # Checks if we already looked up the package :
             if PackagesStore.get_package(package) is not None:
-                return PackagesStore.get_package(package)["supported"]
+                package_version = PackagesStore.get_package(package)["version"]
+                return is_version_supported(package_version, required_version)
 
             # Safely get the package version, with an exception for when the package was not found
             try:
@@ -32,7 +33,7 @@ def is_package_compatible(package=None, required_version=ANY_VERSION, packages=N
 
             # Check support and store package for later
             supported = is_version_supported(package_version, required_version)
-            PackagesStore.add_package(package, package_version, supported)
+            PackagesStore.add_package(package, package_version)
 
             if supported:
                 logger.debug(
@@ -69,13 +70,12 @@ class PackagesStore:
         return result
 
     @staticmethod
-    def add_package(package, version, supported=True):
+    def add_package(package, version):
         global packages
         packages[package] = {
             "name": package,
             "version": version,
             "requiredAt": t.get_unixtime_ms(),
-            "supported": supported,
             "cleared": False,
         }
 
