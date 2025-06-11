@@ -17,7 +17,7 @@ def send_heartbeat(connection_manager):
     routes = list(connection_manager.routes)
     outgoing_domains = connection_manager.hostnames.as_array()
     ai_stats = connection_manager.ai_stats.get_stats()
-    packages = PackagesStore.get_packages()
+    packages = PackagesStore.export()
 
     connection_manager.statistics.clear()
     connection_manager.users.clear()
