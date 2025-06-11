@@ -69,7 +69,7 @@ class PackagesStore:
         return result
 
     @staticmethod
-    def add_package(package, version, supported=None):
+    def add_package(package, version, supported=True):
         global packages
         packages[package] = {
             "name": package,
