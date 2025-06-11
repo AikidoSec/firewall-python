@@ -4,7 +4,7 @@ import importlib.metadata as importlib_metadata
 
 from packaging.version import Version
 
-from aikido_zen.helpers.get_current_unixtime_ms import get_unixtime_ms
+import aikido_zen.helpers.get_current_unixtime_ms as t
 from aikido_zen.helpers.logging import logger
 
 # If any version is supported, this constant can be used
@@ -74,7 +74,7 @@ class PackagesStore:
         packages[package] = {
             "name": package,
             "version": version,
-            "requiredAt": get_unixtime_ms(),
+            "requiredAt": t.get_unixtime_ms(),
             "supported": supported,
             "cleared": False,
         }
