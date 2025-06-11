@@ -3,6 +3,8 @@
 import importlib.metadata as importlib_metadata
 
 from packaging.version import Version
+
+from aikido_zen.helpers.get_current_unixtime_ms import get_unixtime_ms
 from aikido_zen.helpers.logging import logger
 
 # If any version is supported, this constant can be used
@@ -59,14 +61,22 @@ class PackagesStore:
     @staticmethod
     def get_packages():
         global packages
-        return packages
+        result = []
+        for package in packages.values():
+            if package.get("cleared", False):
+                continue
+            result.append(dict(package))
+        return result
 
     @staticmethod
-    def add_package(package, version, supported):
+    def add_package(package, version, supported=None):
         global packages
         packages[package] = {
+            "name": package,
             "version": version,
-            "supported": bool(supported),
+            "requiredAt": get_unixtime_ms(),
+            "supported": supported,
+            "cleared": False,
         }
 
     @staticmethod
@@ -75,3 +85,17 @@ class PackagesStore:
         if package_name in packages:
             return packages[package_name]
         return None
+
+    @staticmethod
+    def clear():
+        global packages
+        for package in packages:
+            packages[package]["cleared"] = True
+
+    @staticmethod
+    def import_list(imported_packages):
+        for package in imported_packages:
+            if PackagesStore.get_package(package["name"]):
+                continue
+            global packages
+            packages[package["name"]] = package
