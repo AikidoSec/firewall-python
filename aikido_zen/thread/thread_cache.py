@@ -1,6 +1,7 @@
 """Exports class ThreadConfig"""
 
 import aikido_zen.background_process.comms as comms
+from aikido_zen.background_process.packages import PackagesStore
 from aikido_zen.background_process.routes import Routes
 from aikido_zen.background_process.service_config import ServiceConfig
 from aikido_zen.storage.ai_statistics import AIStatistics
@@ -48,6 +49,7 @@ class ThreadCache:
         self.users.clear()
         self.stats.clear()
         self.ai_stats.clear()
+        PackagesStore.clear()
 
     def renew(self):
         if not comms.get_comms():
@@ -63,6 +65,7 @@ class ThreadCache:
                 "users": self.users.as_array(),
                 "stats": self.stats.get_record(),
                 "ai_stats": self.ai_stats.get_stats(),
+                "packages": PackagesStore.get_packages()
             },
             receive=True,
         )
