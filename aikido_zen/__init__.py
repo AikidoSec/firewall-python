@@ -68,5 +68,6 @@ def protect(mode="daemon"):
 
     # Import AI sinks
     import aikido_zen.sinks.openai
+    import aikido_zen.sinks.anthropic
 
     logger.info("Zen by Aikido v%s starting.", PKG_VERSION)
