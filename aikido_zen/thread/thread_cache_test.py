@@ -313,6 +313,7 @@ def test_renew_called_with_correct_args(mock_get_comms, thread_cache: ThreadCach
             "middleware_installed": False,
             "hostnames": [],
             "users": [],
+            "packages": [],
         },
         receive=True,
     )
@@ -358,6 +359,7 @@ def test_sync_data_for_users(mock_get_comms, thread_cache: ThreadCache):
             "middleware_installed": False,
             "hostnames": [],
             "ai_stats": [],
+            "packages": [],
             "users": [
                 {
                     "id": "123",
@@ -410,6 +412,7 @@ def test_renew_called_with_empty_routes(mock_get_comms, thread_cache: ThreadCach
             "hostnames": [],
             "users": [],
             "ai_stats": [],
+            "packages": [],
         },
         receive=True,
     )
@@ -449,6 +452,7 @@ def test_renew_called_with_no_requests(mock_get_comms, thread_cache: ThreadCache
             "hostnames": [],
             "users": [],
             "ai_stats": [],
+            "packages": [],
         },
         receive=True,
     )
