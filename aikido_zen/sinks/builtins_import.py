@@ -14,9 +14,10 @@ def _import(func, instance, args, kwargs, return_value):
         return
     name = getattr(return_value, "__package__")
 
-    if not name or "." in name:
-        # Make sure the name exists and that it's not a submodule
+    if not name:
+        # Make sure the name exists
         return
+    name = name.split(".")[0] # Remove submodules
     if name == "importlib_metadata":
         # Avoid circular dependencies
         return
