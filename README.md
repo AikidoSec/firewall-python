@@ -58,6 +58,7 @@ Zen for Python 3 is compatible with:
 Zen instruments the following AI SDKs to track which models are used and how many tokens are consumed, allowing you to monitor your AI usage and costs:
 * ✅ [`openai`](https://pypi.org/project/openai) ^1.0
 * ✅ [`anthropic`](https://pypi.org/project/anthropic/)
+* ✅ [`mistralai`](https://pypi.org/project/mistralai) ^1.0.0
 
 ## Reporting to your Aikido Security dashboard
 
