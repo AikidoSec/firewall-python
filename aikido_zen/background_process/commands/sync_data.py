@@ -1,6 +1,7 @@
 """Exports process_renew_config"""
 
 from aikido_zen.api_discovery.update_route_info import update_route_info
+from aikido_zen.background_process.packages import PackagesStore
 from aikido_zen.helpers.logging import logger
 
 
@@ -48,6 +49,9 @@ def process_sync_data(connection_manager, data, conn, queue=None):
 
     # Sync ai stats
     connection_manager.ai_stats.import_list(data.get("ai_stats", []))
+
+    # Sync packages
+    PackagesStore.import_list(data.get("packages", []))
 
     if connection_manager.conf.last_updated_at > 0:
         # Only report data if the config has been fetched.
