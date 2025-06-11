@@ -36,6 +36,8 @@ def protect(mode="daemon"):
     if mode == "daemon_disabled":
         logger.debug("Not starting the background process, daemon disabled.")
 
+    import aikido_zen.sinks.builtins_import
+
     # Import sources
     import aikido_zen.sources.django
     import aikido_zen.sources.flask
