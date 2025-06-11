@@ -263,7 +263,6 @@ def test_renew_called_with_correct_args(mock_get_comms, thread_cache: ThreadCach
         "cleared": True,
         "name": "test-package-1",
         "requiredAt": -1,
-        "supported": None,
         "version": "4.3.0",
     }
     assert PackagesStore.export() == []
@@ -330,7 +329,6 @@ def test_renew_called_with_correct_args(mock_get_comms, thread_cache: ThreadCach
                     "name": "test-package-1",
                     "version": "4.3.0",
                     "requiredAt": -1,
-                    "supported": None,
                     "cleared": False,
                 }
             ],
