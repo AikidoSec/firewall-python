@@ -1,6 +1,7 @@
 """
 Aggregates from the different modules
 """
+
 import os
 
 # Re-export functions :
@@ -26,12 +27,12 @@ def protect(mode="daemon", token=""):
     - daemon_disabled : This will import sinks/sources but won't start a background process
     Protect user's application
     """
-    if token:
-        os.putenv("AIKIDO_TOKEN", token)
-
     if aikido_disabled_flag_active():
         # Do not run any aikido code when the disabled flag is on
         return
+    if token:
+        os.environ["AIKIDO_TOKEN"] = token
+
     if mode in ("daemon", "daemon_only"):
         start_background_process()
     if mode == "daemon_only":
