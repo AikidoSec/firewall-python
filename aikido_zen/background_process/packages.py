@@ -59,7 +59,7 @@ packages = dict()
 
 class PackagesStore:
     @staticmethod
-    def get_packages():
+    def export():
         global packages
         result = []
         for package in packages.values():
@@ -88,6 +88,9 @@ class PackagesStore:
 
     @staticmethod
     def clear():
+        # To clear we set the `cleared` attribute to True
+        # This is to ensure you can still get the packages
+        # But that they will not show up during an export
         global packages
         for package in packages:
             packages[package]["cleared"] = True

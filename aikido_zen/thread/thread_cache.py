@@ -65,7 +65,7 @@ class ThreadCache:
                 "users": self.users.as_array(),
                 "stats": self.stats.get_record(),
                 "ai_stats": self.ai_stats.get_stats(),
-                "packages": PackagesStore.get_packages(),
+                "packages": PackagesStore.export(),
             },
             receive=True,
         )
