@@ -3,6 +3,7 @@ from unittest.mock import patch, MagicMock
 from aikido_zen.background_process.routes import Routes
 from .thread_cache import ThreadCache, get_cache
 from .. import set_user
+from ..background_process.packages import PackagesStore
 from ..background_process.service_config import ServiceConfig
 from ..context import current_context, Context
 from aikido_zen.helpers.iplist import IPList
@@ -252,9 +253,20 @@ def test_renew_called_with_correct_args(mock_get_comms, thread_cache: ThreadCach
     with patch(
         "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms", return_value=-1
     ):
+        PackagesStore.add_package("test-package-4", "4.3.0")
+        PackagesStore.clear()
+        PackagesStore.add_package("test-package-1", "4.3.0")
         thread_cache.renew()
 
     assert thread_cache.ai_stats.empty()
+    assert PackagesStore.get_package("test-package-1") == {
+        "cleared": True,
+        "name": "test-package-1",
+        "requiredAt": -1,
+        "supported": None,
+        "version": "4.3.0",
+    }
+    assert PackagesStore.export() == []
 
     # Assert that send_data_to_bg_process was called with the correct arguments
     mock_comms.send_data_to_bg_process.assert_called_once_with(
@@ -313,7 +325,15 @@ def test_renew_called_with_correct_args(mock_get_comms, thread_cache: ThreadCach
             "middleware_installed": False,
             "hostnames": [],
             "users": [],
-            "packages": [],
+            "packages": [
+                {
+                    "name": "test-package-1",
+                    "version": "4.3.0",
+                    "requiredAt": -1,
+                    "supported": None,
+                    "cleared": False,
+                }
+            ],
         },
         receive=True,
     )
