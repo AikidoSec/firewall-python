@@ -6,6 +6,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     continue-on-error: true
+    timeout-minutes: 15
     strategy:
       # Don't cancel jobs if one fails
       fail-fast: false
