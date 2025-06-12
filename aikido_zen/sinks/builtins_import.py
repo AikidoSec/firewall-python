@@ -18,7 +18,7 @@ def _import(func, instance, args, kwargs, return_value):
         # Make sure the name exists
         return
     name = name.split(".")[0]  # Remove submodules
-    if name == "importlib_metadata":
+    if name == "importlib" or name == "importlib_metadata":
         # Avoid circular dependencies
         return
 
