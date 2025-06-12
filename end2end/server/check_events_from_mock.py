@@ -21,7 +21,10 @@ def validate_started_event(event, stack, dry_mode=False, serverless=False, os_na
     # if stack is not None:
     #    assert set(event["agent"]["stack"]) == set(stack)
 
-def validate_heartbeat(event, routes, req_stats):
+def validate_heartbeat(event, routes, req_stats, packages=None):
+    if packages:
+        package_names = set(map(lambda x: x["name"], event["packages"]))
+        assert package_names == packages, f"Expected {packages} but got {package_names}"
     assert event["type"] == "heartbeat", f"Expected event type 'heartbeat', but got '{event['type']}'"
     assert event["routes"] == routes, f"Expected routes '{routes}', but got '{event['routes']}'"
     assert event["stats"]["requests"] == req_stats, f"Expected request stats '{req_stats}', but got '{event['stats']['requests']}'"
