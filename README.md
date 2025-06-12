@@ -56,7 +56,7 @@ Zen for Python 3 is compatible with:
 
 ### AI SDKs
 * ✅ [`openai`](https://pypi.org/project/openai) ^1.0
-
+* ✅ [`mistralai`](https://pypi.org/project/mistralai) ^1.0.0
 ## Reporting to your Aikido Security dashboard
 
 > Aikido is your no nonsense application security platform. One central system that scans your source code & cloud, shows you what vulnerabilities matter, and how to fix them - fast. So you can get back to building.
