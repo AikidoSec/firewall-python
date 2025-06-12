@@ -9,7 +9,8 @@ dependencies = [
     "psycopg2-binary (>=2.9.10,<3.0.0)",
     "cryptography (>=44.0.0,<45.0.0)",
     "aikido_zen",
-    "openai (>=1.85.0,<2.0.0)"
+    "openai (>=1.85.0,<2.0.0)",
+    "mistralai (>=1.8.2,<2.0.0)"
 ]
 
 [build-system]
