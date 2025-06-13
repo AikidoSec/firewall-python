@@ -4,8 +4,8 @@ from aikido_zen.storage.statistics.operations import Operations
 
 class Statistics:
     """
-    Keeps track of total and aborted requests
-    and total and blocked attacks
+    Stores: hits, counts of attacks (split up in detected/blocked), count of rate-limited requests,
+    statistics for operations (i.e. how many times did we see a query being executed)
     """
 
     def __init__(self):
