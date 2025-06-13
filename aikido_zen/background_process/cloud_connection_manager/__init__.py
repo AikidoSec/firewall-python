@@ -32,7 +32,7 @@ class CloudConnectionManager:
         self.block = block
         self.api: ReportingApiHTTP = api
         self.token = token  # Should be instance of the Token class!
-        self.routes = Routes(1000)
+        self.routes = Routes(max_size=1000)
         self.hostnames = Hostnames(200)
         self.conf = ServiceConfig(
             endpoints=[],
