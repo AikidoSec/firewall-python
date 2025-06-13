@@ -12,6 +12,7 @@ class Statistics:
         self.total_hits = 0
         self.attacks_detected = 0
         self.attacks_blocked = 0
+        self.rate_limited_hits = 0
         self.started_at = t.get_unixtime_ms()
         self.operations = Operations()
 
@@ -19,6 +20,7 @@ class Statistics:
         self.total_hits = 0
         self.attacks_detected = 0
         self.attacks_blocked = 0
+        self.rate_limited_hits = 0
         self.started_at = t.get_unixtime_ms()
         self.operations.clear()
 
@@ -31,6 +33,9 @@ class Statistics:
             self.attacks_blocked += 1
         self.operations.on_detected_attack(blocked, operation)
 
+    def on_rate_limit(self):
+        self.rate_limited_hits += 1
+
     def get_record(self):
         current_time = t.get_unixtime_ms()
         return {
@@ -38,6 +43,7 @@ class Statistics:
             "endedAt": current_time,
             "requests": {
                 "total": self.total_hits,
+                "rate_limited": self.rate_limited_hits,
                 "aborted": 0,  # statistic currently not in use
                 "attacksDetected": {
                     "total": self.attacks_detected,
@@ -50,6 +56,7 @@ class Statistics:
     def import_from_record(self, record):
         attacks_detected = record.get("requests", {}).get("attacksDetected", {})
         self.total_hits += record.get("requests", {}).get("total", 0)
+        self.rate_limited_hits += record.get("requests", {}).get("rate_limited", 0)
         self.attacks_detected += attacks_detected.get("total", 0)
         self.attacks_blocked += attacks_detected.get("blocked", 0)
         self.operations.update(record.get("operations", {}))
