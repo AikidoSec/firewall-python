@@ -79,7 +79,7 @@ def test_get_record(monkeypatch):
     assert record["startedAt"] == stats.started_at
     assert record["endedAt"] == mock_time
     assert record["requests"]["total"] == 10
-    assert record["requests"]["rate_limited"] == 2
+    assert record["requests"]["rateLimited"] == 2
     assert record["requests"]["aborted"] == 0
     assert record["requests"]["attacksDetected"]["total"] == 5
     assert record["requests"]["attacksDetected"]["blocked"] == 3
@@ -100,7 +100,7 @@ def test_import_from_record():
     record = {
         "requests": {
             "total": 10,
-            "rate_limited": 5,
+            "rateLimited": 5,
             "attacksDetected": {
                 "total": 5,
                 "blocked": 3,
@@ -157,7 +157,7 @@ def test_multiple_imports(stats):
     record1 = {
         "requests": {
             "total": 10,
-            "rate_limited": 20,
+            "rateLimited": 20,
             "attacksDetected": {
                 "total": 5,
                 "blocked": 3,
@@ -174,7 +174,7 @@ def test_multiple_imports(stats):
     record2 = {
         "requests": {
             "total": 20,
-            "rate_limited": 5,
+            "rateLimited": 5,
             "attacksDetected": {
                 "total": 10,
                 "blocked": 7,
@@ -276,7 +276,7 @@ def test_rate_limit_in_get_record():
     stats.on_rate_limit()
 
     record = stats.get_record()
-    assert record["requests"]["rate_limited"] == 3
+    assert record["requests"]["rateLimited"] == 3
     assert record["requests"]["total"] == 10
 
 
