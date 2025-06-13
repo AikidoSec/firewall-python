@@ -2,6 +2,8 @@
 Aggregates from the different modules
 """
 
+import os
+
 # Re-export functions :
 from aikido_zen.context.users import set_user
 from aikido_zen.middleware import should_block_request
@@ -17,7 +19,7 @@ from aikido_zen.config import PKG_VERSION
 from aikido_zen.helpers.aikido_disabled_flag_active import aikido_disabled_flag_active
 
 
-def protect(mode="daemon"):
+def protect(mode="daemon", token=""):
     """
     Mode can be set to :
     - daemon : Default, imports sinks/sources and starts background_process
@@ -28,6 +30,9 @@ def protect(mode="daemon"):
     if aikido_disabled_flag_active():
         # Do not run any aikido code when the disabled flag is on
         return
+    if token:
+        os.environ["AIKIDO_TOKEN"] = token
+
     if mode in ("daemon", "daemon_only"):
         start_background_process()
     if mode == "daemon_only":
