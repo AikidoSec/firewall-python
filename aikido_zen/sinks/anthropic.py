@@ -2,6 +2,7 @@ from aikido_zen.helpers.on_ai_call import on_ai_call
 from aikido_zen.helpers.register_call import register_call
 from aikido_zen.sinks import on_import, patch_function, after
 
+
 @after
 def _messages_create(func, instance, args, kwargs, return_value):
     op = f"anthropic.resources.messages.messages.Messages.create"
