@@ -61,6 +61,7 @@ def test_with_context_with_cache():
     }
     assert get_current_context().executed_middleware == True
     assert thread_cache.middleware_installed == True
+    assert thread_cache.stats.rate_limited_hits == 0
 
     thread_cache.config.blocked_uids = []
     assert should_block_request() == {"block": False}
@@ -69,6 +70,7 @@ def test_with_context_with_cache():
     assert should_block_request() == {"block": False}
     assert get_current_context().executed_middleware == True
     assert thread_cache.middleware_installed == True
+    assert thread_cache.stats.rate_limited_hits == 0
 
 
 def test_cache_comms_with_endpoints():
@@ -158,9 +160,11 @@ def test_cache_comms_with_endpoints():
             "success": True,
             "data": {"block": True, "trigger": "my_trigger"},
         }
+        assert thread_cache.stats.rate_limited_hits == 0
         assert should_block_request() == {
             "block": True,
             "ip": "::1",
             "type": "ratelimited",
             "trigger": "my_trigger",
         }
+        assert thread_cache.stats.rate_limited_hits == 1
