@@ -2,7 +2,7 @@
 
 import aikido_zen.background_process.comms as comms
 from aikido_zen.background_process.packages import PackagesStore
-from aikido_zen.background_process.routes import Routes
+from aikido_zen.storage.routes import Routes
 from aikido_zen.background_process.service_config import ServiceConfig
 from aikido_zen.storage.ai_statistics import AIStatistics
 from aikido_zen.storage.hostnames import Hostnames

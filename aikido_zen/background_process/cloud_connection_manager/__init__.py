@@ -1,7 +1,7 @@
 """ This file simply exports the CloudConnectionManager class"""
 
 from aikido_zen.background_process.heartbeats import send_heartbeats_every_x_secs
-from aikido_zen.background_process.routes import Routes
+from aikido_zen.storage.routes import Routes
 from aikido_zen.ratelimiting.rate_limiter import RateLimiter
 from aikido_zen.helpers.logging import logger
 from .update_firewall_lists import update_firewall_lists
