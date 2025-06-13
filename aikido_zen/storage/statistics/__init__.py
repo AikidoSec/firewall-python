@@ -43,7 +43,7 @@ class Statistics:
             "endedAt": current_time,
             "requests": {
                 "total": self.total_hits,
-                "rate_limited": self.rate_limited_hits,
+                "rateLimited": self.rate_limited_hits,
                 "aborted": 0,  # statistic currently not in use
                 "attacksDetected": {
                     "total": self.attacks_detected,
@@ -56,7 +56,7 @@ class Statistics:
     def import_from_record(self, record):
         attacks_detected = record.get("requests", {}).get("attacksDetected", {})
         self.total_hits += record.get("requests", {}).get("total", 0)
-        self.rate_limited_hits += record.get("requests", {}).get("rate_limited", 0)
+        self.rate_limited_hits += record.get("requests", {}).get("rateLimited", 0)
         self.attacks_detected += attacks_detected.get("total", 0)
         self.attacks_blocked += attacks_detected.get("blocked", 0)
         self.operations.update(record.get("operations", {}))
