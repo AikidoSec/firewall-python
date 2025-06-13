@@ -73,7 +73,6 @@ def post_response(status_code):
     context = ctx.get_current_context()
     if not context:
         return
-    route_metadata = context.get_route_metadata()
 
     is_curr_route_useful = is_useful_route(
         status_code,
@@ -85,8 +84,8 @@ def post_response(status_code):
 
     cache = get_cache()
     if cache:
-        cache.routes.increment_route(route_metadata)
+        cache.routes.increment_route(context.method, context.route)
 
         # api spec generation
-        route = cache.routes.get(route_metadata)
+        route = cache.routes.get(context.method, context.route)
         update_route_info_from_context(context, route)
