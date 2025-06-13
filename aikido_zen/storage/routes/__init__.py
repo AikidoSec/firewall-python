@@ -46,6 +46,7 @@ class Routes:
             # merge
             existing_route["hits"] += route.get("hits", 0)
             update_route_info(route.get("apispec", {}), existing_route)
+        self.manage_routes_size()
 
     def clear(self):
         self.routes = {}
