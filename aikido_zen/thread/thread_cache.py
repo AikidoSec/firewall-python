@@ -17,8 +17,10 @@ class ThreadCache:
     """
 
     def __init__(self):
+        # We store both routes and routes_from_background, the latter contains all hits (useful for apispec)
         self.routes = Routes(max_size=1000)
         self.routes_from_background = Routes(max_size=1000)
+
         self.hostnames = Hostnames(200)
         self.users = Users(1000)
         self.stats = Statistics()
