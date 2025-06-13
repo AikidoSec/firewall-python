@@ -32,7 +32,7 @@ class CloudConnectionManager:
         self.block = block
         self.api: ReportingApiHTTP = api
         self.token = token  # Should be instance of the Token class!
-        self.routes = Routes(200)
+        self.routes = Routes(1000)
         self.hostnames = Hostnames(200)
         self.conf = ServiceConfig(
             endpoints=[],
@@ -73,7 +73,7 @@ class CloudConnectionManager:
         """
         data_present = (
             not self.statistics.empty()
-            or len(self.routes.routes) > 0
+            or not self.routes.empty()
             or not self.ai_stats.empty()
         )
         should_report_initial_stats = data_present and not self.conf.received_any_stats

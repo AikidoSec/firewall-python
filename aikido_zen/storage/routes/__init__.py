@@ -48,8 +48,10 @@ class Routes:
             update_route_info(route.get("apispec", {}), existing_route)
 
     def clear(self):
-        """Deletes all routes"""
         self.routes = {}
+
+    def empty(self):
+        return len(self.routes) == 0
 
     def manage_routes_size(self):
         """
