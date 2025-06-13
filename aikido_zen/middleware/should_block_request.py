@@ -51,6 +51,7 @@ def should_block_request():
                 receive=True,
             )
             if ratelimit_res["success"] and ratelimit_res["data"]["block"]:
+                cache.stats.on_rate_limit()
                 return {
                     "block": True,
                     "type": "ratelimited",
