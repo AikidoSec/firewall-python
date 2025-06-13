@@ -42,6 +42,7 @@ def test_initialization(thread_cache: ThreadCache):
     assert thread_cache.config.blocked_uids == set()
     assert thread_cache.stats.get_record()["requests"] == {
         "total": 0,
+        "rateLimited": 0,
         "aborted": 0,
         "attacksDetected": {"total": 0, "blocked": 0},
     }
@@ -77,6 +78,7 @@ def test_reset(thread_cache: ThreadCache):
     assert thread_cache.config.blocked_uids == set()
     assert thread_cache.stats.get_record()["requests"] == {
         "total": 0,
+        "rateLimited": 0,
         "aborted": 0,
         "attacksDetected": {"total": 0, "blocked": 0},
     }
@@ -100,6 +102,7 @@ def test_renew_with_no_comms(thread_cache: ThreadCache):
         assert thread_cache.config.blocked_uids == set()
         assert thread_cache.stats.get_record()["requests"] == {
             "total": 0,
+            "rateLimited": 0,
             "aborted": 0,
             "attacksDetected": {"total": 0, "blocked": 0},
         }
@@ -285,6 +288,7 @@ def test_renew_called_with_correct_args(mock_get_comms, thread_cache: ThreadCach
                 "endedAt": -1,
                 "requests": {
                     "total": 2,
+                    "rateLimited": 0,
                     "aborted": 0,
                     "attacksDetected": {"blocked": 1, "total": 3},
                 },
@@ -369,6 +373,7 @@ def test_sync_data_for_users(mock_get_comms, thread_cache: ThreadCache):
                 "endedAt": -1,
                 "requests": {
                     "total": 1,
+                    "rateLimited": 0,
                     "aborted": 0,
                     "attacksDetected": {"total": 0, "blocked": 0},
                 },
@@ -421,6 +426,7 @@ def test_renew_called_with_empty_routes(mock_get_comms, thread_cache: ThreadCach
                 "endedAt": -1,
                 "requests": {
                     "total": 0,
+                    "rateLimited": 0,
                     "aborted": 0,
                     "attacksDetected": {"total": 0, "blocked": 0},
                 },
@@ -461,6 +467,7 @@ def test_renew_called_with_no_requests(mock_get_comms, thread_cache: ThreadCache
                 "endedAt": -1,
                 "requests": {
                     "total": 0,
+                    "rateLimited": 0,
                     "aborted": 0,
                     "attacksDetected": {"total": 0, "blocked": 0},
                 },
