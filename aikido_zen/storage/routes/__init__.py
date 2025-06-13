@@ -1,5 +1,5 @@
 from aikido_zen.api_discovery.update_route_info import update_route_info
-from .route_to_key import route_to_key
+from aikido_zen.helpers.logging import logger
 
 
 class Routes:
@@ -11,38 +11,38 @@ class Routes:
         self.max_size = max_size
         self.routes = {}
 
-    def get(self, route_metadata):
-        key = route_to_key(route_metadata)
-        return self.routes[key]
+    def get(self, method, route):
+        key = route_to_key(method, route)
+        return self.routes.get(key)
 
-    def ensure_route(self, route_metadata=None, key=None):
-        if self.get(route_metadata):
+    def ensure_route(self, method, route):
+        if self.get(method, route):
             return  # A route already exists
-        if key is None:
-            key = route_to_key(route_metadata)
+        key = route_to_key(method, route)
         self.routes[key] = {
-            "method": route_metadata.get("method"),
-            "path": route_metadata.get("route"),
+            "method": method,
+            "path": route,
             "hits": 0,
             "apispec": {},
         }
+        logger.error(self.routes)
         self.manage_routes_size()
 
-    def increment_route(self, route_metadata):
-        self.ensure_route(route_metadata)
-        self.get(route_metadata)["hits"] += 1
+    def increment_route(self, method, route):
+        self.ensure_route(method, route)
+        self.get(method, route)["hits"] += 1
 
-    def update_route_with_apispec(self, route_metadata, apispec):
-        self.ensure_route(route_metadata)
-        update_route_info(apispec, self.get(route_metadata))
+    def update_route_with_apispec(self, method, route, apispec):
+        self.ensure_route(method, route)
+        update_route_info(apispec, self.get(method, route))
 
     def export(self):
         return dict(self.routes)
 
     def import_from_record(self, new_routes):
-        for key, route in new_routes:
-            self.ensure_route(key=key)
-            existing_route = self.routes.get(key)
+        for route in new_routes.values():
+            self.ensure_route(method=route["method"], route=route["path"])
+            existing_route = self.get(method=route["method"], route=route["path"])
             # merge
             existing_route["hits"] += route.get("hits", 0)
             update_route_info(route.get("apispec", {}), existing_route)
@@ -65,3 +65,7 @@ class Routes:
                     least_used = [key, route.get("hits")]
             if least_used[0]:
                 del self.routes[least_used[0]]
+
+
+def route_to_key(method, route):
+    return f"{method}:{route}"
