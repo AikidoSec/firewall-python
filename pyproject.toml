@@ -81,6 +81,7 @@ pygments = "^2.18.0"
 lxml = "^5.4.0"
 clickhouse-driver = "^0.2.9"
 openai = "^1.85.0"
+anthropic = "^0.54.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
