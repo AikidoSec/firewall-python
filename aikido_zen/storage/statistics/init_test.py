@@ -68,6 +68,8 @@ def test_get_record(monkeypatch):
 
     stats = Statistics()
     stats.total_hits = 10
+    stats.on_rate_limit()
+    stats.on_rate_limit()
     stats.operations.register_call("test.test", "nosql_op")
     stats.on_detected_attack(blocked=True, operation="test.test")
     stats.attacks_detected = 5
@@ -77,6 +79,7 @@ def test_get_record(monkeypatch):
     assert record["startedAt"] == stats.started_at
     assert record["endedAt"] == mock_time
     assert record["requests"]["total"] == 10
+    assert record["requests"]["rate_limited"] == 2
     assert record["requests"]["aborted"] == 0
     assert record["requests"]["attacksDetected"]["total"] == 5
     assert record["requests"]["attacksDetected"]["blocked"] == 3
@@ -97,6 +100,7 @@ def test_import_from_record():
     record = {
         "requests": {
             "total": 10,
+            "rate_limited": 5,
             "attacksDetected": {
                 "total": 5,
                 "blocked": 3,
@@ -117,6 +121,7 @@ def test_import_from_record():
     }
     stats.import_from_record(record)
     assert stats.total_hits == 10
+    assert stats.rate_limited_hits == 5
     assert stats.attacks_detected == 5
     assert stats.attacks_blocked == 3
     assert stats.operations == {
@@ -152,6 +157,7 @@ def test_multiple_imports(stats):
     record1 = {
         "requests": {
             "total": 10,
+            "rate_limited": 20,
             "attacksDetected": {
                 "total": 5,
                 "blocked": 3,
@@ -168,6 +174,7 @@ def test_multiple_imports(stats):
     record2 = {
         "requests": {
             "total": 20,
+            "rate_limited": 5,
             "attacksDetected": {
                 "total": 10,
                 "blocked": 7,
@@ -184,6 +191,7 @@ def test_multiple_imports(stats):
     stats.import_from_record(record1)
     stats.import_from_record(record2)
     assert stats.total_hits == 30
+    assert stats.rate_limited_hits == 25
     assert stats.attacks_detected == 15
     assert stats.attacks_blocked == 10
     assert stats.operations == {
@@ -204,6 +212,7 @@ def test_import_empty_record(stats):
     record = {"requests": {}}
     stats.import_from_record(record)
     assert stats.total_hits == 0
+    assert stats.rate_limited_hits == 0
     assert stats.attacks_detected == 0
     assert stats.attacks_blocked == 0
     assert stats.operations == {}
@@ -213,6 +222,7 @@ def test_import_partial_record(stats):
     record = {"requests": {"total": 10}}
     stats.import_from_record(record)
     assert stats.total_hits == 10
+    assert stats.rate_limited_hits == 0
     assert stats.attacks_detected == 0
     assert stats.attacks_blocked == 0
     assert stats.operations == {}
@@ -242,3 +252,40 @@ def test_multiple_increments_and_detects(stats):
         "kind": "sql_op",
         "total": 1,
     }
+
+    stats.on_rate_limit()
+    assert stats.rate_limited_hits == 1
+
+    stats.on_rate_limit()
+    assert stats.rate_limited_hits == 2
+
+
+def test_multiple_rate_limits(stats):
+    """Test multiple rate limit calls"""
+    for _ in range(5):
+        stats.on_rate_limit()
+    assert stats.rate_limited_hits == 5
+
+
+def test_rate_limit_in_get_record():
+    """Test that rate_limited_hits is included in get_record output"""
+    stats = Statistics()
+    stats.total_hits = 10
+    stats.on_rate_limit()
+    stats.on_rate_limit()
+    stats.on_rate_limit()
+
+    record = stats.get_record()
+    assert record["requests"]["rate_limited"] == 3
+    assert record["requests"]["total"] == 10
+
+
+def test_rate_limit_clear():
+    """Test that clear() resets rate_limited_hits"""
+    stats = Statistics()
+    stats.on_rate_limit()
+    stats.on_rate_limit()
+    assert stats.rate_limited_hits == 2
+
+    stats.clear()
+    assert stats.rate_limited_hits == 0
