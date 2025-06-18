@@ -70,3 +70,37 @@ def test_mistralai_agents_complete(mistral):
     assert get_ai_stats()[0]["tokens"]["input"] == 20
     assert get_ai_stats()[0]["tokens"]["output"] == 11
     assert get_ai_stats()[0]["tokens"]["total"] == 31
+
+
+@skip_no_api_key
+def test_mistralai_embeddings_create(mistral):
+    res = mistral.embeddings.create(
+        model="mistral-embed",
+        inputs=[
+            "Embed this sentence.",
+            "As well as this one.",
+        ],
+    )
+    print(res)
+
+    assert get_ai_stats()[0]["model"] == "mistral-embed"
+    assert get_ai_stats()[0]["calls"] == 1
+    assert get_ai_stats()[0]["provider"] == "mistralai"
+    assert get_ai_stats()[0]["tokens"]["input"] == 15
+    assert get_ai_stats()[0]["tokens"]["output"] == 0  # Double-checked this
+    assert get_ai_stats()[0]["tokens"]["total"] == 15
+
+
+@skip_no_api_key
+def test_mistralai_fim_complete(mistral):
+    res = mistral.fim.complete(
+        model="codestral-2405", prompt="def", suffix="return a+b"
+    )
+    print(res)
+
+    assert get_ai_stats()[0]["model"] == "codestral-2405"
+    assert get_ai_stats()[0]["calls"] == 1
+    assert get_ai_stats()[0]["provider"] == "mistralai"
+    assert get_ai_stats()[0]["tokens"]["input"] == 8
+    assert get_ai_stats()[0]["tokens"]["output"] == 6
+    assert get_ai_stats()[0]["tokens"]["total"] == 14
