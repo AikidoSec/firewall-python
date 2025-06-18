@@ -2,7 +2,6 @@ import os
 
 import pytest
 import aikido_zen.sinks.mistralai
-import mistralai
 
 from aikido_zen.thread.thread_cache import get_cache
 
@@ -21,6 +20,8 @@ def setup():
 
 @pytest.fixture
 def mistral():
+    import mistralai
+
     return mistralai.Mistral(api_key=os.getenv("MISTRAL_API_KEY", ""))
 
 
