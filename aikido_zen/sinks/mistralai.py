@@ -16,16 +16,10 @@ def _chat_completions_response(func, instance, args, kwargs, return_value):
     )
 
 
-
 @on_import("mistralai", "mistralai", "1.0.0")
 def patch(m):
-    """
-    patching module mistralai
-    - patches function agents.Agents.complete, returns ChatCompletionResponse
-    - patches function chat.Chat.complete, returns ChatCompletionResponse
-    """
+    """patching module mistralai"""
     patch_function(m, "agents.Agents.complete", _chat_completions_response)
-    # patch_function(m, "chat.Chat.parse", _chat_completions_response)
     patch_function(m, "chat.Chat.complete", _chat_completions_response)
     patch_function(m, "embeddings.Embeddings.create", _chat_completions_response)
     patch_function(m, "fim.Fim.complete", _chat_completions_response)
