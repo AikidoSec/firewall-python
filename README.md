@@ -55,6 +55,7 @@ Zen for Python 3 is compatible with:
 * ✅ [`clickhouse-driver`](https://pypi.org/project/clickhouse-driver)
 
 ### AI SDKs
+Zen instruments the following AI SDKs to track which models are used and how many tokens are consumed, allowing you to monitor your AI usage and costs:
 * ✅ [`openai`](https://pypi.org/project/openai) ^1.0
 * ✅ [`anthropic`](https://pypi.org/project/anthropic/)
 
