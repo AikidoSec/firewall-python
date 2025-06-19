@@ -1,7 +1,7 @@
 """ This file simply exports the CloudConnectionManager class"""
 
 from aikido_zen.background_process.heartbeats import send_heartbeats_every_x_secs
-from aikido_zen.background_process.routes import Routes
+from aikido_zen.storage.routes import Routes
 from aikido_zen.ratelimiting.rate_limiter import RateLimiter
 from aikido_zen.helpers.logging import logger
 from .update_firewall_lists import update_firewall_lists
@@ -32,7 +32,7 @@ class CloudConnectionManager:
         self.block = block
         self.api: ReportingApiHTTP = api
         self.token = token  # Should be instance of the Token class!
-        self.routes = Routes(200)
+        self.routes = Routes(max_size=1000)
         self.hostnames = Hostnames(200)
         self.conf = ServiceConfig(
             endpoints=[],
@@ -73,7 +73,7 @@ class CloudConnectionManager:
         """
         data_present = (
             not self.statistics.empty()
-            or len(self.routes.routes) > 0
+            or not self.routes.empty()
             or not self.ai_stats.empty()
         )
         should_report_initial_stats = data_present and not self.conf.received_any_stats

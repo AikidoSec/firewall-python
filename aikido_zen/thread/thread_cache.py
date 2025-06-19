@@ -2,7 +2,7 @@
 
 import aikido_zen.background_process.comms as comms
 from aikido_zen.background_process.packages import PackagesStore
-from aikido_zen.background_process.routes import Routes
+from aikido_zen.storage.routes import Routes
 from aikido_zen.background_process.service_config import ServiceConfig
 from aikido_zen.storage.ai_statistics import AIStatistics
 from aikido_zen.storage.hostnames import Hostnames
@@ -17,6 +17,10 @@ class ThreadCache:
     """
 
     def __init__(self):
+        # We store both routes and routes_from_background, the latter contains all hits (useful for apispec)
+        self.routes = Routes(max_size=1000)
+        self.routes_from_background = Routes(max_size=1000)
+
         self.hostnames = Hostnames(200)
         self.users = Users(1000)
         self.stats = Statistics()
@@ -36,7 +40,6 @@ class ThreadCache:
 
     def reset(self):
         """Empties out all values of the cache"""
-        self.routes = Routes(max_size=1000)
         self.config = ServiceConfig(
             endpoints=[],
             blocked_uids=set(),
@@ -45,6 +48,8 @@ class ThreadCache:
             received_any_stats=False,
         )
         self.middleware_installed = False
+        self.routes.clear()
+        self.routes_from_background.clear()
         self.hostnames.clear()
         self.users.clear()
         self.stats.clear()
@@ -59,7 +64,7 @@ class ThreadCache:
         res = comms.get_comms().send_data_to_bg_process(
             action="SYNC_DATA",
             obj={
-                "current_routes": self.routes.get_routes_with_hits(),
+                "routes": self.routes.export(),
                 "middleware_installed": self.middleware_installed,
                 "hostnames": self.hostnames.as_array(),
                 "users": self.users.as_array(),
@@ -78,10 +83,7 @@ class ThreadCache:
             self.config = res["data"]["config"]
 
         # update routes
-        if isinstance(res["data"].get("routes"), dict):
-            self.routes.routes = res["data"]["routes"]
-            for route in self.routes.routes.values():
-                route["hits_delta_since_sync"] = 0
+        self.routes_from_background.import_from_record(res["data"].get("routes", {}))
 
 
 # For these 2 functions and the data they process, we rely on Python's GIL
