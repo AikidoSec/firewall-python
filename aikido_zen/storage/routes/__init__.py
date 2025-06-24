@@ -44,6 +44,8 @@ class Routes:
         return result
 
     def import_from_record(self, new_routes):
+        if not isinstance(new_routes, dict):
+            return
         for route in new_routes.values():
             self.ensure_route(method=route["method"], route=route["path"])
             existing_route = self.get(method=route["method"], route=route["path"])
