@@ -33,17 +33,18 @@ def test_process_sync_data_initialization(setup_connection_manager):
     test_hostnames.add("bumblebee.com", 8080)
 
     data = {
-        "current_routes": {
-            "route1": {
+        "routes": {
+            "GET:/api/v1/resource": {
                 "method": "GET",
                 "path": "/api/v1/resource",
-                "hits_delta_since_sync": 5,
+                "hits": 5,
+                "hits_delta_since_sync": 2000,
                 "apispec": {"info": "API spec for resource"},
             },
-            "route2": {
+            "POST:/api/v1/resource": {
                 "method": "POST",
                 "path": "/api/v1/resource",
-                "hits_delta_since_sync": 3,
+                "hits": 3,
                 "apispec": {"info": "API spec for resource"},
             },
         },
@@ -73,19 +74,9 @@ def test_process_sync_data_initialization(setup_connection_manager):
     result = process_sync_data(connection_manager, data, None)
 
     # Check that routes were initialized correctly
-    assert len(connection_manager.routes) == 2
-    assert (
-        connection_manager.routes.get({"method": "GET", "route": "/api/v1/resource"})[
-            "hits"
-        ]
-        == 5
-    )
-    assert (
-        connection_manager.routes.get({"method": "POST", "route": "/api/v1/resource"})[
-            "hits"
-        ]
-        == 3
-    )
+    assert len(connection_manager.routes.export()) == 2
+    assert connection_manager.routes.get("GET", "/api/v1/resource")["hits"] == 5
+    assert connection_manager.routes.get("POST", "/api/v1/resource")["hits"] == 3
 
     # Check that the total requests were updated
     assert connection_manager.statistics.get_record()["requests"] == {
@@ -114,18 +105,18 @@ def test_process_sync_data_with_last_updated_at_below_zero(setup_connection_mana
     connection_manager = setup_connection_manager
     connection_manager.conf.last_updated_at = -1
     data = {
-        "current_routes": {
-            "route1": {
+        "routes": {
+            "GET:/api/v1/resource": {
                 "method": "GET",
                 "path": "/api/v1/resource",
-                "hits_delta_since_sync": 5,
+                "hits": 5,
                 "apispec": {"info": "API spec for resource"},
             },
-            "route2": {
+            "POST:/api/v1/resource": {
                 "method": "POST",
                 "path": "/api/v1/resource",
-                "hits_delta_since_sync": 3,
-                "apispec": {"info": "API spec for resource"},
+                "hits": 3,
+                "apispec": {"info": "API spec for another resource"},
             },
         },
         "stats": {
@@ -146,19 +137,19 @@ def test_process_sync_data_with_last_updated_at_below_zero(setup_connection_mana
     result = process_sync_data(connection_manager, data, None)
 
     # Check that routes were initialized correctly
-    assert len(connection_manager.routes) == 2
-    assert (
-        connection_manager.routes.get({"method": "GET", "route": "/api/v1/resource"})[
-            "hits"
-        ]
-        == 5
-    )
-    assert (
-        connection_manager.routes.get({"method": "POST", "route": "/api/v1/resource"})[
-            "hits"
-        ]
-        == 3
-    )
+    assert len(connection_manager.routes.export()) == 2
+    assert connection_manager.routes.get("GET", "/api/v1/resource") == {
+        "hits": 5,
+        "method": "GET",
+        "path": "/api/v1/resource",
+        "apispec": {"info": "API spec for resource"},
+    }
+    assert connection_manager.routes.get("POST", "/api/v1/resource") == {
+        "hits": 3,
+        "method": "POST",
+        "path": "/api/v1/resource",
+        "apispec": {"info": "API spec for another resource"},
+    }
 
     # Check that the total requests were updated
     assert connection_manager.statistics.get_record()["requests"] == {
@@ -184,11 +175,11 @@ def test_process_sync_data_existing_route_and_hostnames(setup_connection_manager
     hostnames_sync.add("c.com", 443)
 
     data = {
-        "current_routes": {
+        "routes": {
             "route1": {
                 "method": "GET",
                 "path": "/api/v1/resource",
-                "hits_delta_since_sync": 5,
+                "hits": 5,
                 "apispec": {"info": "API spec for resource"},
             }
         },
@@ -212,11 +203,11 @@ def test_process_sync_data_existing_route_and_hostnames(setup_connection_manager
 
     # Second call to update the existing route
     data_update = {
-        "current_routes": {
+        "routes": {
             "route1": {
                 "method": "GET",
                 "path": "/api/v1/resource",
-                "hits_delta_since_sync": 10,
+                "hits": 10,
                 "apispec": {"info": "Updated API spec for resource"},
             }
         },
@@ -237,12 +228,7 @@ def test_process_sync_data_existing_route_and_hostnames(setup_connection_manager
     result = process_sync_data(connection_manager, data_update, None)
 
     # Check that the hit count was updated correctly
-    assert (
-        connection_manager.routes.get({"method": "GET", "route": "/api/v1/resource"})[
-            "hits"
-        ]
-        == 15
-    )
+    assert connection_manager.routes.get("GET", "/api/v1/resource")["hits"] == 15
 
     # Check that the total requests were updated
     assert connection_manager.statistics.get_record()["requests"] == {
@@ -265,11 +251,24 @@ def test_process_sync_data_existing_route_and_hostnames(setup_connection_manager
 def test_process_sync_data_no_routes(setup_connection_manager):
     """Test behavior when no routes are provided."""
     connection_manager = setup_connection_manager
-    data = {"current_routes": {}, "reqs": 0}  # No requests to add
+    data = {"routes": {}, "reqs": 0}  # No requests to add
 
     result = process_sync_data(connection_manager, data, None)
 
     # Check that no routes were initialized
-    assert len(connection_manager.routes) == 0
+    assert len(connection_manager.routes.export()) == 0
+
+    # Check that the total requests remain unchanged
+
+
+def test_process_sync_data_routes_undefined(setup_connection_manager):
+    """Test behavior when no routes are provided."""
+    connection_manager = setup_connection_manager
+    data = {"sdfsdsdfsdfds": {}, "reqs": 0}  # No requests to add
+
+    result = process_sync_data(connection_manager, data, None)
+
+    # Check that no routes were initialized
+    assert len(connection_manager.routes.export()) == 0
 
     # Check that the total requests remain unchanged

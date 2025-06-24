@@ -18,7 +18,7 @@ def process_sync_data(connection_manager, data, conn, queue=None):
         connection_manager.middleware_installed = True
 
     # Sync routes
-    connection_manager.routes.increment_route(data.get("routes", {}))
+    connection_manager.routes.import_from_record(data.get("routes", {}))
 
     # Sync hostnames
     for hostnames_entry in data.get("hostnames", list()):
