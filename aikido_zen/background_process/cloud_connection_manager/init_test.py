@@ -25,7 +25,7 @@ def test_cloud_connection_manager_initialization(setup_cloud_connection_manager)
     assert manager.block is None
     assert isinstance(manager.api, ReportingApiHTTP)
     assert isinstance(manager.token, Token)
-    assert len(manager.routes) == 0
+    assert len(manager.routes.export()) == 0
     assert isinstance(manager.hostnames, Hostnames)
     assert isinstance(manager.conf, ServiceConfig)
     assert isinstance(manager.rate_limiter, RateLimiter)
