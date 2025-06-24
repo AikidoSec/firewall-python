@@ -181,14 +181,12 @@ def test_parses_routes_correctly(
                     "method": "POST",
                     "path": "/body",
                     "hits": 20,
-                    "hits_delta_since_sync": 25,
                     "apispec": {},
                 },
                 "GET:/body": {
                     "method": "GET",
                     "path": "/body",
                     "hits": 10,
-                    "hits_delta_since_sync": 5,
                     "apispec": {},
                 },
             },
@@ -210,22 +208,21 @@ def test_parses_routes_correctly(
         }
     ]
     assert thread_cache.is_user_blocked("user123")
-    assert list(thread_cache.routes) == [
-        {
+    assert thread_cache.routes.export() == {}
+    assert thread_cache.routes_from_background.export() == {
+        "POST:/body": {
             "method": "POST",
             "path": "/body",
             "hits": 20,
-            "hits_delta_since_sync": 0,
             "apispec": {},
         },
-        {
+        "GET:/body": {
             "method": "GET",
             "path": "/body",
             "hits": 10,
-            "hits_delta_since_sync": 0,
             "apispec": {},
         },
-    ]
+    }
 
 
 @patch("aikido_zen.background_process.comms.get_comms")
@@ -242,8 +239,7 @@ def test_renew_called_with_correct_args(mock_get_comms, thread_cache: ThreadCach
     thread_cache.stats.on_detected_attack(blocked=True, operation="op1")
     thread_cache.stats.on_detected_attack(blocked=False, operation="op1")
     thread_cache.stats.on_detected_attack(blocked=False, operation="op2")
-    thread_cache.routes.initialize_route({"method": "GET", "route": "/test"})
-    thread_cache.routes.increment_route({"method": "GET", "route": "/test"})
+    thread_cache.routes.increment_route("GET", "/test")
     thread_cache.ai_stats.on_ai_call("openai", "gpt-4o", 6427, 200)
     thread_cache.ai_stats.on_ai_call("openai", "gpt-4o2", 424, 235)
     thread_cache.ai_stats.on_ai_call("openai", "gpt-4o2", 232, 932)
@@ -271,12 +267,11 @@ def test_renew_called_with_correct_args(mock_get_comms, thread_cache: ThreadCach
     mock_comms.send_data_to_bg_process.assert_called_once_with(
         action="SYNC_DATA",
         obj={
-            "current_routes": {
+            "routes": {
                 "GET:/test": {
                     "method": "GET",
                     "path": "/test",
                     "hits": 1,
-                    "hits_delta_since_sync": 1,
                     "apispec": {},
                 }
             },
@@ -363,7 +358,7 @@ def test_sync_data_for_users(mock_get_comms, thread_cache: ThreadCache):
     mock_comms.send_data_to_bg_process.assert_called_once_with(
         action="SYNC_DATA",
         obj={
-            "current_routes": {},
+            "routes": {},
             "stats": {
                 "startedAt": -1,
                 "endedAt": -1,
@@ -415,7 +410,7 @@ def test_renew_called_with_empty_routes(mock_get_comms, thread_cache: ThreadCach
     mock_comms.send_data_to_bg_process.assert_called_once_with(
         action="SYNC_DATA",
         obj={
-            "current_routes": {},
+            "routes": {},
             "stats": {
                 "startedAt": -1,
                 "endedAt": -1,
@@ -443,7 +438,7 @@ def test_renew_called_with_no_requests(mock_get_comms, thread_cache: ThreadCache
     mock_get_comms.return_value = mock_comms
 
     # Setup initial state with a route but no requests
-    thread_cache.routes.initialize_route({"method": "GET", "route": "/test"})
+    thread_cache.routes.increment_route("GET", "/test")
 
     # Call renew
     with patch(
@@ -455,7 +450,14 @@ def test_renew_called_with_no_requests(mock_get_comms, thread_cache: ThreadCache
     mock_comms.send_data_to_bg_process.assert_called_once_with(
         action="SYNC_DATA",
         obj={
-            "current_routes": {},
+            "routes": {
+                "GET:/test": {
+                    "method": "GET",
+                    "path": "/test",
+                    "hits": 1,
+                    "apispec": {},
+                }
+            },
             "stats": {
                 "startedAt": -1,
                 "endedAt": -1,
