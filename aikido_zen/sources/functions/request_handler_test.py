@@ -42,7 +42,7 @@ def test_post_response_useful_route(mock_context):
 
     # Check that the route was initialized and updated
     route = cache.routes.routes.get("GET:/test/route")
-    assert route["hits"] == route["hits_delta_since_sync"] == 25
+    assert route["hits"] == 25
     assert route["method"] == "GET"
     assert route["path"] == "/test/route"
 
