@@ -258,6 +258,10 @@ def test_api_discovery_for_new_routes(monkeypatch):
         "query": None,
     }
 
+    routes_export = routes.export(include_apispecs=False)
+    assert len(routes_export) == 1
+    assert routes_export["GET:/api/resource1"]["apispec"] == {}
+
 
 def test_api_discovery_for_new_routes_without_ensure_route(monkeypatch):
     routes = Routes(max_size=3)

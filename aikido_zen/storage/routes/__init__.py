@@ -36,8 +36,12 @@ class Routes:
         self.ensure_route(method, route)
         update_route_info(apispec, self.get(method, route))
 
-    def export(self):
-        return dict(self.routes)
+    def export(self, include_apispecs=True):
+        result = dict(self.routes)
+        if not include_apispecs:
+            for route in result.values():
+                route["apispec"] = {}
+        return result
 
     def import_from_record(self, new_routes):
         for route in new_routes.values():

@@ -44,7 +44,7 @@ def process_sync_data(connection_manager, data, conn, queue=None):
     if connection_manager.conf.last_updated_at > 0:
         # Only report data if the config has been fetched.
         return {
-            "routes": connection_manager.routes.export(),
+            "routes": connection_manager.routes.export(include_apispecs=False),
             "config": connection_manager.conf,
         }
     return {}
