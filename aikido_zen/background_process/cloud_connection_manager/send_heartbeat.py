@@ -14,7 +14,7 @@ def send_heartbeat(connection_manager):
     logger.debug("Aikido CloudConnectionManager : Sending out heartbeat")
     stats = connection_manager.statistics.get_record()
     users = connection_manager.users.as_array()
-    routes = connection_manager.routes.export()
+    routes = list(connection_manager.routes.export().values())
     outgoing_domains = connection_manager.hostnames.as_array()
     ai_stats = connection_manager.ai_stats.get_stats()
     packages = PackagesStore.export()
