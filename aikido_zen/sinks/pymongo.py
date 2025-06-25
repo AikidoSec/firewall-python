@@ -76,8 +76,14 @@ def _bulk_write(func, instance, args, kwargs):
         )
 
 
-@on_import("pymongo.collection", "pymongo", version_requirement="3.10.0")
+@on_import("pymongo", "pymongo", version_requirement="3.10.0")
 def patch(m):
+    on_import("pymongo.collection")(patch_collection)
+    # After 4.9, pymongo moved the collection module to `synchronous`
+    on_import("pymongo.synchronous.collection")(patch_collection)
+
+
+def patch_collection(m):
     """
     patching pymongo.collection
     - patches Collection.*(filter, ...)
