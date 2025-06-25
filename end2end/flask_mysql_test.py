@@ -81,7 +81,7 @@ def test_dangerous_response_with_firewall_query_params():
     assert attacks[2]["attack"]["kind"] == "sql_injection"
     assert attacks[0]["attack"]["operation"] == 'pymysql.Cursor.execute'
     assert attacks[2]["attack"]["pathToPayload"] == '.dog_name.[0]'
-    assert attacks[2]["attack"]["payload"] == '"Malicious dog\\", 1); -- "'
+    assert attacks[2]["attack"]["payload"] == '"Malicious dog\\", 1); -- %FF"'
     assert attacks[2]["attack"]["source"] == "query"
 
 
