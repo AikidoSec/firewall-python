@@ -33,35 +33,55 @@ def patch_function(module, name, wrapper):
     Patches a function in the specified module with a wrapper function.
     """
     try:
-        (parent, _, original) = resolve_path(module, name)
+        (_, _, original) = resolve_path(module, name)
 
-        # Generate a hook ID (i.e. pymongo.synchronous$replace_one$_func_filter_first)
-        hook_id = f"{parent.__module__}${original.__name__}${wrapper.__name__}"
-        if not _is_hook_in_hook_store(parent, hook_id):
+        hook_duplicate_helper = HookDuplicateHelper(original, wrapper)
+
+        if not hook_duplicate_helper.is_registered():
             wrap_object(module, name, FunctionWrapper, (wrapper,))
-            _register_hook_in_hook_store(parent, hook_id)
+            hook_duplicate_helper.register()
         else:
-            logger.error("Attempted to apply same hook twice: %s", hook_id)
+            logger.debug(
+                "Attempted to apply same hook twice: %s", hook_duplicate_helper.hook_id
+            )
     except Exception as e:
         logger.info("Failed to wrap %s:%s, due to: %s", module, name, e)
 
 
-def _ensure_object_has_hooks_store(obj):
-    if not hasattr(obj, "_aikido_hooks_store"):
-        obj._aikido_hooks_lock = threading.Lock()
-        obj._aikido_hooks_store = set()
+class HookDuplicateHelper:
+    AIKIDO_HOOKS_LOCK = "_aikido_hooks_lock"
+    AIKIDO_HOOKS_STORE = "_aikido_hooks_store"
 
+    def __init__(self, original, wrapper):
+        self.original = original
 
-def _is_hook_in_hook_store(obj, hook_id):
-    _ensure_object_has_hooks_store(obj)
-    with getattr(obj, "_aikido_hooks_lock"):
-        return hook_id in getattr(obj, "_aikido_hooks_store")
+        # Hook id is either module+name, or set via @before, ... as _hook_id
+        self.hook_id = f"{wrapper.__module__}:wrapper.__name__"
+        if hasattr(wrapper, "_hook_id"):
+            self.hook_id = getattr(wrapper, "_hook_id")
 
+    def is_registered(self):
+        self._try_create_hooks_store()
+        if not hasattr(self.original, self.AIKIDO_HOOKS_LOCK):
+            return False
+        with getattr(self.original, self.AIKIDO_HOOKS_LOCK):
+            return self.hook_id in getattr(self.original, self.AIKIDO_HOOKS_STORE)
 
-def _register_hook_in_hook_store(obj, hook_id):
-    _ensure_object_has_hooks_store(obj)
-    with getattr(obj, "_aikido_hooks_lock"):
-        getattr(obj, "_aikido_hooks_store").add(hook_id)
+    def register(self):
+        self._try_create_hooks_store()
+        if not hasattr(self.original, self.AIKIDO_HOOKS_LOCK):
+            return False
+        with getattr(self.original, self.AIKIDO_HOOKS_LOCK):
+            getattr(self.original, self.AIKIDO_HOOKS_STORE).add(self.hook_id)
+
+    def _try_create_hooks_store(self):
+        if hasattr(self.original, self.AIKIDO_HOOKS_LOCK):
+            return
+        try:
+            setattr(self.original, self.AIKIDO_HOOKS_LOCK, threading.Lock())
+            setattr(self.original, self.AIKIDO_HOOKS_STORE, set())
+        except AttributeError as e:
+            logger.debug("Failed to create hook storage on: %s", self.original)
 
 
 def before(wrapper):
@@ -80,7 +100,7 @@ def before(wrapper):
             )
         return func(*args, **kwargs)  # Call the original function
 
-    decorator.__name__ = wrapper.__name__
+    decorator._hook_id = f"{wrapper.__module__}:{wrapper.__name__}"
     return decorator
 
 
@@ -100,7 +120,7 @@ def before_async(wrapper):
             )
         return await func(*args, **kwargs)  # Call the original function
 
-    decorator.__name__ = wrapper.__name__
+    decorator._hook_id = f"{wrapper.__module__}:{wrapper.__name__}"
     return decorator
 
 
@@ -122,7 +142,7 @@ def before_modify_return(wrapper):
             )
         return func(*args, **kwargs)  # Call the original function
 
-    decorator.__name__ = wrapper.__name__
+    decorator._hook_id = f"{wrapper.__module__}:{wrapper.__name__}"
     return decorator
 
 
@@ -144,5 +164,5 @@ def after(wrapper):
 
         return return_value
 
-    decorator.__name__ = wrapper.__name__
+    decorator._hook_id = f"{wrapper.__module__}:{wrapper.__name__}"
     return decorator
