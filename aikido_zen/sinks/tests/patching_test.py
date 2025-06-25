@@ -37,13 +37,13 @@ def test_patch_happens_once():
 
 
 def test_patch_happens_multiple():
-    @on_import("aikido_zen.sinks.tests.utils.sample_module")
+    @on_import("aikido_zen.sinks.tests.utils.sample_module_3")
     def patch(m):
         patch_function(m, "my_func", my_func_wrapper)
         patch_function(m, "my_func", my_func_wrapper)
         patch_function(m, "my_func", my_func_wrapper)
 
-    from aikido_zen.sinks.tests.utils.sample_module import my_func
+    from aikido_zen.sinks.tests.utils.sample_module_3 import my_func
 
     assert my_func(1) == 3
     assert my_func(2) == 4
@@ -62,12 +62,12 @@ def test_patch_happens_multiple_but_different_function():
 
 
 def test_patch_happens_multiple_but_different_order():
-    @on_import("aikido_zen.sinks.tests.utils.sample_module")
+    @on_import("aikido_zen.sinks.tests.utils.sample_module_4")
     def patch(m):
         patch_function(m, "my_func", my_func_wrapper_2)
         patch_function(m, "my_func", my_func_wrapper)
 
-    from aikido_zen.sinks.tests.utils.sample_module import my_func
+    from aikido_zen.sinks.tests.utils.sample_module_4 import my_func
 
     assert my_func(1) == (2 * 3) + 1 == 7
     assert my_func(2) == (3 * 3) + 1 == 10
