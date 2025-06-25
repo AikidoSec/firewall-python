@@ -74,6 +74,7 @@ def test_patch_happens_multiple_but_different_order():
 
 
 def test_patch_happens_multiple_but_different_module():
+    # In this case, you will still have 2x the wrapper, because the parent is different.
     @on_import("aikido_zen.sinks.tests.utils.sample_module_2")
     def patch(m):
         patch_function(m, "my_func", my_func_wrapper)
@@ -84,5 +85,19 @@ def test_patch_happens_multiple_but_different_module():
 
     from aikido_zen.sinks.tests.utils.sample_module_2 import my_func
 
-    assert my_func(1) == 3
-    assert my_func(2) == 4
+    assert my_func(1) == 4
+    assert my_func(2) == 5
+
+def test_patch_happens_multiple_different_module_class():
+    @on_import("aikido_zen.sinks.tests.utils.sample_module_2")
+    def patch(m):
+        patch_function(m, "Functions.my_func", my_func_wrapper)
+
+    @on_import("aikido_zen.sinks.tests.utils.sample_module")
+    def patch2(m):
+        patch_function(m, "Functions.my_func", my_func_wrapper)
+
+    from aikido_zen.sinks.tests.utils.sample_module_2 import Functions
+
+    assert Functions.my_func(1) == 3
+    assert Functions.my_func(2) == 4
