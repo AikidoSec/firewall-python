@@ -40,6 +40,8 @@ def patch_function(module, name, wrapper):
         if not _is_hook_in_hook_store(parent, hook_id):
             wrap_object(module, name, FunctionWrapper, (wrapper,))
             _register_hook_in_hook_store(parent, hook_id)
+        else:
+            logger.error("Attempted to apply same hook twice: %s", hook_id)
     except Exception as e:
         logger.info("Failed to wrap %s:%s, due to: %s", module, name, e)
 
