@@ -1,4 +1,6 @@
-from wrapt import wrap_object, FunctionWrapper, when_imported
+import threading
+
+from wrapt import wrap_object, FunctionWrapper, when_imported, resolve_path
 from aikido_zen.background_process.packages import ANY_VERSION, is_package_compatible
 from aikido_zen.errors import AikidoException
 from aikido_zen.helpers.logging import logger
@@ -31,9 +33,33 @@ def patch_function(module, name, wrapper):
     Patches a function in the specified module with a wrapper function.
     """
     try:
-        wrap_object(module, name, FunctionWrapper, (wrapper,))
+        (parent, _, original) = resolve_path(module, name)
+
+        # Generate a hook ID (i.e. pymongo.synchronous.collection$replace_one$_func_filter_first)
+        hook_id = f"{original.__module__}${original.__name__}${wrapper.__name__}"
+        if not _is_hook_in_hook_store(parent, hook_id):
+            wrap_object(module, name, FunctionWrapper, (wrapper,))
+            _register_hook_in_hook_store(parent, hook_id)
     except Exception as e:
         logger.info("Failed to wrap %s:%s, due to: %s", module, name, e)
+
+
+def _ensure_object_has_hooks_store(obj):
+    if not hasattr(obj, "_aikido_hooks_store"):
+        obj._aikido_hooks_lock = threading.Lock()
+        obj._aikido_hooks_store = set()
+
+
+def _is_hook_in_hook_store(obj, hook_id):
+    _ensure_object_has_hooks_store(obj)
+    with getattr(obj, "_aikido_hooks_lock"):
+        return hook_id in getattr(obj, "_aikido_hooks_store")
+
+
+def _register_hook_in_hook_store(obj, hook_id):
+    _ensure_object_has_hooks_store(obj)
+    with getattr(obj, "_aikido_hooks_lock"):
+        getattr(obj, "_aikido_hooks_store").add(hook_id)
 
 
 def before(wrapper):
@@ -52,6 +78,7 @@ def before(wrapper):
             )
         return func(*args, **kwargs)  # Call the original function
 
+    decorator.__name__ = wrapper.__name__
     return decorator
 
 
@@ -71,6 +98,7 @@ def before_async(wrapper):
             )
         return await func(*args, **kwargs)  # Call the original function
 
+    decorator.__name__ = wrapper.__name__
     return decorator
 
 
@@ -92,6 +120,7 @@ def before_modify_return(wrapper):
             )
         return func(*args, **kwargs)  # Call the original function
 
+    decorator.__name__ = wrapper.__name__
     return decorator
 
 
@@ -113,4 +142,5 @@ def after(wrapper):
 
         return return_value
 
+    decorator.__name__ = wrapper.__name__
     return decorator
