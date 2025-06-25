@@ -10,6 +10,7 @@ from aikido_zen.sinks import (
     before_modify_return,
     before,
 )
+from aikido_zen.sources.functions.request_handler import pre_response as should_block
 
 
 @before_modify_return
@@ -21,13 +22,6 @@ def _full_dispatch_request_before(func, instance, args, kwargs):
     extract_cookies_from_flask_request_and_save_data(req)
     extract_form_data_from_flask_request_and_save_data(req)
     extract_view_args_from_flask_request_and_save_data(req)
-
-    pre_response = funcs.request_handler(stage="pre_response")
-    if not pre_response:
-        return None
-    # This happens when a route is rate limited, a user blocked, etc...
-    return Response(pre_response[0], status=pre_response[1], mimetype="text/plain")
-
 
 @after
 def _full_dispatch_request_after(func, instance, args, kwargs, return_value):
@@ -72,23 +66,31 @@ def extract_cookies_from_flask_request_and_save_data(req):
         logger.debug("Exception occurred whilst extracting flask cookie data: %s", e)
 
 
-@before
+@before_modify_return
 def _call(func, instance, args, kwargs):
     environ = get_argument(args, kwargs, 0, "environ")
+    start_response = get_argument(args, kwargs, 1, "start_response")
+
     context1 = Context(req=environ, source="flask")
     context1.set_as_current_context()
     funcs.request_handler(stage="init")
 
+    # Checks for blocked IPs, blocked UAs, ...
+    should_block_current_request = should_block()
+    if should_block_current_request is not None:
+        from flask import Response
+        msg, status_code = should_block_current_request
+        return Response(msg, status=status_code, mimetype="text/plain")(environ, start_response)
 
 @on_import("flask.app", "flask", version_requirement="2.2.4")
 def patch(m):
     """
     patching module flask.appimport
 
-    - patches: Flask.__call__ (context parsing/initial stage)
+    - patches: Flask.__call__, also done by Sentry.
     - patches: Flask.full_dispatch_request
     **Why?** full_dispatch_request gets called in the WSGI app. It gets called after all middleware. request_ctx is
-    available, so we can extract data from it. It returns a response, so we can send status codes and error messages.
+    available, so we can extract data from it.
     (github src: https://github.com/pallets/flask/blob/bc143499cf1137a271a7cf75bdd3e16e43ede2f0/src/flask/app.py#L1529)
     """
     patch_function(m, "Flask.__call__", _call)
