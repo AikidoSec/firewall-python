@@ -11,11 +11,11 @@ from ...sinks import on_import, patch_function, before, after
 def _get_response_before(func, instance, args, kwargs):
     request = get_argument(args, kwargs, 0, "request")
 
-    run_init_stage(request)
-
     if pre_response_middleware not in instance._view_middleware:
         # The rate limiting middleware needs to be last in the chain.
         instance._view_middleware += [pre_response_middleware]
+
+    run_init_stage(request)
 
 
 @after
