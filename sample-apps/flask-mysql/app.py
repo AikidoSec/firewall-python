@@ -74,6 +74,15 @@ def create_dog():
     connection.commit()
     return f'Dog {dog_name} created successfully'
 
+@app.route("/create/via_query", methods=['GET'])
+def create_dog_via_query_param():
+    dog_name = request.args.get('dog_name')
+    connection = mysql.get_db()
+    cursor = connection.cursor()
+    cursor.execute(f'INSERT INTO dogs (dog_name, isAdmin) VALUES ("%s", 0)' % (dog_name))
+    connection.commit()
+    return f'Dog {dog_name} created successfully'
+
 @app.route("/shell", methods=['GET'])
 def show_shell_form():
     return render_template('shell.html')
