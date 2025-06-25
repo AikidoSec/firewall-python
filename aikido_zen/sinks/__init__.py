@@ -35,8 +35,8 @@ def patch_function(module, name, wrapper):
     try:
         (parent, _, original) = resolve_path(module, name)
 
-        # Generate a hook ID (i.e. pymongo.synchronous.collection$replace_one$_func_filter_first)
-        hook_id = f"{original.__module__}${original.__name__}${wrapper.__name__}"
+        # Generate a hook ID (i.e. pymongo.synchronous$replace_one$_func_filter_first)
+        hook_id = f"{parent.__module__}${original.__name__}${wrapper.__name__}"
         if not _is_hook_in_hook_store(parent, hook_id):
             wrap_object(module, name, FunctionWrapper, (wrapper,))
             _register_hook_in_hook_store(parent, hook_id)
