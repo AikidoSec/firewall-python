@@ -33,9 +33,9 @@ def patch_function(module, name, wrapper):
     Patches a function in the specified module with a wrapper function.
     """
     try:
-        (_, _, original) = resolve_path(module, name)
+        (parent, _, original) = resolve_path(module, name)
 
-        hook_duplicate_helper = HookDuplicateHelper(original, wrapper)
+        hook_duplicate_helper = HookDuplicateHelper(parent, original, wrapper)
 
         if not hook_duplicate_helper.is_registered():
             wrap_object(module, name, FunctionWrapper, (wrapper,))
@@ -52,36 +52,37 @@ class HookDuplicateHelper:
     AIKIDO_HOOKS_LOCK = "_aikido_hooks_lock"
     AIKIDO_HOOKS_STORE = "_aikido_hooks_store"
 
-    def __init__(self, original, wrapper):
-        self.original = original
+    def __init__(self, parent, original, wrapper):
+        self.parent = parent
 
         # Hook id is either module+name, or set via @before, ... as _hook_id
         self.hook_id = f"{wrapper.__module__}:wrapper.__name__"
         if hasattr(wrapper, "_hook_id"):
             self.hook_id = getattr(wrapper, "_hook_id")
+        self.hook_id += f":{original.__name__}"
 
     def is_registered(self):
         self._try_create_hooks_store()
-        if not hasattr(self.original, self.AIKIDO_HOOKS_LOCK):
+        if not hasattr(self.parent, self.AIKIDO_HOOKS_LOCK):
             return False
-        with getattr(self.original, self.AIKIDO_HOOKS_LOCK):
-            return self.hook_id in getattr(self.original, self.AIKIDO_HOOKS_STORE)
+        with getattr(self.parent, self.AIKIDO_HOOKS_LOCK):
+            return self.hook_id in getattr(self.parent, self.AIKIDO_HOOKS_STORE)
 
     def register(self):
         self._try_create_hooks_store()
-        if not hasattr(self.original, self.AIKIDO_HOOKS_LOCK):
+        if not hasattr(self.parent, self.AIKIDO_HOOKS_LOCK):
             return False
-        with getattr(self.original, self.AIKIDO_HOOKS_LOCK):
-            getattr(self.original, self.AIKIDO_HOOKS_STORE).add(self.hook_id)
+        with getattr(self.parent, self.AIKIDO_HOOKS_LOCK):
+            getattr(self.parent, self.AIKIDO_HOOKS_STORE).add(self.hook_id)
 
     def _try_create_hooks_store(self):
-        if hasattr(self.original, self.AIKIDO_HOOKS_LOCK):
+        if hasattr(self.parent, self.AIKIDO_HOOKS_LOCK):
             return
         try:
-            setattr(self.original, self.AIKIDO_HOOKS_LOCK, threading.Lock())
-            setattr(self.original, self.AIKIDO_HOOKS_STORE, set())
+            setattr(self.parent, self.AIKIDO_HOOKS_LOCK, threading.Lock())
+            setattr(self.parent, self.AIKIDO_HOOKS_STORE, set())
         except AttributeError as e:
-            logger.debug("Failed to create hook storage on: %s", self.original)
+            logger.debug("Failed to create hook storage on: %s", self.parent)
 
 
 def before(wrapper):
