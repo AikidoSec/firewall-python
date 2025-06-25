@@ -71,6 +71,19 @@ def test_dangerous_response_with_firewall_route_params():
     assert attacks[0]["attack"]["user"]["id"] == "123"
     assert attacks[0]["attack"]["user"]["name"] == "John Doe"
 
+def test_dangerous_response_with_firewall_query_params():
+    res = requests.get(base_url_fw + "/create/via_query?dog_name=Malicious%20dog%22%2C%201)%3B%20--%20%ff")
+    assert res.status_code == 500
+    time.sleep(5) # Wait for attack to be reported
+    events = fetch_events_from_mock("http://localhost:5000")
+    attacks = filter_on_event_type(events, "detected_attack")
+    assert attacks[2]["attack"]["blocked"] == True
+    assert attacks[2]["attack"]["kind"] == "sql_injection"
+    assert attacks[0]["attack"]["operation"] == 'pymysql.Cursor.execute'
+    assert attacks[2]["attack"]["pathToPayload"] == '.dog_name.[0]'
+    assert attacks[2]["attack"]["payload"] == '"Malicious dog\\", 1); -- "'
+    assert attacks[2]["attack"]["source"] == "query"
+
 
 def test_dangerous_response_without_firewall():
     dog_name = 'Dangerous bobby", 1); -- '

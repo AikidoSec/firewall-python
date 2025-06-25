@@ -3,6 +3,7 @@ from aikido_zen.helpers.get_argument import get_argument
 from aikido_zen.sinks import on_import, patch_function, before_modify_return, after
 from .extract_cookies import extract_cookies_from_flask_request_and_save_data
 from .extract_form_data import extract_form_data_from_flask_request_and_save_data
+from .extract_query import extract_query_from_flask_request_and_save_data
 from .extract_view_args import extract_view_args_from_flask_request_and_save_data
 import aikido_zen.sources.functions.request_handler as funcs
 from aikido_zen.sources.functions.request_handler import pre_response as should_block
@@ -16,6 +17,7 @@ def _full_dispatch_request_before(func, instance, args, kwargs):
     extract_cookies_from_flask_request_and_save_data(req)
     extract_form_data_from_flask_request_and_save_data(req)
     extract_view_args_from_flask_request_and_save_data(req)
+    extract_query_from_flask_request_and_save_data(req)
 
 
 @after
