@@ -19,7 +19,7 @@ def run_init_stage(request):
         return
 
     # Parse some attributes separately
-    context.body = try_extract_body_from_django_request(request)
+    context.set_body(try_extract_body_from_django_request(request))
     context.cookies = try_extract_cookies_from_django_request(request)
 
     context.set_as_current_context()
