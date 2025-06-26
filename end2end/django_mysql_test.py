@@ -89,5 +89,5 @@ def test_initial_heartbeat():
             "path": "/app/create"
         }], 
         {"aborted":0,"attacksDetected":{"blocked":2,"total":2},"total":3, 'rateLimited': 0},
-                       {'asgiref', 'regex', 'mysqlclient', 'sqlparse', 'aikido_zen', 'django'}
+                       {'wrapt', 'asgiref', 'aikido_zen', 'django', 'sqlparse', 'regex', 'mysqlclient'}
     )
