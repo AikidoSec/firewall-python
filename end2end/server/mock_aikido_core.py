@@ -85,6 +85,12 @@ def mock_get_events():
     return jsonify(events)
 
 
+@app.route('/mock/reset', methods=['GET'])
+def mock_get_events():
+    events.clear()
+    return jsonify({"msg": "OK"})
+
+
 if __name__ == '__main__':
     if len(sys.argv) < 2 or len(sys.argv) > 3:
         print("Usage: python mock_server.py <port> [config_file]")
