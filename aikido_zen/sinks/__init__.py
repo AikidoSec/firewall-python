@@ -59,7 +59,7 @@ class HookDuplicateHelper:
         self.hook_id = f"{wrapper.__module__}:wrapper.__name__"
         if hasattr(wrapper, "_hook_id"):
             self.hook_id = getattr(wrapper, "_hook_id")
-        self.hook_id += f":{original.__name__}"
+        self.hook_id += f":{original}"
 
     def is_registered(self):
         self._try_create_hooks_store()
