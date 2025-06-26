@@ -52,7 +52,6 @@ def test_dangerous_response_with_firewall():
 
 
 def test_dangerous_response_with_firewall():
-    dog_name = "Dangerous bobby', TRUE); -- "
     cookie_header = "dog_name=Dangerous bobby', TRUE) --; ,2=2"
     res = requests.get(f"{post_url_fw}/via_cookies", headers={
         "Cookie": cookie_header
@@ -68,11 +67,11 @@ def test_dangerous_response_with_firewall():
     assert attacks[1]["attack"]["kind"] == "sql_injection"
     assert attacks[1]["attack"]["metadata"] == {
         'dialect': "postgres",
-        'sql': "INSERT INTO sample_app_Dogs (dog_name, is_admin) VALUES ('Dangerous bobby', TRUE) -- ', FALSE)"
+        'sql': "INSERT INTO sample_app_Dogs (dog_name, is_admin) VALUES ('Dangerous bobby', TRUE) --', FALSE)"
     }
-    assert attacks[1]["pathToPayload"] == ".dog_name"
-    assert attacks[1]["source"] == "cookies"
-    assert attacks[1]["payload"] == "\"Dangerous bobby', TRUE) --\""
+    assert attacks[1]["attack"]["pathToPayload"] == ".dog_name"
+    assert attacks[1]["attack"]["source"] == "cookies"
+    assert attacks[1]["attack"]["payload"] == "\"Dangerous bobby', TRUE) --\""
 
 
 def test_dangerous_response_without_firewall():
