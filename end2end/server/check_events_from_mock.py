@@ -7,6 +7,12 @@ def fetch_events_from_mock(url):
     json_events = json.loads(res.content.decode("utf-8"))
     return json_events
 
+def clear_events_from_mock(url):
+    mock_events_url = f"{url}/mock/reset"
+    res = requests.get(mock_events_url, timeout=5)
+    return json.loads(res.content.decode("utf-8"))
+
+
 def filter_on_event_type(events, type):
     return [event for event in events if event["type"] == type]
 

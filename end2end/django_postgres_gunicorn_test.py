@@ -1,7 +1,8 @@
 import pytest
 import requests
 import time
-from .server.check_events_from_mock import fetch_events_from_mock, validate_started_event, filter_on_event_type
+from .server.check_events_from_mock import fetch_events_from_mock, validate_started_event, filter_on_event_type, \
+    clear_events_from_mock
 
 # e2e tests for django_postgres_gunicorn sample app
 post_url_fw = "http://localhost:8100/app/create"
@@ -26,6 +27,7 @@ def test_safe_response_without_firewall():
 
 
 def test_dangerous_response_with_firewall():
+    clear_events_from_mock("http://localhost:5000")
     dog_name = "Dangerous bobby', TRUE); -- "
     res = requests.post(post_url_fw, data={'dog_name': dog_name})
     assert res.status_code == 500
@@ -52,6 +54,7 @@ def test_dangerous_response_with_firewall():
 
 
 def test_dangerous_response_with_firewall():
+    clear_events_from_mock("http://localhost:5000")
     cookie_header = "dog_name=Dangerous bobby', TRUE) --; ,2=2"
     res = requests.get(f"{post_url_fw}/via_cookies", headers={
         "Cookie": cookie_header
@@ -62,16 +65,16 @@ def test_dangerous_response_with_firewall():
     events = fetch_events_from_mock("http://localhost:5000")
     attacks = filter_on_event_type(events, "detected_attack")
 
-    assert len(attacks) == 2
-    assert attacks[1]["attack"]["blocked"]
-    assert attacks[1]["attack"]["kind"] == "sql_injection"
-    assert attacks[1]["attack"]["metadata"] == {
+    assert len(attacks) == 1
+    assert attacks[0]["attack"]["blocked"]
+    assert attacks[0]["attack"]["kind"] == "sql_injection"
+    assert attacks[0]["attack"]["metadata"] == {
         'dialect': "postgres",
         'sql': "INSERT INTO sample_app_Dogs (dog_name, is_admin) VALUES ('Dangerous bobby', TRUE) --', FALSE)"
     }
-    assert attacks[1]["attack"]["pathToPayload"] == ".dog_name"
-    assert attacks[1]["attack"]["source"] == "cookies"
-    assert attacks[1]["attack"]["payload"] == "\"Dangerous bobby', TRUE) --\""
+    assert attacks[0]["attack"]["pathToPayload"] == ".dog_name"
+    assert attacks[0]["attack"]["source"] == "cookies"
+    assert attacks[0]["attack"]["payload"] == "\"Dangerous bobby', TRUE) --\""
 
 
 def test_dangerous_response_without_firewall():
