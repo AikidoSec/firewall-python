@@ -2,10 +2,13 @@
 Sink module for `pymongo`
 """
 
+import wrapt
+
 from aikido_zen.helpers.get_argument import get_argument
 import aikido_zen.vulnerabilities as vulns
 from . import patch_function, on_import, before
-from ..helpers.register_call import register_call
+from aikido_zen.helpers.register_call import register_call
+from aikido_zen.helpers.logging import logger
 
 
 @before
@@ -76,8 +79,14 @@ def _bulk_write(func, instance, args, kwargs):
         )
 
 
-@on_import("pymongo.collection", "pymongo", version_requirement="3.10.0")
+@on_import("pymongo", "pymongo", version_requirement="3.10.0")
 def patch(m):
+    on_import("pymongo.collection")(patch_collection)
+    # After 4.9, pymongo moved the collection module to `synchronous`
+    on_import("pymongo.synchronous.collection")(patch_collection)
+
+
+def patch_collection(m):
     """
     patching pymongo.collection
     - patches Collection.*(filter, ...)
@@ -86,6 +95,14 @@ def patch(m):
     - patches Collection.bulk_write
     src: https://github.com/mongodb/mongo-python-driver/blob/98658cfd1fea42680a178373333bf27f41153759/pymongo/synchronous/collection.py#L136
     """
+
+    if m.__name__ == "pymongo.collection":
+        # pymongo together with motor causes issues here, with the wrapping happening twice,
+        # since pymongo.collection still exists, but it just imports everything from pymono.synchronous.collection
+        original_collection_class = wrapt.resolve_path(m, "Collection")[2]
+        if original_collection_class.__module__ != "pymongo.collection":
+            return
+
     # func(filter, ...)
     patch_function(m, "Collection.replace_one", _func_filter_first)
     patch_function(m, "Collection.update_one", _func_filter_first)
