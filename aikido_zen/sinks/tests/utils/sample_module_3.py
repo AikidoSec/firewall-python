@@ -5,7 +5,8 @@ def my_func(a):
 def other_func(a):
     return a * 2
 
+
 class Functions:
     @staticmethod
     def my_func(a):
-        return a+1
+        return a + 1

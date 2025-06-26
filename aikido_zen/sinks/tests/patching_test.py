@@ -79,7 +79,7 @@ def test_patch_happens_multiple_but_different_module():
     def patch(m):
         patch_function(m, "my_func", my_func_wrapper)
 
-    @on_import("aikido_zen.sinks.tests.utils.sample_module")
+    @on_import("aikido_zen.sinks.tests.utils.sample_module_5")
     def patch2(m):
         patch_function(m, "my_func", my_func_wrapper)
 
@@ -88,12 +88,13 @@ def test_patch_happens_multiple_but_different_module():
     assert my_func(1) == 4
     assert my_func(2) == 5
 
+
 def test_patch_happens_multiple_different_module_class():
     @on_import("aikido_zen.sinks.tests.utils.sample_module_2")
-    def patch(m):
+    def patch1(m):
         patch_function(m, "Functions.my_func", my_func_wrapper)
 
-    @on_import("aikido_zen.sinks.tests.utils.sample_module")
+    @on_import("aikido_zen.sinks.tests.utils.sample_module_5")
     def patch2(m):
         patch_function(m, "Functions.my_func", my_func_wrapper)
 
