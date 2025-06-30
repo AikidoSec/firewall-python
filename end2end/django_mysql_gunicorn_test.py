@@ -44,7 +44,7 @@ def test_dangerous_response_with_firewall():
             'sql': 'INSERT INTO sample_app_dogs (dog_name, dog_boss) VALUES ("Dangerous bobby", 1); -- ", "N/A")'
         },
         'operation': 'MySQLdb.Cursor.execute',
-        'pathToPayload': '.dog_name[0]',
+        'pathToPayload': '.dog_name.[0]',
         'payload': '"Dangerous bobby\\", 1); -- "',
         'source': "body",
         'user': None
