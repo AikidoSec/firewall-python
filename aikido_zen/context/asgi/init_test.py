@@ -32,8 +32,8 @@ def test_asgi_scope_1():
     assert context1.remote_address == "1.1.1.1"
     assert context1.query == {"a": ["b"], "b": ["d"]}
     assert context1.headers == {
-        "COOKIE": "a=b; c=d",
-        "HEADER1_TEST_2": "testValue2198&",
+        "COOKIE": ["a=b; c=d"],
+        "HEADER1_TEST_2": ["testValue2198&"],
     }
     assert context1.cookies == {"a": "b", "c": "d"}
     assert context1.url == "https://192.168.0.1:443/a/b/c/d"
@@ -59,8 +59,8 @@ def test_asgi_scope_2():
     assert context2.remote_address == "2.2.2.2"
     assert context2.query == {"x": ["y"], "z": ["w"]}
     assert context2.headers == {
-        "COOKIE": "x=y; z=w",
-        "HEADER2_TEST_1": "anotherValue",
+        "COOKIE": ["x=y; z=w"],
+        "HEADER2_TEST_1": ["anotherValue"],
     }
     assert context2.cookies == {"x": "y", "z": "w"}
     assert context2.url == "http://192.168.0.2:80/path/to/resource"
@@ -86,8 +86,8 @@ def test_asgi_scope_3():
     assert context3.remote_address == "3.3.3.3"
     assert context3.query == {"key1": ["value1"], "key2": ["value2"]}
     assert context3.headers == {
-        "COOKIE": "session=abc123",
-        "HEADER3_TEST_3": "postValue",
+        "COOKIE": ["session=abc123"],
+        "HEADER3_TEST_3": ["postValue"],
     }
     assert context3.cookies == {"session": "abc123"}
     assert context3.url == "http://192.168.0.3:8080/v1/resource"
@@ -113,7 +113,37 @@ def test_asgi_scope_4():
     assert context4.remote_address == "4.4.4.4"
     assert context4.query == {}
     assert context4.headers == {
-        "HEADER4_TEST_4": "deleteValue",
+        "HEADER4_TEST_4": ["deleteValue"],
+    }
+    assert context4.cookies == {}  # No cookies in this scope
+    assert context4.url == "https://192.168.0.4:443/resource/123"
+
+
+# Scope 4 :
+TEST_ASGI_SCOPE_MULTIPLE_HEADER_VALUES = {
+    "method": "DELETE",
+    "headers": [
+        (b"header-key", b"value1"),
+        (b"header-key", b"value2"),
+        (b"header-key", b"value3"),
+    ],
+    "query_string": b"",
+    "client": ["4.4.4.4"],
+    "server": ["192.168.0.4", 443],
+    "scheme": "https",
+    "root_path": "/secure",
+    "path": "/secure/resource/123",
+}
+
+
+def test_asgi_scope_multiple_header_values():
+    context4 = Context()
+    set_asgi_attributes_on_context(context4, TEST_ASGI_SCOPE_MULTIPLE_HEADER_VALUES)
+    assert context4.method == "DELETE"
+    assert context4.remote_address == "4.4.4.4"
+    assert context4.query == {}
+    assert context4.headers == {
+        "HEADER_KEY": ["value1", "value2", "value3"],
     }
     assert context4.cookies == {}  # No cookies in this scope
     assert context4.url == "https://192.168.0.4:443/resource/123"
