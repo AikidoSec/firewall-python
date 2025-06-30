@@ -1,5 +1,8 @@
 import pytest
 from unittest.mock import MagicMock
+
+from django.utils.datastructures import MultiValueDict
+
 from .run_init_stage import run_init_stage
 from ...context import Context, get_current_context, current_context
 
@@ -57,14 +60,52 @@ def test_run_init_stage_with_json(mock_request):
     assert {"key": "value"} == context.body
 
 
-def test_run_init_stage_with_dict(mock_request):
+def test_run_init_stage_with_the_multi_value_dict(mock_request):
     """Test run_init_stage with a JSON request."""
-    mock_request.POST.dict.return_value = {"a": [1, 2], "b": [2, 3]}
+    mock_request.POST = MultiValueDict({"a": [1, 2], "b": [2, 3]})
     run_init_stage(mock_request)
 
     # Assertions
     context: Context = get_current_context()
     assert {"a": [1, 2], "b": [2, 3]} == context.body
+
+
+def test_run_init_stage_with_the_multi_value_dict_flat(mock_request):
+    mock_request.POST = MultiValueDict({"a": ["test"], "b": ["test2"]})
+    run_init_stage(mock_request)
+
+    # Assertions
+    context: Context = get_current_context()
+    assert {"a": ["test"], "b": ["test2"]} == context.body
+
+    mock_request.POST = MultiValueDict()
+    mock_request.POST["a"] = "test3"
+    mock_request.POST["b"] = "test4"
+    run_init_stage(mock_request)
+
+    # Assertions
+    context: Context = get_current_context()
+    assert {"a": ["test3"], "b": ["test4"]} == context.body
+
+    mock_request.POST = MultiValueDict()
+    mock_request.POST["a"] = "test3"
+    mock_request.POST["b"] = "test4"
+    mock_request.POST["b"] = "test5"
+    run_init_stage(mock_request)
+
+    # Assertions
+    context: Context = get_current_context()
+    assert {"a": ["test3"], "b": ["test5"]} == context.body
+
+
+def test_run_init_stage_with_the_multi_value_dict_complex(mock_request):
+    mock_request.POST = MultiValueDict({"a": ["test"], "b": ["test2"]})
+    mock_request.POST.appendlist("a", "test4")
+    run_init_stage(mock_request)
+
+    # Assertions
+    context: Context = get_current_context()
+    assert {"a": ["test", "test4"], "b": ["test2"]} == context.body
 
 
 def test_run_init_stage_with_dict_error(mock_request):
