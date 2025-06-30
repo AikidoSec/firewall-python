@@ -18,7 +18,9 @@ def set_asgi_attributes_on_context(context, scope):
     context.headers = normalize_asgi_headers(scope["headers"])
 
     if "COOKIE" in context.headers:
-        context.cookies = parse_cookies(context.headers["COOKIE"])
+        # Right now just use the first Cookie header, will change later to use
+        # framework definition for cookies.
+        context.cookies = parse_cookies(context.headers["COOKIE"][0])
     else:
         context.cookies = {}
 
