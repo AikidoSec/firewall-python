@@ -108,6 +108,15 @@ def test_run_init_stage_with_the_multi_value_dict_complex(mock_request):
     assert {"a": ["test", "test4"], "b": ["test2"]} == context.body
 
 
+def test_run_init_stage_with_invalid_post_body(mock_request):
+    mock_request.POST = {"a": ["test"], "b": ["test2"]}
+    run_init_stage(mock_request)
+
+    # Assertions
+    context: Context = get_current_context()
+    assert {"key": "value"} == context.body
+
+
 def test_run_init_stage_with_dict_error(mock_request):
     """Test run_init_stage with a JSON request."""
     mock_request.POST.dict.side_effect = Exception("too large")
