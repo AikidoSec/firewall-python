@@ -53,6 +53,21 @@ async def create_dog(request: Request):
 
     return JSONResponse({"message": f'Dog {dog_name} created successfully'}, status_code=201)
 
+async def create_dog_from_headers(request: Request):
+    dog_name = request.headers.get('X-Dog-Name')
+
+    if not dog_name:
+        return JSONResponse({"error": "dog_name is required"}, status_code=400)
+
+    conn = await get_db_connection()
+    try:
+        await conn.execute(f"INSERT INTO dogs (dog_name, isAdmin) VALUES ('%s', FALSE)" % (dog_name))
+    finally:
+        await conn.close()
+
+    return JSONResponse({"message": f'Dog {dog_name} created successfully'}, status_code=201)
+
+
 async def just(request: Request):
     return JSONResponse({"message": "Empty Page"})
 
@@ -85,6 +100,7 @@ routes = [
     Route("/dogpage/{dog_id:int}", get_dogpage),
     Route("/create", show_create_dog_form, methods=["GET"]),
     Route("/create", create_dog, methods=["POST"]),
+    Route("/create_dog_from_headers", create_dog_from_headers, methods=["GET"]),
     Route("/sync_route", sync_route),
     Route("/just", just,  methods=["GET"]),
     Route("/delayed_route", delayed_route, methods=["GET"])
