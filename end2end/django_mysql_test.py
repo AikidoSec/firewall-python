@@ -76,18 +76,39 @@ def test_dangerous_response_without_firewall():
     assert res.status_code == 200
 
 def test_initial_heartbeat():
-    time.sleep(55) # Sleep 5 + 55 seconds for heartbeat
+    time.sleep(55)  # Sleep 5 + 55 seconds for heartbeat
     events = fetch_events_from_mock("http://localhost:5000")
     heartbeat_events = filter_on_event_type(events, "heartbeat")
     assert len(heartbeat_events) == 1
-    validate_heartbeat(heartbeat_events[0], 
+    validate_heartbeat(
+        heartbeat_events[0],
         [{
-            "apispec": {'body': {'type': 'form-urlencoded', 'schema': {'type': 'object', 'properties': {'dog_name': {'type': 'string'}}}}, 'query': None, 'auth': None},
+            "apispec": {
+                'body': {
+                    'type': 'form-urlencoded',
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'dog_name': {
+                                'items': {'type': 'string'},
+                                'type': 'array'
+                            }
+                        }
+                    }
+                },
+                'query': None,
+                'auth': None
+            },
             "hits": 1,
             "hits_delta_since_sync": 0,
             "method": "POST",
             "path": "/app/create"
         }], 
-        {"aborted":0,"attacksDetected":{"blocked":2,"total":2},"total":3, 'rateLimited': 0},
-                       {'wrapt', 'asgiref', 'aikido_zen', 'django', 'sqlparse', 'regex', 'mysqlclient'}
+        {
+            "aborted": 0,
+            "attacksDetected": {"blocked": 2, "total": 2},
+            "total": 3,
+            'rateLimited': 0
+        },
+        {'wrapt', 'asgiref', 'aikido_zen', 'django', 'sqlparse', 'regex', 'mysqlclient'}
     )
