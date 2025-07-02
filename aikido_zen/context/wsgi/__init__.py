@@ -17,8 +17,8 @@ def set_wsgi_attributes_on_context(context, environ):
 
     context.method = environ["REQUEST_METHOD"]
     context.headers = extract_wsgi_headers(environ)
-    if "COOKIE" in context.headers:
-        context.cookies = parse_cookies(context.headers["COOKIE"])
+    if context.headers.get_header("COOKIE"):
+        context.cookies = parse_cookies(context.headers.get_header("COOKIE"))
     else:
         context.cookies = {}
     context.url = build_url_from_wsgi(environ)
@@ -29,4 +29,4 @@ def set_wsgi_attributes_on_context(context, environ):
 
     # Content type is generally not included as a header, do include this as a header to simplify :
     if "CONTENT_TYPE" in environ:
-        context.headers["CONTENT_TYPE"] = environ["CONTENT_TYPE"]
+        context.headers.store_header("CONTENT_TYPE", environ["CONTENT_TYPE"])

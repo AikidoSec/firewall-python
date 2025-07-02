@@ -1,5 +1,6 @@
 from aikido_zen.background_process.routes import Routes
 from aikido_zen.api_discovery.get_api_info import get_api_info
+from aikido_zen.helpers.headers import Headers
 
 
 class Context:
@@ -18,8 +19,11 @@ class Context:
         self.route = path
         self.body = body
         self.xml = xml
-        self.headers = headers
-        self.headers["CONTENT_TYPE"] = content_type
+        self.raw_headers = headers
+        self.raw_headers["CONTENT_TYPE"] = content_type
+        self.headers = Headers()
+        for k, v in self.raw_headers.items():
+            self.headers.store_header(k, v)
         self.query = query
         self.cookies = cookies
 
