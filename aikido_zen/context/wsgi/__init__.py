@@ -5,12 +5,13 @@ from aikido_zen.helpers.get_ip_from_request import get_ip_from_request
 from .extract_wsgi_headers import extract_wsgi_headers
 from .build_url_from_wsgi import build_url_from_wsgi
 from ..parse_cookies import parse_cookies
+from ...helpers.headers import Headers
 
 
 @dataclass
 class WSGIContext:
     method: str
-    headers: Dict[str, List[str]]
+    headers: Headers
     cookies: dict
     url: str
     query: dict
@@ -22,7 +23,7 @@ def parse_wsgi_environ(environ) -> WSGIContext:
     This extracts WSGI attributes, described in :
     https://peps.python.org/pep-3333/#environ-variables
     """
-    headers: Dict[str, List[str]] = extract_wsgi_headers(environ)
+    headers: Headers = extract_wsgi_headers(environ)
     # Content type is generally not included as a header, do include this as a header to simplify :
     if "CONTENT_TYPE" in environ:
         headers["CONTENT_TYPE"] = [environ["CONTENT_TYPE"]]
