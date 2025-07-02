@@ -4,29 +4,29 @@ Provides all the functionality for contexts
 
 import contextvars
 import json
-from json import JSONDecodeError
-from time import sleep
-from urllib.parse import parse_qs
+from typing import Optional, Dict, List
 
 from aikido_zen.helpers.build_route_from_url import build_route_from_url
 from aikido_zen.helpers.get_subdomains_from_url import get_subdomains_from_url
 from aikido_zen.helpers.logging import logger
-from .wsgi import set_wsgi_attributes_on_context
-from .asgi import set_asgi_attributes_on_context
+from .wsgi import parse_wsgi_environ, WSGIContext
+from .asgi import parse_asgi_scope, ASGIContext
 from .extract_route_params import extract_route_params
+from ..helpers.headers import Headers
 
 UINPUT_SOURCES = ["body", "cookies", "query", "headers", "xml", "route_params"]
-current_context = contextvars.ContextVar("current_context", default=None)
+current_context = contextvars.ContextVar[Optional["Context"]](
+    "current_context", default=None
+)
 
 WSGI_SOURCES = ["django", "flask"]
 ASGI_SOURCES = ["quart", "django_async", "starlette"]
 
 
-def get_current_context():
-    """Returns the current context"""
+def get_current_context() -> Optional["Context"]:
     try:
         return current_context.get()
-    except Exception:
+    except LookupError:
         return None
 
 
@@ -41,29 +41,43 @@ class Context:
             logger.debug("Creating Context instance based on dict object.")
             self.__dict__.update(context_obj)
             return
-        # Define emtpy variables/Properties :
+
         self.source = source
         self.user = None
+        self.method = None
+        self.remote_address = None
+        self.url = None
         self.parsed_userinput = {}
         self.xml = {}
         self.outgoing_req_redirects = []
+        self.headers: Headers = Headers()
+        self.query: Dict[str, List[str]] = dict()
+        self.cookies: Dict[str, List[str]] = dict()
+        self.executed_middleware = False
         self.set_body(body)
 
-        # Parse WSGI/ASGI/... request :
-        self.cookies = self.method = self.remote_address = self.query = self.headers = (
-            self.url
-        ) = None
         if source in WSGI_SOURCES:
-            set_wsgi_attributes_on_context(self, req)
+            wsgi_context: WSGIContext = parse_wsgi_environ(req)
+            self.method = wsgi_context.method
+            self.remote_address = wsgi_context.remote_address
+            self.url = wsgi_context.url
+            self.headers = wsgi_context.headers
+            self.query = wsgi_context.query
+            self.cookies = wsgi_context.cookies
         elif source in ASGI_SOURCES:
-            set_asgi_attributes_on_context(self, req)
+            asgi_context: ASGIContext = parse_asgi_scope(req)
+            self.method = asgi_context.method
+            self.remote_address = asgi_context.remote_address
+            self.url = asgi_context.url
+            self.headers = asgi_context.headers
+            self.query = asgi_context.query
+            self.cookies = asgi_context.cookies
+        else:
+            raise Exception("Unsupported source: " + source)
 
-        # Define variables using parsed request :
         self.route = build_route_from_url(self.url)
         self.route_params = extract_route_params(self.url)
         self.subdomains = get_subdomains_from_url(self.url)
-
-        self.executed_middleware = False
 
     def __reduce__(self):
         return (
@@ -127,9 +141,5 @@ class Context:
             "url": self.url,
         }
 
-    def get_user_agent(self):
-        if "USER_AGENT" not in self.headers:
-            return None
-        if isinstance(self.headers["USER_AGENT"], list):
-            return self.headers["USER_AGENT"][-1]
-        return self.headers["USER_AGENT"]
+    def get_user_agent(self) -> Optional[str]:
+        return self.headers.get_header("USER_AGENT")

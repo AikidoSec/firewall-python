@@ -52,11 +52,11 @@ def test_wsgi_context_1():
         "source": "django",
         "method": "POST",
         "headers": {
-            "HEADER_1": "header 1 value",
-            "HEADER_2": "Header 2 value",
-            "COOKIE": "sessionId=abc123xyz456;",
-            "HOST": "example.com",
-            "CONTENT_TYPE": "application/x-www-form-urlencoded",
+            "HEADER_1": ["header 1 value"],
+            "HEADER_2": ["Header 2 value"],
+            "COOKIE": ["sessionId=abc123xyz456;"],
+            "HOST": ["example.com"],
+            "CONTENT_TYPE": ["application/x-www-form-urlencoded"],
         },
         "cookies": {"sessionId": "abc123xyz456"},
         "url": "https://example.com/hello",
@@ -81,12 +81,12 @@ def test_wsgi_context_2():
         "source": "flask",
         "method": "GET",
         "headers": {
-            "HEADER_1": "header 1 value",
-            "HEADER_2": "Header 2 value",
-            "COOKIE": "sessionId=abc123xyz456;",
-            "HOST": "localhost:8080",
-            "CONTENT_TYPE": "application/json",
-            "USER_AGENT": "Mozilla/5.0",
+            "HEADER_1": ["header 1 value"],
+            "HEADER_2": ["Header 2 value"],
+            "COOKIE": ["sessionId=abc123xyz456;"],
+            "HOST": ["localhost:8080"],
+            "CONTENT_TYPE": ["application/json"],
+            "USER_AGENT": ["Mozilla/5.0"],
         },
         "cookies": {"sessionId": "abc123xyz456"},
         "url": "http://localhost:8080/hello",
@@ -129,12 +129,12 @@ def test_context_is_picklable(mocker):
     assert unpickled_obj.url == "http://localhost:8080/hello"
     assert unpickled_obj.body == 123
     assert unpickled_obj.headers == {
-        "HEADER_1": "header 1 value",
-        "HEADER_2": "Header 2 value",
-        "COOKIE": "sessionId=abc123xyz456;",
-        "HOST": "localhost:8080",
-        "CONTENT_TYPE": "application/json",
-        "USER_AGENT": "Mozilla/5.0",
+        "HEADER_1": ["header 1 value"],
+        "HEADER_2": ["Header 2 value"],
+        "COOKIE": ["sessionId=abc123xyz456;"],
+        "HOST": ["localhost:8080"],
+        "CONTENT_TYPE": ["application/json"],
+        "USER_AGENT": ["Mozilla/5.0"],
     }
     assert unpickled_obj.query == {"user": ["JohnDoe"], "age": ["30", "35"]}
     assert unpickled_obj.cookies == {"sessionId": "abc123xyz456"}

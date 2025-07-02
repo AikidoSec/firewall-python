@@ -146,12 +146,12 @@ def test_on_detected_attack_request_data_and_attack_data(
     assert request_data["ipAddress"] == "198.51.100.23"
     assert request_data["body"] == 123
     assert request_data["headers"] == {
-        "CONTENT_TYPE": "application/json",
-        "USER_AGENT": "Mozilla/5.0",
-        "COOKIE": "sessionId=abc123xyz456;",
-        "HEADER_1": "header 1 value",
-        "HEADER_2": "Header 2 value",
-        "HOST": "localhost:8080",
+        "CONTENT_TYPE": ["application/json"],
+        "USER_AGENT": ["Mozilla/5.0"],
+        "COOKIE": ["sessionId=abc123xyz456;"],
+        "HEADER_1": ["header 1 value"],
+        "HEADER_2": ["Header 2 value"],
+        "HOST": ["localhost:8080"],
     }
     assert request_data["source"] == "django"
     assert request_data["route"] == "/hello"

@@ -104,11 +104,11 @@ def test_flask_all_3_func_with_view_args_and_invalid_json_body():
         assert get_current_context().method == "POST"
         assert get_current_context().body is None
         assert get_current_context().headers == {
-            "COOKIE": "sessionId=abc123xyz456;",
-            "HEADER_1": "header 1 value",
-            "HEADER_2": "Header 2 value",
-            "HOST": "example.com",
-            "CONTENT_TYPE": "application/json",
+            "COOKIE": ["sessionId=abc123xyz456;"],
+            "HEADER_1": ["header 1 value"],
+            "HEADER_2": ["Header 2 value"],
+            "HOST": ["example.com"],
+            "CONTENT_TYPE": ["application/json"],
         }
         calls = mock_request_handler.call_args_list
         assert len(calls) == 2
@@ -175,11 +175,11 @@ def test_flask_all_3_func_with_invalid_body():
             get_current_context().body == None
         )  # body is None since it's invalid json
         assert get_current_context().headers == {
-            "COOKIE": "sessionId=abc123xyz456;",
-            "HEADER_1": "header 1 value",
-            "HEADER_2": "Header 2 value",
-            "HOST": "example.com",
-            "CONTENT_TYPE": "application/json",
+            "COOKIE": ["sessionId=abc123xyz456;"],
+            "HEADER_1": ["header 1 value"],
+            "HEADER_2": ["Header 2 value"],
+            "HOST": ["example.com"],
+            "CONTENT_TYPE": ["application/json"],
         }
         calls = mock_request_handler.call_args_list
         assert len(calls) == 2
@@ -208,11 +208,11 @@ def test_flask_all_3_func():
         assert get_current_context().method == "POST"
         assert get_current_context().body == None
         assert get_current_context().headers == {
-            "COOKIE": "sessionId=abc123xyz456;",
-            "HEADER_1": "header 1 value",
-            "HEADER_2": "Header 2 value",
-            "HOST": "example.com",
-            "CONTENT_TYPE": "application/x-www-form-urlencoded",
+            "COOKIE": ["sessionId=abc123xyz456;"],
+            "HEADER_1": ["header 1 value"],
+            "HEADER_2": ["Header 2 value"],
+            "HOST": ["example.com"],
+            "CONTENT_TYPE": ["application/x-www-form-urlencoded"],
         }
         calls = mock_request_handler.call_args_list
         assert len(calls) == 2
