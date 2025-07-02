@@ -4,16 +4,13 @@ Provides all the functionality for contexts
 
 import contextvars
 import json
-from json import JSONDecodeError
-from time import sleep
 from typing import Optional, Dict, List
-from urllib.parse import parse_qs
 
 from aikido_zen.helpers.build_route_from_url import build_route_from_url
 from aikido_zen.helpers.get_subdomains_from_url import get_subdomains_from_url
 from aikido_zen.helpers.logging import logger
-from .wsgi import set_wsgi_attributes_on_context
-from .asgi import set_asgi_attributes_on_context
+from .wsgi import parse_wsgi_environ, WSGIContext
+from .asgi import parse_asgi_scope, ASGIContext
 from .extract_route_params import extract_route_params
 
 UINPUT_SOURCES = ["body", "cookies", "query", "headers", "xml", "route_params"]
@@ -59,9 +56,23 @@ class Context:
         self.set_body(body)
 
         if source in WSGI_SOURCES:
-            set_wsgi_attributes_on_context(self, req)
+            wsgi_context: WSGIContext = parse_wsgi_environ(req)
+            self.method = wsgi_context.method
+            self.remote_address = wsgi_context.remote_address
+            self.url = wsgi_context.url
+            self.headers = wsgi_context.headers
+            self.query = wsgi_context.query
+            self.cookies = wsgi_context.cookies
         elif source in ASGI_SOURCES:
-            set_asgi_attributes_on_context(self, req)
+            asgi_context: ASGIContext = parse_asgi_scope(req)
+            self.method = asgi_context.method
+            self.remote_address = asgi_context.remote_address
+            self.url = asgi_context.url
+            self.headers = asgi_context.headers
+            self.query = asgi_context.query
+            self.cookies = asgi_context.cookies
+        else:
+            raise Exception("Unsupported source: " + source)
 
         self.route = build_route_from_url(self.url)
         self.route_params = extract_route_params(self.url)
