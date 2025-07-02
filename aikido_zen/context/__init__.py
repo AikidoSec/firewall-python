@@ -12,6 +12,7 @@ from aikido_zen.helpers.logging import logger
 from .wsgi import parse_wsgi_environ, WSGIContext
 from .asgi import parse_asgi_scope, ASGIContext
 from .extract_route_params import extract_route_params
+from ..helpers.headers import Headers
 
 UINPUT_SOURCES = ["body", "cookies", "query", "headers", "xml", "route_params"]
 current_context = contextvars.ContextVar[Optional["Context"]](
@@ -49,7 +50,7 @@ class Context:
         self.parsed_userinput = {}
         self.xml = {}
         self.outgoing_req_redirects = []
-        self.headers: Dict[str, List[str]] = dict()
+        self.headers: Headers = Headers()
         self.query: Dict[str, List[str]] = dict()
         self.cookies: Dict[str, List[str]] = dict()
         self.executed_middleware = False
@@ -140,10 +141,5 @@ class Context:
             "url": self.url,
         }
 
-    def get_header(self, key: str) -> Optional[str]:
-        if key not in self.headers or not self.headers[key]:
-            return None
-        return self.headers[key][-1]
-
     def get_user_agent(self) -> Optional[str]:
-        return self.get_header("USER_AGENT")
+        return self.headers.get_header("USER_AGENT")
