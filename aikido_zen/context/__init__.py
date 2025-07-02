@@ -6,6 +6,7 @@ import contextvars
 import json
 from json import JSONDecodeError
 from time import sleep
+from typing import Optional, Dict, List
 from urllib.parse import parse_qs
 
 from aikido_zen.helpers.build_route_from_url import build_route_from_url
@@ -16,17 +17,18 @@ from .asgi import set_asgi_attributes_on_context
 from .extract_route_params import extract_route_params
 
 UINPUT_SOURCES = ["body", "cookies", "query", "headers", "xml", "route_params"]
-current_context = contextvars.ContextVar("current_context", default=None)
+current_context = contextvars.ContextVar[Optional["Context"]](
+    "current_context", default=None
+)
 
 WSGI_SOURCES = ["django", "flask"]
 ASGI_SOURCES = ["quart", "django_async", "starlette"]
 
 
-def get_current_context():
-    """Returns the current context"""
+def get_current_context() -> Optional["Context"]:
     try:
         return current_context.get()
-    except Exception:
+    except LookupError:
         return None
 
 
@@ -41,29 +43,29 @@ class Context:
             logger.debug("Creating Context instance based on dict object.")
             self.__dict__.update(context_obj)
             return
-        # Define emtpy variables/Properties :
+
         self.source = source
         self.user = None
+        self.method = None
+        self.remote_address = None
+        self.url = None
         self.parsed_userinput = {}
         self.xml = {}
         self.outgoing_req_redirects = []
+        self.headers: Dict[str, List[str]] = dict()
+        self.query: Dict[str, List[str]] = dict()
+        self.cookies: Dict[str, List[str]] = dict()
+        self.executed_middleware = False
         self.set_body(body)
 
-        # Parse WSGI/ASGI/... request :
-        self.cookies = self.method = self.remote_address = self.query = self.headers = (
-            self.url
-        ) = None
         if source in WSGI_SOURCES:
             set_wsgi_attributes_on_context(self, req)
         elif source in ASGI_SOURCES:
             set_asgi_attributes_on_context(self, req)
 
-        # Define variables using parsed request :
         self.route = build_route_from_url(self.url)
         self.route_params = extract_route_params(self.url)
         self.subdomains = get_subdomains_from_url(self.url)
-
-        self.executed_middleware = False
 
     def __reduce__(self):
         return (
