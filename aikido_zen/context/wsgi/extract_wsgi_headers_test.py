@@ -4,7 +4,7 @@ from .extract_wsgi_headers import extract_wsgi_headers
 
 def test_extract_wsgi_headers_single_header():
     request = {"REQUEST_METHOD": "GET", "HTTP_USER_AGENT": "Mozilla/5.0"}
-    expected = {"USER_AGENT": "Mozilla/5.0"}
+    expected = {"USER_AGENT": ["Mozilla/5.0"]}
     assert extract_wsgi_headers(request) == expected
 
 
@@ -16,9 +16,9 @@ def test_extract_wsgi_headers_multiple_headers():
         "HTTP_CONTENT_TYPE": "application/json",
     }
     expected = {
-        "HOST": "example.com",
-        "ACCEPT": "text/html",
-        "CONTENT_TYPE": "application/json",
+        "HOST": ["example.com"],
+        "ACCEPT": ["text/html"],
+        "CONTENT_TYPE": ["application/json"],
     }
     assert extract_wsgi_headers(request) == expected
 
@@ -42,5 +42,5 @@ def test_extract_wsgi_headers_mixed_headers():
         "HTTP_ACCEPT_LANGUAGE": "en-US,en;q=0.5",
         "OTHER_HEADER": "value",
     }
-    expected = {"USER_AGENT": "Mozilla/5.0", "ACCEPT_LANGUAGE": "en-US,en;q=0.5"}
+    expected = {"USER_AGENT": ["Mozilla/5.0"], "ACCEPT_LANGUAGE": ["en-US,en;q=0.5"]}
     assert extract_wsgi_headers(request) == expected
