@@ -1,5 +1,6 @@
 import pytest
 from .get_api_info import get_api_info
+from ..helpers.headers import Headers
 
 
 class Context:
@@ -16,7 +17,8 @@ class Context:
         self.path = path
         self.body = body
         self.xml = xml
-        self.headers = {"CONTENT_TYPE": content_type}
+        self.headers = Headers()
+        self.headers.store_header("CONTENT_TYPE", content_type)
         self.query = query
         self.cookies = {}
 
@@ -154,7 +156,7 @@ def test_auth_get_api_info(monkeypatch):
         },
         content_type="application/json",
     )
-    context1.headers["AUTHORIZATION"] = "Bearer token"
+    context1.headers.store_header("AUTHORIZATION", "Bearer token")
     api_info = get_api_info(context1)
     assert api_info == {
         "body": {

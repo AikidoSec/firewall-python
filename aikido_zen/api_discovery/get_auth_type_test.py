@@ -1,10 +1,13 @@
 import pytest
 from .get_auth_types import get_auth_types
+from ..helpers.headers import Headers
 
 
 class Context:
     def __init__(self, headers={}, cookies={}):
-        self.headers = headers
+        self.headers = Headers()
+        for k, v in headers.items():
+            self.headers.store_header(k, v)
         self.cookies = cookies
 
 
