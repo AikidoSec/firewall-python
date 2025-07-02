@@ -84,7 +84,7 @@ def test_dangerous_response_with_firewall_via_headers():
     assert attacks[0]["attack"]["metadata"]["dialect"] == "postgres"
     assert attacks[0]["attack"]["operation"] == "asyncpg.connection.Connection.execute"
     assert attacks[0]["attack"]["pathToPayload"] == ".X_DOG_NAME.[0]"
-    assert attacks[0]["attack"]["payload"] == "\"Dangerous Bobby', TRUE); --\""
+    assert attacks[0]["attack"]["payload"] == "\"Dangerous Bobby', TRUE); -- \""
     assert attacks[0]["attack"]["source"] == "headers"
     assert attacks[0]["attack"]["user"]["id"] == "user123"
     assert attacks[0]["attack"]["user"]["name"] == "John Doe"
