@@ -14,6 +14,7 @@ from aikido_zen.helpers.logging import logger
 from .wsgi import set_wsgi_attributes_on_context
 from .asgi import set_asgi_attributes_on_context
 from .extract_route_params import extract_route_params
+from ..helpers.headers import Headers
 
 UINPUT_SOURCES = ["body", "cookies", "query", "headers", "xml", "route_params"]
 current_context = contextvars.ContextVar("current_context", default=None)
@@ -48,11 +49,12 @@ class Context:
         self.xml = {}
         self.outgoing_req_redirects = []
         self.set_body(body)
+        self.headers: Headers = Headers()
+        self.cookies = dict()
+        self.query = dict()
 
         # Parse WSGI/ASGI/... request :
-        self.cookies = self.method = self.remote_address = self.query = self.headers = (
-            self.url
-        ) = None
+        self.method = self.remote_address = self.url = None
         if source in WSGI_SOURCES:
             set_wsgi_attributes_on_context(self, req)
         elif source in ASGI_SOURCES:
@@ -128,8 +130,4 @@ class Context:
         }
 
     def get_user_agent(self):
-        if "USER_AGENT" not in self.headers:
-            return None
-        if isinstance(self.headers["USER_AGENT"], list):
-            return self.headers["USER_AGENT"][-1]
-        return self.headers["USER_AGENT"]
+        return self.headers.get_header("USER_AGENT")
