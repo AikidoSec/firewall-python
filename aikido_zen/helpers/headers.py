@@ -1,6 +1,4 @@
-from typing import List
-
-from typing_extensions import Optional
+from typing import List, Optional
 
 
 class Headers(dict):
