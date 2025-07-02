@@ -128,6 +128,8 @@ class Context:
         }
 
     def get_user_agent(self):
-        if "USER_AGENT" in self.headers:
-            return self.headers["USER_AGENT"]
-        return None
+        if "USER_AGENT" not in self.headers:
+            return None
+        if isinstance(self.headers["USER_AGENT"], list):
+            return self.headers["USER_AGENT"][-1]
+        return self.headers["USER_AGENT"]
