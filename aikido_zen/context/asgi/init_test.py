@@ -1,16 +1,5 @@
 import pytest
-from aikido_zen.context.asgi import set_asgi_attributes_on_context
-
-
-class Context:
-    def __init__(self):
-        self.headers = None
-        self.cookies = None
-        self.method = None
-        self.url = None
-        self.query = None
-        self.remote_address = None
-
+from aikido_zen.context.asgi import parse_asgi_scope
 
 # Scope 1 :
 TEST_ASGI_SCOPE_1 = {
@@ -26,8 +15,7 @@ TEST_ASGI_SCOPE_1 = {
 
 
 def test_asgi_scope_1():
-    context1 = Context()
-    set_asgi_attributes_on_context(context1, TEST_ASGI_SCOPE_1)
+    context1 = parse_asgi_scope(TEST_ASGI_SCOPE_1)
     assert context1.method == "PUT"
     assert context1.remote_address == "1.1.1.1"
     assert context1.query == {"a": ["b"], "b": ["d"]}
@@ -53,8 +41,7 @@ TEST_ASGI_SCOPE_2 = {
 
 
 def test_asgi_scope_2():
-    context2 = Context()
-    set_asgi_attributes_on_context(context2, TEST_ASGI_SCOPE_2)
+    context2 = parse_asgi_scope(TEST_ASGI_SCOPE_2)
     assert context2.method == "GET"
     assert context2.remote_address == "2.2.2.2"
     assert context2.query == {"x": ["y"], "z": ["w"]}
@@ -80,8 +67,7 @@ TEST_ASGI_SCOPE_3 = {
 
 
 def test_asgi_scope_3():
-    context3 = Context()
-    set_asgi_attributes_on_context(context3, TEST_ASGI_SCOPE_3)
+    context3 = parse_asgi_scope(TEST_ASGI_SCOPE_3)
     assert context3.method == "POST"
     assert context3.remote_address == "3.3.3.3"
     assert context3.query == {"key1": ["value1"], "key2": ["value2"]}
@@ -107,8 +93,7 @@ TEST_ASGI_SCOPE_4 = {
 
 
 def test_asgi_scope_4():
-    context4 = Context()
-    set_asgi_attributes_on_context(context4, TEST_ASGI_SCOPE_4)
+    context4 = parse_asgi_scope(TEST_ASGI_SCOPE_4)
     assert context4.method == "DELETE"
     assert context4.remote_address == "4.4.4.4"
     assert context4.query == {}
@@ -137,8 +122,7 @@ TEST_ASGI_SCOPE_MULTIPLE_HEADER_VALUES = {
 
 
 def test_asgi_scope_multiple_header_values():
-    context4 = Context()
-    set_asgi_attributes_on_context(context4, TEST_ASGI_SCOPE_MULTIPLE_HEADER_VALUES)
+    context4 = parse_asgi_scope(TEST_ASGI_SCOPE_MULTIPLE_HEADER_VALUES)
     assert context4.method == "DELETE"
     assert context4.remote_address == "4.4.4.4"
     assert context4.query == {}
@@ -147,3 +131,33 @@ def test_asgi_scope_multiple_header_values():
     }
     assert context4.cookies == {}  # No cookies in this scope
     assert context4.url == "https://192.168.0.4:443/resource/123"
+
+
+# Scope 5 :
+TEST_ASGI_SCOPE_5 = {
+    "method": "POST",
+    "headers": [
+        (b"COOKIE", b"session=abc"),
+        (b"COOKIE", b"session=abc123"),
+        (b"header3_test-3", b"postValue"),
+    ],
+    "query_string": b"key1=value1&key2=value2",
+    "client": ["3.3.3.3"],
+    "server": ["192.168.0.3", 8080],
+    "scheme": "http",
+    "root_path": "/api",
+    "path": "/api/v1/resource",
+}
+
+
+def test_asgi_scope_5():
+    context5 = parse_asgi_scope(TEST_ASGI_SCOPE_5)
+    assert context5.method == "POST"
+    assert context5.remote_address == "3.3.3.3"
+    assert context5.query == {"key1": ["value1"], "key2": ["value2"]}
+    assert context5.headers == {
+        "COOKIE": ["session=abc", "session=abc123"],
+        "HEADER3_TEST_3": ["postValue"],
+    }
+    assert context5.cookies == {"session": "abc123"}
+    assert context5.url == "http://192.168.0.3:8080/v1/resource"
