@@ -6,21 +6,21 @@ import socket
 import os
 from typing import Dict, List, Optional
 
+from aikido_zen.helpers.headers import Headers
 from aikido_zen.helpers.logging import logger
 
 
-def get_ip_from_request(remote_address, headers: Dict[str, List[str]]) -> Optional[str]:
+def get_ip_from_request(remote_address: str, headers: Headers) -> Optional[str]:
     """
     Tries and get the IP address from the request, checking for x-forwarded-for
     """
-    if headers and "X_FORWARDED_FOR" in headers and headers["X_FORWARDED_FOR"]:
-        if trust_proxy():
-            x_forwarded_for = get_client_ip_from_x_forwarded_for(
-                headers["X_FORWARDED_FOR"][-1]
-            )
+    if headers.get_header("X_FORWARDED_FOR") and trust_proxy():
+        x_forwarded_for = get_client_ip_from_x_forwarded_for(
+            headers.get_header("X_FORWARDED_FOR")
+        )
 
-            if x_forwarded_for and is_ip(x_forwarded_for):
-                return x_forwarded_for
+        if x_forwarded_for and is_ip(x_forwarded_for):
+            return x_forwarded_for
 
     if remote_address and is_ip(remote_address):
         return remote_address
