@@ -4,18 +4,19 @@ Mainly exports the `get_ip_from_request` function
 
 import socket
 import os
+from typing import Dict, List, Optional
+
 from aikido_zen.helpers.logging import logger
 
 
-def get_ip_from_request(remote_address, headers):
+def get_ip_from_request(remote_address, headers: Dict[str, List[str]]) -> Optional[str]:
     """
     Tries and get the IP address from the request, checking for x-forwarded-for
     """
-    if headers:
-        lower_headers = {key.lower(): value for key, value in headers.items()}
-        if "x_forwarded_for" in lower_headers and trust_proxy():
+    if headers and "X_FORWARDED_FOR" in headers and headers["X_FORWARDED_FOR"]:
+        if trust_proxy():
             x_forwarded_for = get_client_ip_from_x_forwarded_for(
-                lower_headers["x_forwarded_for"]
+                headers["X_FORWARDED_FOR"][-1]
             )
 
             if x_forwarded_for and is_ip(x_forwarded_for):
@@ -27,7 +28,7 @@ def get_ip_from_request(remote_address, headers):
     return None
 
 
-def get_client_ip_from_x_forwarded_for(value):
+def get_client_ip_from_x_forwarded_for(value: str) -> Optional[str]:
     """
     Fetches the IP out of the X-Forwarder-For headers
     """
