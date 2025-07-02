@@ -129,9 +129,10 @@ class Context:
             "url": self.url,
         }
 
-    def get_user_agent(self):
-        if "USER_AGENT" not in self.headers:
+    def get_header(self, key: str) -> Optional[str]:
+        if key not in self.headers or not self.headers[key]:
             return None
-        if isinstance(self.headers["USER_AGENT"], list):
-            return self.headers["USER_AGENT"][-1]
-        return self.headers["USER_AGENT"]
+        return self.headers[key][-1]
+
+    def get_user_agent(self) -> Optional[str]:
+        return self.get_header("USER_AGENT")
