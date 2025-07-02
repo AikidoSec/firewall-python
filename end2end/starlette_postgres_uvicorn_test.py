@@ -80,7 +80,7 @@ def test_dangerous_response_with_firewall_via_headers():
     assert attacks[0]["attack"]["blocked"] == True
     assert attacks[0]["attack"]["kind"] == "sql_injection"
     assert attacks[0]["attack"]["metadata"][
-               "sql"] == "INSERT INTO dogs (dog_name, isAdmin) VALUES ('Dangerous Bobby', TRUE); --', FALSE)"
+               "sql"] == "INSERT INTO dogs (dog_name, isAdmin) VALUES ('Dangerous Bobby', TRUE); -- ', FALSE)"
     assert attacks[0]["attack"]["metadata"]["dialect"] == "postgres"
     assert attacks[0]["attack"]["operation"] == "asyncpg.connection.Connection.execute"
     assert attacks[0]["attack"]["pathToPayload"] == ".X_DOG_NAME.[0]"
