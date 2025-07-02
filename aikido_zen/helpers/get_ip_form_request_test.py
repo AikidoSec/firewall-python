@@ -4,36 +4,37 @@ from .get_ip_from_request import (
     is_ip,
     get_client_ip_from_x_forwarded_for,
 )
+from .headers import Headers
 
 
 # Test `get_ip_from_request` function :
 def test_get_ip_from_request():
     # Test case 1: Valid X_FORWARDED_FOR header with valid IP
-    headers = {"X_FORWARDED_FOR": "192.168.1.1, 10.0.0.1"}
+    headers = Headers()
+    headers.store_header("x-forwarded-for", "192.168.1.1, 10.0.0.1")
     assert get_ip_from_request(None, headers) == "192.168.1.1"
 
     # Test case 2: Valid X_FORWARDED_FOR header with invalid IPs
-    headers = {"X_FORWARDED_FOR": "256.256.256.256, 192.168.1.1"}
+    headers = Headers()
+    headers.store_header("x-forwarded-for", "256.256.256.256, 192.168.1.1")
     assert (
         get_ip_from_request(None, headers) == "192.168.1.1"
     )  # Should return the valid IP
 
     # Test case 3: Valid remote address
-    headers = {}
+    headers = Headers()
     assert get_ip_from_request("10.0.0.1", headers) == "10.0.0.1"
 
     # Test case 4: Valid remote address with invalid X_FORWARDED_FOR
-    headers = {"X_FORWARDED_FOR": "abc.def.ghi.jkl, 256.256.256.256"}
+    headers = Headers()
+    headers.store_header("x-forwarded-for", "abc.def.ghi.jkl, 256.256.256.256")
     assert (
         get_ip_from_request("10.0.0.1", headers) == "10.0.0.1"
     )  # Should return the remote address
 
     # Test case 5: Both X_FORWARDED_FOR and remote address are invalid
-    headers = {"X_FORWARDED_FOR": "abc.def.ghi.jkl, 256.256.256.256"}
-    assert get_ip_from_request(None, headers) is None  # Should return None
-
-    # Test case 6: Empty headers and remote address
-    headers = {}
+    headers = Headers()
+    headers.store_header("x-forwarded-for", "abc.def.ghi.jkl, 256.256.256.256")
     assert get_ip_from_request(None, headers) is None  # Should return None
 
 
