@@ -3,7 +3,7 @@ from typing import Dict, List
 from urllib.parse import parse_qs
 from aikido_zen.helpers.get_ip_from_request import get_ip_from_request
 from ..parse_cookies import parse_cookies
-from .normalize_asgi_headers import normalize_asgi_headers
+from .extract_asgi_headers import extract_asgi_headers
 from .build_url_from_asgi import build_url_from_asgi
 
 
@@ -22,7 +22,7 @@ def parse_asgi_scope(scope) -> ASGIContext:
     This extracts ASGI Scope attributes, described in :
     https://asgi.readthedocs.io/en/latest/specs/www.html#http-connection-scope
     """
-    headers = normalize_asgi_headers(scope["headers"])
+    headers = extract_asgi_headers(scope["headers"])
 
     cookies = {}
     if "COOKIE" in headers and headers["COOKIE"]:
