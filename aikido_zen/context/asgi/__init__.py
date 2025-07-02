@@ -5,12 +5,13 @@ from aikido_zen.helpers.get_ip_from_request import get_ip_from_request
 from ..parse_cookies import parse_cookies
 from .extract_asgi_headers import extract_asgi_headers
 from .build_url_from_asgi import build_url_from_asgi
+from ...helpers.headers import Headers
 
 
 @dataclass
 class ASGIContext:
     method: str
-    headers: Dict[str, List[str]]
+    headers: Headers
     cookies: dict
     url: str
     query: dict
