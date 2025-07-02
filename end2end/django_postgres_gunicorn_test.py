@@ -44,7 +44,7 @@ def test_dangerous_response_with_firewall():
             'sql': "INSERT INTO sample_app_Dogs (dog_name, is_admin) VALUES ('Dangerous bobby', TRUE); -- ', FALSE)"
         },
         'operation': "psycopg2.Connection.Cursor.execute",
-        'pathToPayload': '.dog_name',
+        'pathToPayload': '.dog_name.[0]',
         'payload': "\"Dangerous bobby', TRUE); -- \"",
         'source': "body",
         'user': None
