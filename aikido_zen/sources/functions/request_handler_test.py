@@ -4,6 +4,7 @@ from aikido_zen.thread.thread_cache import get_cache, ThreadCache
 from .request_handler import request_handler
 from ...background_process.service_config import ServiceConfig
 from ...context import Context, current_context
+from ...helpers.headers import Headers
 
 
 @pytest.fixture
@@ -107,13 +108,15 @@ def test_post_response_no_context(mock_get_comms):
 
 # Test firewall lists
 def set_context(remote_address, user_agent=""):
+    headers = Headers()
+    headers.store_header("USER_AGENT", user_agent)
     Context(
         context_obj={
             "remote_address": remote_address,
             "method": "POST",
             "url": "http://localhost:4000",
             "query": {"abc": "def"},
-            "headers": {"USER_AGENT": user_agent},
+            "headers": headers,
             "body": None,
             "cookies": {},
             "source": "flask",
