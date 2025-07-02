@@ -1,5 +1,7 @@
 """Exports get_body_data_type"""
 
+from aikido_zen.helpers.headers import Headers
+
 JSON_CONTENT_TYPES = [
     "application/json",
     "application/vnd.api+json",
@@ -8,12 +10,12 @@ JSON_CONTENT_TYPES = [
 ]
 
 
-def get_body_data_type(headers):
+def get_body_data_type(headers: Headers):
     """Gets the type of body data from headers"""
-    if not isinstance(headers, dict) or headers is None:
+    if not isinstance(headers, Headers) or headers is None:
         return
 
-    content_type = headers.get("CONTENT_TYPE")
+    content_type = headers.get_header("CONTENT_TYPE")
     if not content_type:
         return
 

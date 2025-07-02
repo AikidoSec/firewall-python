@@ -1,5 +1,6 @@
 """Usefull export : get_auth_types"""
 
+from aikido_zen.helpers.headers import Headers
 from aikido_zen.helpers.is_http_auth_scheme import is_http_auth_scheme
 
 common_api_key_header_names = [
@@ -26,13 +27,13 @@ common_auth_cookie_names = [
 
 def get_auth_types(context):
     """Get the authentication type of the API request."""
-    if not isinstance(context.headers, dict):
+    if not isinstance(context.headers, Headers):
         return None
 
     result = []
 
     # Check the Authorization header
-    auth_header = context.headers.get("AUTHORIZATION")
+    auth_header = context.headers.get_header("AUTHORIZATION")
     if isinstance(auth_header, str):
         auth_header_type = get_authorization_header_type(auth_header)
         if auth_header_type:
