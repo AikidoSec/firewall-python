@@ -12,6 +12,9 @@ UUID_REGEX = re.compile(
     r"(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
     re.I,
 )
+OBJECT_ID_REGEX = re.compile(r"^[0-9a-f]{24}$", re.I)
+
+ULID_REGEX = re.compile(r"^[0-9A-HJKMNP-TV-Z]{26}$", re.I)
 NUMBER_REGEX = re.compile(r"^\d+$")
 DATE_REGEX = re.compile(r"^\d{4}-\d{2}-\d{2}|\d{2}-\d{2}-\d{4}$")
 EMAIL_REGEX = re.compile(
@@ -60,6 +63,12 @@ def replace_url_segment_with_param(segment):
 
     if len(segment) == 36 and UUID_REGEX.match(segment):
         return ":uuid"
+
+    if len(segment) == 26 and ULID_REGEX.match(segment):
+        return ":ulid"
+
+    if len(segment) == 24 and OBJECT_ID_REGEX.match(segment):
+        return ":objectId"
 
     if starts_with_number and DATE_REGEX.match(segment):
         return ":date"
