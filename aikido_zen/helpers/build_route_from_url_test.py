@@ -114,3 +114,26 @@ def test_replace_secrets():
         build_route_from_url("/confirm/CnJ4DunhYfv2db6T1FRfciRBHtlNKOYrjoz")
         == "/confirm/:secret"
     )
+
+
+def test_replaces_bson_object_ids():
+    assert build_route_from_url("/posts/66ec29159d00113616fc7184") == "/posts/:objectId"
+
+    # 25 characters
+    assert (
+        build_route_from_url("/posts/66ec29159d00113616fc71845") != "/posts/:objectId"
+    )
+
+    # 23 characters
+    assert build_route_from_url("/posts/66ec29159d00113616fc718") != "/posts/:objectId"
+
+
+def test_replaces_ulid_strings():
+    assert build_route_from_url("/posts/01ARZ3NDEKTSV4RRFFQ69G5FAV") == "/posts/:ulid"
+    assert build_route_from_url("/posts/01arz3ndektsv4rrffq69g5fav") == "/posts/:ulid"
+
+    # 27 characters
+    assert build_route_from_url("/posts/01arz3ndektsv4rrffq69g5favv") != "/posts/:ulid"
+
+    # 25 characters
+    assert build_route_from_url("/posts/01arz3ndektsv4rrffq69g5fa") != "/posts/:ulid"
