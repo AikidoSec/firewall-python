@@ -6,6 +6,7 @@ import contextvars
 import json
 from json import JSONDecodeError
 from time import sleep
+from typing import Dict
 from urllib.parse import parse_qs
 
 from aikido_zen.helpers.build_route_from_url import build_route_from_url
@@ -98,6 +99,9 @@ class Context:
         Set the current context
         """
         current_context.set(self)
+
+    def set_cookies(self, cookies):
+        self.cookies = cookies
 
     def set_body(self, body):
         try:
