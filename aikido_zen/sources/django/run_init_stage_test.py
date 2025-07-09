@@ -45,6 +45,7 @@ def mock_request():
     request.body = '{"key": "value"}'  # Example JSON body
     request.META = wsgi_request
     request.scope = None
+    del request.COOKIES
     return request
 
 
@@ -63,16 +64,19 @@ def test_run_init_stage_with_json(mock_request):
     # Assertions
     context: Context = get_current_context()
     assert {"key": "value"} == context.body
+    assert {} == context.cookies
 
 
 def test_run_init_stage_with_the_multi_value_dict(mock_request):
     """Test run_init_stage with a JSON request."""
     mock_request.POST = MultiValueDict({"a": [1, 2], "b": [2, 3]})
+    mock_request.COOKIES = {"a": "b", "c": "d"}
     run_init_stage(mock_request)
 
     # Assertions
     context: Context = get_current_context()
     assert {"a": [1, 2], "b": [2, 3]} == context.body
+    assert {"a": "b", "c": "d"} == context.cookies
 
 
 def test_run_init_stage_with_the_multi_value_dict_flat(mock_request):
