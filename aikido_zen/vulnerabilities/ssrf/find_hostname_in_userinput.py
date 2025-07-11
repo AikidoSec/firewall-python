@@ -2,7 +2,7 @@
 Only exports find_hostname_in_userinput function
 """
 
-from typing import Optional, List, Dict
+from typing import Optional, List, Tuple
 
 from aikido_zen.helpers.get_port_from_url import get_port_from_url
 from aikido_zen.helpers.try_parse_url import try_parse_url
@@ -16,9 +16,6 @@ def find_hostname_in_userinput(
     """
     normalized_hostname = normalized_hostname.lower()
     if len(user_input) <= 1:
-        return False
-    if port and not str(port) in user_input:
-        # Easy way for an early return: If a port is defined, it has to be inside the user input.
         return False
 
     user_input_variants = [user_input, f"http://{user_input}", f"https://{user_input}"]
@@ -41,13 +38,15 @@ def find_hostname_in_userinput(
     return False
 
 
-def normalize_raw_url_variants(url_variants: List[str]) -> Dict[str, Optional[int]]:
-    normalized_variants = {}
+def normalize_raw_url_variants(
+    url_variants: List[str],
+) -> List[Tuple[str, Optional[int]]]:
+    normalized_variants = []
     for variant in url_variants:
         # Try parse the variant as an url,
         user_input_url = try_parse_url(variant)
         if not user_input_url or not user_input_url.hostname:
             continue
         port = get_port_from_url(user_input_url.geturl())
-        normalized_variants[user_input_url.hostname.lower()] = port
+        normalized_variants.append((user_input_url.hostname.lower(), port))
     return normalized_variants
