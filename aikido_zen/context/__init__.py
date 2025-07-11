@@ -66,6 +66,7 @@ class Context:
         self.subdomains = get_subdomains_from_url(self.url)
 
         self.executed_middleware = False
+        logger.debug("New `%s` context: [%s]%s", self.source, self.method, self.route)
 
     def __reduce__(self):
         return (

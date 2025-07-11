@@ -13,7 +13,6 @@ def set_asgi_attributes_on_context(context, scope):
     This extracts ASGI Scope attributes, described in :
     https://asgi.readthedocs.io/en/latest/specs/www.html#http-connection-scope
     """
-    logger.debug("Setting ASGI attributes")
     context.method = scope["method"]
     context.headers = normalize_asgi_headers(scope["headers"])
 
