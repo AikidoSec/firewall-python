@@ -11,7 +11,7 @@ def find_hostname_in_userinput(user_input, hostname, port=None):
     if not hostname_url:
         return False
     normalized_hostname = hostname_url.hostname
-    return _find_hostname_in_userinput(user_input, normalized_hostname, port)
+    return _find_hostname_in_userinput(user_input, [normalized_hostname], port)
 
 
 def test_returns_false_if_user_input_and_hostname_are_empty():
