@@ -2,10 +2,14 @@
 Mainly exports function `find_hostname_in_context`
 """
 
+from typing import List, Optional
+
 from aikido_zen.helpers.extract_strings_from_context import extract_strings_from_context
 from .find_hostname_in_userinput import find_hostname_in_userinput
 from .is_request_to_itself import is_request_to_itself
+from .normalize_string_to_hostname_and_port import normalize_string_to_hostname_and_port
 from ...context import Context
+from ...helpers.try_parse_url import try_parse_url
 
 
 def find_hostname_in_context(hostname, context: Context, port):
@@ -29,8 +33,15 @@ def find_hostname_in_context(hostname, context: Context, port):
             # hostname
             pass
 
+    normalized_hostnames: Optional[List[str]] = None
     for user_input, path, source in extract_strings_from_context(context):
-        found = find_hostname_in_userinput(user_input, hostname, port)
+        if normalized_hostnames is None:
+            # Cache the normalized hostnames
+            normalized_hostnames = [
+                x[0] for x in normalize_string_to_hostname_and_port(user_input)
+            ]
+
+        found = find_hostname_in_userinput(user_input, normalized_hostnames, port)
         if found:
             return {
                 "source": source,
