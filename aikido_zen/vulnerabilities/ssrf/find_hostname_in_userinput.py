@@ -1,16 +1,20 @@
 """
 Only exports find_hostname_in_userinput function
 """
+from typing import Optional
 
 from aikido_zen.helpers.get_port_from_url import get_port_from_url
 from aikido_zen.helpers.try_parse_url import try_parse_url
 
 
-def find_hostname_in_userinput(user_input, normalized_hostname: str, port=None):
+def find_hostname_in_userinput(user_input: str, normalized_hostname: str, port: Optional[int] = None):
     """
     Returns true if the hostname is in userinput
     """
     if len(user_input) <= 1:
+        return False
+    if port and not str(port) in user_input:
+        # Easy way for an early return: If a port is defined, it has to be inside the user input.
         return False
 
     variants = [user_input, f"http://{user_input}", f"https://{user_input}"]
