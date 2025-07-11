@@ -16,6 +16,8 @@ def request_handler(stage, status_code=0):
             cache = get_cache()
             if ctx.get_current_context() and cache:
                 cache.stats.increment_total_hits()
+            else:
+                logger.debug("Init stage ran, but unable to increment total hits.")
         if stage == "pre_response":
             return pre_response()
         if stage == "post_response":
