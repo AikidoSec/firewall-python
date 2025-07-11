@@ -100,3 +100,105 @@ def test_no_raises_if_diff_url(monkeypatch):
     monkeypatch.setenv("AIKIDO_BLOCK", "1")
     with pytest.raises(requests.exceptions.ConnectionError):
         requests.get(SSRF_TEST_DOMAIN_TWICE)
+
+
+def test_localhost_is_same_as_context(monkeypatch):
+    set_context_and_lifecycle("http://localhost:8080")
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
+    with pytest.raises(requests.exceptions.ConnectionError):
+        requests.get("http://localhost:8080")
+
+
+def test_localhost_raises_ssrf(monkeypatch):
+    set_context_and_lifecycle("http://localhost:8081")
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
+    with pytest.raises(AikidoSSRF):
+        requests.get("http://localhost:8081")
+    with pytest.raises(AikidoSSRF):
+        requests.get("http://localhost:8081/test")
+    with pytest.raises(requests.exceptions.ConnectionError):
+        requests.get("http://localhost:5002/test")
+
+    set_context_and_lifecycle("http://localhost:8081/test")
+    with pytest.raises(AikidoSSRF):
+        requests.get("http://localhost:8081/test")
+    set_context_and_lifecycle("http://localhost:8081/test/2")
+    with pytest.raises(AikidoSSRF):
+        requests.get("http://localhost:8081/chicken/3")
+
+
+def test_loopback_ipv6_raises_ssrf(monkeypatch):
+    set_context_and_lifecycle("http://[::1]:8081")
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
+    with pytest.raises(AikidoSSRF):
+        requests.get("http://[::1]:8081")
+    with pytest.raises(AikidoSSRF):
+        requests.get("http://[::1]:8081/")
+    with pytest.raises(AikidoSSRF):
+        requests.get("http://[::1]:8081/test")
+
+
+def test_loopback_ipv6_with_zeros_raises_ssrf(monkeypatch):
+    set_context_and_lifecycle("http://[0000:0000:0000:0000:0000:0000:0000:0001]:8081")
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
+    with pytest.raises(AikidoSSRF):
+        requests.get("http://[0000:0000:0000:0000:0000:0000:0000:0001]:8081")
+    with pytest.raises(AikidoSSRF):
+        requests.get("http://[0000:0000:0000:0000:0000:0000:0000:0001]:8081/")
+    with pytest.raises(AikidoSSRF):
+        requests.get("http://[0000:0000:0000:0000:0000:0000:0000:0001]:8081/test")
+
+
+def test_different_capitalization_raises_ssrf(monkeypatch):
+    set_context_and_lifecycle("http://localHost:8081")
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
+    with pytest.raises(AikidoSSRF):
+        requests.get("http://LOCALHOST:8081")
+    with pytest.raises(AikidoSSRF):
+        requests.get("http://Localhost:8081/")
+    with pytest.raises(AikidoSSRF):
+        requests.get("http://localHost:8081/test")
+
+
+def test_2130706433_raises_ssrf(monkeypatch):
+    set_context_and_lifecycle("http://2130706433:8081")
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
+    with pytest.raises(AikidoSSRF):
+        requests.get("http://2130706433:8081")
+    with pytest.raises(AikidoSSRF):
+        requests.get("http://2130706433:8081/")
+    with pytest.raises(AikidoSSRF):
+        requests.get("http://2130706433:8081/test")
+
+
+def test_0x7f000001_raises_ssrf(monkeypatch):
+    set_context_and_lifecycle("http://0x7f000001:8081/")
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
+    with pytest.raises(AikidoSSRF):
+        requests.get("http://0x7f000001:8081")
+    with pytest.raises(AikidoSSRF):
+        requests.get("http://0x7f000001:8081/")
+    with pytest.raises(AikidoSSRF):
+        requests.get("http://0x7f000001:8081/test")
+
+
+def test_0177_0_0_01_raises_ssrf(monkeypatch):
+    set_context_and_lifecycle("http://0177.0.0.01:8081/")
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
+    with pytest.raises(AikidoSSRF):
+        requests.get("http://0177.0.0.01:8081/api/pets")
+    with pytest.raises(AikidoSSRF):
+        requests.get("http://0177.0.0.01:8081/")
+    with pytest.raises(AikidoSSRF):
+        requests.get("http://0177.0.0.01:8081/test")
+
+
+def test_0x7f_0x0_0x0_0x1_raises_ssrf(monkeypatch):
+    set_context_and_lifecycle("http://0x7f.0x0.0x0.0x1:8081/")
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
+    with pytest.raises(AikidoSSRF):
+        requests.get("http://0x7f.0x0.0x0.0x1:8081/api/pets")
+    with pytest.raises(AikidoSSRF):
+        requests.get("http://0x7f.0x0.0x0.0x1:8081/")
+    with pytest.raises(AikidoSSRF):
+        requests.get("http://0x7f.0x0.0x0.0x1:8081/test")
