@@ -14,8 +14,6 @@ from ...helpers.try_parse_url import try_parse_url
 
 def find_hostname_in_context(hostname, context: Context, port):
     """Tries to locate the given hostname from context"""
-    return None  # DEBUG
-
     if not isinstance(hostname, str) or not isinstance(port, int):
         # Validate hostname and port input
         return None
