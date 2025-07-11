@@ -1,5 +1,17 @@
 import pytest
-from .find_hostname_in_userinput import find_hostname_in_userinput
+from .find_hostname_in_userinput import (
+    find_hostname_in_userinput as _find_hostname_in_userinput,
+)
+from ...helpers.try_parse_url import try_parse_url
+
+
+def find_hostname_in_userinput(user_input, hostname, port=None):
+    # Normalize hostname by parsing it as a URL
+    hostname_url = try_parse_url(f"http://{hostname}")
+    if not hostname_url:
+        return False
+    normalized_hostname = hostname_url.hostname
+    _find_hostname_in_userinput(user_input, normalized_hostname, port)
 
 
 def test_returns_false_if_user_input_and_hostname_are_empty():

@@ -6,6 +6,7 @@ from aikido_zen.helpers.extract_strings_from_context import extract_strings_from
 from .find_hostname_in_userinput import find_hostname_in_userinput
 from .is_request_to_itself import is_request_to_itself
 from ...context import Context
+from ...helpers.try_parse_url import try_parse_url
 
 
 def find_hostname_in_context(hostname, context: Context, port):
@@ -29,8 +30,14 @@ def find_hostname_in_context(hostname, context: Context, port):
             # hostname
             pass
 
+    # Normalize hostname by parsing it as a URL
+    hostname_url = try_parse_url(f"http://{hostname}")
+    if not hostname_url:
+        return False
+    normalized_hostname = hostname_url.hostname
+
     for user_input, path, source in extract_strings_from_context(context):
-        found = find_hostname_in_userinput(user_input, hostname, port)
+        found = find_hostname_in_userinput(user_input, normalized_hostname, port)
         if found:
             return {
                 "source": source,
