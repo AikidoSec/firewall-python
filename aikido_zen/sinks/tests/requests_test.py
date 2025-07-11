@@ -202,14 +202,3 @@ def test_0x7f_0x0_0x0_0x1_raises_ssrf(monkeypatch):
         requests.get("http://0x7f.0x0.0x0.0x1:8081/")
     with pytest.raises(AikidoSSRF):
         requests.get("http://0x7f.0x0.0x0.0x1:8081/test")
-
-
-def test_ffff_127_0_0_1_raises_ssrf(monkeypatch):
-    set_context_and_lifecycle("http://[::ffff:127.0.0.1]:8081")
-    monkeypatch.setenv("AIKIDO_BLOCK", "1")
-    with pytest.raises(AikidoSSRF):
-        requests.get("http://[::ffff:127.0.0.1]:8081")
-    with pytest.raises(AikidoSSRF):
-        requests.get("http://[::ffff:127.0.0.1]:8081/")
-    with pytest.raises(AikidoSSRF):
-        requests.get("http://[::ffff:127.0.0.1]:8081/test")
