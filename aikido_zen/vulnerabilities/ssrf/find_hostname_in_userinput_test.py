@@ -91,3 +91,92 @@ def test_it_works_with_ports():
     assert (
         find_hostname_in_userinput("http://localhost:8080", "localhost", 4321) is False
     )
+
+
+def test_loopback_ipv6_found():
+    assert find_hostname_in_userinput("http://[::1]:8081", "[::1]") is True
+
+
+def test_loopback_ipv6_with_zeros_found():
+    assert (
+        find_hostname_in_userinput(
+            "http://[0000:0000:0000:0000:0000:0000:0000:0001]:8081",
+            "[0000:0000:0000:0000:0000:0000:0000:0001]",
+        )
+        is True
+    )
+
+
+def test_different_capitalization_found():
+    assert find_hostname_in_userinput("http://localHost:8081", "localhost") is True
+
+
+def test_2130706433_found():
+    assert find_hostname_in_userinput("http://2130706433:8081", "2130706433") is True
+
+
+def test_0x7f000001_found():
+    assert find_hostname_in_userinput("http://0x7f000001:8081", "0x7f000001") is True
+
+
+def test_0177_0_0_01_found():
+    assert find_hostname_in_userinput("http://0177.0.0.01:8081", "0177.0.0.01") is True
+
+
+def test_0x7f_0x0_0x0_0x1_found():
+    assert (
+        find_hostname_in_userinput("http://0x7f.0x0.0x0.0x1:8081", "0x7f.0x0.0x0.0x1")
+        is True
+    )
+
+
+def test_ffff_127_0_0_1_found():
+    assert (
+        find_hostname_in_userinput(
+            "http://[::ffff:127.0.0.1]:8081", "[::ffff:127.0.0.1]"
+        )
+        is True
+    )
+
+
+def test_loopback_ipv6_not_found():
+    assert find_hostname_in_userinput("http://[::1]:8081", "localhost") is False
+
+
+def test_loopback_ipv6_with_zeros_not_found():
+    assert (
+        find_hostname_in_userinput(
+            "http://[0000:0000:0000:0000:0000:0000:0000:0001]:8081", "localhost"
+        )
+        is False
+    )
+
+
+def test_different_capitalization_not_found():
+    assert find_hostname_in_userinput("http://localHost:8081", "example.com") is False
+
+
+def test_2130706433_not_found():
+    assert find_hostname_in_userinput("http://2130706433:8081", "example.com") is False
+
+
+def test_0x7f000001_not_found():
+    assert find_hostname_in_userinput("http://0x7f000001:8081", "example.com") is False
+
+
+def test_0177_0_0_01_not_found():
+    assert find_hostname_in_userinput("http://0177.0.0.01:8081", "example.com") is False
+
+
+def test_0x7f_0x0_0x0_0x1_not_found():
+    assert (
+        find_hostname_in_userinput("http://0x7f.0x0.0x0.0x1:8081", "example.com")
+        is False
+    )
+
+
+def test_ffff_127_0_0_1_not_found():
+    assert (
+        find_hostname_in_userinput("http://[::ffff:127.0.0.1]:8081", "example.com")
+        is False
+    )
