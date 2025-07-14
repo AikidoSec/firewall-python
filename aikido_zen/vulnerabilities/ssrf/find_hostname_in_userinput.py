@@ -38,14 +38,19 @@ def find_hostname_in_userinput(user_input, hostname, port=None):
 
 
 def get_hostname_options(raw_hostname: str) -> List[str]:
-    options = []
-    hostname_url = try_parse_url(f"http://{raw_hostname}")
-    if hostname_url and hostname_url.hostname:
-        options.append(hostname_url.hostname)
+    options_urls = [try_parse_url(f"http://{raw_hostname}")]
 
     # Add a case for hostnames like ::1 or ::ffff:127.0.0.1, who need brackets to be parsed
-    hostname_url_ipv6 = try_parse_url(f"http://[{raw_hostname}]")
-    if hostname_url_ipv6 and hostname_url_ipv6.hostname:
-        options.append(hostname_url_ipv6.hostname)
+    options_urls.append(try_parse_url(f"http://[{raw_hostname}]"))
 
+    # Add a case when the hostname is in punycode (like xn--pp-oia.aikido.dev)
+    if "xn--" in raw_hostname:
+        hostname_decoded = raw_hostname.encode("ascii", errors="").decode("idna")
+        options_urls.append(try_parse_url(f"http://{hostname_decoded}"))
+
+    # Map to url.hostname
+    options = []
+    for options_url in options_urls:
+        if options_url and options_url.hostname:
+            options.append(options_url.hostname)
     return options
