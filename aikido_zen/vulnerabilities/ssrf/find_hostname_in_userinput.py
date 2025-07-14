@@ -16,8 +16,6 @@ def find_hostname_in_userinput(user_input, hostname, port=None):
         return False
 
     hostname_options = get_hostname_options(hostname)
-    if len(hostname_options) == 0:
-        return False
 
     variants = [user_input, f"http://{user_input}", f"https://{user_input}"]
     for variant in variants:
