@@ -1,5 +1,13 @@
 import pytest
-from .find_hostname_in_userinput import find_hostname_in_userinput
+from .find_hostname_in_userinput import (
+    find_hostname_in_userinput as _find_hostname_in_userinput,
+)
+from .get_hostname_options import get_hostname_options
+
+
+def find_hostname_in_userinput(user_input, hostname, port=None):
+    hostname_options = get_hostname_options(hostname)
+    return _find_hostname_in_userinput(user_input, hostname_options, port)
 
 
 def test_returns_false_if_user_input_and_hostname_are_empty():
