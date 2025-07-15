@@ -1,3 +1,5 @@
+from typing import Dict, List
+
 from aikido_zen.context import get_current_context
 from aikido_zen.helpers.logging import logger
 
@@ -9,9 +11,11 @@ def extract_form_data_from_flask_request_and_save_data(req):
         return
     try:
         # https://flask.palletsprojects.com/en/stable/api/#flask.Request
-        # req.form is an ImmutableMultiDict, use `.items(multi=True)` to extract all values.
+        # req.form is an ImmutableMultiDict, we will try and extract all values for a certain key
         if req.form:
-            form_data = req.form.items(multi=True)
+            form_data: Dict[str, List] = {}
+            for key in req.form.keys():
+                form_data[key] = req.form.getlist(key)
             context.set_body(form_data)
         else:
             context.set_body(req.data.decode("utf-8"))
