@@ -14,8 +14,13 @@ def extract_form_data_from_flask_request_and_save_data(req):
         # req.form is an ImmutableMultiDict, we will try and extract all values for a certain key
         if req.form:
             form_data: Dict[str, List] = {}
-            for key in req.form.keys():
-                form_data[key] = req.form.getlist(key)
+
+            # Extract to a dict of lists
+            for key, value in req.form.items(multi=True):
+                if not key in form_data:
+                    form_data[key] = list()
+                form_data[key].append(value)
+
             context.set_body(form_data)
         else:
             context.set_body(req.data.decode("utf-8"))
