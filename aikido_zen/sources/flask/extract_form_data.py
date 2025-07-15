@@ -9,9 +9,9 @@ def extract_form_data_from_flask_request_and_save_data(req):
         return
     try:
         # https://flask.palletsprojects.com/en/stable/api/#flask.Request
-        # req.form is an ImmutableMultiDict, use `.to_dict(flat=False)` to extract all values.
+        # req.form is an ImmutableMultiDict, use `.items(multi=True)` to extract all values.
         if req.form:
-            form_data = req.form.to_dict(flat=False)
+            form_data = req.form.items(multi=True)
             context.set_body(form_data)
         else:
             context.set_body(req.data.decode("utf-8"))
