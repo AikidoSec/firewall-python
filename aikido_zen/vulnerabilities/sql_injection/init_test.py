@@ -264,6 +264,17 @@ def test_user_input_is_multiline():
     is_not_sql_injection("SELECT * FROM users WHERE id = 'a\nb\nc';", "a\nb\nc")
 
 
+def test_user_input_contains_unsafe_unicode():
+    is_sql_injection(
+        "SELECT * FROM users WHERE id = 'a \udce9'\nOR 1=1#'",
+        "a \udce9'\nOR 1=1#",
+        "generic",
+    )
+    is_not_sql_injection(
+        "SELECT * FROM users WHERE id = 'a\udce9\nb\nc';", "a\udce9\nb\nc"
+    )
+
+
 def test_user_input_is_longer_than_query():
     is_not_sql_injection("SELECT * FROM users", "SELECT * FROM users WHERE id = 'a'")
 
