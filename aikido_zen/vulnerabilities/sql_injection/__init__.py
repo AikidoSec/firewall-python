@@ -7,6 +7,7 @@ import ctypes
 from aikido_zen.helpers.logging import logger
 from .map_dialect_to_rust_int import map_dialect_to_rust_int
 from .get_lib_path import get_binary_path
+from ...helpers.encode_safely import encode_safely
 
 
 def detect_sql_injection(query, user_input, dialect):
@@ -20,9 +21,12 @@ def detect_sql_injection(query, user_input, dialect):
             return False
 
         internals_lib = ctypes.CDLL(get_binary_path())
-        query_bytes = query_l.encode("utf-8")
-        userinput_bytes = userinput_l.encode("utf-8")
+
+        # Parse input variables for rust function
+        query_bytes = encode_safely(query_l)
+        userinput_bytes = encode_safely(userinput_l)
         dialect_int = map_dialect_to_rust_int(dialect)
+
         c_int_res = internals_lib.detect_sql_injection(
             query_bytes, userinput_bytes, dialect_int
         )
