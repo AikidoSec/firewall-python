@@ -13,6 +13,13 @@ SSRF_TEST_DOMAIN = "http://ssrf-redirects.testssandbox.com/ssrf-test-domain"
 SSRF_TEST_TWICE = "http://ssrf-redirects.testssandbox.com/ssrf-test-twice"
 SSRF_TEST_DOMAIN_TWICE = "http://ssrf-redirects.testssandbox.com/ssrf-test-domain-twice"
 
+SSRF_TEST_PUNYCODE = "http://ssrf-rédirects.testssandbox.com/ssrf-test"
+SSRF_TEST_PUNYCODE_ENCODED = "http://xn--ssrf-rdirects-ghb.testssandbox.com/ssrf-test"
+SSRF_TEST_DOMAIN_TWICE_PUNYCODE = (
+    "http://ssrf-rédirects.testssandbox.com/ssrf-test-domain-twice"
+)
+
+
 CROSS_DOMAIN_TEST = "http://firewallssrfredirects-env-2.eba-7ifve22q.eu-north-1.elasticbeanstalk.com/ssrf-test"
 CROSS_DOMAIN_TEST_DOMAIN_TWICE = "http://firewallssrfredirects-env-2.eba-7ifve22q.eu-north-1.elasticbeanstalk.com/ssrf-test-domain-twice"
 
@@ -79,6 +86,33 @@ def test_srrf_test_domain_twice(monkeypatch):
     monkeypatch.setenv("AIKIDO_BLOCK", "1")
     with pytest.raises(AikidoSSRF):
         requests.get(SSRF_TEST_DOMAIN_TWICE)
+
+
+def test_ssrf_test_punycode(monkeypatch):
+    reset_comms()
+    set_context_and_lifecycle(SSRF_TEST_PUNYCODE)
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
+
+    with pytest.raises(AikidoSSRF):
+        requests.get(SSRF_TEST_PUNYCODE)
+
+
+def test_ssrf_test_punycode_encoded(monkeypatch):
+    reset_comms()
+    set_context_and_lifecycle(SSRF_TEST_PUNYCODE_ENCODED)
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
+
+    with pytest.raises(AikidoSSRF):
+        requests.get(SSRF_TEST_PUNYCODE_ENCODED)
+
+
+def test_ssrf_test_domain_twice_punycode(monkeypatch):
+    reset_comms()
+    set_context_and_lifecycle(SSRF_TEST_DOMAIN_TWICE_PUNYCODE)
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
+
+    with pytest.raises(AikidoSSRF):
+        requests.get(SSRF_TEST_DOMAIN_TWICE_PUNYCODE)
 
 
 def test_cross_domain(monkeypatch):
