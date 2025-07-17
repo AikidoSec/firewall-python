@@ -56,6 +56,13 @@ def get_runtime_config():
 
 @app.route('/api/runtime/firewall/lists', methods=['GET'])
 def get_fw_lists():
+    accept_encoding = request.headers.get('Accept-Encoding', '').lower()
+    if 'gzip' not in accept_encoding:
+        return jsonify({
+            "success": False,
+            "error": "Accept-Encoding header must include 'gzip' for firewall lists endpoint"
+        }), 400
+
     json_data = json.dumps(responses["lists"])
     compressed_data = gzip.compress(json_data.encode('utf-8'))
 
