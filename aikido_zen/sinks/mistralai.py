@@ -16,10 +16,21 @@ def _chat_completions_response(func, instance, args, kwargs, return_value):
     )
 
 
-@on_import("mistralai", "mistralai", "1.0.0")
-def patch(m):
-    """patching module mistralai"""
-    patch_function(m, "agents.Agents.complete", _chat_completions_response)
-    patch_function(m, "chat.Chat.complete", _chat_completions_response)
-    patch_function(m, "embeddings.Embeddings.create", _chat_completions_response)
-    patch_function(m, "fim.Fim.complete", _chat_completions_response)
+@on_import("mistralai.agents", "mistralai", "1.0.0")
+def patch_agents(m):
+    patch_function(m, "Agents.complete", _chat_completions_response)
+
+
+@on_import("mistralai.chat", "mistralai", "1.0.0")
+def patch_chat(m):
+    patch_function(m, "Chat.complete", _chat_completions_response)
+
+
+@on_import("mistralai.embeddings", "mistralai", "1.0.0")
+def patch_embeddings(m):
+    patch_function(m, "Embeddings.create", _chat_completions_response)
+
+
+@on_import("mistralai.fim", "mistralai", "1.0.0")
+def patch_fim(m):
+    patch_function(m, "Fim.complete", _chat_completions_response)
