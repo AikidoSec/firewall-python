@@ -122,3 +122,37 @@ def test_ignores_invalid_filename_type(monkeypatch):
     filename = object()
     result = check_context_for_path_traversal(filename, "op", UnsafeContext())
     assert len(result) == 0
+
+
+def test_detects_path_traversal_with_url_control_character(monkeypatch):
+    monkeypatch.setattr("aikido_zen.context.get_current_context", lambda: None)
+
+    filename = "\x14file:///../file/test.txt"
+    result = check_context_for_path_traversal(filename, "op", UnsafeContext())
+    assert result == {
+        "operation": "op",
+        "kind": "path_traversal",
+        "source": "body",
+        "pathToPayload": ".path",
+        "metadata": {
+            "filename": "/../file/test.txt",
+        },
+        "payload": "../file",
+    }
+
+
+def test_detects_path_traversal_with_url_tab_character(monkeypatch):
+    monkeypatch.setattr("aikido_zen.context.get_current_context", lambda: None)
+
+    filename = "filE:///../\tfile/test.txt"
+    result = check_context_for_path_traversal(filename, "op", UnsafeContext())
+    assert result == {
+        "operation": "op",
+        "kind": "path_traversal",
+        "source": "body",
+        "pathToPayload": ".path",
+        "metadata": {
+            "filename": "/../file/test.txt",
+        },
+        "payload": "../file",
+    }
