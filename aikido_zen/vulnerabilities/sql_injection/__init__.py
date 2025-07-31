@@ -34,7 +34,9 @@ def detect_sql_injection(query, user_input, dialect):
         query_bytes = encode_safely(query_l)
         userinput_bytes = encode_safely(userinput_l)
         query_buffer = (ctypes.c_uint8 * len(query_bytes)).from_buffer_copy(query_bytes)
-        userinput_buffer = (ctypes.c_uint8 * len(userinput_bytes)).from_buffer_copy(userinput_bytes)
+        userinput_buffer = (ctypes.c_uint8 * len(userinput_bytes)).from_buffer_copy(
+            userinput_bytes
+        )
         dialect_int = map_dialect_to_rust_int(dialect)
 
         c_int_res = internals_lib.detect_sql_injection(
@@ -54,9 +56,7 @@ def detect_sql_injection(query, user_input, dialect):
 
         # This means that the library failed to tokenize the SQL query
         if c_int_res == 3:
-            logger.debug(
-                "Unable to check for SQL Injection, SQL tokenization failed"
-            )
+            logger.debug("Unable to check for SQL Injection, SQL tokenization failed")
             return False
 
         return c_int_res == 1
