@@ -21,14 +21,28 @@ def detect_sql_injection(query, user_input, dialect):
             return False
 
         internals_lib = ctypes.CDLL(get_binary_path())
+        internals_lib.detect_sql_injection.argtypes = [
+            ctypes.POINTER(ctypes.c_uint8),
+            ctypes.c_size_t,
+            ctypes.POINTER(ctypes.c_uint8),
+            ctypes.c_size_t,
+            ctypes.c_int,
+        ]
+        internals_lib.detect_sql_injection.restype = ctypes.c_int
 
         # Parse input variables for rust function
         query_bytes = encode_safely(query_l)
         userinput_bytes = encode_safely(userinput_l)
+        query_buffer = (ctypes.c_uint8 * len(query_bytes)).from_buffer_copy(query_bytes)
+        userinput_buffer = (ctypes.c_uint8 * len(userinput_bytes)).from_buffer_copy(userinput_bytes)
         dialect_int = map_dialect_to_rust_int(dialect)
 
         c_int_res = internals_lib.detect_sql_injection(
-            query_bytes, userinput_bytes, dialect_int
+            query_buffer,
+            len(query_bytes),
+            userinput_buffer,
+            len(userinput_bytes),
+            dialect_int,
         )
 
         # This means that an error occurred in the library
@@ -38,7 +52,14 @@ def detect_sql_injection(query, user_input, dialect):
             )
             return False
 
-        return bool(c_int_res)
+        # This means that the library failed to tokenize the SQL query
+        if c_int_res == 3:
+            logger.debug(
+                "Unable to check for SQL Injection, SQL tokenization failed"
+            )
+            return False
+
+        return c_int_res == 1
     except Exception as e:
         logger.debug("Exception in SQL algo: %s", e)
     return False
