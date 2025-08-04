@@ -114,3 +114,24 @@ def after(wrapper):
         return return_value
 
     return decorator
+
+
+def after_async(wrapper):
+    """
+    Surrounds an async patch with try-except, calls the original function and gives the return value to the patch
+    """
+
+    async def decorator(func, instance, args, kwargs):
+        return_value = await func(*args, **kwargs)  # Call the original function
+        try:
+            await wrapper(func, instance, args, kwargs, return_value)  # Call the patch
+        except AikidoException as e:
+            raise e  # Re-raise AikidoException
+        except Exception as e:
+            logger.debug(
+                "%s:%s wrapping-after error: %s", func.__module__, func.__name__, e
+            )
+
+        return return_value
+
+    return decorator
