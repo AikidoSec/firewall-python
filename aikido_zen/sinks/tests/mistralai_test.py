@@ -61,16 +61,16 @@ def test_mistralai_agents_complete(mistral):
                 "role": "user",
             },
         ],
-        agent_id="ag:e1521cc4:20250618:untitled-agent:cb1e1742",
+        agent_id="ag:e1521cc4:20250805:untitled-agent:498e0dd8",
     )
     print(res)
 
-    assert get_ai_stats()[0]["model"] == "mistral-large-2411"
+    assert get_ai_stats()[0]["model"] == "mistral-medium-latest"
     assert get_ai_stats()[0]["calls"] == 1
     assert get_ai_stats()[0]["provider"] == "mistralai"
-    assert get_ai_stats()[0]["tokens"]["input"] == 20
+    assert get_ai_stats()[0]["tokens"]["input"] == 16
     assert get_ai_stats()[0]["tokens"]["output"] == 11
-    assert get_ai_stats()[0]["tokens"]["total"] == 31
+    assert get_ai_stats()[0]["tokens"]["total"] == 27
 
 
 @skip_no_api_key
@@ -95,7 +95,7 @@ def test_mistralai_embeddings_create(mistral):
 @skip_no_api_key
 def test_mistralai_fim_complete(mistral):
     res = mistral.fim.complete(
-        model="codestral-2405", prompt="def", suffix="return a+b"
+        model="codestral-2405", prompt="def", suffix="return a+b", max_tokens=6
     )
     print(res)
 
