@@ -15,6 +15,9 @@ def _chat_completions_response(func, instance, args, kwargs, return_value):
         output_tokens=return_value.usage.completion_tokens,
     )
 
+    print(return_value)
+    print(return_value.usage)
+
 
 @on_import("mistralai.agents", "mistralai", "1.0.0")
 def patch_agents(m):
