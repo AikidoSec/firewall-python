@@ -60,7 +60,7 @@ Zen instruments the following AI SDKs to track which models are used and how man
 * ✅ [`anthropic`](https://pypi.org/project/anthropic/)
 * ✅ [`mistralai`](https://pypi.org/project/mistralai) ^1.0.0
 
-Zen is compatible with Python 3.8-3.13 and can run on Windows, Linux & Mac OS X.
+Zen is compatible with Python 3.8-3.13 and can run on Windows, Linux, and Mac OS X.
 
 ## Reporting to your Aikido Security dashboard
 
