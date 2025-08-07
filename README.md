@@ -60,6 +60,8 @@ Zen instruments the following AI SDKs to track which models are used and how man
 * ✅ [`anthropic`](https://pypi.org/project/anthropic/)
 * ✅ [`mistralai`](https://pypi.org/project/mistralai) ^1.0.0
 
+Zen is compatible with Python 3.8-3.13 and can run on Windows, Linux & Mac OS X.
+
 ## Reporting to your Aikido Security dashboard
 
 > Aikido is your no nonsense application security platform. One central system that scans your source code & cloud, shows you what vulnerabilities matter, and how to fix them - fast. So you can get back to building.
