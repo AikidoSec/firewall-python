@@ -39,7 +39,7 @@ def patch(m):
     patch_function(m, "access", _os_patch)
     patch_function(m, "chmod", _os_patch)
     patch_function(m, "mkdir", _os_patch)
-    patch_function(m, "listdir", _os_patch)
+    #patch_function(m, "listdir", _os_patch)
     patch_function(m, "readlink", _os_patch)
     patch_function(m, "unlink", _os_patch)
     patch_function(m, "rename", _os_patch)
