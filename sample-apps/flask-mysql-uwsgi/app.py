@@ -1,3 +1,5 @@
+import time
+
 import aikido_zen # Aikido package import
 aikido_zen.protect()
 
@@ -44,3 +46,8 @@ def create_dog():
     cursor.execute(f'INSERT INTO dogs (dog_name, isAdmin) VALUES ("%s", 0)' % (dog_name))
     connection.commit()
     return f'Dog {dog_name} created successfully'
+
+@app.route("/benchmark", methods=['GET'])
+def benchmark():
+    time.sleep(1)
+    return "OK"

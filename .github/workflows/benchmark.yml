@@ -62,12 +62,13 @@ jobs:
         run: |
           k6 run -q ./benchmarks/flask-mysql-benchmarks.js
 
-  benchmark_with_starlette_app:
+  wrk_benchmarks:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
+        app: [starlette-postgres-uvicorn, flask-mysql-uwsgi]
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
       - name: Checkout code
@@ -83,12 +84,13 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           make install && make build
-      - name: Start starlette
-        working-directory: ./sample-apps/starlette-postgres-uvicorn
+      - name: Start app
+        working-directory: ./sample-apps/${{ matrix.app }}
         run: nohup make runBenchmark & nohup make runZenDisabled &
       - name: Install wrk
         run: |
           sudo apt-get update
           sudo apt-get install -y wrk
-      - name: Run benchmark
-        run: python ./benchmarks/starlette_benchmark.py
+      - name: Run benchmarks
+        working-directory: ./benchmarks/wrk_benchmark
+        run: make benchmark_${{ matrix.app }}
