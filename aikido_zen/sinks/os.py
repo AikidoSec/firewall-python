@@ -2,6 +2,7 @@
 Sink module for python's `os`
 """
 
+import os
 from pathlib import PurePath
 import aikido_zen.vulnerabilities as vulns
 from aikido_zen.helpers.register_call import register_call
@@ -37,7 +38,6 @@ def patch(m):
     # os.*(...) patches
     patch_function(m, "access", _os_patch)
     patch_function(m, "chmod", _os_patch)
-    patch_function(m, "chown", _os_patch)
     patch_function(m, "mkdir", _os_patch)
     patch_function(m, "listdir", _os_patch)
     patch_function(m, "readlink", _os_patch)
@@ -49,6 +49,10 @@ def patch(m):
     patch_function(m, "link", _os_patch)
     patch_function(m, "walk", _os_patch)
     patch_function(m, "open", _os_patch)
+
+    # `chown` patch is platform-specific, so don't patch on windows
+    if hasattr(os, "chown"):
+        patch_function(m, "chown", _os_patch)
 
     # os.path.*(...) patches
     patch_function(m, "path.getsize", _os_patch)
