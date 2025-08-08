@@ -1,16 +1,13 @@
 import aikido_zen # Aikido package import
 aikido_zen.protect()
 
+import time
 from flask import Flask, render_template, request
 from flaskext.mysql import MySQL
 
 app = Flask(__name__)
 
-
-if __name__ == '__main__':
-    app.run()
 mysql = MySQL()
-
 app.config['MYSQL_DATABASE_HOST'] = '127.0.0.1'
 app.config['MYSQL_DATABASE_USER'] = 'user'
 app.config['MYSQL_DATABASE_PASSWORD'] = 'password'
@@ -44,3 +41,12 @@ def create_dog():
     cursor.execute(f'INSERT INTO dogs (dog_name, isAdmin) VALUES ("%s", 0)' % (dog_name))
     connection.commit()
     return f'Dog {dog_name} created successfully'
+
+@app.route("/benchmark", methods=['GET'])
+def benchmark():
+    time.sleep(1/1000)
+    return "OK"
+
+
+if __name__ == '__main__':
+    app.run()
