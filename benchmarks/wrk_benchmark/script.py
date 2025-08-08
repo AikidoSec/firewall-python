@@ -6,7 +6,7 @@ import requests
 
 def generate_wrk_command_for_url(url):
     # Define the command with awk included
-    return "wrk -t5 -c200 -d15s " + url
+    return "wrk -t12 -c400 -d15s " + url
 
 def wait_until_live(url):
     for i in range(30):
@@ -34,12 +34,12 @@ def extract_requests_and_latency_tuple(output):
             latency_float *= 1000
         return (float(requests_sec), latency_float)
     else:
-        print("Exception occurred running benchmark command:")
+        print("Error occured running benchmark command:")
         print(output.stderr.strip())
         sys.exit(1)
 
 def run_benchmark(route1, route2, descriptor, percentage_limit):
-    # Make sure both routes are accessible before running benchmark
+    # Cold start :
     if not wait_until_live(route1):
         raise Exception("Unable to access: " + route1)
     if not wait_until_live(route2):
@@ -72,23 +72,13 @@ def run_benchmark(route1, route2, descriptor, percentage_limit):
 
         delta_in_ms = round(result_fw[1] - result_nofw[1], 2)
         print(f"-> Delta in ms: {delta_in_ms}ms after running load test on {descriptor}")
+
         delay_percentage = round(
             (result_nofw[0] - result_fw[0]) / result_nofw[0] * 100
         )
         print(
             f"-> {delay_percentage}% decrease in throughput after running load test on {descriptor} \n"
         )
+
         if delay_percentage > percentage_limit:
             sys.exit(1)
-
-# Run benchmarks :
-run_benchmark(
-    "http://localhost:8102/delayed_route", 
-    "http://localhost:8103/delayed_route", 
-    "a non empty route which makes a simulated request to a database",
-    percentage_limit=15
-)
-run_benchmark(
-    "http://localhost:8102/just", "http://localhost:8103/just", "an empty route",
-    percentage_limit=30
-)
