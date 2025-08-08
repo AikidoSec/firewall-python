@@ -44,7 +44,7 @@ def create_dog():
 
 @app.route("/benchmark", methods=['GET'])
 def benchmark():
-    time.sleep(1)
+    time.sleep(1/1000)
     return "OK"
 
 
