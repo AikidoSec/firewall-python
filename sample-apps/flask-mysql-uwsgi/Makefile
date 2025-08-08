@@ -10,6 +10,14 @@ run: install
 	AIKIDO_ENDPOINT="http://localhost:5000/" AIKIDO_DISABLE=0 \
 	poetry run uwsgi --ini uwsgi.ini
 
+.PHONY: runBenchmark
+runBenchmark: install
+	@echo "Running sample app flask-mysql-uwsgi with Zen on port 8088"
+	AIKIDO_DEBUG=false AIKIDO_BLOCK=true AIKIDO_TOKEN="AIK_secret_token" \
+	AIKIDO_REALTIME_ENDPOINT="http://localhost:5000/" \
+	AIKIDO_ENDPOINT="http://localhost:5000/" AIKIDO_DISABLE=0 \
+	poetry run uwsgi --ini uwsgi.ini
+
 .PHONY: runZenDisabled
 runZenDisabled: install
 	@echo "Running sample app flask-mysql-uwsgi without Zen on port 8089"
