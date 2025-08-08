@@ -8,3 +8,8 @@ benchmark_starlette-postgres-uvicorn:
 benchmark_flask-mysql-uwsgi:
 	@echo "Running wrk benchmarks for Flask w/ MySQL, UWSGI"
 	python flask_mysql_uwsgi.py
+
+.PHONY: benchmark_flask-mysql
+benchmark_flask-mysql:
+	@echo "Running wrk benchmarks for Flask w/ MySQL (built-in wsgi server)"
+	python flask_mysql.py

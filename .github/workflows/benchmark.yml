@@ -68,7 +68,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [starlette-postgres-uvicorn, flask-mysql-uwsgi]
+        app: [starlette-postgres-uvicorn, flask-mysql-uwsgi, flask-mysql]
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
       - name: Checkout code
