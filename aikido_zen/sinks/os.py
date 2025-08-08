@@ -1,6 +1,7 @@
 """
 Sink module for python's `os`
 """
+
 import os
 from pathlib import PurePath
 import aikido_zen.vulnerabilities as vulns
