@@ -34,6 +34,7 @@ imds_addresses.add_address("fd00:ec2::254", "ipv6")
 # Block the IP address used by Alibaba Cloud
 imds_addresses.add_address("100.100.100.200", "ipv4")
 
+
 def is_imds_ip_address(ip):
     """Checks if the IP is an imds ip"""
     return imds_addresses.check(ip) or imds_addresses.check(ip, "ipv6")
