@@ -44,3 +44,7 @@ def test_try_parse_url_path_for_absolute_url_with_query_no_path():
 
 def test_try_parse_url_path_for_absolute_url_with_hash_no_path():
     assert try_parse_url_path("http://localhost#abc") == "/"
+
+
+def test_try_parse_url_path_none():
+    assert try_parse_url_path(None) is None
