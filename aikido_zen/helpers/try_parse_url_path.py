@@ -17,6 +17,9 @@ def try_parse_url(url):
 
 def try_parse_url_path(url):
     """Try and parse url path"""
+    if not url:
+        return None
+
     parsed = try_parse_url(f"http://localhost{url}" if url.startswith("/") else url)
 
     if not parsed or not parsed.scheme:
