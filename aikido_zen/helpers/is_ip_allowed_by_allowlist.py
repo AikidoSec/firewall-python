@@ -13,7 +13,7 @@ def is_ip_allowed_by_allowlist(service_config, ip):
         return True
 
     for entry in service_config.allowed_ips:
-        if entry["iplist"].matches(ip):
+        if entry["iplist"].has(ip):
             # If the IP matches one of the lists the IP is allowed :
             return True
     return False
