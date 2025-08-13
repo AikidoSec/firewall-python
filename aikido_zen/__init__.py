@@ -4,6 +4,8 @@ Aggregates from the different modules
 
 import os
 
+from aikido_zen.background_process.test_uds_file_access import test_uds_file_access
+
 # Re-export functions :
 from aikido_zen.context.users import set_user
 from aikido_zen.middleware import should_block_request
@@ -30,6 +32,9 @@ def protect(mode="daemon", token=""):
     if aikido_disabled_flag_active():
         # Do not run any aikido code when the disabled flag is on
         return
+    if not test_uds_file_access():
+        return  # Unable to start background process
+
     if token:
         os.environ["AIKIDO_TOKEN"] = token
 
