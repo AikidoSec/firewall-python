@@ -24,9 +24,9 @@ def update_firewall_lists(connection_manager):
         if not isinstance(blocked_user_agents, str):
             return
 
-        connection_manager.conf.set_blocked_ips(blocked_ips)
-        connection_manager.conf.set_allowed_ips(allowed_ips)
-        connection_manager.conf.set_blocked_user_agents(blocked_user_agents)
+        connection_manager.firewall_lists.set_blocked_ips(blocked_ips)
+        connection_manager.firewall_lists.set_allowed_ips(allowed_ips)
+        connection_manager.firewall_lists.set_blocked_user_agents(blocked_user_agents)
 
     except Exception as e:
         logger.debug("Exception in update_firewall_lists: %s", e)
