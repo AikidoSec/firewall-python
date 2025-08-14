@@ -25,9 +25,7 @@ def start_background_process():
     Starts a process to handle incoming/outgoing data
     """
 
-    # Generate a secret key :
-    secret_key_bytes = str.encode(str(get_token_from_env()))
-    if secret_key_bytes == b"None":
+    if get_token_from_env() is None:
         logger.warning(
             "You are running without AIKIDO_TOKEN set, not starting background process."
         )
@@ -38,7 +36,7 @@ def start_background_process():
         # Python does not support Windows UDS just yet, so we have to rely on INET
         address = ("127.0.0.1", 49156)
 
-    comms = AikidoIPCCommunications(address, secret_key_bytes)
+    comms = AikidoIPCCommunications(address)
 
     if isinstance(address, str) and os.path.exists(address):
         if background_process_already_active(comms):
@@ -47,7 +45,7 @@ def start_background_process():
 
     #  Daemon is set to True so that the process kills itself when the main process dies
     background_process = Process(
-        target=AikidoBackgroundProcess, args=(comms.address, comms.key), daemon=True
+        target=AikidoBackgroundProcess, args=(comms.address), daemon=True
     )
     background_process.start()
 

@@ -31,9 +31,9 @@ class AikidoBackgroundProcess:
     - (spawned) reporting thread which collects IPC data and send it to a CloudConnectionManager
     """
 
-    def __init__(self, address, key):
+    def __init__(self, address):
         try:
-            listener = con.Listener(address, authkey=None)
+            listener = con.Listener(address)
         except OSError:
             logger.debug("not listening, another thread is already listening.")
             sys.exit(0)

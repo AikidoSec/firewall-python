@@ -5,10 +5,10 @@ from aikido_zen.background_process.comms import AikidoIPCCommunications
 def test_comms_init():
     address = ("localhost", 9898)
     key = "secret_key"
-    comms = AikidoIPCCommunications(address, key)
+    comms = AikidoIPCCommunications(address)
 
     assert comms.address == address
-    assert comms.key == key
+    assert comms.timeout == 0.1
 
 
 def test_send_data_to_bg_process_exception(monkeypatch, caplog):
@@ -18,12 +18,12 @@ def test_send_data_to_bg_process_exception(monkeypatch, caplog):
     monkeypatch.setitem(globals(), "Client", mock_client)
     monkeypatch.setitem(globals(), "logger", caplog)
 
-    comms = AikidoIPCCommunications(("localhost", 9898), "mock_key")
+    comms = AikidoIPCCommunications(("localhost", 9898))
     comms.send_data_to_bg_process("ACTION", "Test Object")
 
 
 def test_send_data_to_bg_process_successful(monkeypatch, caplog, mocker):
-    comms = AikidoIPCCommunications(("localhost"), "mock_key")
+    comms = AikidoIPCCommunications(("localhost"))
     mock_client = mocker.MagicMock()
     monkeypatch.setattr("multiprocessing.connection.Client", mock_client)
 
