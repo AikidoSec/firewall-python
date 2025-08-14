@@ -59,22 +59,21 @@ def pre_response():
         },
         receive=True,
     )
-    if not check_fw_lists_res["success"] or not check_fw_lists_res["blocked"]:
+    if not check_fw_lists_res["success"] or not check_fw_lists_res["data"]["blocked"]:
         return
 
-    if check_fw_lists_res["type"] == "allowlist":
+    block_type = check_fw_lists_res["data"]["type"]
+
+    if block_type == "allowlist":
         message = "Your IP address is not allowed."
         message += " (Your IP: " + context.remote_address + ")"
         return message, 403
-
-    if check_fw_lists_res["data"]["type"] == "blocklist":
+    if block_type == "blocklist":
         message = "Your IP address is blocked due to "
         message += check_fw_lists_res["data"]["reason"]
         message += " (Your IP: " + context.remote_address + ")"
         return message, 403
-
-    # User agent blocking (e.g. blocking AI scrapers)
-    if check_fw_lists_res["data"]["type"] == "bot-blocking":
+    if block_type == "bot-blocking":
         msg = "You are not allowed to access this resource because you have been identified as a bot."
         return msg, 403
 

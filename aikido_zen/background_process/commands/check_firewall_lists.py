@@ -35,8 +35,11 @@ def process_check_firewall_lists(
     if user_agent is not None and isinstance(user_agent, str):
         # User agent blocking (e.g. blocking AI scrapers)
         if connection_manager.firewall_lists.is_user_agent_blocked(user_agent):
-            reason = "You"
             return {
                 "blocked": True,
                 "type": "bot-blocking",
             }
+
+    return {
+        "blocked": False,
+    }
