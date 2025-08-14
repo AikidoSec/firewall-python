@@ -2,6 +2,7 @@
 
 from aikido_zen.helpers.logging import logger
 from .attack import process_attack
+from .check_firewall_lists import process_check_firewall_lists
 from .read_property import process_read_property
 from .should_ratelimit import process_should_ratelimit
 from .ping import process_ping
@@ -16,6 +17,7 @@ commands_map = {
     "READ_PROPERTY": (process_read_property, True),
     "SHOULD_RATELIMIT": (process_should_ratelimit, True),
     "PING": (process_ping, True),
+    "CHECK_FIREWALL_LISTS": (process_check_firewall_lists, True),
 }
 
 

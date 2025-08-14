@@ -11,6 +11,7 @@ from aikido_zen.storage.users import Users
 from aikido_zen.storage.hostnames import Hostnames
 from ..realtime.start_polling_for_changes import start_polling_for_changes
 from ...storage.ai_statistics import AIStatistics
+from ...storage.firewall_lists import FirewallLists
 from ...storage.statistics import Statistics
 
 # Import functions :
@@ -41,6 +42,7 @@ class CloudConnectionManager:
             bypassed_ips=[],
             received_any_stats=True,
         )
+        self.firewall_lists = FirewallLists()
         self.rate_limiter = RateLimiter(
             max_items=5000, time_to_live_in_ms=120 * 60 * 1000  # 120 minutes
         )

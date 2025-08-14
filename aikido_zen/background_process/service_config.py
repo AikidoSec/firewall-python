@@ -4,8 +4,6 @@ Exports ServiceConfig class
 
 from typing import Pattern
 
-import regex as re
-
 from aikido_zen.helpers.ip_matcher import IPMatcher
 from aikido_zen.helpers.match_endpoints import match_endpoints
 
@@ -26,9 +24,6 @@ class ServiceConfig:
         self.update(
             endpoints, last_updated_at, blocked_uids, bypassed_ips, received_any_stats
         )
-        self.blocked_ips = []
-        self.allowed_ips = []
-        self.blocked_user_agent_regex: Pattern = None
 
     def update(
         self,
@@ -81,39 +76,3 @@ class ServiceConfig:
     def is_bypassed_ip(self, ip):
         """Checks if the IP is on the bypass list"""
         return self.bypassed_ips.has(ip)
-
-    def set_blocked_ips(self, blocked_ip_entries):
-        self.blocked_ips = list(map(parse_ip_entry, blocked_ip_entries))
-
-    def set_allowed_ips(self, allowed_ip_entries):
-        self.allowed_ips = list(map(parse_ip_entry, allowed_ip_entries))
-
-    def is_blocked_ip(self, ip):
-        for entry in self.blocked_ips:
-            if entry["iplist"].has(ip):
-                return entry["description"]
-        return False
-
-    def set_blocked_user_agents(self, blocked_user_agents: str):
-        if not blocked_user_agents:
-            self.blocked_user_agent_regex = None
-            return
-        self.blocked_user_agent_regex = re.compile(blocked_user_agents, re.IGNORECASE)
-
-    def is_user_agent_blocked(self, ua: str):
-        if not ua:
-            return False
-        if not self.blocked_user_agent_regex:
-            return False
-        return self.blocked_user_agent_regex.search(ua)
-
-
-def parse_ip_entry(entry):
-    """
-    Converts ip entry: {"source": "example", "description": "Example description", "ips": []}
-    """
-    return {
-        "source": entry["source"],
-        "description": entry["description"],
-        "iplist": IPMatcher(entry["ips"]),
-    }
