@@ -5,7 +5,6 @@ Interface for calling zen-internal shared library
 import ctypes
 import threading
 from .get_lib_path import get_binary_path
-from .map_dialect_to_rust_int import map_dialect_to_rust_int
 from ...helpers.encode_safely import encode_safely
 
 
@@ -21,6 +20,15 @@ class __Singleton(type):
 
 
 class ZenInternal(metaclass=__Singleton):
+    # Reference : [rust lib]/src/sql_injection/helpers/select_dialect_based_on_enum.rs
+    SQL_DIALECTS = {
+        "generic": 0,
+        "clickhouse": 3,
+        "mysql": 8,
+        "postgres": 9,
+        "sqlite": 12,
+    }
+
     def __init__(self):
         self._lib = ctypes.CDLL(get_binary_path())
         self._lib.detect_sql_injection.argtypes = [
@@ -39,7 +47,7 @@ class ZenInternal(metaclass=__Singleton):
         userinput_buffer = (ctypes.c_uint8 * len(userinput_bytes)).from_buffer_copy(
             userinput_bytes
         )
-        dialect_int = map_dialect_to_rust_int(dialect)
+        dialect_int = self.SQL_DIALECTS[dialect]
         return self._lib.detect_sql_injection(
             query_buffer,
             len(query_bytes),
