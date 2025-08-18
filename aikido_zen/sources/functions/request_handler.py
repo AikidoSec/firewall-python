@@ -58,6 +58,7 @@ def pre_response():
             "user-agent": context.get_user_agent(),
         },
         receive=True,
+        timeout_in_sec=(20 / 1000),
     )
     if not check_fw_lists_res["success"] or not check_fw_lists_res["data"]["blocked"]:
         return
