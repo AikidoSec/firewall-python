@@ -42,6 +42,3 @@ class IPMatcher:
             return self
         self.sorted.insert(idx, net)
         return self
-
-    def is_empty(self):
-        return len(self.sorted) == 0

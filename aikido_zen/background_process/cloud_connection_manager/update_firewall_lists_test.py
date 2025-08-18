@@ -141,7 +141,8 @@ def test_update_firewall_lists_no_token(connection_manager):
     connection_manager.token = None
     update_firewall_lists(connection_manager)
     # No changes should be made, so we check the initial state
-    assert connection_manager.conf.bypassed_ips.is_empty()
+    assert len(connection_manager.conf.bypassed_ips.blocked_subnets) == 0
+    assert len(connection_manager.conf.bypassed_ips.blocked_addresses) == 0
 
 
 def test_update_firewall_lists_serverless(connection_manager):
@@ -149,7 +150,8 @@ def test_update_firewall_lists_serverless(connection_manager):
     connection_manager.serverless = True
     update_firewall_lists(connection_manager)
     # No changes should be made, so we check the initial state
-    assert connection_manager.conf.bypassed_ips.is_empty()
+    assert len(connection_manager.conf.bypassed_ips.blocked_subnets) == 0
+    assert len(connection_manager.conf.bypassed_ips.blocked_addresses) == 0
 
 
 def test_update_firewall_lists_api_failure(connection_manager):
@@ -161,7 +163,8 @@ def test_update_firewall_lists_api_failure(connection_manager):
     connection_manager.api = FailingApi()
     update_firewall_lists(connection_manager)
     # No changes should be made, so we check the initial state
-    assert connection_manager.conf.bypassed_ips.is_empty()
+    assert len(connection_manager.conf.bypassed_ips.blocked_subnets) == 0
+    assert len(connection_manager.conf.bypassed_ips.blocked_addresses) == 0
 
 
 def test_update_firewall_lists_exception_handling(connection_manager):
@@ -173,4 +176,5 @@ def test_update_firewall_lists_exception_handling(connection_manager):
     connection_manager.api = ExceptionApi()
     update_firewall_lists(connection_manager)
     # No changes should be made, so we check the initial state
-    assert connection_manager.conf.bypassed_ips.is_empty()
+    assert len(connection_manager.conf.bypassed_ips.blocked_subnets) == 0
+    assert len(connection_manager.conf.bypassed_ips.blocked_addresses) == 0
