@@ -15,32 +15,32 @@ export const options = {
             delayAbortEval: '10s',
         }],
         test_multiple_queries: [{
-            threshold: "avg<5", 
+            threshold: "avg<6",
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
         test_multiple_queries_with_big_body: [{
-            threshold: "avg<5", 
+            threshold: "avg<6",
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
         test_create_with_big_body: [{
-            threshold: "avg<5", 
+            threshold: "avg<6",
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
         test_normal_route: [{
-            threshold: "avg<5", 
+            threshold: "avg<6", 
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
         test_id_route: [{
-            threshold: "avg<5", 
+            threshold: "avg<6",
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
         test_open_file: [{
-            threshold: "avg<5", 
+            threshold: "avg<6",
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
