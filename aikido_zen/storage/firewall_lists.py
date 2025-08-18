@@ -23,6 +23,9 @@ class FirewallLists:
         self.allowed_ips = list(map(parse_ip_entry, allowed_ip_entries))
 
     def is_allowed_ip(self, ip):
+        # If allowed_ips is empty, we are not in allow mode, so we don't check
+        if len(self.allowed_ips) == 0:
+            return True
         # We don't want to block local ip addresses
         if is_private_ip(ip):
             return True
