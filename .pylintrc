@@ -1,5 +1,46 @@
 [MASTER]
 # Ignore test files
 ignore-patterns=(.)*_test\.py,test_(.)*\.py
-disable=all
-enable=unused-import,use-dict-literal
+enable=all
+disable =
+    missing-function-docstring,
+    missing-class-docstring,
+    missing-module-docstring,
+    line-too-long,
+    import-outside-toplevel,
+    unused-argument,
+    broad-exception-caught,
+    protected-access,
+    too-few-public-methods,
+    consider-using-from-import,
+    invalid-name,
+    too-many-return-statements,
+    too-many-branches,
+    too-many-locals,
+    too-many-arguments,
+    too-many-instance-attributes,
+    # Test to enable:
+    locally-disabled,
+    unnecessary-comprehension,
+    suppressed-message,
+    redefined-outer-name,
+    redefined-argument-from-local,
+    no-else-return,
+    useless-parent-delegation,
+    broad-exception-raised,
+    reimported,
+    global-variable-not-assigned,
+    use-a-generator,
+    cyclic-import,
+    use-implicit-booleaness-not-comparison-to-zero,
+    attribute-defined-outside-init,
+    inconsistent-return-statements,
+    duplicate-code,
+    no-value-for-parameter,
+    redefined-builtin,
+    wrong-import-order,
+    consider-using-in,
+    use-implicit-booleaness-not-comparison-to-string,
+    chained-comparison,
+    consider-using-dict-items,
+    unexpected-keyword-arg
