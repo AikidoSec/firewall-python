@@ -5,7 +5,6 @@ from aikido_zen.background_process.cloud_connection_manager import (
     CloudConnectionManager,
 )
 from .update_firewall_lists import update_firewall_lists
-from ...helpers.is_ip_allowed_by_allowlist import is_ip_allowed_by_allowlist
 
 
 class MockApi:
@@ -93,17 +92,19 @@ def test_update_firewall_lists_success(connection_manager):
     update_firewall_lists(connection_manager)
 
     # Check that the blocked IPs were set correctly
-    assert connection_manager.conf.is_blocked_ip("192.168.1.1")
-    assert connection_manager.conf.is_blocked_ip("192.168.1.2")
+    assert connection_manager.firewall_lists.is_blocked_ip("192.168.1.1")
+    assert connection_manager.firewall_lists.is_blocked_ip("192.168.1.2")
 
     # Check that the allowed IPs were set correctly
-    assert is_ip_allowed_by_allowlist(connection_manager.conf, "192.168.1.3")
-    assert is_ip_allowed_by_allowlist(connection_manager.conf, "192.168.2.50")
+    assert connection_manager.firewall_lists.is_allowed_ip("192.168.1.3")
+    assert connection_manager.firewall_lists.is_allowed_ip("192.168.2.50")
 
     # Check that the blocked user agents were set correctly
-    assert connection_manager.conf.is_user_agent_blocked("bAdBoT test woop wop")
-    assert not connection_manager.conf.is_user_agent_blocked("")
-    assert not connection_manager.conf.is_user_agent_blocked(None)
+    assert connection_manager.firewall_lists.is_user_agent_blocked(
+        "bAdBoT test woop wop"
+    )
+    assert not connection_manager.firewall_lists.is_user_agent_blocked("")
+    assert not connection_manager.firewall_lists.is_user_agent_blocked(None)
 
 
 def test_update_firewall_lists_no_ua(connection_manager):
@@ -112,13 +113,15 @@ def test_update_firewall_lists_no_ua(connection_manager):
     update_firewall_lists(connection_manager)
 
     # Check that the blocked IPs were set correctly
-    assert connection_manager.conf.is_blocked_ip("192.168.1.1")
-    assert connection_manager.conf.is_blocked_ip("192.168.1.2")
+    assert connection_manager.firewall_lists.is_blocked_ip("192.168.1.1")
+    assert connection_manager.firewall_lists.is_blocked_ip("192.168.1.2")
 
     # Check that the blocked user agents were set correctly
-    assert not connection_manager.conf.is_user_agent_blocked("bAdBoT test woop wop")
-    assert not connection_manager.conf.is_user_agent_blocked("")
-    assert connection_manager.conf.blocked_user_agent_regex is None
+    assert not connection_manager.firewall_lists.is_user_agent_blocked(
+        "bAdBoT test woop wop"
+    )
+    assert not connection_manager.firewall_lists.is_user_agent_blocked("")
+    assert connection_manager.firewall_lists.blocked_user_agent_regex is None
 
 
 def test_update_firewall_lists_invalid_regex(connection_manager):
@@ -127,13 +130,15 @@ def test_update_firewall_lists_invalid_regex(connection_manager):
     update_firewall_lists(connection_manager)
 
     # Check that the blocked IPs were set correctly
-    assert connection_manager.conf.is_blocked_ip("192.168.1.1")
-    assert connection_manager.conf.is_blocked_ip("192.168.1.2")
+    assert connection_manager.firewall_lists.is_blocked_ip("192.168.1.1")
+    assert connection_manager.firewall_lists.is_blocked_ip("192.168.1.2")
 
     # Check that the blocked user agents were set correctly
-    assert not connection_manager.conf.is_user_agent_blocked("bAdBoT test woop wop")
-    assert not connection_manager.conf.is_user_agent_blocked("")
-    assert connection_manager.conf.blocked_user_agent_regex is None
+    assert not connection_manager.firewall_lists.is_user_agent_blocked(
+        "bAdBoT test woop wop"
+    )
+    assert not connection_manager.firewall_lists.is_user_agent_blocked("")
+    assert connection_manager.firewall_lists.blocked_user_agent_regex is None
 
 
 def test_update_firewall_lists_no_token(connection_manager):
