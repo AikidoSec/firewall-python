@@ -61,7 +61,7 @@ class Routes:
 
     def get_routes_with_hits(self):
         """Gets you all routes with a positive hits delta"""
-        result = dict()
+        result = {}
         for key, route in self.routes.items():
             if route["hits_delta_since_sync"] <= 0:
                 continue  # do not add routes without a hit delta
