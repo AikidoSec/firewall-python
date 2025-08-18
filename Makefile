@@ -74,7 +74,6 @@ check_binaries:
 
 
 # Replace version number automatically on publish :
-VERSION_FILES = ./build.gradle ./agent_api/src/main/java/dev/aikido/agent_api/Config.java
 replace_version:
 	@if [ -z "$(version)" ]; then \
 		echo "Error: No version specified. Use 'make replace_version version=<new_version>'."; \
