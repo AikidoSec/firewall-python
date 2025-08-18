@@ -19,8 +19,9 @@ disable =
     too-many-locals,
     too-many-arguments,
     too-many-instance-attributes,
-    # Test to enable:
     locally-disabled,
+    
+    # Test to enable:
     unnecessary-comprehension,
     suppressed-message,
     redefined-outer-name,
