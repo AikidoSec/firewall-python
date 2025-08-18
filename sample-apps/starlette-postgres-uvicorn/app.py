@@ -68,10 +68,8 @@ async def create_dog_from_headers(request: Request):
     return JSONResponse({"message": f'Dog {dog_name} created successfully'}, status_code=201)
 
 
-async def just(request: Request):
-    return JSONResponse({"message": "Empty Page"})
 
-async def delayed_route(request: Request):
+async def benchmark_route(request: Request):
     time.sleep(1/1000)
     return JSONResponse({"message": "Empty Page"})
 
@@ -102,8 +100,7 @@ routes = [
     Route("/create", create_dog, methods=["POST"]),
     Route("/create_dog_from_headers", create_dog_from_headers, methods=["GET"]),
     Route("/sync_route", sync_route),
-    Route("/just", just,  methods=["GET"]),
-    Route("/delayed_route", delayed_route, methods=["GET"])
+    Route("/benchmark", benchmark_route, methods=["GET"])
 ]
 if len(middleware) != 0:
     app = Starlette(routes=routes, middleware=middleware)
