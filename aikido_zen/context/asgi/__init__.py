@@ -22,7 +22,7 @@ def set_asgi_attributes_on_context(context, scope):
         # framework definition for cookies.
         context.cookies = parse_cookies(context.headers.get_header("COOKIE"))
     else:
-        context.cookies = {}
+        context.cookies = dict()
 
     context.url = build_url_from_asgi(scope)
     context.query = parse_qs(scope["query_string"].decode("utf-8"))
