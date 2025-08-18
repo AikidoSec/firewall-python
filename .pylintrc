@@ -38,7 +38,6 @@ disable =
     duplicate-code,
     no-value-for-parameter,
     redefined-builtin,
-    wrong-import-order,
     consider-using-in,
     use-implicit-booleaness-not-comparison-to-string,
     chained-comparison,
