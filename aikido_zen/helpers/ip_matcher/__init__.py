@@ -27,8 +27,6 @@ class IPMatcher:
         if not net or not net.is_valid():
             return False
         idx = binary_search_for_insertion_index(net, self.sorted)
-        if idx < 0:
-            return False
         if idx < len(self.sorted) and self.sorted[idx].contains(net):
             return True
         if idx - 1 >= 0 and self.sorted[idx - 1].contains(net):
