@@ -44,15 +44,15 @@ class AikidoIPCCommunications:
         global comms
         comms = self
 
-    def send_data_to_bg_process(self, action, obj, receive=False):
+    def send_data_to_bg_process(self, action, obj, receive=False, timeout_in_sec=0.1):
         """Try-catched send_data_to_bg_process"""
         try:
-            return self._send_data_to_bg_process(action, obj, receive)
+            return self._send_data_to_bg_process(action, obj, receive, timeout_in_sec)
         except Exception as e:
             logger.debug("Exception happened in send_data_to_bg_process : %s", e)
             return {"success": False, "error": "unknown"}
 
-    def _send_data_to_bg_process(self, action, obj, receive=False):
+    def _send_data_to_bg_process(self, action, obj, receive=False, timeout_in_sec=0.1):
         """
         This creates a new client for comms to the background process
         """
@@ -88,7 +88,7 @@ class AikidoIPCCommunications:
 
         # Start and join the thread for 100ms, afterwards the thread is forced to close (daemon=True)
         t.start()
-        t.join(timeout=0.1)
+        t.join(timeout=timeout_in_sec)
         if not result_obj[0]:
             logger.debug(
                 " Failure in communication to background process, %s(%s)", action, obj
