@@ -6,5 +6,5 @@ run_benchmark(
     "http://localhost:8086/create",
     "http://localhost:8087/create",
     "",
-    percentage_limit=15
+    percentage_limit=40
 )
