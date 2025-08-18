@@ -1,17 +1,18 @@
 """ This file simply exports the CloudConnectionManager class"""
 
-from aikido_zen.background_process.heartbeats import send_heartbeats_every_x_secs
-from aikido_zen.background_process.routes import Routes
 from aikido_zen.ratelimiting.rate_limiter import RateLimiter
 from aikido_zen.helpers.logging import logger
-from .update_firewall_lists import update_firewall_lists
-from ..api.http_api import ReportingApiHTTP
-from ..service_config import ServiceConfig
 from aikido_zen.storage.users import Users
 from aikido_zen.storage.hostnames import Hostnames
-from ..realtime.start_polling_for_changes import start_polling_for_changes
-from ...storage.ai_statistics import AIStatistics
-from ...storage.statistics import Statistics
+from aikido_zen.storage.ai_statistics import AIStatistics
+from aikido_zen.storage.statistics import Statistics
+from aikido_zen.background_process.heartbeats import send_heartbeats_every_x_secs
+from aikido_zen.background_process.routes import Routes
+from aikido_zen.background_process.realtime.start_polling_for_changes import (
+    start_polling_for_changes,
+)
+from aikido_zen.background_process.api.http_api import ReportingApiHTTP
+from aikido_zen.background_process.service_config import ServiceConfig
 
 # Import functions :
 from .on_detected_attack import on_detected_attack
@@ -19,6 +20,7 @@ from .get_manager_info import get_manager_info
 from .update_service_config import update_service_config
 from .on_start import on_start
 from .send_heartbeat import send_heartbeat
+from .update_firewall_lists import update_firewall_lists
 
 
 class CloudConnectionManager:

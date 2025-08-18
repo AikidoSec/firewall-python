@@ -3,9 +3,9 @@ Users file
 """
 
 from aikido_zen.helpers.logging import logger
-from . import get_current_context
 import aikido_zen.thread.thread_cache as thread_cache
 import aikido_zen.helpers.get_current_unixtime_ms as t
+from . import get_current_context
 
 
 def set_user(user):
