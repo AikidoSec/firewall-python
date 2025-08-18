@@ -4,7 +4,7 @@ from . import run_vulnerability_scan
 from aikido_zen.context import current_context, Context
 from aikido_zen.errors import AikidoSQLInjection
 from aikido_zen.thread.thread_cache import get_cache
-from aikido_zen.helpers.ip_matcher import IPMatcher
+from aikido_zen.helpers.iplist import IPList
 
 
 @pytest.fixture(autouse=True)
@@ -83,7 +83,8 @@ def test_ssrf(caplog, get_context):
 def test_lifecycle_cache_bypassed_ip(caplog, get_context):
     get_context.set_as_current_context()
     cache = get_cache()
-    cache.config.bypassed_ips = IPMatcher(["198.51.100.23"])
+    cache.config.bypassed_ips = IPList()
+    cache.config.bypassed_ips.add("198.51.100.23")
     assert cache.is_bypassed_ip("198.51.100.23")
     run_vulnerability_scan(kind="test", op="test", args=tuple())
     assert len(caplog.text) == 0
@@ -188,7 +189,8 @@ def test_ssrf_vulnerability_scan_no_port(get_context):
 
 def test_ssrf_vulnerability_scan_bypassed_ip(get_context):
     get_context.set_as_current_context()
-    get_cache().config.bypassed_ips = IPMatcher(["198.51.100.23"])
+    get_cache().config.bypassed_ips = IPList()
+    get_cache().config.bypassed_ips.add("198.51.100.23")
 
     dns_results = MagicMock()
     hostname = "example.com"
