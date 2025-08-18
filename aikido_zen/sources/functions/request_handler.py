@@ -6,7 +6,7 @@ from aikido_zen.helpers.is_useful_route import is_useful_route
 from aikido_zen.helpers.logging import logger
 from aikido_zen.thread.thread_cache import get_cache
 from .ip_allowed_to_access_route import ip_allowed_to_access_route
-from ...background_process import get_comms
+import aikido_zen.background_process.comms as c
 
 
 def request_handler(stage, status_code=0):
@@ -50,7 +50,7 @@ def pre_response():
         return message, 403
 
     # Do a check on firewall lists, this happens in background because of the heavy data.
-    comms = get_comms()
+    comms = c.get_comms()
     check_fw_lists_res = comms.send_data_to_bg_process(
         action="CHECK_FIREWALL_LISTS",
         obj={
