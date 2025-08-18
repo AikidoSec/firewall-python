@@ -516,3 +516,66 @@ def test_allowed_for_endpoint_and_in_allowlist_bots_are_set_but_is_not_bot(
 
     # Assert
     assert result is None
+
+
+"""
+config.set_blocked_ips(
+        [
+            {
+                "source": "geoip",
+                "description": "description",
+                "ips": [
+                    "1.2.3.4",
+                    "192.168.2.1/24",
+                    "fd00:1234:5678:9abc::1",
+                    "fd00:3234:5678:9abc::1/64",
+                    "5.6.7.8/32",
+                ],
+            }
+        ]
+    )
+
+    assert config.is_blocked_ip("fd00:3234:5678:9abc::1") is "description"
+    assert config.is_blocked_ip("fd00:3234:5678:9abc::2") is "description"
+    assert config.is_blocked_ip("5.6.7.8") is "description"
+    assert config.is_blocked_ip("1.2") is False
+"""
+
+
+@patch_firewall_lists
+def test_multiple_blocked(firewall_lists):
+    # Arrange
+    blocked_ips = [
+        {
+            "source": "geoip",
+            "description": "description",
+            "ips": [
+                "1.2.3.4",
+                "192.168.2.1/24",
+                "fd00:1234:5678:9abc::1",
+                "fd00:3234:5678:9abc::1/64",
+                "5.6.7.8/32",
+            ],
+        }
+    ]
+    firewall_lists.set_blocked_ips(blocked_ips)
+
+    set_context("1.2.3.4")
+    assert request_handler("pre_response")[0].startswith("Your IP address is blocked")
+    set_context("192.168.2.2")
+    assert request_handler("pre_response")[0].startswith("Your IP address is blocked")
+    set_context("fd00:1234:5678:9abc::1")
+    assert request_handler("pre_response")[0].startswith("Your IP address is blocked")
+    set_context("fd00:3234:5678:9abc::1")
+    assert request_handler("pre_response")[0].startswith("Your IP address is blocked")
+    set_context("fd00:3234:5678:9abc::2")
+    assert request_handler("pre_response")[0].startswith("Your IP address is blocked")
+    set_context("5.6.7.8")
+    assert request_handler("pre_response")[0].startswith("Your IP address is blocked")
+
+    set_context("2.3.4.5")
+    assert request_handler("pre_response") is None
+    set_context("1.2")
+    assert request_handler("pre_response") is None
+    set_context("fd00:1234:5678:9abc::2")
+    assert request_handler("pre_response") is None
