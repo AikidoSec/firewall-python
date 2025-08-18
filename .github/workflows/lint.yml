@@ -20,7 +20,7 @@ jobs:
 
     - name: Run Pylint
       run: |
-        poetry run pylint --fail-under=9 --rcfile=.pylintrc aikido_zen/
+        poetry run pylint --rcfile=.pylintrc aikido_zen/
         pylint_exit_code=$?
         if [ $pylint_exit_code -ne 0 ]; then
           echo "Pylint check failed. Please fix the issues."

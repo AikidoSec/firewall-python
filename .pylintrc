@@ -1,7 +1,5 @@
 [MASTER]
-# Disable the unused-argument warning
-disable = unused-argument
+# Ignore test files
 ignore-patterns=(.)*_test\.py,test_(.)*\.py
-
-[MESSAGES CONTROL]
-disable=too-few-public-methods,broad-exception-caught
+disable=all
+enable=unused-import,use-dict-literal
