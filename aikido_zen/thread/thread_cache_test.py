@@ -6,7 +6,7 @@ from .. import set_user
 from ..background_process.packages import PackagesStore
 from ..background_process.service_config import ServiceConfig
 from ..context import current_context, Context
-from aikido_zen.helpers.ip_matcher import IPMatcher
+from aikido_zen.helpers.iplist import IPList
 
 
 @pytest.fixture
@@ -37,7 +37,7 @@ def run_around_tests():
 def test_initialization(thread_cache: ThreadCache):
     """Test that the ThreadCache initializes correctly."""
     assert isinstance(thread_cache.routes, Routes)
-    assert isinstance(thread_cache.config.bypassed_ips, IPMatcher)
+    assert isinstance(thread_cache.config.bypassed_ips, IPList)
     assert thread_cache.get_endpoints() == []
     assert thread_cache.config.blocked_uids == set()
     assert thread_cache.stats.get_record()["requests"] == {
@@ -74,7 +74,7 @@ def test_reset(thread_cache: ThreadCache):
 
     thread_cache.reset()
 
-    assert isinstance(thread_cache.config.bypassed_ips, IPMatcher)
+    assert isinstance(thread_cache.config.bypassed_ips, IPList)
     assert thread_cache.config.blocked_uids == set()
     assert thread_cache.stats.get_record()["requests"] == {
         "total": 0,
@@ -97,7 +97,7 @@ def test_renew_with_no_comms(thread_cache: ThreadCache):
     """Test that renew does not proceed if there are no communications available."""
     with patch("aikido_zen.background_process.comms.get_comms", return_value=None):
         thread_cache.renew()
-        assert isinstance(thread_cache.config.bypassed_ips, IPMatcher)
+        assert isinstance(thread_cache.config.bypassed_ips, IPList)
         assert thread_cache.get_endpoints() == []
         assert thread_cache.config.blocked_uids == set()
         assert thread_cache.stats.get_record()["requests"] == {
@@ -121,7 +121,7 @@ def test_renew_with_invalid_response(mock_get_comms, thread_cache: ThreadCache):
     }
 
     thread_cache.renew()
-    assert isinstance(thread_cache.config.bypassed_ips, IPMatcher)
+    assert isinstance(thread_cache.config.bypassed_ips, IPList)
     assert thread_cache.get_endpoints() == []
     assert thread_cache.config.blocked_uids == set()
 

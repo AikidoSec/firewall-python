@@ -5,9 +5,8 @@ Exports ServiceConfig class
 from typing import Pattern
 
 import regex as re
-
-from aikido_zen.helpers.ip_matcher import IPMatcher
 from aikido_zen.helpers.match_endpoints import match_endpoints
+from aikido_zen.helpers.iplist import IPList
 
 
 # noinspection PyAttributeOutsideInit
@@ -51,7 +50,7 @@ class ServiceConfig:
             endpoint for endpoint in endpoints if not endpoint.get("graphql")
         ]
 
-        # Create an IPMatcher instance for each endpoint
+        # Create a IPList instance for each endpoint
         for endpoint in self.endpoints:
             if not "allowedIPAddresses" in endpoint:
                 #  This feature is not supported by the current aikido server version
@@ -63,7 +62,7 @@ class ServiceConfig:
                 #  Skip empty allowlist
                 continue
 
-            endpoint["allowedIPAddresses"] = IPMatcher(endpoint["allowedIPAddresses"])
+            endpoint["allowedIPAddresses"] = IPList(endpoint["allowedIPAddresses"])
 
     def get_endpoints(self, route_metadata):
         """
@@ -73,14 +72,14 @@ class ServiceConfig:
         return match_endpoints(route_metadata, self.endpoints)
 
     def set_bypassed_ips(self, bypassed_ips):
-        """Creates an IPMatcher from the given bypassed ip set"""
-        self.bypassed_ips = IPMatcher()
+        """Creates an IPList from the given bypassed ip set"""
+        self.bypassed_ips = IPList()
         for ip in bypassed_ips:
             self.bypassed_ips.add(ip)
 
     def is_bypassed_ip(self, ip):
         """Checks if the IP is on the bypass list"""
-        return self.bypassed_ips.has(ip)
+        return self.bypassed_ips.matches(ip)
 
     def set_blocked_ips(self, blocked_ip_entries):
         self.blocked_ips = list(map(parse_ip_entry, blocked_ip_entries))
@@ -90,7 +89,7 @@ class ServiceConfig:
 
     def is_blocked_ip(self, ip):
         for entry in self.blocked_ips:
-            if entry["iplist"].has(ip):
+            if entry["iplist"].matches(ip):
                 return entry["description"]
         return False
 
@@ -112,8 +111,12 @@ def parse_ip_entry(entry):
     """
     Converts ip entry: {"source": "example", "description": "Example description", "ips": []}
     """
+    iplist = IPList()
+    for ip in entry["ips"]:
+        iplist.add(ip)
+
     return {
         "source": entry["source"],
         "description": entry["description"],
-        "iplist": IPMatcher(entry["ips"]),
+        "iplist": iplist,
     }
