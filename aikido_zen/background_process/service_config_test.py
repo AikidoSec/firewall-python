@@ -1,6 +1,6 @@
 import pytest
 from .service_config import ServiceConfig
-from aikido_zen.helpers.iplist import IPList
+from aikido_zen.helpers.ip_matcher import IPMatcher
 
 
 def test_service_config_initialization():
@@ -66,10 +66,10 @@ def test_service_config_initialization():
     assert service_config.endpoints[1]["route"] == "/v3"
     assert service_config.endpoints[2]["route"] == "/admin"
     assert service_config.last_updated_at == last_updated_at
-    assert isinstance(service_config.bypassed_ips, IPList)
-    assert service_config.bypassed_ips.matches("127.0.0.1")
-    assert service_config.bypassed_ips.matches("123.1.2.2")
-    assert not service_config.bypassed_ips.matches("1.1.1.1")
+    assert isinstance(service_config.bypassed_ips, IPMatcher)
+    assert service_config.bypassed_ips.has("127.0.0.1")
+    assert service_config.bypassed_ips.has("123.1.2.2")
+    assert not service_config.bypassed_ips.has("1.1.1.1")
     assert service_config.blocked_uids == set(["1", "0", "5"])
 
     v1_endpoint = service_config.get_endpoints(
@@ -90,10 +90,10 @@ def test_service_config_initialization():
         }
     )[0]
     assert admin_endpoint["route"] == "/admin"
-    assert isinstance(admin_endpoint["allowedIPAddresses"], IPList)
-    assert admin_endpoint["allowedIPAddresses"].matches("192.168.2.1")
-    assert admin_endpoint["allowedIPAddresses"].matches("1.2.3.4")
-    assert not admin_endpoint["allowedIPAddresses"].matches("192.168.0.1")
+    assert isinstance(admin_endpoint["allowedIPAddresses"], IPMatcher)
+    assert admin_endpoint["allowedIPAddresses"].has("192.168.2.1")
+    assert admin_endpoint["allowedIPAddresses"].has("1.2.3.4")
+    assert not admin_endpoint["allowedIPAddresses"].has("192.168.0.1")
 
 
 # Sample data for testing
@@ -118,7 +118,7 @@ def service_config():
 def test_initialization(service_config):
     assert len(service_config.endpoints) == 2  # Only non-graphql endpoints
     assert service_config.last_updated_at == "2023-10-01T00:00:00Z"
-    assert isinstance(service_config.bypassed_ips, IPList)
+    assert isinstance(service_config.bypassed_ips, IPMatcher)
     assert service_config.blocked_uids == {"user1", "user2"}
 
 
@@ -194,10 +194,10 @@ def test_service_config_with_empty_allowlist():
     assert len(service_config.endpoints) == 1
     assert service_config.endpoints[0]["route"] == "/admin"
     assert service_config.last_updated_at == last_updated_at
-    assert isinstance(service_config.bypassed_ips, IPList)
-    assert service_config.bypassed_ips.matches("127.0.0.1")
-    assert service_config.bypassed_ips.matches("123.1.2.2")
-    assert not service_config.bypassed_ips.matches("1.1.1.1")
+    assert isinstance(service_config.bypassed_ips, IPMatcher)
+    assert service_config.bypassed_ips.has("127.0.0.1")
+    assert service_config.bypassed_ips.has("123.1.2.2")
+    assert not service_config.bypassed_ips.has("1.1.1.1")
     assert service_config.blocked_uids == set(["1", "0", "5"])
 
     admin_endpoint = service_config.get_endpoints(
