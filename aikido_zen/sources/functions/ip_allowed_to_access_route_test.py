@@ -1,7 +1,6 @@
 import pytest
-from unittest.mock import MagicMock
 from .ip_allowed_to_access_route import ip_allowed_to_access_route
-from aikido_zen.helpers.iplist import IPList
+from aikido_zen.helpers.ip_matcher import IPMatcher
 
 
 def gen_route_metadata(
@@ -16,7 +15,9 @@ def gen_endpoints(allowed_ip_addresses):
             "route": "/posts/:id",
             "method": "POST",
             "allowedIPAddresses": (
-                IPList(allowed_ip_addresses) if len(allowed_ip_addresses) > 0 else None
+                IPMatcher(allowed_ip_addresses)
+                if len(allowed_ip_addresses) > 0
+                else None
             ),
             "force_protection_off": False,
         },
@@ -78,13 +79,13 @@ def test_checks_every_matching_endpoint():
         {
             "route": "/posts/:id",
             "method": "POST",
-            "allowedIPAddresses": IPList(["3.4.5.6"]),
+            "allowedIPAddresses": IPMatcher(["3.4.5.6"]),
             "force_protection_off": False,
         },
         {
             "route": "/posts/*",
             "method": "POST",
-            "allowedIPAddresses": IPList(["1.2.3.4"]),
+            "allowedIPAddresses": IPMatcher(["1.2.3.4"]),
             "force_protection_off": False,
         },
     ]
@@ -109,7 +110,7 @@ def test_if_allowed_ips_is_empty_or_broken():
         {
             "route": "/posts/*",
             "method": "POST",
-            "allowedIPAddresses": IPList(["1.2.3.4"]),
+            "allowedIPAddresses": IPMatcher(["1.2.3.4"]),
             "force_protection_off": False,
         },
     ]

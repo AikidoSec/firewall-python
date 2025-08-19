@@ -4,8 +4,8 @@ import pytest
 from unittest.mock import MagicMock
 from .sync_data import process_sync_data
 from aikido_zen.background_process.routes import Routes
-from aikido_zen.helpers.iplist import IPList
 from ..packages import PackagesStore
+from ...helpers.ip_matcher import IPMatcher
 from ...storage.hostnames import Hostnames
 from ...storage.statistics import Statistics
 
@@ -18,8 +18,7 @@ def setup_connection_manager():
     connection_manager.hostnames = Hostnames()
     connection_manager.conf.endpoints = ["endpoint1", "endpoint2"]
 
-    connection_manager.conf.bypassed_ips = IPList()
-    connection_manager.conf.bypassed_ips.add("192.168.1.1")
+    connection_manager.conf.bypassed_ips = IPMatcher(["192.168.1.1"])
     connection_manager.conf.blocked_uids = ["user1", "user2"]
     connection_manager.conf.last_updated_at = 200
     connection_manager.statistics = Statistics()
