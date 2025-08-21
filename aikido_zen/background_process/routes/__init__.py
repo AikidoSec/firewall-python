@@ -41,8 +41,9 @@ class Routes:
             self.initialize_route(route_metadata)
         # Add hits to
         route = self.routes.get(key)
-        route["hits"] += 1
-        route["hits_delta_since_sync"] += 1
+        if route:
+            route["hits"] += 1
+            route["hits_delta_since_sync"] += 1
 
     def update_route_with_apispec(self, route_metadata, apispec):
         """
@@ -50,9 +51,9 @@ class Routes:
         route_metadata object includes route, url and method
         """
         key = route_to_key(route_metadata)
-        if not self.routes.get(key):
-            return
-        update_route_info(apispec, self.routes[key])
+        route = self.routes.get(key)
+        if route:
+            update_route_info(apispec, route)
 
     def get(self, route_metadata):
         """Gets you the route entry if it exists using route metadata"""
@@ -61,8 +62,8 @@ class Routes:
 
     def get_routes_with_hits(self):
         """Gets you all routes with a positive hits delta"""
-        result = dict()
-        for key, route in self.routes.items():
+        result = {}
+        for key, route in list(self.routes.items()):
             if route["hits_delta_since_sync"] <= 0:
                 continue  # do not add routes without a hit delta
             result[key] = route
@@ -78,11 +79,13 @@ class Routes:
         """
         if len(self.routes) >= self.max_size:
             least_used = [None, float("inf")]
-            for key, route in self.routes.items():
+            for key, route in list(self.routes.items()):
                 if route.get("hits") < least_used[1]:
                     least_used = [key, route.get("hits")]
             if least_used[0]:
-                del self.routes[least_used[0]]
+                delete_route = self.routes[least_used[0]]
+                if delete_route:
+                    del delete_route
 
     def __iter__(self):
         return iter(self.routes.values())
