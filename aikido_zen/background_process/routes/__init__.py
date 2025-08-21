@@ -83,9 +83,7 @@ class Routes:
                 if route.get("hits") < least_used[1]:
                     least_used = [key, route.get("hits")]
             if least_used[0]:
-                delete_route = self.routes[least_used[0]]
-                if delete_route:
-                    del delete_route
+                del self.routes[least_used[0]]
 
     def __iter__(self):
         return iter(self.routes.values())
