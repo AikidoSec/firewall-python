@@ -58,8 +58,8 @@ def test_heartbeat(app):
             }
         }
     })
-    assert_eq(route1["apispec"]["body"]["query"], None)
-    assert_eq(route1["apispec"]["body"]["auth"], None)
+    assert_eq(route1["apispec"]["query"], None)
+    assert_eq(route1["apispec"]["auth"], None)
 
     # Validate stats
     assert_eq(stats["requests"]["attacksDetected"]["blocked"], 2)
