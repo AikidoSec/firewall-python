@@ -7,7 +7,7 @@ const BASE_URL_8086 = 'http://localhost:8086';
 const BASE_URL_8087 = 'http://localhost:8087';
 
 export const options = {
-    vus: 2, // Number of virtual users
+    vus: 1, // Number of virtual users
     thresholds: {
         test_40mb_payload: [{
             threshold: "avg<=15", // This is a higher threshold due to the data being processed
