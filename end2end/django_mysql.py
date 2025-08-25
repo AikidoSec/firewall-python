@@ -64,7 +64,13 @@ def test_heartbeat(app):
     # Validate stats
     assert_eq(stats["requests"]["attacksDetected"]["blocked"], 2)
     assert_eq(stats["requests"]["attacksDetected"]["total"], 2)
-    assert_eq(stats["requests"]["total"], 4)
+    # There are 3-4 requests :
+    # 1. is website live request, first request not always counted
+    # 2. /app/create safe
+    # 3. /app/create sql inj
+    # 4. /app/shell/ls -la shell inj
+    total = stats["requests"]["total"]
+    assert 3 <= total <= 4, f"Unexpected amount of total requests {total}"
 
     # Validate packages
     assert_eq(packages, {'wrapt', 'asgiref', 'aikido_zen', 'django', 'sqlparse', 'regex', 'mysqlclient'})
