@@ -1,4 +1,3 @@
-from end2end.utils import assert_eq
 from utils import App, Request
 
 quart_postgres_uvicorn_app = App(8096)
