@@ -88,7 +88,11 @@ function measureRequest(url, method = 'GET', payload, status_code=200, headers=d
     check(res, {
         'status is correct': (r) => r.status === status_code,
     });
-    return res.timings.waiting; // Return the duration of the request
+
+    // res.timings.waiting returns TTFB:
+    // The time spent waiting for the server to send the first byte of the response
+    // This is the same metric we use in AikidoSec/firewall-node.
+    return res.timings.waiting;
 }
 
 function route_test(trend, amount, route, method="GET", data=default_payload, status=200) {
