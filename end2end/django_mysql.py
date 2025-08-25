@@ -23,7 +23,7 @@ django_mysql_app.add_payload(
 
 django_mysql_app.add_payload(
     "test_shell_injection",
-    safe_request=None, # Don't test safeness
+    safe_request=None,  # Don't test safeness
     unsafe_request=Request("/app/shell/ls -la", "GET"),
     test_event={
         "blocked": True,
@@ -35,6 +35,7 @@ django_mysql_app.add_payload(
         'source': "route_params",
     }
 )
+
 
 def test_heartbeat(app):
     heartbeat = app.get_heartbeat()
