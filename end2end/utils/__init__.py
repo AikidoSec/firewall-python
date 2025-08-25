@@ -55,11 +55,18 @@ class App:
 
     def get_heartbeat(self):
         print("↺ Fetching latest heartbeat")
+
+        start_time = time.time()
+
         heartbeats = self.event_handler.fetch_heartbeats()
         while len(heartbeats) == 0:
             heartbeats = self.event_handler.fetch_heartbeats()
-            time.sleep(5)
+            time.sleep(2)
         assert_eq(len(heartbeats), equals=1)
+
+        delta = time.time() - start_time
+        print(f"✅ Fetched heartbeat, time spent: {delta:.2f}s")
+
         return heartbeats[0]
 
 def wait_until_live(url):
