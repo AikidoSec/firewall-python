@@ -5,9 +5,9 @@ from utils import App, Request
 flask_mongo_app = App(8094)
 
 def create_test_dog():
-    Request("/create", data_type="form", body={
+    Request("/create", data_type="form", body=json.dumps({
         {"dog_name": "bobby", "pswd": "1234"}
-    }).execute(flask_mongo_app.urls["enabled"])
+    })).execute(flask_mongo_app.urls["enabled"])
 
 flask_mongo_app.add_payload(
     "test_nosql_injection",
