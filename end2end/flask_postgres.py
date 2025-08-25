@@ -14,7 +14,7 @@ flask_postgres_app.add_payload(
             "sql": "INSERT INTO dogs (dog_name, isAdmin) VALUES ('Dangerous Bobby', TRUE); -- ', FALSE)"
         },
         "operation": "psycopg2.Connection.Cursor.execute",
-        "pathToPayload": '.dog_name.[0]',
+        "pathToPayload": '.dog_name',
         "payload": '"Dangerous Bobby\', TRUE); -- "',
         "source": "body",
     }
