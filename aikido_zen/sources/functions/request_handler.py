@@ -50,6 +50,8 @@ def pre_response():
         return message, 403
 
     # Do a check on firewall lists, this happens in background because of the heavy data.
+    # For the timeout we notice the request during heavy loads usually takes 2ms - 2.5ms, we set timeout at 10ms.
+    # That way we have a very small timeout with very little risk of not blocking ips.
     comms = c.get_comms()
     check_fw_lists_res = comms.send_data_to_bg_process(
         action="CHECK_FIREWALL_LISTS",
@@ -58,7 +60,7 @@ def pre_response():
             "user-agent": context.get_user_agent(),
         },
         receive=True,
-        timeout_in_sec=(20 / 1000),
+        timeout_in_sec=(10 / 1000),
     )
     if not check_fw_lists_res["success"] or not check_fw_lists_res["data"]["blocked"]:
         return
