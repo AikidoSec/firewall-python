@@ -32,8 +32,7 @@ jobs:
           - { name: flask-mysql, testfile: end2end/flask_mysql_test.py }
           - { name: flask-mysql-uwsgi, testfile: end2end/flask_mysql_uwsgi_test.py }
           - { name: flask-postgres, testfile: end2end/flask_postgres_test.py }
-          - { name: flask-postgres-xml, testfile: end2end/flask_postgres_xml_test.py }
-          - { name: flask-postgres-xml, testfile: end2end/flask_postgres_xml_lxml_test.py }
+          - { name: flask-postgres-xml, testfile: end2end/flask_postgres_xml.py }
           - { name: quart-postgres-uvicorn, testfile: end2end/quart_postgres_uvicorn.py }
           - { name: starlette-postgres-uvicorn, testfile: end2end/starlette_postgres_uvicorn_test.py }
         python-version: ["3.10", "3.11", "3.12", "3.13"]
