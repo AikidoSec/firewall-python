@@ -28,7 +28,7 @@ jobs:
           - { name: django-mysql, testfile: end2end/django_mysql.py }
           - { name: django-mysql-gunicorn, testfile: end2end/django_mysql_gunicorn.py }
           - { name: django-postgres-gunicorn, testfile: end2end/django_postgres_gunicorn.py }
-          - { name: flask-mongo, testfile: end2end/flask_mongo_test.py }
+          - { name: flask-mongo, testfile: end2end/flask_mongo.py }
           - { name: flask-mysql, testfile: end2end/flask_mysql_test.py }
           - { name: flask-mysql-uwsgi, testfile: end2end/flask_mysql_uwsgi_test.py }
           - { name: flask-postgres, testfile: end2end/flask_postgres_test.py }
