@@ -13,3 +13,8 @@ benchmark_flask-mysql-uwsgi:
 benchmark_flask-mysql:
 	@echo "Running wrk benchmarks for Flask w/ MySQL (built-in wsgi server)"
 	python flask_mysql.py
+
+.PHONY: benchmark_flask-mysql-gunicorn
+benchmark_flask-mysql-uwsgi:
+	@echo "Running wrk benchmarks for Flask w/ MySQL, gUnicorn"
+	python flask_mysql_gunicorn.py
