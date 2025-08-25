@@ -1,4 +1,4 @@
-from .utils import App, Request
+from utils import App, Request
 
 flask_mongo_app = App(8094)
 
