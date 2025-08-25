@@ -64,7 +64,7 @@ def test_heartbeat(app):
     # Validate stats
     assert_eq(stats["requests"]["attacksDetected"]["blocked"], 2)
     assert_eq(stats["requests"]["attacksDetected"]["total"], 2)
-    assert_eq(stats["requests"]["total"], 3)
+    assert_eq(stats["requests"]["total"], 4)
 
     # Validate packages
     assert_eq(packages, {'wrapt', 'asgiref', 'aikido_zen', 'django', 'sqlparse', 'regex', 'mysqlclient'})
