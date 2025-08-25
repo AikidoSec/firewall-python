@@ -92,7 +92,7 @@ def run_vulnerability_scan(kind, op, args):
             logger.error(
                 "Vulnerability type %s currently has no scans implemented", kind
             )
-    except Exception as e:  # pylint: disable=broad-exception-caught
+    except Exception as e:
         logger.debug("Exception occurred in run_vulnerability_scan : %s", e)
 
     if injection_results:

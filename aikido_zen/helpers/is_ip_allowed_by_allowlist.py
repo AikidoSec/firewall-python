@@ -1,4 +1,3 @@
-from aikido_zen.helpers.is_localhost_ip import is_localhost_ip
 from aikido_zen.vulnerabilities.ssrf.is_private_ip import is_private_ip
 
 

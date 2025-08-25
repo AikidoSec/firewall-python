@@ -5,7 +5,7 @@ from aikido_zen.sinks import on_import, patch_function, after, after_async
 
 @after
 def _messages_create(func, instance, args, kwargs, return_value):
-    op = f"anthropic.resources.messages.messages.Messages.create"
+    op = "anthropic.resources.messages.messages.Messages.create"
     register_call(op, "ai_op")
 
     on_ai_call(
@@ -18,7 +18,7 @@ def _messages_create(func, instance, args, kwargs, return_value):
 
 @after_async
 async def _messages_create_async(func, instance, args, kwargs, return_value):
-    op = f"anthropic.resources.messages.messages.Messages.create"
+    op = "anthropic.resources.messages.messages.Messages.create"
     register_call(op, "ai_op")
 
     on_ai_call(

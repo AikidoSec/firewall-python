@@ -55,7 +55,7 @@ def is_version_supported(version, required_version):
 
 
 # packages store, uses python's built in GlobalInterpreterLock (GIL)
-packages = dict()
+packages = {}
 
 
 class PackagesStore:

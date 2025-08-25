@@ -7,7 +7,6 @@ import multiprocessing.connection as con
 from threading import Thread
 from aikido_zen.helpers.logging import logger
 
-# pylint: disable=invalid-name # This variable does change
 comms = None
 
 
@@ -21,7 +20,6 @@ def get_comms():
 
 def reset_comms():
     """This will reset communications"""
-    # pylint: disable=global-statement # This needs to be global
     global comms
     if comms:
         logger.debug("Resetting communications. (comms = None)")
@@ -40,7 +38,6 @@ class AikidoIPCCommunications:
 
         # Set as global ipc object :
         reset_comms()
-        # pylint: disable=global-statement # This needs to be global
         global comms
         comms = self
 

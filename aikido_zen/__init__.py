@@ -46,6 +46,7 @@ def protect(mode="daemon", token=""):
     if mode == "daemon_disabled":
         logger.debug("Not starting the background process, daemon disabled.")
 
+    # pylint: disable=unused-import
     import aikido_zen.sinks.builtins_import
 
     # Import sources

@@ -51,8 +51,8 @@ class Context:
         self.outgoing_req_redirects = []
         self.set_body(body)
         self.headers: Headers = Headers()
-        self.cookies = dict()
-        self.query = dict()
+        self.cookies = {}
+        self.query = {}
 
         # Parse WSGI/ASGI/... request :
         self.method = self.remote_address = self.url = None
