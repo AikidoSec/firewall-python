@@ -26,7 +26,7 @@ jobs:
       matrix:
         app:
           - { name: django-mysql, testfile: end2end/django_mysql_test.py }
-          - { name: django-mysql-gunicorn, testfile: end2end/django_mysql_gunicorn_test.py }
+          - { name: django-mysql-gunicorn, testfile: end2end/django_mysql_gunicorn.py }
           - { name: django-postgres-gunicorn, testfile: end2end/django_postgres_gunicorn_test.py }
           - { name: flask-mongo, testfile: end2end/flask_mongo_test.py }
           - { name: flask-mysql, testfile: end2end/flask_mysql_test.py }
@@ -65,7 +65,7 @@ jobs:
       - name: Start application
         working-directory: ./sample-apps/${{ matrix.app.name }}
         run: |
-          nohup make run > output.log & tail -f output.log & sleep 20
-          nohup make runZenDisabled & sleep 20
+          nohup make run > output.log & sleep 1
+          nohup make runZenDisabled & sleep 1
       - name: Run end2end tests for application
         run: tail -f  ./sample-apps/${{ matrix.app.name }}/output.log & poetry run pytest ./${{ matrix.app.testfile }}
