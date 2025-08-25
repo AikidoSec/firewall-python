@@ -25,7 +25,7 @@ jobs:
     strategy:
       matrix:
         app:
-          - { name: django-mysql, testfile: end2end/django_mysql_test.py }
+          - { name: django-mysql, testfile: end2end/django_mysql.py }
           - { name: django-mysql-gunicorn, testfile: end2end/django_mysql_gunicorn.py }
           - { name: django-postgres-gunicorn, testfile: end2end/django_postgres_gunicorn_test.py }
           - { name: flask-mongo, testfile: end2end/flask_mongo_test.py }
