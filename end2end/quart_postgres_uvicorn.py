@@ -4,8 +4,8 @@ quart_postgres_uvicorn_app = App(8096)
 
 quart_postgres_uvicorn_app.add_payload(
     "test_sql_injection",
-    safe_request=Request("/app/create", data_type="form", body={"dog_name": "Bobby Tables"}),
-    unsafe_request=Request("/app/create", data_type="form", body={"dog_name": "Dangerous Bobby', TRUE); -- "}),
+    safe_request=Request("/create", data_type="form", body={"dog_name": "Bobby Tables"}),
+    unsafe_request=Request("/create", data_type="form", body={"dog_name": "Dangerous Bobby', TRUE); -- "}),
     test_event={
         "blocked": True,
         "kind": "sql_injection",
