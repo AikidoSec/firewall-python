@@ -10,42 +10,42 @@ export const options = {
     vus: 1, // Number of virtual users
     thresholds: {
         test_40mb_payload: [{
-            threshold: "avg<15", // This is a higher threshold due to the data being processed
+            threshold: "avg<=15.0", // This is a higher threshold due to the data being processed
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
         test_multiple_queries: [{
-            threshold: "avg<6",
+            threshold: "avg<=6.0",
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
         test_multiple_queries_with_big_body: [{
-            threshold: "avg<6",
+            threshold: "avg<=6.0",
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
         test_create_with_big_body: [{
-            threshold: "avg<6",
+            threshold: "avg<=6.0",
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
         test_normal_route: [{
-            threshold: "avg<6", 
+            threshold: "avg<=6.0",
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
         test_id_route: [{
-            threshold: "avg<6",
+            threshold: "avg<=6.0",
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
         test_open_file: [{
-            threshold: "avg<6",
+            threshold: "avg<=6.0",
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
         test_execute_shell: [{
-            threshold: "avg<10", 
+            threshold: "avg<=6.0",
             abortOnFail: true,
             delayAbortEval: '10s',
         }],
@@ -88,7 +88,11 @@ function measureRequest(url, method = 'GET', payload, status_code=200, headers=d
     check(res, {
         'status is correct': (r) => r.status === status_code,
     });
-    return res.timings.duration; // Return the duration of the request
+
+    // res.timings.waiting returns TTFB:
+    // The time spent waiting for the server to send the first byte of the response
+    // This is the same metric we use in AikidoSec/firewall-node.
+    return res.timings.waiting;
 }
 
 function route_test(trend, amount, route, method="GET", data=default_payload, status=200) {
