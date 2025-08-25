@@ -6,7 +6,7 @@ from aikido_zen.helpers.is_useful_route import is_useful_route
 from aikido_zen.helpers.logging import logger
 from aikido_zen.thread.thread_cache import get_cache
 from .ip_allowed_to_access_route import ip_allowed_to_access_route
-from ...helpers.is_ip_allowed_by_allowlist import is_ip_allowed_by_allowlist
+import aikido_zen.background_process.comms as c
 
 
 def request_handler(stage, status_code=0):
@@ -49,21 +49,34 @@ def pre_response():
             message += f" (Your IP: {context.remote_address})"
         return message, 403
 
-    # Global IP Allowlist (e.g. for geofencing)
-    if not is_ip_allowed_by_allowlist(cache.config, context.remote_address):
+    # Do a check on firewall lists, this happens in background because of the heavy data.
+    # For the timeout we notice the request during heavy loads usually takes 2ms - 2.5ms, we set timeout at 10ms.
+    # That way we have a very small timeout with very little risk of not blocking ips.
+    comms = c.get_comms()
+    check_fw_lists_res = comms.send_data_to_bg_process(
+        action="CHECK_FIREWALL_LISTS",
+        obj={
+            "ip": context.remote_address,
+            "user-agent": context.get_user_agent(),
+        },
+        receive=True,
+        timeout_in_sec=(10 / 1000),
+    )
+    if not check_fw_lists_res["success"] or not check_fw_lists_res["data"]["blocked"]:
+        return
+
+    block_type = check_fw_lists_res["data"]["type"]
+
+    if block_type == "allowlist":
         message = "Your IP address is not allowed."
         message += " (Your IP: " + context.remote_address + ")"
         return message, 403
-
-    # Global IP Blocklist (e.g. blocking known threat actors)
-    reason = cache.config.is_blocked_ip(context.remote_address)
-    if reason:
-        message = "Your IP address is blocked due to " + reason
+    if block_type == "blocklist":
+        message = "Your IP address is blocked due to "
+        message += check_fw_lists_res["data"]["reason"]
         message += " (Your IP: " + context.remote_address + ")"
         return message, 403
-
-    # User agent blocking (e.g. blocking AI scrapers)
-    if cache.config.is_user_agent_blocked(context.get_user_agent()):
+    if block_type == "bot-blocking":
         msg = "You are not allowed to access this resource because you have been identified as a bot."
         return msg, 403
 

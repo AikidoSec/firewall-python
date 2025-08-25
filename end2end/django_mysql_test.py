@@ -110,5 +110,5 @@ def test_initial_heartbeat():
             "total": 3,
             'rateLimited': 0
         },
-        {'wrapt', 'asgiref', 'aikido_zen', 'django', 'sqlparse', 'regex', 'mysqlclient'}
+        {'wrapt', 'asgiref', 'aikido_zen', 'django', 'sqlparse', 'mysqlclient'}
     )

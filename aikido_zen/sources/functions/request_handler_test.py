@@ -2,9 +2,11 @@ import pytest
 from unittest.mock import patch, MagicMock
 from aikido_zen.thread.thread_cache import get_cache, ThreadCache
 from .request_handler import request_handler
+from ...background_process.commands import process_check_firewall_lists
 from ...background_process.service_config import ServiceConfig
 from ...context import Context, current_context
 from ...helpers.headers import Headers
+from ...storage.firewall_lists import FirewallLists
 
 
 @pytest.fixture
@@ -29,6 +31,22 @@ def run_around_tests():
     yield
     get_cache().reset()
     current_context.set(None)
+
+
+class MyMockComms:
+    def __init__(self):
+        self.firewall_lists = FirewallLists()
+        self.conn_manager = MagicMock()
+        self.conn_manager.firewall_lists = self.firewall_lists
+
+    def send_data_to_bg_process(self, action, obj, receive=False, timeout_in_sec=0.1):
+        if action != "CHECK_FIREWALL_LISTS":
+            return {"success": False}
+        res = process_check_firewall_lists(self.conn_manager, obj, None, None)
+        return {
+            "success": True,
+            "data": res,
+        }
 
 
 def test_post_response_useful_route(mock_context):
@@ -127,7 +145,7 @@ def set_context(remote_address, user_agent=""):
     ).set_as_current_context()
 
 
-def create_service_config(blocked_ips=None):
+def create_service_config():
     config = ServiceConfig(
         endpoints=[
             {
@@ -142,19 +160,35 @@ def create_service_config(blocked_ips=None):
         bypassed_ips=[],
         received_any_stats=False,
     )
-    if blocked_ips:
-        config.set_blocked_ips(blocked_ips)
     get_cache().config = config
     return config
 
 
-def test_blocked_ip():
+def patch_firewall_lists(func):
+    def wrapper(*args, **kwargs):
+        with patch("aikido_zen.background_process.comms.get_comms") as mock_comms:
+            comms = MyMockComms()
+            mock_comms.return_value = comms
+
+            return func(*args, firewall_lists=comms.firewall_lists, **kwargs)
+
+    return wrapper
+
+
+@patch_firewall_lists
+def test_blocked_ip(firewall_lists):
     # Arrange
+    firewall_lists.set_blocked_ips(
+        [
+            {
+                "source": "test",
+                "description": "Blocked for testing",
+                "ips": ["192.168.1.1"],
+            }
+        ]
+    )
     set_context("192.168.1.1")
-    blocked_ips = [
-        {"source": "test", "description": "Blocked for testing", "ips": ["192.168.1.1"]}
-    ]
-    config = create_service_config(blocked_ips)
+    config = create_service_config()
     config.endpoints[0]["allowedIPAddresses"] = []  # Clear allowed ips for endpoint
 
     # Act
@@ -167,13 +201,19 @@ def test_blocked_ip():
     )
 
 
-def test_allowed_ip():
+@patch_firewall_lists
+def test_allowed_ip(firewall_lists):
     # Arrange
     set_context("1.1.1.1")
-    blocked_ips = [
-        {"source": "test", "description": "Blocked for testing", "ips": ["192.168.1.1"]}
-    ]
-    create_service_config(blocked_ips)
+    firewall_lists.set_blocked_ips(
+        [
+            {
+                "source": "test",
+                "description": "Blocked for testing",
+                "ips": ["192.168.1.1"],
+            }
+        ]
+    )
 
     # Act
     result = request_handler("pre_response")
@@ -193,13 +233,15 @@ def test_invalid_context():
     assert result is None
 
 
-def test_not_allowed_ip():
+@patch_firewall_lists
+def test_not_allowed_ip(firewall_lists):
     # Arrange
     set_context("192.168.1.3")
+    create_service_config()
     blocked_ips = [
         {"source": "test", "description": "Blocked for testing", "ips": ["192.168.1.1"]}
     ]
-    create_service_config(blocked_ips)
+    firewall_lists.set_blocked_ips(blocked_ips)
 
     # Act
     result = request_handler("pre_response")
@@ -211,29 +253,15 @@ def test_not_allowed_ip():
     )
 
 
-def test_bypassed_ip():
-    # Arrange
-    set_context("1.1.1.1")  # This IP is in the allowed list
-    blocked_ips = [
-        {"source": "test", "description": "Blocked for testing", "ips": ["192.168.1.1"]}
-    ]
-    config = create_service_config(blocked_ips)
-    config.bypassed_ips.add("1.1.1.1")
-
-    # Act
-    result = request_handler("pre_response")
-
-    # Assert
-    assert result is None  # Should be allowed since it's in the bypass list
-
-
-def test_ip_allowed_by_endpoint():
+@patch_firewall_lists
+def test_ip_allowed_by_endpoint(firewall_lists):
     # Arrange
     set_context("2.2.2.2")  # This IP is in the allowed list
     blocked_ips = [
         {"source": "test", "description": "Blocked for testing", "ips": ["192.168.1.1"]}
     ]
-    config = create_service_config(blocked_ips)
+    firewall_lists.set_blocked_ips(blocked_ips)
+    create_service_config()
 
     # Act
     result = request_handler("pre_response")
@@ -242,13 +270,15 @@ def test_ip_allowed_by_endpoint():
     assert result is None  # Should be allowed since it's in the allowed list
 
 
-def test_ip_not_allowed_by_endpoint():
+@patch_firewall_lists
+def test_ip_not_allowed_by_endpoint(firewall_lists):
     # Arrange
     set_context("4.4.4.4")  # Not in the allowed list
     blocked_ips = [
         {"source": "test", "description": "Blocked for testing", "ips": ["192.168.1.1"]}
     ]
-    config = create_service_config(blocked_ips)
+    firewall_lists.set_blocked_ips(blocked_ips)
+    config = create_service_config()
 
     # Act
     result = request_handler("pre_response")
@@ -260,9 +290,11 @@ def test_ip_not_allowed_by_endpoint():
     )
 
 
-def test_first_checks_resource_blocked():
+@patch_firewall_lists
+def test_first_checks_resource_blocked(firewall_lists):
     # Arrange
     set_context("192.168.1.1")  # This IP is blocked
+    create_service_config()
     blocked_ips = [
         {
             "source": "test",
@@ -270,7 +302,7 @@ def test_first_checks_resource_blocked():
             "ips": ["192.168.1.1", "192.168.1.2"],
         }
     ]
-    create_service_config(blocked_ips)
+    firewall_lists.set_blocked_ips(blocked_ips)
 
     # Act
     result = request_handler("pre_response")
@@ -282,9 +314,11 @@ def test_first_checks_resource_blocked():
     )
 
 
-def test_allowed_for_endpoint_but_blocked():
+@patch_firewall_lists
+def test_allowed_for_endpoint_but_blocked(firewall_lists):
     # Arrange
     set_context("1.1.1.1")  # This IP is blocked
+    create_service_config()
     blocked_ips = [
         {
             "source": "test",
@@ -292,7 +326,7 @@ def test_allowed_for_endpoint_but_blocked():
             "ips": ["192.168.1.1", "192.168.1.2", "1.1.1.0/24"],
         }
     ]
-    create_service_config(blocked_ips)
+    firewall_lists.set_blocked_ips(blocked_ips)
 
     # Act
     result = request_handler("pre_response")
@@ -304,18 +338,21 @@ def test_allowed_for_endpoint_but_blocked():
     )
 
 
-def test_allowed_for_endpoint_but_not_in_allowlist_and_blocked():
+@patch_firewall_lists
+def test_allowed_for_endpoint_but_not_in_allowlist_and_blocked(firewall_lists):
     # Arrange
     set_context("1.1.1.1")  # This IP is blocked
-    blocked_ips = [
-        {
-            "source": "test",
-            "description": "Blocked for testing",
-            "ips": ["192.168.1.1", "192.168.1.2", "1.1.1.0/24"],
-        }
-    ]
-    config = create_service_config(blocked_ips)
-    config.set_allowed_ips(
+    create_service_config()
+    firewall_lists.set_blocked_ips(
+        [
+            {
+                "source": "test",
+                "description": "Blocked for testing",
+                "ips": ["192.168.1.1", "192.168.1.2", "1.1.1.0/24"],
+            }
+        ]
+    )
+    firewall_lists.set_allowed_ips(
         [
             {
                 "source": "test",
@@ -335,11 +372,12 @@ def test_allowed_for_endpoint_but_not_in_allowlist_and_blocked():
     )
 
 
-def test_allowed_for_endpoint_but_not_in_allowlist_not_blocked():
+@patch_firewall_lists
+def test_allowed_for_endpoint_but_not_in_allowlist_not_blocked(firewall_lists):
     # Arrange
     set_context("1.1.1.1")  # This IP is blocked
-    config = create_service_config()
-    config.set_allowed_ips(
+    create_service_config()
+    firewall_lists.set_allowed_ips(
         [
             {
                 "source": "test",
@@ -359,11 +397,12 @@ def test_allowed_for_endpoint_but_not_in_allowlist_not_blocked():
     )
 
 
-def test_allowed_for_endpoint_and_in_allowlist():
+@patch_firewall_lists
+def test_allowed_for_endpoint_and_in_allowlist(firewall_lists):
     # Arrange
     set_context("1.1.1.1")  # This IP is blocked
-    config = create_service_config()
-    config.set_allowed_ips(
+    create_service_config()
+    firewall_lists.set_allowed_ips(
         [
             {
                 "source": "test",
@@ -380,18 +419,21 @@ def test_allowed_for_endpoint_and_in_allowlist():
     assert result is None
 
 
-def test_allowed_for_endpoint_in_allowlist_but_blocked():
+@patch_firewall_lists
+def test_allowed_for_endpoint_in_allowlist_but_blocked(firewall_lists):
     # Arrange
     set_context("1.1.1.1")  # This IP is blocked
-    blocked_ips = [
-        {
-            "source": "test",
-            "description": "Blocked for testing",
-            "ips": ["192.168.1.1", "192.168.1.2", "1.1.1.0/24"],
-        }
-    ]
-    config = create_service_config(blocked_ips)
-    config.set_allowed_ips(
+    create_service_config()
+    firewall_lists.set_blocked_ips(
+        [
+            {
+                "source": "test",
+                "description": "Blocked for testing",
+                "ips": ["192.168.1.1", "192.168.1.2", "1.1.1.0/24"],
+            }
+        ]
+    )
+    firewall_lists.set_allowed_ips(
         [
             {
                 "source": "test",
@@ -411,11 +453,12 @@ def test_allowed_for_endpoint_in_allowlist_but_blocked():
     )
 
 
-def test_allowed_for_endpoint_and_in_allowlist_but_is_bot():
+@patch_firewall_lists
+def test_allowed_for_endpoint_and_in_allowlist_but_is_bot(firewall_lists):
     # Arrange
     set_context("1.1.1.1", "Test_be bot")
-    config = create_service_config()
-    config.set_blocked_user_agents("test_ua|test_be")
+    create_service_config()
+    firewall_lists.set_blocked_user_agents("test_ua|test_be")
 
     # Act
     result = request_handler("pre_response")
@@ -427,14 +470,15 @@ def test_allowed_for_endpoint_and_in_allowlist_but_is_bot():
     )
 
 
-def test_allowed_for_endpoint_and_in_allowlist_but_is_bot_2():
+@patch_firewall_lists
+def test_allowed_for_endpoint_and_in_allowlist_but_is_bot_2(firewall_lists):
     # Arrange
     set_context(
         "1.1.1.1",
         "Mozilla/5.0 (compatible; Bytespider/1.0; +http://bytespider.com/bot.html)",
     )
-    config = create_service_config()
-    config.set_blocked_user_agents(
+    create_service_config()
+    firewall_lists.set_blocked_user_agents(
         "AI2Bot|Applebot-Extended|Bytespider|CCBot|ClaudeBot|cohere-training-data-crawler|Diffbot|Google-Extended|GPTBot|Kangaroo Bot|meta-externalagent|anthropic-ai|omgili|PanguBot|Webzio-Extended|Timpibot|img2dataset|ImagesiftBot|archive.org_bot"
     )
 
@@ -458,14 +502,80 @@ def test_allowed_for_endpoint_and_in_allowlist_but_is_bot_2():
     )
 
 
-def test_allowed_for_endpoint_and_in_allowlist_bots_are_set_but_is_not_bot():
+@patch_firewall_lists
+def test_allowed_for_endpoint_and_in_allowlist_bots_are_set_but_is_not_bot(
+    firewall_lists,
+):
     # Arrange
     set_context("1.1.1.1", "Test_u4 bot")
-    config = create_service_config()
-    config.set_blocked_user_agents("test_ua|test_be")
+    create_service_config()
+    firewall_lists.set_blocked_user_agents("test_ua|test_be")
 
     # Act
     result = request_handler("pre_response")
 
     # Assert
     assert result is None
+
+
+"""
+config.set_blocked_ips(
+        [
+            {
+                "source": "geoip",
+                "description": "description",
+                "ips": [
+                    "1.2.3.4",
+                    "192.168.2.1/24",
+                    "fd00:1234:5678:9abc::1",
+                    "fd00:3234:5678:9abc::1/64",
+                    "5.6.7.8/32",
+                ],
+            }
+        ]
+    )
+
+    assert config.is_blocked_ip("fd00:3234:5678:9abc::1") is "description"
+    assert config.is_blocked_ip("fd00:3234:5678:9abc::2") is "description"
+    assert config.is_blocked_ip("5.6.7.8") is "description"
+    assert config.is_blocked_ip("1.2") is False
+"""
+
+
+@patch_firewall_lists
+def test_multiple_blocked(firewall_lists):
+    # Arrange
+    blocked_ips = [
+        {
+            "source": "geoip",
+            "description": "description",
+            "ips": [
+                "1.2.3.4",
+                "192.168.2.1/24",
+                "fd00:1234:5678:9abc::1",
+                "fd00:3234:5678:9abc::1/64",
+                "5.6.7.8/32",
+            ],
+        }
+    ]
+    firewall_lists.set_blocked_ips(blocked_ips)
+
+    set_context("1.2.3.4")
+    assert request_handler("pre_response")[0].startswith("Your IP address is blocked")
+    set_context("192.168.2.2")
+    assert request_handler("pre_response")[0].startswith("Your IP address is blocked")
+    set_context("fd00:1234:5678:9abc::1")
+    assert request_handler("pre_response")[0].startswith("Your IP address is blocked")
+    set_context("fd00:3234:5678:9abc::1")
+    assert request_handler("pre_response")[0].startswith("Your IP address is blocked")
+    set_context("fd00:3234:5678:9abc::2")
+    assert request_handler("pre_response")[0].startswith("Your IP address is blocked")
+    set_context("5.6.7.8")
+    assert request_handler("pre_response")[0].startswith("Your IP address is blocked")
+
+    set_context("2.3.4.5")
+    assert request_handler("pre_response") is None
+    set_context("1.2")
+    assert request_handler("pre_response") is None
+    set_context("fd00:1234:5678:9abc::2")
+    assert request_handler("pre_response") is None

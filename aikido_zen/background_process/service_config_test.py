@@ -130,31 +130,6 @@ def test_ip_blocking():
         bypassed_ips=["192.168.1.1", "10.0.0.0/16", "::1/128"],
         received_any_stats=True,
     )
-    config.set_blocked_ips(
-        [
-            {
-                "source": "geoip",
-                "description": "description",
-                "ips": [
-                    "1.2.3.4",
-                    "192.168.2.1/24",
-                    "fd00:1234:5678:9abc::1",
-                    "fd00:3234:5678:9abc::1/64",
-                    "5.6.7.8/32",
-                ],
-            }
-        ]
-    )
-
-    assert config.is_blocked_ip("1.2.3.4") is "description"
-    assert config.is_blocked_ip("2.3.4.5") is False
-    assert config.is_blocked_ip("192.168.2.2") is "description"
-    assert config.is_blocked_ip("fd00:1234:5678:9abc::1") is "description"
-    assert config.is_blocked_ip("fd00:1234:5678:9abc::2") is False
-    assert config.is_blocked_ip("fd00:3234:5678:9abc::1") is "description"
-    assert config.is_blocked_ip("fd00:3234:5678:9abc::2") is "description"
-    assert config.is_blocked_ip("5.6.7.8") is "description"
-    assert config.is_blocked_ip("1.2") is False
 
     assert config.is_bypassed_ip("192.168.1.1")
     assert config.is_bypassed_ip("10.0.0.1")
