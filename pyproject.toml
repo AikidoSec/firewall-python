@@ -83,6 +83,8 @@ clickhouse-driver = "^0.2.9"
 openai = "^1.85.0"
 anthropic = "^0.54.0"
 mistralai = { version = "^1.8.2", python = ">=3.9,<4.0" }
+boto3 = { version = "^1.40.17", python = ">=3.9,<4.0" }
+
 django = "4"
 
 [build-system]
