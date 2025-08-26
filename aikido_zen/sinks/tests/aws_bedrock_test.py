@@ -58,7 +58,9 @@ def test_boto3_converse(client):
 
 @skip_no_api_key
 def test_boto3_invoke_model_claude_3_sonnet(client):
-    model_id = "amazon.titan-tg1-large"  # Example model ID for Amazon Bedrock
+    model_id = (
+        "anthropic.claude-3-sonnet-20240229-v1:0"  # Example model ID for Amazon Bedrock
+    )
     input_payload = {
         "inputText": "Hello, how are you?",
         "textGenerationConfig": {"maxTokenCount": 100, "temperature": 0.7},

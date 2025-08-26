@@ -5,7 +5,7 @@ from aikido_zen.sinks import after, on_import, patch_function, before
 
 
 @after
-def _debug_after(func, instance, args, kwargs, return_value):
+def make_api_call_after(func, instance, args, kwargs, return_value):
     # Extract arguments to validate later
     operation_name = get_argument(args, kwargs, 0, "operation_name")
     api_params = get_argument(args, kwargs, 1, "api_params")
@@ -13,9 +13,9 @@ def _debug_after(func, instance, args, kwargs, return_value):
         return
 
     # Validate arguments, we only want to check operations related to AI.
-    if operation_name.lower() != "converse":
+    if operation_name not in ["Converse", "InvokeModel"]:
         return
-    register_call("botocore.client.Converse", "ai_op")
+    register_call(f"botocore.client.{operation_name}", "ai_op")
 
     model_id = str(api_params.get("modelId", ""))
     if not model_id:
@@ -32,4 +32,4 @@ def _debug_after(func, instance, args, kwargs, return_value):
 
 @on_import("botocore.client")
 def patch(m):
-    patch_function(m, "BaseClient._make_api_call", _debug_after)
+    patch_function(m, "BaseClient._make_api_call", make_api_call_after)
