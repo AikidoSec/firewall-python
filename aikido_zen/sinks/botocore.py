@@ -4,24 +4,6 @@ from aikido_zen.helpers.register_call import register_call
 from aikido_zen.sinks import after, on_import, patch_function, before
 
 
-def get_provider(api_params):
-    raw_model_id = str(api_params.get("modelId", ""))
-    if not raw_model_id:
-        return None
-    # e.g. `anthropic.claude-3-sonnet-20240229-v1:0`
-    return raw_model_id.split(".")[0]
-
-
-def get_model_id(api_params):
-    model_id = str(api_params.get("modelId", ""))
-    if not model_id:
-        return None
-    # e.g. `anthropic.claude-3-sonnet-20240229-v1:0`
-    model_id = model_id.split(".")[1]
-    model_id = "-".join(model_id.split("-")[:-1])
-    return model_id
-
-
 @after
 def _debug_after(func, instance, args, kwargs, return_value):
     # Extract arguments to validate later
@@ -35,14 +17,13 @@ def _debug_after(func, instance, args, kwargs, return_value):
         return
     register_call("botocore.client.Converse", "ai_op")
 
-    provider = get_provider(api_params)
-    model_id = get_model_id(api_params)
-    if not provider or not model_id:
-        return  # No use recording AI stats without model id.
+    model_id = str(api_params.get("modelId", ""))
+    if not model_id:
+        return None
 
     usage = return_value.get("usage", {})
     on_ai_call(
-        provider=provider,
+        provider="bedrock",
         model=model_id,
         input_tokens=usage.get("inputTokens", 0),
         output_tokens=usage.get("outputTokens", 0),
