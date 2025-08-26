@@ -148,6 +148,7 @@ def test_cache_comms_with_endpoints():
                 "remote_address": "::1",
             },
             receive=True,
+            timeout_in_sec=0.01,
         )
 
         mock_comms.send_data_to_bg_process.return_value = {
