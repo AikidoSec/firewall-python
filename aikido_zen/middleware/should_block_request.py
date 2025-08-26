@@ -49,6 +49,7 @@ def should_block_request():
                     "remote_address": context.remote_address,
                 },
                 receive=True,
+                timeout_in_sec=(10 / 1000),  # 10ms
             )
             if ratelimit_res["success"] and ratelimit_res["data"]["block"]:
                 cache.stats.on_rate_limit()
