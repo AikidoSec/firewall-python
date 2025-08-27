@@ -50,11 +50,13 @@ def trust_proxy():
     """
     Checks the environment variables for `AIKIDO_TRUST_PROXY`, Defaults to true.
     """
-    if not os.getenv("AIKIDO_TRUST_PROXY"):
-        return True  # Default
-    if os.getenv("AIKIDO_TRUST_PROXY").lower() in ["1", "true"]:
-        return True
-    return False
+    trust_proxy_env = os.getenv("AIKIDO_TRUST_PROXY")
+    if not trust_proxy_env:
+        return True  # default to trusting proxy
+
+    if trust_proxy_env.lower() in ["0", "false"]:
+        return False
+    return True
 
 
 def get_ip_header_name():
