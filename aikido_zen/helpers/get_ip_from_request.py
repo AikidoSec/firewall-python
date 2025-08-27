@@ -49,11 +49,13 @@ def get_client_ip_from_x_forwarded_for(value):
 
 def trust_proxy():
     """
-    Checks the enviornment variables for `AIKIDO_TRUST_PROXY`
+    Checks the environment variables for `AIKIDO_TRUST_PROXY`, Defaults to true.
     """
-    return not "AIKIDO_TRUST_PROXY" in os.environ or os.environ[
-        "AIKIDO_TRUST_PROXY"
-    ] in ["1", "true"]
+    if not os.getenv("AIKIDO_TRUST_PROXY"):
+        return True  # Default
+    if os.getenv("AIKIDO_TRUST_PROXY").lower() in ["1", "true"]:
+        return True
+    return False
 
 
 def is_ip(value):
