@@ -4,6 +4,20 @@ from aikido_zen.helpers.register_call import register_call
 from aikido_zen.sinks import after, on_import, patch_function, before
 
 
+def get_tokens_from_converse(api_response):
+    usage = api_response.get("usage", {})
+    input_tokens = usage.get("inputTokens", 0)
+    output_tokens = usage.get("outputTokens", 0)
+    return int(input_tokens), int(output_tokens)
+
+
+def get_tokens_from_invoke_model(api_response):
+    headers = api_response.get("ResponseMetadata", {}).get("HTTPHeaders", {})
+    input_tokens_str = headers.get("x-amzn-bedrock-input-token-count", "0")
+    output_tokens_str = headers.get("x-amzn-bedrock-output-token-count", "0")
+    return int(input_tokens_str), int(output_tokens_str)
+
+
 @after
 def make_api_call_after(func, instance, args, kwargs, return_value):
     # Extract arguments to validate later
@@ -21,13 +35,13 @@ def make_api_call_after(func, instance, args, kwargs, return_value):
     if not model_id:
         return None
 
-    usage = return_value.get("usage", {})
-    on_ai_call(
-        provider="bedrock",
-        model=model_id,
-        input_tokens=usage.get("inputTokens", 0),
-        output_tokens=usage.get("outputTokens", 0),
-    )
+    input_tokens, output_tokens = (0, 0)
+    if operation_name == "Converse":
+        input_tokens, output_tokens = get_tokens_from_converse(return_value)
+    elif operation_name == "InvokeModel":
+        input_tokens, output_tokens = get_tokens_from_invoke_model(return_value)
+
+    on_ai_call("bedrock", model_id, input_tokens, output_tokens)
 
 
 @on_import("botocore.client")

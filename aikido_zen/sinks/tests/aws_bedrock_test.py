@@ -21,7 +21,7 @@ def setup():
 
 @pytest.fixture
 def client():
-    client = boto3.client(service_name="bedrock-runtime", region_name="eu-west-1")
+    client = boto3.client(service_name="bedrock-runtime", region_name="us-east-1")
     return client
 
 
@@ -48,9 +48,9 @@ def test_boto3_converse(client):
     )
     output = response["output"]["message"]["content"][0]["text"]
 
-    assert get_ai_stats()[0]["model"] == "claude-3-sonnet-20240229"
+    assert get_ai_stats()[0]["model"] == "anthropic.claude-3-sonnet-20240229-v1:0"
     assert get_ai_stats()[0]["calls"] == 1
-    assert get_ai_stats()[0]["provider"] == "anthropic"
+    assert get_ai_stats()[0]["provider"] == "bedrock"
     assert get_ai_stats()[0]["tokens"]["input"] == 13
     assert get_ai_stats()[0]["tokens"]["output"] == 20
     assert get_ai_stats()[0]["tokens"]["total"] == 33
@@ -58,41 +58,23 @@ def test_boto3_converse(client):
 
 @skip_no_api_key
 def test_boto3_invoke_model_claude_3_sonnet(client):
-    model_id = (
-        "anthropic.claude-3-sonnet-20240229-v1:0"  # Example model ID for Amazon Bedrock
-    )
+    model_id = "us.anthropic.claude-3-5-sonnet-20241022-v2:0"  # Example model ID for Amazon Bedrock
     input_payload = {
-        "inputText": "Hello, how are you?",
-        "textGenerationConfig": {"maxTokenCount": 100, "temperature": 0.7},
+        "messages": [
+            {
+                "role": "user",
+                "content": [{"type": "text", "text": "Are tomatoes a vegetable?"}],
+            }
+        ],
+        "max_tokens": 20,
+        "anthropic_version": "bedrock-2023-05-31",
     }
     response = client.invoke_model(modelId=model_id, body=json.dumps(input_payload))
+    print(response)
     stats = get_ai_stats()[0]
-    assert stats["model"] == "llama2-70b-chat"
+    assert stats["model"] == "us.anthropic.claude-3-5-sonnet-20241022-v2:0"
     assert stats["calls"] == 1
-    assert stats["provider"] == "meta"
-    assert stats["tokens"]["input"] == 0
-    assert stats["tokens"]["output"] == 30
-
-
-@skip_no_api_key
-def test_boto3_invoke_model_meta_llama3_8b(client):
-    metadata = {
-        "model": "meta.llama3-8b-instruct-v1:0",
-        "prompt": "Who painted the Mona Lisa?",
-        "max_tokens": 20,
-    }
-    body = {
-        "prompt": metadata["prompt"],
-        "max_gen_len": metadata["max_tokens"],
-        "temperature": 0.5,
-    }
-    response = client.invoke_model(
-        modelId=metadata["model"],
-        body=json.dumps(body).encode("utf-8"),
-    )
-    stats = get_ai_stats()[0]
-    assert stats["model"] == "llama3-8b-instruct"
-    assert stats["calls"] == 1
-    assert stats["provider"] == "meta"
-    assert stats["tokens"]["input"] == 3
+    assert stats["provider"] == "bedrock"
+    assert stats["tokens"]["input"] == 14
     assert stats["tokens"]["output"] == 20
+    assert stats["tokens"]["total"] == 34
