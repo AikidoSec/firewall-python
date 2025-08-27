@@ -2,7 +2,6 @@ import json
 import os
 import aikido_zen.sinks.botocore
 import pytest
-import boto3
 
 from aikido_zen.thread.thread_cache import get_cache
 
@@ -21,6 +20,8 @@ def setup():
 
 @pytest.fixture
 def client():
+    import boto3
+
     client = boto3.client(service_name="bedrock-runtime", region_name="us-east-1")
     return client
 
