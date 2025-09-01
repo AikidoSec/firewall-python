@@ -1,3 +1,5 @@
+from tokenize import group
+
 import pytest
 from unittest.mock import Mock, patch
 from .should_ratelimit import process_should_ratelimit
@@ -22,6 +24,7 @@ def test_process_should_ratelimit(should_ratelimit, expected_call):
         },
         "remote_address": "192.168.1.1",
         "user": {"id": 1, "name": "Test User"},
+        "group": "123",
     }
 
     with patch(
@@ -37,6 +40,7 @@ def test_process_should_ratelimit(should_ratelimit, expected_call):
         remote_address=data["remote_address"],
         user=data["user"],
         connection_manager=connection_manager,
+        group="123"
     )
 
 
@@ -51,6 +55,7 @@ def test_process_should_ratelimit_no_connection_manager():
         },
         "remote_address": "192.168.1.1",
         "user": {"id": 1, "name": "Test User"},
+        "group": None,
     }
 
     # Act
@@ -72,6 +77,7 @@ def test_process_should_ratelimit_multiple_calls():
         },
         "remote_address": "192.168.1.1",
         "user": {"id": 1, "name": "Test User"},
+        "group": None,
     }
 
     with patch(
@@ -88,6 +94,7 @@ def test_process_should_ratelimit_multiple_calls():
         remote_address=data["remote_address"],
         user=data["user"],
         connection_manager=connection_manager,
+        group=None
     )
 
 
@@ -104,6 +111,7 @@ def test_process_should_ratelimit_with_different_connection_manager():
         },
         "remote_address": "192.168.1.1",
         "user": {"id": 1, "name": "Test User"},
+        "group": None,
     }
 
     with patch(
@@ -120,10 +128,12 @@ def test_process_should_ratelimit_with_different_connection_manager():
         remote_address=data["remote_address"],
         user=data["user"],
         connection_manager=connection_manager1,
+        group=None,
     )
     mock_should_ratelimit.assert_any_call(
         route_metadata=data["route_metadata"],
         remote_address=data["remote_address"],
         user=data["user"],
         connection_manager=connection_manager2,
+        group=None,
     )
