@@ -1,6 +1,7 @@
 from aikido_zen.context import get_current_context
 from aikido_zen.helpers.logging import logger
 
+
 def set_rate_limit_group(group_id: str):
     if not group_id or not isinstance(group_id, str):
         logger.warning("")
@@ -16,4 +17,3 @@ def set_rate_limit_group(group_id: str):
 
     context.rate_limit_group = group_id
     context.set_as_current_context()
-
