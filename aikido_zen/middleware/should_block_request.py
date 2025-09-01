@@ -52,6 +52,7 @@ def should_block_request():
                 obj={
                     "route_metadata": route_metadata,
                     "user": context.user,
+                    "group": context.rate_limit_group,
                     "remote_address": context.remote_address,
                 },
                 receive=True,

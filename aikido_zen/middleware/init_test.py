@@ -145,6 +145,7 @@ def test_cache_comms_with_endpoints():
                     "url": "http://localhost:4000",
                 },
                 "user": {"id": "456"},
+                "group": None,
                 "remote_address": "::1",
             },
             receive=True,
