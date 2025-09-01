@@ -348,3 +348,166 @@ def test_rate_limiting_bypassed_ip_with_user():
     assert should_ratelimit_request(metadata, "1.2.3.4", {"id": "123"}, cm) == {
         "block": False
     }
+
+
+def test_rate_limits_by_user_with_different_ips():
+    user = {"id": "123"}
+    cm = create_connection_manager(
+        [
+            {
+                "method": "POST",
+                "route": "/login",
+                "forceProtectionOff": False,
+                "rateLimiting": {
+                    "enabled": True,
+                    "maxRequests": 3,
+                    "windowSizeInMS": 1000,
+                },
+            },
+        ]
+    )
+    route_metadata = create_route_metadata()
+    # First request from user 123, IP 1.2.3.4
+    assert should_ratelimit_request(route_metadata, "1.2.3.4", user, cm, "group1") == {
+        "block": False
+    }
+    # First request from user 123, IP 4.3.2.1
+    assert should_ratelimit_request(route_metadata, "4.3.2.1", user, cm, "group1") == {
+        "block": False
+    }
+    # Second request from user 123, IP 1.2.3.4
+    assert should_ratelimit_request(route_metadata, "1.2.3.4", user, cm, "group1") == {
+        "block": False
+    }
+    # This request should trigger the rate limit by group
+    assert should_ratelimit_request(route_metadata, "4.3.2.1", user, cm, "group1") == {
+        "block": True,
+        "trigger": "group",
+    }
+
+
+def test_rate_limits_different_users_in_same_group():
+    cm = create_connection_manager(
+        [
+            {
+                "method": "POST",
+                "route": "/login",
+                "forceProtectionOff": False,
+                "rateLimiting": {
+                    "enabled": True,
+                    "maxRequests": 3,
+                    "windowSizeInMS": 1000,
+                },
+            },
+        ]
+    )
+    route_metadata = create_route_metadata()
+    # First request from user 123, IP 1.2.3.4
+    assert should_ratelimit_request(
+        route_metadata, "1.2.3.4", {"id": "123"}, cm, "group1"
+    ) == {"block": False}
+    # First request from user 456, IP 4.3.2.1
+    assert should_ratelimit_request(
+        route_metadata, "4.3.2.1", {"id": "456"}, cm, "group1"
+    ) == {"block": False}
+    # Second request from user 789, IP 1.2.3.4
+    assert should_ratelimit_request(
+        route_metadata, "1.2.3.4", {"id": "789"}, cm, "group1"
+    ) == {"block": False}
+    # This request should trigger the rate limit by group
+    assert should_ratelimit_request(
+        route_metadata, "4.3.2.1", {"id": "101112"}, cm, "group1"
+    ) == {
+        "block": True,
+        "trigger": "group",
+    }
+
+
+def test_works_with_multiple_rate_limit_groups_and_different_users():
+    cm = create_connection_manager(
+        [
+            {
+                "method": "POST",
+                "route": "/login",
+                "forceProtectionOff": False,
+                "rateLimiting": {
+                    "enabled": True,
+                    "maxRequests": 2,
+                    "windowSizeInMS": 1000,
+                },
+            },
+        ]
+    )
+    route_metadata = create_route_metadata()
+    # First request from user 123, group1
+    assert should_ratelimit_request(
+        route_metadata, "1.2.3.4", {"id": "123"}, cm, "group1"
+    ) == {"block": False}
+    # Second request from user 789, group1
+    assert should_ratelimit_request(
+        route_metadata, "1.2.3.4", {"id": "789"}, cm, "group1"
+    ) == {"block": False}
+    # First request from user 101112, group2
+    assert should_ratelimit_request(
+        route_metadata, "4.3.2.1", {"id": "101112"}, cm, "group2"
+    ) == {"block": False}
+    # This request should trigger the rate limit for group1
+    assert should_ratelimit_request(
+        route_metadata, "1.2.3.4", {"id": "789"}, cm, "group1"
+    ) == {
+        "block": True,
+        "trigger": "group",
+    }
+    # This request should also trigger the rate limit for group1
+    assert should_ratelimit_request(
+        route_metadata, "1.2.3.4", {"id": "4321"}, cm, "group1"
+    ) == {
+        "block": True,
+        "trigger": "group",
+    }
+    # First request from user 953, group2
+    assert should_ratelimit_request(
+        route_metadata, "4.3.2.1", {"id": "953"}, cm, "group2"
+    ) == {"block": False}
+    # This request should trigger the rate limit for group2
+    assert should_ratelimit_request(
+        route_metadata, "4.3.2.1", {"id": "1563"}, cm, "group2"
+    ) == {
+        "block": True,
+        "trigger": "group",
+    }
+
+
+def test_rate_limits_by_group_if_user_is_not_set():
+    cm = create_connection_manager(
+        [
+            {
+                "method": "POST",
+                "route": "/login",
+                "forceProtectionOff": False,
+                "rateLimiting": {
+                    "enabled": True,
+                    "maxRequests": 3,
+                    "windowSizeInMS": 1000,
+                },
+            },
+        ]
+    )
+    route_metadata = create_route_metadata()
+    # First request, no user, IP 1.2.3.4
+    assert should_ratelimit_request(route_metadata, "1.2.3.4", None, cm, "group1") == {
+        "block": False
+    }
+    # Second request, no user, IP 4.3.2.1
+    assert should_ratelimit_request(route_metadata, "4.3.2.1", None, cm, "group1") == {
+        "block": False
+    }
+    # Third request, no user, IP 1.2.3.4
+    assert should_ratelimit_request(route_metadata, "1.2.3.4", None, cm, "group1") == {
+        "block": False
+    }
+    # This request should trigger the rate limit by group
+    assert should_ratelimit_request(route_metadata, "4.3.2.1", None, cm, "group1") == {
+        "block": True,
+        "trigger": "group",
+    }
