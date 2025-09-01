@@ -4,6 +4,7 @@ import pytest
 from aikido_zen.context import current_context, Context, get_current_context
 from aikido_zen.thread.thread_cache import ThreadCache, get_cache
 from . import should_block_request
+from .. import set_rate_limit_group
 
 
 @pytest.fixture(autouse=True)
@@ -36,6 +37,7 @@ def set_context(user=None, executed_middleware=False):
             "source": "flask",
             "route": "/posts/:id",
             "user": user,
+            "rate_limit_group": None,
             "executed_middleware": executed_middleware,
         }
     ).set_as_current_context()
@@ -75,6 +77,7 @@ def test_with_context_with_cache():
 
 def test_cache_comms_with_endpoints():
     set_context(user={"id": "456"})
+    set_rate_limit_group("my_group")
     thread_cache = get_cache()
     thread_cache.config.blocked_uids = ["123"]
     thread_cache.config.endpoints = [
@@ -145,7 +148,7 @@ def test_cache_comms_with_endpoints():
                     "url": "http://localhost:4000",
                 },
                 "user": {"id": "456"},
-                "group": None,
+                "group": "my_group",
                 "remote_address": "::1",
             },
             receive=True,
