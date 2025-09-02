@@ -40,7 +40,7 @@ def test_process_should_ratelimit(should_ratelimit, expected_call):
         remote_address=data["remote_address"],
         user=data["user"],
         connection_manager=connection_manager,
-        group="123"
+        group="123",
     )
 
 
@@ -94,7 +94,7 @@ def test_process_should_ratelimit_multiple_calls():
         remote_address=data["remote_address"],
         user=data["user"],
         connection_manager=connection_manager,
-        group=None
+        group=None,
     )
 
 
