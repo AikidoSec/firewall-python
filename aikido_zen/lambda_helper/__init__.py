@@ -38,7 +38,7 @@ def lambda_post_handler():
     res = ipc_client.send_data_to_bg_process(
         action="SEND_HEARTBEAT",
         obj=None,
-        receive=False,
+        receive=True,
         timeout_in_sec=LAMBDA_SEND_HEARTBEAT_TIMEOUT,
     )
     if res["success"]:
