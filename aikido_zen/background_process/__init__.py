@@ -37,6 +37,8 @@ def start_background_process():
     if platform.system() == "Windows":
         # Python does not support Windows UDS just yet, so we have to rely on INET
         address = ("127.0.0.1", 49156)
+    if os.getenv("AIKIDO_INET_ONLY") is "1":
+        address = ("127.0.0.1", 49156)
 
     comms = AikidoIPCCommunications(address, secret_key_bytes)
 
