@@ -5,7 +5,7 @@ import urllib.request
 import urllib.error
 from urllib.error import HTTPError
 
-from aikido_zen import logger
+from aikido_zen.helpers.logging import logger
 
 
 class InternalRequest:
@@ -99,6 +99,6 @@ class Response:
             "Error parsing API Response for %s: %s (%s) %s",
             raw_response.url,
             raw_response.status_code,
-            self.error,
+            self.error.value,
             raw_response.text,
         )
