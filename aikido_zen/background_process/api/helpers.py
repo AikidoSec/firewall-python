@@ -102,3 +102,10 @@ class Response:
             self.error.value,
             raw_response.text,
         )
+
+    def __str__(self):
+        if self.success:
+            return (
+                f"SuccessfulResponse<status: {self.status_code}, data: {self.raw_data}>"
+            )
+        return f"FailedResponse<error: {self.error.value}, data: {self.raw_data}>"
