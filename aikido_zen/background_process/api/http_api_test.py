@@ -1,57 +1,33 @@
-import pytest
 import requests
-from unittest.mock import patch
-from aikido_zen.background_process.api.http_api import (
-    ReportingApiHTTP,
-)  # Replace with the actual module name
+from aikido_zen.background_process.api.http_api import ReportingApiHTTP
+from aikido_zen.background_process.api.helpers import ResponseError
 
 # Sample event data for testing
 sample_event = {"event_type": "test_event", "data": {"key": "value"}}
 
 
-def test_report_data_401_code(monkeypatch):
+def test_report_data_401_code():
     # Create an instance of ReportingApiHTTP
-    api = ReportingApiHTTP("http://mocked-url.com/")
+    api = ReportingApiHTTP("https://guard.aikido.dev/")
 
-    # Mock the requests.post method to return a successful response
-    class MockResponse:
-        def __init__(self, json_data, status_code):
-            self.json_data = json_data
-            self.status_code = status_code
+    # Call the report method with an invalid token, see the 401
+    response = api.report("mocked_token", sample_event, 5)
 
-        def json(self):
-            return self.json_data
+    # Assert the response
+    assert response.success is False
+    assert response.error is ResponseError.INVALID_TOKEN
 
-    def mock_post(url, json, timeout, headers):
-        return MockResponse({"success": False}, 401)
 
-    monkeypatch.setattr(requests, "post", mock_post)
+def test_report_connection_error():
+    # Create an instance of ReportingApiHTTP
+    api = ReportingApiHTTP("http://localhost:5000/timeout5/")
 
     # Call the report method
     response = api.report("mocked_token", sample_event, 5)
 
     # Assert the response
-    assert response == {"success": False, "error": "invalid_token"}
-
-
-def test_report_connection_error(monkeypatch):
-    # Create an instance of ReportingApiHTTP
-    api = ReportingApiHTTP("http://mocked-url.com/")
-
-    # Mock the requests.post method to raise a ConnectionError
-    monkeypatch.setattr(
-        requests,
-        "post",
-        lambda *args, **kwargs: (_ for _ in ()).throw(
-            requests.exceptions.ConnectionError
-        ),
-    )
-
-    # Call the report method
-    response = api.report("mocked_token", sample_event, 5)
-
-    # Assert the response
-    assert response == {"success": False, "error": "timeout"}
+    assert response.success == False
+    assert response.error == ResponseError.TIMEOUT_ERROR
 
 
 def test_report_other_exception(monkeypatch):
