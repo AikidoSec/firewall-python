@@ -4,6 +4,7 @@ Exports ReportingApiHTTPRatelimited
 
 import aikido_zen.background_process.api.http_api as http_api
 import aikido_zen.helpers.get_current_unixtime_ms as t
+from aikido_zen.background_process.api.helpers import Response, RawInternalResponse
 
 
 class ReportingApiHTTPRatelimited(http_api.ReportingApiHTTP):
@@ -15,7 +16,7 @@ class ReportingApiHTTPRatelimited(http_api.ReportingApiHTTP):
         self.max_events_per_interval = max_events_per_interval
         self.events = []
 
-    def report(self, token, event, timeout_in_sec):
+    def report(self, token, event, timeout_in_sec) -> Response:
         if event["type"] == "detected_attack":
             # Remove all outdated events :
             current_time = t.get_unixtime_ms()
@@ -27,7 +28,7 @@ class ReportingApiHTTPRatelimited(http_api.ReportingApiHTTP):
 
             # Check if interval is exceeded :
             if len(self.events) >= self.max_events_per_interval:
-                return {"success": False, "error": "max_attacks_reached"}
+                return Response(RawInternalResponse(0, "max_attacks_reached", ""))
 
             self.events.append(event)
         return super().report(token, event, timeout_in_sec)

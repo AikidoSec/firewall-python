@@ -65,6 +65,7 @@ class ResponseError(Enum):
     RATE_LIMITED = "rate_limited"
     UNKNOWN = "unknown"
     JSON_PARSING_FAILED = "json_parsing_failed"
+    MAX_ATTACKS_REACHED = "max_attacks_reached"
 
 
 class Response:
@@ -94,6 +95,8 @@ class Response:
         elif self.status_code == 401:
             # Happens when the token the user provided in AIKIDO_TOKEN is invalid
             self.error = ResponseError.INVALID_TOKEN
+        elif self.status_code == 0 and self.raw_data == "max_attacks_reached":
+            self.error = ResponseError.MAX_ATTACKS_REACHED
 
         logger.info(
             "Error parsing API Response for %s: %s (%s) %s",
