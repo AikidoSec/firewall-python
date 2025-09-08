@@ -2,6 +2,7 @@
 Mainly exports `start_polling_for_changes` function
 """
 
+from aikido_zen.background_process.api import Response
 from aikido_zen.helpers.token import Token
 from aikido_zen.helpers.logging import logger
 import aikido_zen.background_process.realtime as realtime
@@ -53,8 +54,11 @@ def poll_for_changes(
         if config_changed:
             #  The config changed
             logger.debug("According to realtime: Config changed")
-            config = realtime.get_config(token)
-            connection_manager.update_service_config({**config, "success": True})
+
+            get_config_res: Response = realtime.get_config(token)
+            if get_config_res.success:
+                connection_manager.update_service_config(get_config_res.json)
+
             connection_manager.update_firewall_lists()
     except Exception as e:
         logger.error("Failed to check for config updates due to error : %s", e)

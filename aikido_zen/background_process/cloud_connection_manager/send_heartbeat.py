@@ -1,5 +1,6 @@
 """Exports the send_heartbeat function"""
 
+from aikido_zen.background_process.api import Response
 from aikido_zen.background_process.packages import PackagesStore
 from aikido_zen.helpers.logging import logger
 from aikido_zen.helpers.get_current_unixtime_ms import get_unixtime_ms
@@ -26,7 +27,7 @@ def send_heartbeat(connection_manager):
     connection_manager.ai_stats.clear()
     PackagesStore.clear()
 
-    res = connection_manager.api.report(
+    res: Response = connection_manager.api.report(
         connection_manager.token,
         {
             "type": "heartbeat",
@@ -42,4 +43,5 @@ def send_heartbeat(connection_manager):
         },
         connection_manager.timeout_in_sec,
     )
-    connection_manager.update_service_config(res)
+    if res.success:
+        connection_manager.update_service_config(res.json)

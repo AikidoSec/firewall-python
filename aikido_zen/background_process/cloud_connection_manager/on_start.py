@@ -25,7 +25,7 @@ def on_start(connection_manager):
         # Update config time even in failure :
         connection_manager.conf.last_updated_at = get_unixtime_ms()
     else:
-        connection_manager.update_service_config(res)
+        connection_manager.update_service_config(res.json)
         connection_manager.update_firewall_lists()
         logger.info("Established connection with Aikido Server")
     return res
