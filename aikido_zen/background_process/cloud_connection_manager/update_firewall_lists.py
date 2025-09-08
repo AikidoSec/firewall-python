@@ -2,6 +2,7 @@
 Exports update_firewall_lists
 """
 
+from aikido_zen.background_process.api.helpers import Response
 from aikido_zen.helpers.logging import logger
 
 
@@ -11,14 +12,18 @@ def update_firewall_lists(connection_manager):
         # We need a token, and support in serverless mode is off for this feature
         return
     try:
-        res = connection_manager.api.fetch_firewall_lists(connection_manager.token)
-        blocked_ips = res.get("blockedIPAddresses")
-        allowed_ips = res.get("allowedIPAddresses")
-        blocked_user_agents = res.get("blockedUserAgents")
+        res: Response = connection_manager.api.fetch_firewall_lists(
+            connection_manager.token
+        )
+        if not res.success:
+            # Something went wong getting lists from API
+            return
+
+        blocked_ips = res.json.get("blockedIPAddresses")
+        allowed_ips = res.json.get("allowedIPAddresses")
+        blocked_user_agents = res.json.get("blockedUserAgents")
 
         # Validate response
-        if not res.get("success"):
-            return
         if not isinstance(blocked_ips, list) or not isinstance(allowed_ips, list):
             return
         if not isinstance(blocked_user_agents, str):

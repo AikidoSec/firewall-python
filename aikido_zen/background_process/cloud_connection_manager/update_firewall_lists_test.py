@@ -1,75 +1,85 @@
 import pytest
-from unittest.mock import patch
 
 from aikido_zen.background_process.cloud_connection_manager import (
     CloudConnectionManager,
 )
 from .update_firewall_lists import update_firewall_lists
+from ..api.helpers import Response, RawInternalResponse
 
 
 class MockApi:
     """Mock API class to simulate API responses."""
 
     def fetch_firewall_lists(self, token):
-        return {
-            "success": True,
-            "blockedIPAddresses": [
-                {
-                    "source": "example",
-                    "description": "Example description",
-                    "ips": ["192.168.1.0/24"],
-                }
-            ],
-            "allowedIPAddresses": [
-                {
-                    "source": "list1",
-                    "description": "Example description",
-                    "ips": ["192.168.1.3"],
-                },
-                {
-                    "source": "example",
-                    "description": "Example description",
-                    "ips": ["192.168.2.0/24"],
-                },
-            ],
-            "blockedUserAgents": "BadBot|Test",
-        }
+        return MockResponse(
+            {
+                "blockedIPAddresses": [
+                    {
+                        "source": "example",
+                        "description": "Example description",
+                        "ips": ["192.168.1.0/24"],
+                    }
+                ],
+                "allowedIPAddresses": [
+                    {
+                        "source": "list1",
+                        "description": "Example description",
+                        "ips": ["192.168.1.3"],
+                    },
+                    {
+                        "source": "example",
+                        "description": "Example description",
+                        "ips": ["192.168.2.0/24"],
+                    },
+                ],
+                "blockedUserAgents": "BadBot|Test",
+            }
+        )
+
+
+class MockResponse:
+    def __init__(self, json, success=True):
+        self.json = json
+        self.success = success
 
 
 class MockApiNoUA:
     """Mock API class to simulate API responses."""
 
     def fetch_firewall_lists(self, token):
-        return {
-            "success": True,
-            "blockedIPAddresses": [
-                {
-                    "source": "example",
-                    "description": "Example description",
-                    "ips": ["192.168.1.0/24"],
-                }
-            ],
-            "allowedIPAddresses": [],
-            "blockedUserAgents": "",
-        }
+        return MockResponse(
+            {
+                "blockedIPAddresses": [
+                    {
+                        "source": "example",
+                        "description": "Example description",
+                        "ips": ["192.168.1.0/24"],
+                    }
+                ],
+                "allowedIPAddresses": [],
+                "blockedUserAgents": "",
+            }
+        )
 
 
 class MockApiInvalidRegex:
     """Mock API class to simulate API responses."""
 
     def fetch_firewall_lists(self, token):
-        return {
-            "success": True,
-            "blockedIPAddresses": [
-                {
-                    "source": "example",
-                    "description": "Example description",
-                    "ips": ["192.168.1.0/24"],
-                }
-            ],
-            "allowedIPAddresses": [],
-            "blockedUserAgents": "[abc",
-        }
+        return MockResponse(
+            {
+                "success": True,
+                "blockedIPAddresses": [
+                    {
+                        "source": "example",
+                        "description": "Example description",
+                        "ips": ["192.168.1.0/24"],
+                    }
+                ],
+                "allowedIPAddresses": [],
+                "blockedUserAgents": "[abc",
+            }
+        )
 
 
 @pytest.fixture
@@ -160,8 +170,9 @@ def test_update_firewall_lists_serverless(connection_manager):
 def test_update_firewall_lists_api_failure(connection_manager):
     # Override the mock API to simulate a failure
     class FailingApi:
-        def fetch_firewall_lists(self, token):
-            return {"success": False}
+
+        def fetch_firewall_lists(self, token) -> Response:
+            return Response(RawInternalResponse(0, "error", "example.com"))
 
     connection_manager.api = FailingApi()
     update_firewall_lists(connection_manager)
