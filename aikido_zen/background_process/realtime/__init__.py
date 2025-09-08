@@ -3,8 +3,8 @@ Code to poll for realtime changes
 """
 
 import os
-import requests
-from aikido_zen.helpers.logging import logger
+
+from aikido_zen.background_process.api.helpers import InternalRequest
 from aikido_zen.helpers.urls.get_api_url import get_api_url
 
 
@@ -24,14 +24,10 @@ def get_config(token):
     headers = {
         "Authorization": str(token),
     }
-    response = requests.get(url, headers=headers, timeout=3)  # timeout in 3 seconds
-    if response.status_code != 200:
-        logger.info("Invalid response from api : %s", response.status_code)
-
-    return response.json()  # Parse and return the JSON response
+    return InternalRequest.get(url, headers=headers, timeout=3)
 
 
-def get_config_last_updated_at(token):
+def get_config_last_updated_at(token) -> int:
     """
     Fetches the time when the config was last updated from realtime server
     """
@@ -39,10 +35,6 @@ def get_config_last_updated_at(token):
     headers = {
         "Authorization": str(token),
     }
-    response = requests.get(url, headers=headers, timeout=0.5)  # timeout in 500ms
-    if response.status_code != 200:
-        logger.info("Invalid response from realtime api : %s", response.status_code)
-
-    return int(
-        response.json().get("configUpdatedAt", 0)
-    )  #  Return configUpdatedAt time
+    response = InternalRequest.get(url, headers=headers, timeout=0.5)
+    config_updated_at = response.json.get("configUpdatedAt", 0)
+    return int(config_updated_at)
