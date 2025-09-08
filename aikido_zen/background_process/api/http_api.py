@@ -2,9 +2,8 @@
 Exports the HTTP API class
 """
 
-import requests
 from aikido_zen.background_process.api import ReportingApi
-from aikido_zen.helpers.logging import logger
+from aikido_zen.background_process.api.helpers import InternalRequest, Response
 
 
 class ReportingApiHTTP(ReportingApi):
@@ -13,49 +12,32 @@ class ReportingApiHTTP(ReportingApi):
     def __init__(self, reporting_url):
         self.reporting_url = reporting_url
 
-    def report(self, token, event, timeout_in_sec):
-        try:
-            res = requests.post(
-                self.reporting_url + "api/runtime/events",
-                json=event,
-                timeout=timeout_in_sec,
-                headers=get_headers(token),
-            )
-        except requests.exceptions.ConnectionError as e:
-            logger.error(e)
-            return {"success": False, "error": "timeout"}
-        except Exception as e:
-            logger.error(e)
-            return {"success": False, "error": "unknown"}
-        return self.to_api_response(res)
+    def report(self, token, event, timeout_in_sec) -> Response:
+        REPORT_EVENTS_URL = self.reporting_url + "api/runtime/events"
+        return InternalRequest.post(
+            REPORT_EVENTS_URL,
+            json=event,
+            timeout=timeout_in_sec,
+            headers=get_headers(token),
+        )
 
-    def fetch_firewall_lists(self, token):
+    def fetch_firewall_lists(self, token) -> Response:
         """
-        Fetches firewall lists from aikido's servers
+        Fetches firewall lists from Aikido's servers
         If successful the current API returns :
         - `allowedIPAddresses` : An array with iplist entries which are the only ones allowed
         - `blockedIPAddresses` : An array with iplist entries that are blocked
         - `blockedUserAgents` : A string with a simple regex to match user agents with
         """
-        try:
-            res = requests.get(
-                self.reporting_url + "api/runtime/firewall/lists",
-                timeout=20,
-                headers={
-                    # We need to set the Accept-Encoding header to "gzip" to receive the response in gzip format
-                    "Accept-Encoding": "gzip",
-                    "Authorization": str(token),
-                },
-            )
-        except requests.exceptions.ConnectionError as e:
-            logger.error(e)
-            return {"success": False, "error": "timeout"}
-        except Exception as e:
-            logger.error(e)
-            return {"success": False, "error": "unknown"}
-        return self.to_api_response(res)
+        FIREWALL_LISTS_URL = self.reporting_url + "api/runtime/firewall/lists"
+        headers = {
+            # We need to set the Accept-Encoding header to "gzip" to receive the response in gzip format
+            "Accept-Encoding": "gzip",
+            "Authorization": str(token),
+        }
+        return InternalRequest.get(FIREWALL_LISTS_URL, headers=headers, timeout=20)
 
 
 def get_headers(token):
     """Returns headers"""
-    return {"Content-Type": "application/json", "Authorization": str(token)}
+    return {"Authorization": str(token)}
