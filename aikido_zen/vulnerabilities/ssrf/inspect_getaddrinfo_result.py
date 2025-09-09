@@ -23,8 +23,9 @@ def inspect_getaddrinfo_result(dns_results, hostname, port):
         logger.debug("Hostname %s is actually an IP address, ignoring", hostname)
         return
 
-    if not inspect_dns_results(dns_results, hostname):
-        return
+    imds_result = inspect_dns_results(dns_results, hostname, port)
+    if imds_result:
+        return imds_result
 
     context = get_current_context()
     if not context:
@@ -60,18 +61,47 @@ def get_metadata_for_ssrf_attack(hostname, port):
     return {"hostname": hostname}
 
 
-def inspect_dns_results(dns_results, hostname):
+def inspect_dns_results(dns_results, hostname, port):
     """
-    Blocks stored SSRF attack that target IMDS IP addresses and returns True
-    if a private_ip is present.
-    This function gets called by inspect_getaddrinfo_result after parsing the hostname.
+    Check for IMDS IP addresses. Returns attack data if IMDS found, private_ip boolean otherwise.
+    Kind depends on whether hostname is found in user context (ssrf vs stored-ssrf).
     """
     ip_addresses = extract_ip_array_from_results(dns_results)
-    if resolves_to_imds_ip(ip_addresses, hostname):
-        #  An attacker could have stored a hostname in a database that points to an IMDS IP address
-        #  We don't check if the user input contains the hostname because there's no context
-        if is_blocking_enabled():
-            raise AikidoSSRF()
+    imds_ip = resolves_to_imds_ip(ip_addresses, hostname)
+    if imds_ip:
+        context = get_current_context()
+
+        # Check if hostname is in user input
+        if context:
+            attack_findings = find_hostname_in_context(hostname, context, port)
+            if attack_findings:
+                # Regular SSRF - hostname found in user input
+                return {
+                    "module": "socket",
+                    "operation": "socket.getaddrinfo",
+                    "kind": "ssrf",
+                    "source": attack_findings["source"],
+                    "path": attack_findings["pathToPayload"],
+                    "metadata": {
+                        "hostname": hostname,
+                        "privateIP": imds_ip,
+                    },
+                    "payload": attack_findings["payload"],
+                }
+
+        # Stored SSRF - no context or hostname not in user input
+        return {
+            "module": "socket",
+            "operation": "socket.getaddrinfo",
+            "kind": "stored-ssrf",
+            "source": None,
+            "path": "",
+            "metadata": {
+                "hostname": hostname,
+                "privateIP": imds_ip,
+            },
+            "payload": hostname,
+        }
 
     private_ip = next((ip for ip in ip_addresses if is_private_ip(ip)), None)
     return private_ip
