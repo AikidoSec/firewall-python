@@ -6,7 +6,7 @@ from aikido_zen.vulnerabilities.attack_wave_detection.is_web_scan_path import (
     is_web_scan_path,
 )
 from aikido_zen.vulnerabilities.attack_wave_detection.query_params_contain_dangerous_strings import (
-    query_params_contain_dangerous_payload,
+    query_params_contain_dangerous_strings,
 )
 
 
@@ -16,6 +16,6 @@ def is_web_scanner(context: Context) -> bool:
         return True
     if context.route and is_web_scan_path(context.route):
         return True
-    if query_params_contain_dangerous_payload(context):
+    if query_params_contain_dangerous_strings(context):
         return True
     return False
