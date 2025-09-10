@@ -1,3 +1,5 @@
+import inspect
+
 import pytest
 from unittest.mock import patch, MagicMock
 from aikido_zen.thread.thread_cache import get_cache, ThreadCache
@@ -7,6 +9,9 @@ from ...background_process.service_config import ServiceConfig
 from ...context import Context, current_context
 from ...helpers.headers import Headers
 from ...storage.firewall_lists import FirewallLists
+from ...vulnerabilities.attack_wave_detection.attack_wave_detector import (
+    AttackWaveDetector,
+)
 
 
 @pytest.fixture
@@ -38,6 +43,8 @@ class MyMockComms:
         self.firewall_lists = FirewallLists()
         self.conn_manager = MagicMock()
         self.conn_manager.firewall_lists = self.firewall_lists
+        self.conn_manager.attack_wave_detector = AttackWaveDetector()
+        self.attacks = []
 
     def send_data_to_bg_process(self, action, obj, receive=False, timeout_in_sec=0.1):
         if action != "CHECK_FIREWALL_LISTS":
@@ -125,7 +132,7 @@ def test_post_response_no_context(mock_get_comms):
 
 
 # Test firewall lists
-def set_context(remote_address, user_agent=""):
+def set_context(remote_address, user_agent="", route="/posts/:number"):
     headers = Headers()
     headers.store_header("USER_AGENT", user_agent)
     Context(
@@ -138,7 +145,7 @@ def set_context(remote_address, user_agent=""):
             "body": None,
             "cookies": {},
             "source": "flask",
-            "route": "/posts/:number",
+            "route": route,
             "user": None,
             "executed_middleware": False,
             "parsed_userinput": {},
@@ -171,7 +178,13 @@ def patch_firewall_lists(func):
             comms = MyMockComms()
             mock_comms.return_value = comms
 
-            return func(*args, firewall_lists=comms.firewall_lists, **kwargs)
+            sig = inspect.signature(func)
+            if "attacks" in sig.parameters:
+                kwargs["attacks"] = comms.attacks
+            if "firewall_lists" in sig.parameters:
+                kwargs["firewall_lists"] = comms.firewall_lists
+
+            return func(*args, **kwargs)
 
     return wrapper
 
@@ -580,3 +593,69 @@ def test_multiple_blocked(firewall_lists):
     assert request_handler("pre_response") is None
     set_context("fd00:1234:5678:9abc::2")
     assert request_handler("pre_response") is None
+
+
+@patch_firewall_lists
+def test_is_attack_waves_doesnt_work_when_ip_blocked(firewall_lists):
+    set_context("1.1.1.1", route="/.env")
+    create_service_config()
+    blocked_ips = [
+        {"source": "test", "description": "Blocked for testing", "ips": ["1.1.1.1"]}
+    ]
+    firewall_lists.set_blocked_ips(blocked_ips)
+
+    for i in range(16):
+        result = request_handler("pre_response")
+        assert result == (
+            "Your IP address is blocked due to Blocked for testing (Your IP: 1.1.1.1)",
+            403,
+        )
+    assert get_cache().stats.get_record()["requests"]["attackWaves"] == {
+        "total": 0,
+        "blocked": 0,
+    }
+
+
+@patch_firewall_lists
+def test_is_attack_waves_doesnt_work_when_ip_blocked(firewall_lists, attacks):
+    set_context("1.1.1.1", route="/.env")
+    create_service_config()
+
+    assert len(attacks) == 0
+    assert get_cache().stats.get_record()["requests"]["attackWaves"] == {
+        "total": 0,
+        "blocked": 0,
+    }
+
+    for i in range(15):
+        request_handler("pre_response")
+
+    assert len(attacks) == 1
+    assert attacks[0].context.route == "/.env"
+    assert attacks[0].context.remote_address == "1.1.1.1"
+    assert attacks[0].metadata == {}
+
+    assert get_cache().stats.get_record()["requests"]["attackWaves"] == {
+        "total": 1,
+        "blocked": 0,
+    }
+
+    # now try again (should not be possible, 20min window)
+    for i in range(15):
+        request_handler("pre_response")
+
+    assert get_cache().stats.get_record()["requests"]["attackWaves"] == {
+        "total": 1,
+        "blocked": 0,
+    }
+
+    # now try with another IP
+    set_context("4.4.4.4", route="/.htaccess")
+    for i in range(15):
+        request_handler("pre_response")
+
+    assert get_cache().stats.get_record()["requests"]["attackWaves"] == {
+        "total": 2,
+        "blocked": 0,
+    }
+    assert len(attacks) == 2
