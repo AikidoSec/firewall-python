@@ -1,4 +1,7 @@
 from aikido_zen.context import Context
+from aikido_zen.helpers.extract_strings_from_user_input import (
+    extract_strings_from_user_input_cached,
+)
 
 keywords = {
     "SELECT (CASE WHEN",
@@ -27,9 +30,7 @@ def query_params_contain_dangerous_payload(context: Context) -> bool:
     if not context.query:
         return False
 
-    for s in context.query.values():
-        if not isinstance(str, s):
-            continue
+    for s in extract_strings_from_user_input_cached(context.query, "query"):
         # Performance optimization
         if len(s) < 5 or len(s) > 1000:
             continue
