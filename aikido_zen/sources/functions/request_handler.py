@@ -7,6 +7,8 @@ from aikido_zen.helpers.logging import logger
 from aikido_zen.thread.thread_cache import get_cache
 from .ip_allowed_to_access_route import ip_allowed_to_access_route
 import aikido_zen.background_process.comms as c
+from ...background_process.commands.check_firewall_lists import FirewallListsCheckRes
+from ...vulnerabilities.attack_wave_detection.is_web_scanner import is_web_scanner
 
 
 def request_handler(stage, status_code=0):
@@ -49,7 +51,12 @@ def pre_response():
             message += f" (Your IP: {context.remote_address})"
         return message, 403
 
-    # Do a check on firewall lists, this happens in background because of the heavy data.
+    # Attack wave detection
+    is_attack_wave_request = is_web_scanner(context)
+    if is_attack_wave_request:
+        logger.debug("Web scan detected for %s:%s", context.method, context.route)
+
+    # Do a check on firewall lists & attack waves, this happens in background because of the heavy data.
     # For the timeout we notice the request during heavy loads usually takes 2ms - 2.5ms, we set timeout at 10ms.
     # That way we have a very small timeout with very little risk of not blocking ips.
     comms = c.get_comms()
@@ -58,25 +65,29 @@ def pre_response():
         obj={
             "ip": context.remote_address,
             "user-agent": context.get_user_agent(),
+            "is_attack_wave_request": bool(is_attack_wave_request),
         },
         receive=True,
         timeout_in_sec=(10 / 1000),
     )
     if not check_fw_lists_res["success"] or not check_fw_lists_res["data"]["blocked"]:
         return
+    res: FirewallListsCheckRes = check_fw_lists_res["data"]
 
-    block_type = check_fw_lists_res["data"]["type"]
+    # Check if an attack wave was detected
+    if res.is_attack_wave:
+        on_detected_attack_wave(context)
 
-    if block_type == "allowlist":
+    if res.blocked and res.type == "allowlist":
         message = "Your IP address is not allowed."
         message += " (Your IP: " + context.remote_address + ")"
         return message, 403
-    if block_type == "blocklist":
+    if res.blocked and res.type == "blocklist":
         message = "Your IP address is blocked due to "
         message += check_fw_lists_res["data"]["reason"]
         message += " (Your IP: " + context.remote_address + ")"
         return message, 403
-    if block_type == "bot-blocking":
+    if res.blocked and res.type == "bot-blocking":
         msg = "You are not allowed to access this resource because you have been identified as a bot."
         return msg, 403
 
