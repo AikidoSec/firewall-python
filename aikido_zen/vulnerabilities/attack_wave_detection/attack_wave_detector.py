@@ -1,9 +1,5 @@
-from aikido_zen.context import Context
 import aikido_zen.helpers.get_current_unixtime_ms as internal_time
 from aikido_zen.ratelimiting.lru_cache import LRUCache
-from aikido_zen.vulnerabilities.attack_wave_detection.is_web_scanner import (
-    is_web_scanner,
-)
 
 
 class AttackWaveDetector:
@@ -28,16 +24,15 @@ class AttackWaveDetector:
             time_to_live_in_ms=self.min_time_between_events,
         )
 
-    def check(self, context: Context) -> bool:
-        ip = context.remote_address
+    def check(self, ip: str) -> bool:
+        """
+        Function gets called with IP if there is an attack wave request.
+        """
         if not ip:
             return False
 
         # Check if an event was sent recently
         if self.sent_events_map.get(ip) is not None:
-            return False
-
-        if not is_web_scanner(context):
             return False
 
         # Increment suspicious requests count -> there is a new or first suspicious request
