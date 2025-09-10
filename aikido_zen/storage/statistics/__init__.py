@@ -10,8 +10,13 @@ class Statistics:
 
     def __init__(self):
         self.total_hits = 0
+
         self.attacks_detected = 0
         self.attacks_blocked = 0
+
+        self.attack_waves_detected = 0
+        self.attack_waves_blocked = 0
+
         self.rate_limited_hits = 0
         self.started_at = t.get_unixtime_ms()
         self.operations = Operations()
@@ -79,6 +84,8 @@ class Statistics:
         if self.total_hits > 0:
             return False
         if self.attacks_detected > 0:
+            return False
+        if self.attack_waves_detected > 0:
             return False
         if len(self.operations) > 0:
             return False
