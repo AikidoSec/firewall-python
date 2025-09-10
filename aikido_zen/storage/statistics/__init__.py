@@ -18,8 +18,13 @@ class Statistics:
 
     def clear(self):
         self.total_hits = 0
+
         self.attacks_detected = 0
         self.attacks_blocked = 0
+
+        self.attack_waves_detected = 0
+        self.attack_waves_blocked = 0
+
         self.rate_limited_hits = 0
         self.started_at = t.get_unixtime_ms()
         self.operations.clear()
@@ -36,6 +41,11 @@ class Statistics:
     def on_rate_limit(self):
         self.rate_limited_hits += 1
 
+    def on_detected_attack_wave(self, blocked: bool):
+        self.attack_waves_detected += 1
+        if blocked:
+            self.attack_waves_blocked += 1
+
     def get_record(self):
         current_time = t.get_unixtime_ms()
         return {
@@ -48,6 +58,10 @@ class Statistics:
                 "attacksDetected": {
                     "total": self.attacks_detected,
                     "blocked": self.attacks_blocked,
+                },
+                "attackWaves": {
+                    "total": self.attack_waves_detected,
+                    "blocked": self.attack_waves_blocked,
                 },
             },
             "operations": dict(self.operations),
