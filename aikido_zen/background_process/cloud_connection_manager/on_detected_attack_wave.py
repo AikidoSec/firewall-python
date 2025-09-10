@@ -1,6 +1,6 @@
-from aikido_zen import logger
 from aikido_zen.context import Context
 from aikido_zen.helpers.get_current_unixtime_ms import get_unixtime_ms
+from aikido_zen.helpers.logging import logger
 from aikido_zen.helpers.serialize_to_json import serialize_to_json
 
 
