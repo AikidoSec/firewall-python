@@ -1,5 +1,3 @@
-from tokenize import group
-
 import pytest
 from unittest.mock import Mock, patch
 from .should_ratelimit import process_should_ratelimit
