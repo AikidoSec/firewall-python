@@ -10,7 +10,6 @@ from aikido_zen.vulnerabilities.attack_wave_detection.query_params_contain_dange
 )
 
 
-# Assume Context is a dictionary or a class with the required attributes
 def is_web_scanner(context: Context) -> bool:
     if context.method and is_web_scan_method(context.method):
         return True
