@@ -1,5 +1,5 @@
 from aikido_zen.context import Context
-from aikido_zen.helpers.get_current_unixtime_ms import get_unixtime_ms
+import aikido_zen.helpers.get_current_unixtime_ms as internal_time
 from aikido_zen.ratelimiting.lru_cache import LRUCache
 from aikido_zen.vulnerabilities.attack_wave_detection.is_web_scanner import (
     is_web_scanner,
@@ -48,5 +48,5 @@ class AttackWaveDetector:
             return False
 
         # Mark event as sent
-        self.sent_events_map.set(ip, get_unixtime_ms(monotonic=True))
+        self.sent_events_map.set(ip, internal_time.get_unixtime_ms(monotonic=True))
         return True
