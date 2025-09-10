@@ -24,6 +24,7 @@ def request_handler(stage, status_code=0):
         if stage == "post_response":
             return post_response(status_code)
     except Exception as e:
+        raise e
         logger.debug("Exception occurred in request_handler : %s", e)
     return None
 
@@ -71,16 +72,9 @@ def pre_response():
         receive=True,
         timeout_in_sec=(10 / 1000),
     )
-    if not check_fw_lists_res["success"] or not check_fw_lists_res["data"]["blocked"]:
+    if not check_fw_lists_res.get("success", False):
         return
-    res: CheckFirewallListsRes = check_fw_lists_res["data"]
-
-    if res.is_attack_wave:
-        # Report to core & increase stats
-        comms.send_data_to_bg_process(
-            "ATTACK", ReportingQueueAttackWaveEvent(context, metadata={})
-        )
-        cache.stats.on_detected_attack_wave(blocked=res.blocked)
+    res: CheckFirewallListsRes = check_fw_lists_res.get("data")
 
     if res.blocked and res.type == "allowlist":
         message = "Your IP address is not allowed."
@@ -88,12 +82,21 @@ def pre_response():
         return message, 403
     if res.blocked and res.type == "blocklist":
         message = "Your IP address is blocked due to "
-        message += check_fw_lists_res["data"]["reason"]
+        message += res.reason
         message += " (Your IP: " + context.remote_address + ")"
         return message, 403
     if res.blocked and res.type == "bot-blocking":
         msg = "You are not allowed to access this resource because you have been identified as a bot."
         return msg, 403
+
+    # We only check for attack waves after IP/Bot blocking, the reason being that if you already block the scanner
+    # There is no attack wave happening.
+    if res.is_attack_wave:
+        # Report to core & increase stats
+        comms.send_data_to_bg_process(
+            "ATTACK", ReportingQueueAttackWaveEvent(context, metadata={})
+        )
+        cache.stats.on_detected_attack_wave(blocked=res.blocked)
 
 
 def post_response(status_code):
