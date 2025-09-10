@@ -11,7 +11,7 @@ def process_check_firewall_lists(connection_manager, data):
     if ip is not None and isinstance(ip, str):
         # Global IP Allowlist (e.g. for geofencing)
         if not connection_manager.firewall_lists.is_allowed_ip(ip):
-            return {"blocked": True, "type": "allowlist"}
+            return CheckFirewallListsRes(blocked=True, type="allowlist")
 
         # Global IP Blocklist (e.g. blocking known threat actors)
         reason = connection_manager.firewall_lists.is_blocked_ip(ip)

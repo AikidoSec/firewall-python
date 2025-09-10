@@ -141,6 +141,7 @@ def set_context(remote_address, user_agent=""):
             "route": "/posts/:number",
             "user": None,
             "executed_middleware": False,
+            "parsed_userinput": {},
         }
     ).set_as_current_context()
 
