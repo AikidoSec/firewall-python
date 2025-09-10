@@ -8,6 +8,7 @@ from aikido_zen.thread.thread_cache import get_cache
 from .ip_allowed_to_access_route import ip_allowed_to_access_route
 import aikido_zen.background_process.comms as c
 from ...background_process.commands.check_firewall_lists import FirewallListsCheckRes
+from ...background_process.queue_helpers import ReportingQueueAttackWaveEvent
 from ...vulnerabilities.attack_wave_detection.is_web_scanner import is_web_scanner
 
 
@@ -74,9 +75,12 @@ def pre_response():
         return
     res: FirewallListsCheckRes = check_fw_lists_res["data"]
 
-    # Check if an attack wave was detected
     if res.is_attack_wave:
-        on_detected_attack_wave(context)
+        # Report to core & increase stats
+        comms.send_data_to_bg_process(
+            "ATTACK", ReportingQueueAttackWaveEvent(context, metadata={})
+        )
+        cache.stats.on_detected_attack_wave(blocked=res.blocked)
 
     if res.blocked and res.type == "allowlist":
         message = "Your IP address is not allowed."
