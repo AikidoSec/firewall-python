@@ -1,4 +1,6 @@
-from aikido_zen.vulnerabilities.attack_wave_detection.is_web_scan_method import is_web_scan_method
+from aikido_zen.vulnerabilities.attack_wave_detection.is_web_scan_method import (
+    is_web_scan_method,
+)
 
 
 def test_is_web_scan_method():
@@ -7,6 +9,7 @@ def test_is_web_scan_method():
     assert is_web_scan_method("BADDATA")
     assert is_web_scan_method("BADMTHD")
     assert is_web_scan_method("BDMTHD")
+
 
 def test_is_not_web_scan_method():
     assert not is_web_scan_method("GET")
