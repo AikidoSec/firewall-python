@@ -1,5 +1,10 @@
-from aikido_zen.vulnerabilities.attack_wave_detection.is_web_scan_path import is_web_scan_path
-from aikido_zen.vulnerabilities.attack_wave_detection.paths import file_names, directory_names
+from aikido_zen.vulnerabilities.attack_wave_detection.is_web_scan_path import (
+    is_web_scan_path,
+)
+from aikido_zen.vulnerabilities.attack_wave_detection.paths import (
+    file_names,
+    directory_names,
+)
 
 
 def test_is_web_scan_path():
@@ -17,6 +22,7 @@ def test_is_web_scan_path():
     assert is_web_scan_path("/Cargo.lock")
     assert is_web_scan_path("/System32/test")
 
+
 def test_is_not_web_scan_path():
     assert not is_web_scan_path("/test/file.txt")
     assert not is_web_scan_path("/some/route/to/file.txt")
@@ -27,10 +33,14 @@ def test_is_not_web_scan_path():
     assert not is_web_scan_path("/static/file.css")
     assert not is_web_scan_path("/static/file.a461f56e.js")
 
+
 def test_no_duplicates_in_file_names():
     unique_file_names = set(file_names)
     assert len(unique_file_names) == len(file_names), "File names should be unique"
 
+
 def test_no_duplicates_in_directory_names():
     unique_directory_names = set(directory_names)
-    assert len(unique_directory_names) == len(directory_names), "Directory names should be unique"
+    assert len(unique_directory_names) == len(
+        directory_names
+    ), "Directory names should be unique"
