@@ -23,7 +23,7 @@ keywords = {
 }
 
 
-def query_params_contain_dangerous_payload(context: Context) -> bool:
+def query_params_contain_dangerous_strings(context: Context) -> bool:
     """
     Check the query for some common SQL or path traversal patterns.
     """
