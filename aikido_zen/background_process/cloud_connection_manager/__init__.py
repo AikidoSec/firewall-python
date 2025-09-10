@@ -4,6 +4,7 @@ from aikido_zen.background_process.heartbeats import send_heartbeats_every_x_sec
 from aikido_zen.background_process.routes import Routes
 from aikido_zen.ratelimiting.rate_limiter import RateLimiter
 from aikido_zen.helpers.logging import logger
+from .on_detected_attack_wave import on_detected_attack_wave
 from .update_firewall_lists import update_firewall_lists
 from ..api.http_api import ReportingApiHTTP
 from ..service_config import ServiceConfig
@@ -20,6 +21,10 @@ from .get_manager_info import get_manager_info
 from .update_service_config import update_service_config
 from .on_start import on_start
 from .send_heartbeat import send_heartbeat
+from aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector import (
+    AttackWaveDetector,
+)
+from aikido_zen.context import Context
 
 
 class CloudConnectionManager:
@@ -50,6 +55,7 @@ class CloudConnectionManager:
         self.statistics = Statistics()
         self.ai_stats = AIStatistics()
         self.middleware_installed = False
+        self.attack_wave_detector = AttackWaveDetector()
 
         if isinstance(serverless, str) and len(serverless) == 0:
             raise ValueError("Serverless cannot be an empty string")
