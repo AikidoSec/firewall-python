@@ -7,7 +7,7 @@ from aikido_zen.helpers.logging import logger
 from aikido_zen.thread.thread_cache import get_cache
 from .ip_allowed_to_access_route import ip_allowed_to_access_route
 import aikido_zen.background_process.comms as c
-from ...background_process.commands.check_firewall_lists import FirewallListsCheckRes
+from ...background_process.commands.check_firewall_lists import CheckFirewallListsRes
 from ...background_process.queue_helpers import ReportingQueueAttackWaveEvent
 from ...vulnerabilities.attack_wave_detection.is_web_scanner import is_web_scanner
 
@@ -73,7 +73,7 @@ def pre_response():
     )
     if not check_fw_lists_res["success"] or not check_fw_lists_res["data"]["blocked"]:
         return
-    res: FirewallListsCheckRes = check_fw_lists_res["data"]
+    res: CheckFirewallListsRes = check_fw_lists_res["data"]
 
     if res.is_attack_wave:
         # Report to core & increase stats
