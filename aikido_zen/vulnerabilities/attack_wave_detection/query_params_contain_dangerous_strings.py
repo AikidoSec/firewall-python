@@ -31,9 +31,11 @@ def query_params_contain_dangerous_strings(context: Context) -> bool:
         return False
 
     for s in extract_strings_from_user_input_cached(context.query, "query"):
-        # Performance optimization
-        if len(s) < 5 or len(s) > 1000:
+        # skipping strings that don't match the length, we chose to start with 5 since the
+        # smaller inputs like `../` and `MD5(` are usually followed with more data.
+        if len(s) < 5 or len(s) > 200:
             continue
+
         for keyword in keywords:
             if keyword.upper() in s.upper():
                 return True
