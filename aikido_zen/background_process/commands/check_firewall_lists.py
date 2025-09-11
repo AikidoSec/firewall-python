@@ -26,7 +26,7 @@ def process_check_firewall_lists(connection_manager, data):
 
     is_attack_wave_request = data.get("is_attack_wave_request", None)
     if is_attack_wave_request and ip is not None:
-        if connection_manager.attack_wave_detector.check(ip):
+        if connection_manager.attack_wave_detector.is_attack_wave(ip):
             return CheckFirewallListsRes(blocked=False, is_attack_wave=True)
 
     return CheckFirewallListsRes()
