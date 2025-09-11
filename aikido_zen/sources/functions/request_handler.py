@@ -52,7 +52,6 @@ def pre_response():
             message += f" (Your IP: {context.remote_address})"
         return message, 403
 
-    # Attack wave detection
     is_attack_wave_request = is_web_scanner(context)
     if is_attack_wave_request:
         logger.debug("Web scan detected for %s:%s", context.method, context.route)
