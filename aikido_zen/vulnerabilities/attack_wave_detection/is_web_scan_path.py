@@ -28,10 +28,9 @@ def is_web_scan_path(path: str) -> bool:
 
     filename = segments[-1]
     if filename:
-        # Check file name
         if filename in filenames:
             return True
-        # Check file extension
+
         if "." in filename:
             ext = filename.split(".")[-1]
             if ext in file_extensions:

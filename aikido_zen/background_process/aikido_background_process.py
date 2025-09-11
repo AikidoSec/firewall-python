@@ -106,7 +106,8 @@ class AikidoBackgroundProcess:
                 self.connection_manager.on_detected_attack_wave(
                     attack_wave_event.context, attack_wave_event.metadata
                 )
-            # Report a regular attack
+            # Since the queue item is not of type ReportingQueueAttackWaveEvent,
+            # we default to regular attack reporting.
             self.connection_manager.on_detected_attack(
                 attack=queue_attack_item[0],
                 context=queue_attack_item[1],
