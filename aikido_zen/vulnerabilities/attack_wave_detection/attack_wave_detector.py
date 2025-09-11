@@ -24,7 +24,7 @@ class AttackWaveDetector:
             time_to_live_in_ms=self.min_time_between_events,
         )
 
-    def check(self, ip: str) -> bool:
+    def is_attack_wave(self, ip: str) -> bool:
         """
         Function gets called with IP if there is an attack wave request.
         """
