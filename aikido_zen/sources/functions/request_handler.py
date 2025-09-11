@@ -24,7 +24,6 @@ def request_handler(stage, status_code=0):
         if stage == "post_response":
             return post_response(status_code)
     except Exception as e:
-        raise e
         logger.debug("Exception occurred in request_handler : %s", e)
     return None
 
