@@ -128,6 +128,26 @@ def test_set_valid_user():
     assert user_1["firstSeenAt"] == user_1["lastSeenAt"]
 
 
+def test_set_valid_user_without_name():
+    context1 = set_context_and_lifecycle()
+    assert context1.user is None
+
+    user = {"id": 456}
+    set_user(user)
+
+    assert context1.user == {
+        "id": "456",
+        "lastIpAddress": "198.51.100.23",
+    }
+
+    assert len(get_cache().users.as_array()) == 1
+    user_1 = get_cache().users.as_array()[0]
+    assert user_1["id"] == "456"
+    assert user_1["lastIpAddress"] == "198.51.100.23"
+    assert user_1["name"] is None
+    assert user_1["firstSeenAt"] == user_1["lastSeenAt"]
+
+
 def test_re_set_valid_user():
     context1 = set_context_and_lifecycle()
     assert context1.user is None

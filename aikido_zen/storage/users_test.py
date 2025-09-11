@@ -178,6 +178,28 @@ def test_as_array_with_multiple_users(users):
     assert user_array[1]["id"] == user_id_2
 
 
+def test_as_array_with_multiple_users_but_one_without_name(users):
+    user_id_1 = "1"
+    user_name_1 = "Test User 1"
+    user_ip_1 = "127.0.0.1"
+    current_time_1 = datetime.now()
+
+    user_id_2 = "2"
+    user_name_2 = None
+    user_ip_2 = "192.168.1.1"
+    current_time_2 = datetime.now()
+
+    users.add_user(user_id_1, user_name_1, user_ip_1, current_time_1)
+    users.add_user(user_id_2, user_name_2, user_ip_2, current_time_2)
+
+    user_array = users.as_array()
+
+    assert len(user_array) == 2
+    assert user_array[0]["id"] == user_id_1
+    assert user_array[1]["id"] == user_id_2
+    assert user_array[1]["name"] is None
+
+
 def test_clear_with_multiple_users(users):
     user_id_1 = "1"
     user_name_1 = "Test User 1"
