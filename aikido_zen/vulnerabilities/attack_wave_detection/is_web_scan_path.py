@@ -21,6 +21,11 @@ directories = {name.lower() for name in directory_names}
 
 
 def is_web_scan_path(path: str) -> bool:
+    """
+    is_web_scan_path gets the current route and wants to determine whether it's a test by some web scanner.
+    Checks filename if it exists (list of suspicious filenames & list of supsicious extensions)
+    Checks all other segments for suspicious directories
+    """
     normalized = path.lower()
     segments = normalized.split("/")
     if not segments:
@@ -36,7 +41,6 @@ def is_web_scan_path(path: str) -> bool:
             if ext in file_extensions:
                 return True
 
-    # Check all directory names
     segments_without_filename = segments[:-1]
     for directory in segments_without_filename:
         if directory in directories:
