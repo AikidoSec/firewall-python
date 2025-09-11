@@ -35,7 +35,7 @@ def set_user(user):
     if cache:
         cache.users.add_user(
             user_id=validated_user["id"],
-            user_name=validated_user["name"],
+            user_name=validated_user.get("name", ""),
             user_ip=validated_user["lastIpAddress"],
             current_time=t.get_unixtime_ms(),
         )
