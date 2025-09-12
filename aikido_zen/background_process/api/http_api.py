@@ -2,7 +2,7 @@
 Exports the HTTP API class
 """
 
-import requests
+import aikido_zen.background_process.requests as requests
 from aikido_zen.background_process.api import ReportingApi
 from aikido_zen.helpers.logging import logger
 
@@ -21,7 +21,7 @@ class ReportingApiHTTP(ReportingApi):
                 timeout=timeout_in_sec,
                 headers=get_headers(token),
             )
-        except requests.exceptions.ConnectionError as e:
+        except Exception as e:
             logger.error(e)
             return {"success": False, "error": "timeout"}
         except Exception as e:
@@ -47,7 +47,7 @@ class ReportingApiHTTP(ReportingApi):
                     "Authorization": str(token),
                 },
             )
-        except requests.exceptions.ConnectionError as e:
+        except Exception as e:
             logger.error(e)
             return {"success": False, "error": "timeout"}
         except Exception as e:
