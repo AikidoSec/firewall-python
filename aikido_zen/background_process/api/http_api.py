@@ -21,11 +21,10 @@ class ReportingApiHTTP(ReportingApi):
                 timeout=timeout_in_sec,
                 headers=get_headers(token),
             )
-        except Exception as e:
-            logger.error(e)
+        except TimeoutError as e:
             return {"success": False, "error": "timeout"}
         except Exception as e:
-            logger.error(e)
+            logger.error("Failed to report event : %s", str(e))
             return {"success": False, "error": "unknown"}
         return self.to_api_response(res)
 
@@ -47,11 +46,10 @@ class ReportingApiHTTP(ReportingApi):
                     "Authorization": str(token),
                 },
             )
-        except Exception as e:
-            logger.error(e)
+        except TimeoutError as e:
             return {"success": False, "error": "timeout"}
         except Exception as e:
-            logger.error(e)
+            logger.error("Failed to fetch firewall lists: %s", str(e))
             return {"success": False, "error": "unknown"}
         return self.to_api_response(res)
 

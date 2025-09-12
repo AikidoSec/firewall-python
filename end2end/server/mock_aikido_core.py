@@ -91,7 +91,7 @@ def mock_set_config():
 def mock_get_events():
     return jsonify(events)
 
-@app.route('/timeout5/api/runtime/events', methods=['GET'])
+@app.route('/timeout5/api/runtime/events', methods=['POST'])
 def mock_timeout_5_secs():
     time.sleep(5)
     return jsonify({"success": True})
