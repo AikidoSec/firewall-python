@@ -24,7 +24,7 @@ class ReportingApiHTTP(ReportingApi):
         except TimeoutError as e:
             return {"success": False, "error": "timeout"}
         except Exception as e:
-            logger.error("Failed to report event : %s", str(e))
+            logger.error("Failed to report event : %s(%s)", str(e.__class__), str(e))
             return {"success": False, "error": "unknown"}
         return self.to_api_response(res)
 
