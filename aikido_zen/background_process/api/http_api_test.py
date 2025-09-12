@@ -14,7 +14,7 @@ def test_report_data_401_code():
 
 
 def test_report_local_valid():
-    api = ReportingApiHTTP("http://localhost:5000/")
+    api = ReportingApiHTTP("http://localhost:5050/")
 
     response = api.report("mocked_token", sample_event, 5)
 
@@ -39,7 +39,7 @@ def test_report_local_valid():
 
 
 def test_report_local_timeout():
-    api = ReportingApiHTTP("http://localhost:5000/timeout5/")
+    api = ReportingApiHTTP("http://localhost:5050/timeout5/")
 
     response = api.report("mocked_token", sample_event, 4)
 
@@ -47,7 +47,7 @@ def test_report_local_timeout():
 
 
 def test_local_gzip():
-    api = ReportingApiHTTP("http://localhost:5000/")
+    api = ReportingApiHTTP("http://localhost:5050/")
     response = api.fetch_firewall_lists("token")
 
     assert response == {
