@@ -43,10 +43,7 @@ def test_report_local_timeout():
 
     response = api.report("mocked_token", sample_event, 4)
 
-    assert response == {
-        "success": False,
-        "error": "timeout"
-    }
+    assert response == {"success": False, "error": "timeout"}
 
 
 def test_local_gzip():
