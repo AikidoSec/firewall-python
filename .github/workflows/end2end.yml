@@ -51,7 +51,7 @@ jobs:
       - name: Build and start aikido mock server
         run: |
             cd end2end/server && docker build -t mock_core .
-            docker run --name mock_core -d -p 5050:5000 mock_core
+            docker run --name mock_core -d -p 5000:5000 mock_core
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
