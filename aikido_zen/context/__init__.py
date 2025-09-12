@@ -46,6 +46,7 @@ class Context:
         # Define emtpy variables/Properties :
         self.source = source
         self.user = None
+        self.rate_limit_group = None
         self.parsed_userinput = {}
         self.xml = {}
         self.outgoing_req_redirects = []
@@ -84,6 +85,7 @@ class Context:
                     "route": self.route,
                     "subdomains": self.subdomains,
                     "user": self.user,
+                    "rate_limit_group": self.rate_limit_group,
                     "xml": self.xml,
                     "outgoing_req_redirects": self.outgoing_req_redirects,
                     "executed_middleware": self.executed_middleware,

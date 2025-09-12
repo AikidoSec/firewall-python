@@ -16,4 +16,5 @@ def process_should_ratelimit(connection_manager, data, queue=None):
         remote_address=data["remote_address"],
         user=data["user"],
         connection_manager=connection_manager,
+        group=data["group"],
     )

@@ -2,40 +2,151 @@ import pytest
 from .get_ip_from_request import (
     get_ip_from_request,
     is_ip,
-    get_client_ip_from_x_forwarded_for,
+    get_client_ip_from_header,
 )
 from .headers import Headers
 
 
-# Test `get_ip_from_request` function :
-def test_get_ip_from_request():
-    # Test case 1: Valid X_FORWARDED_FOR header with valid IP
-    headers = Headers()
-    headers.store_header("x-forwarded-for", "192.168.1.1, 10.0.0.1")
-    assert get_ip_from_request(None, headers) == "192.168.1.1"
+@pytest.fixture(autouse=True)
+def reset_environment_variables(monkeypatch):
+    monkeypatch.delenv("AIKIDO_TRUST_PROXY", raising=False)
+    monkeypatch.delenv("AIKIDO_CLIENT_IP_HEADER", raising=False)
 
-    # Test case 2: Valid X_FORWARDED_FOR header with invalid IPs
+
+def test_no_headers_and_no_remote_address(monkeypatch):
+    # Test case 1: No headers and no remote address
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "false")
+    assert get_ip_from_request(None, Headers()) is None
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "true")
+    assert get_ip_from_request(None, Headers()) is None
+
+
+def test_no_headers_and_remote_address(monkeypatch):
+    # Test case 2: No headers and valid remote address
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "false")
+    assert get_ip_from_request("1.2.3.4", Headers()) == "1.2.3.4"
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "true")
+    assert get_ip_from_request("1.2.3.4", Headers()) == "1.2.3.4"
+
+
+def test_x_forwarded_for_without_trust_proxy(monkeypatch):
+    # Test case 3: x-forwarded-for without trust proxy
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "0")
     headers = Headers()
-    headers.store_header("x-forwarded-for", "256.256.256.256, 192.168.1.1")
+    headers.store_header("x-forwarded-for", "9.9.9.9")
+    assert get_ip_from_request("1.2.3.4", headers) == "1.2.3.4"
+
+
+def test_x_forwarded_for_without_trust_proxy_ipv6(monkeypatch):
+    # Test case 3: x-forwarded-for without trust proxy
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "false")
+    headers = Headers()
+    headers.store_header("x-forwarded-for", "a3ad:8f95:d2a8:454b:cf19:be6e:73c6:f880")
     assert (
-        get_ip_from_request(None, headers) == "192.168.1.1"
-    )  # Should return the valid IP
+        get_ip_from_request("df89:84af:85e0:c55f:960c:341a:2cc6:734d", headers)
+        == "df89:84af:85e0:c55f:960c:341a:2cc6:734d"
+    )
 
-    # Test case 3: Valid remote address
-    headers = Headers()
-    assert get_ip_from_request("10.0.0.1", headers) == "10.0.0.1"
 
-    # Test case 4: Valid remote address with invalid X_FORWARDED_FOR
+def test_x_forwarded_for_with_trust_proxy_invalid_ip():
+    # Test case 4: x-forwarded-for with trust proxy and invalid IP
     headers = Headers()
-    headers.store_header("x-forwarded-for", "abc.def.ghi.jkl, 256.256.256.256")
+    headers.store_header("x-forwarded-for", "invalid")
+    assert get_ip_from_request("1.2.3.4", headers) == "1.2.3.4"
+
+
+def test_x_forwarded_for_with_trust_proxy_ip_with_port():
+    # Test case 5: x-forwarded-for with trust proxy and IP contains port
+    headers = Headers()
+    headers.store_header("x-forwarded-for", "9.9.9.9:8080")
+    assert get_ip_from_request("1.2.3.4", headers) == "9.9.9.9"
+
+
+def test_x_forwarded_for_with_trust_proxy_and_trailing_comma():
+    # Test case 6: x-forwarded-for with trailing comma
+    headers = Headers()
+    headers.store_header("x-forwarded-for", "9.9.9.9,")
+    assert get_ip_from_request("1.2.3.4", headers) == "9.9.9.9"
+
+
+def test_x_forwarded_for_with_trust_proxy_and_leading_comma():
+    # Test case 6: x-forwarded-for with trailing comma
+    headers = Headers()
+    headers.store_header("x-forwarded-for", ",9.9.9.9,,")
+    assert get_ip_from_request("1.2.3.4", headers) == "9.9.9.9"
+
+
+def test_x_forwarded_for_with_trust_proxy_public_ip():
+    # Test case 9: x-forwarded-for with trust proxy and public IP
+    headers = Headers()
+    headers.store_header("x-forwarded-for", "9.9.9.9")
+    assert get_ip_from_request("1.2.3.4", headers) == "9.9.9.9"
+
+
+def test_x_forwarded_for_with_trust_proxy_multiple_ips():
+    # Test case 10: x-forwarded-for with trust proxy and multiple IPs
+    headers = Headers()
+    headers.store_header("x-forwarded-for", "9.9.9.9, 8.8.8.8, 7.7.7.7")
+    assert get_ip_from_request("1.2.3.4", headers) == "9.9.9.9"
+
+
+def test_x_forwarded_for_with_trust_proxy_multiple_ips_ipv6():
+    # Test case 10: x-forwarded-for with trust proxy and multiple IPs
+    headers = Headers()
+    headers.store_header(
+        "x-forwarded-for",
+        "a3ad:8f95:d2a8:454b:cf19:be6e:73c6:f880, 3b07:2fba:0270:2149:5fc1:2049:5f04:2131, 791d:967e:428a:90b9:8f6f:4fcc:5d88:015d",
+    )
     assert (
-        get_ip_from_request("10.0.0.1", headers) == "10.0.0.1"
-    )  # Should return the remote address
+        get_ip_from_request("df89:84af:85e0:c55f:960c:341a:2cc6:734d", headers)
+        == "a3ad:8f95:d2a8:454b:cf19:be6e:73c6:f880"
+    )
 
-    # Test case 5: Both X_FORWARDED_FOR and remote address are invalid
+
+def test_get_ip_from_different_header(monkeypatch):
+    # Test case 1: No client IP header set, should return remote address
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "0")
     headers = Headers()
-    headers.store_header("x-forwarded-for", "abc.def.ghi.jkl, 256.256.256.256")
-    assert get_ip_from_request(None, headers) is None  # Should return None
+    headers.store_header("x-forwarded-for", "127.0.0.1, 192.168.0.1")
+    assert get_ip_from_request("1.2.3.4", headers) == "1.2.3.4"
+
+    # Test case 2: Client IP header set to "connecting-ip", should return that IP
+    monkeypatch.setenv("AIKIDO_CLIENT_IP_HEADER", "connecting-ip")
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "1")
+    headers = Headers()
+    headers.store_header("x-forwarded-for", "127.0.0.1, 192.168.0.1")
+    headers.store_header("connecting-ip", "9.9.9.9")
+    assert get_ip_from_request("1.2.3.4", headers) == "9.9.9.9"
+
+    # Test case 3: No client IP header set, should return remote address
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "0")
+    headers = Headers()
+    headers.store_header("x-forwarded-for", "127.0.0.1, 192.168.0.1")
+    assert get_ip_from_request("1.2.3.4", headers) == "1.2.3.4"
+
+    # Test case 4: Client IP header set to "connecting-IP" (case insensitive), should return that IP
+    monkeypatch.setenv("AIKIDO_CLIENT_IP_HEADER", "connecting-IP")
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "1")
+    headers = Headers()
+    headers.store_header("x-forwarded-for", "127.0.0.1, 192.168.0.1")
+    headers.store_header("connecting-ip", "9.9.9.9")
+    assert get_ip_from_request("1.2.3.4", headers) == "9.9.9.9"
+
+    # Test case 5: Client IP header is empty, should return x-forwarded-for address
+    monkeypatch.setenv("AIKIDO_CLIENT_IP_HEADER", "")
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "1")
+    headers = Headers()
+    headers.store_header("x-forwarded-for", "5.6.7.8, 192.168.0.1")
+    headers.store_header("connecting-ip", "9.9.9.9")
+    assert get_ip_from_request("1.2.3.4", headers) == "5.6.7.8"
+
+    # Test case 6: Valid client ip header, but trust proxy 0
+    monkeypatch.setenv("AIKIDO_CLIENT_IP_HEADER", "connecting-ip")
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "0")
+    headers = Headers()
+    headers.store_header("x-forwarded-for", "127.0.0.1, 192.168.0.1")
+    headers.store_header("connecting-ip", "9.9.9.9")
+    assert get_ip_from_request("1.2.3.4", headers) == "1.2.3.4"
 
 
 #  Test `is_ip` function :
@@ -61,18 +172,18 @@ def test_invalid_ipv6():
     assert not is_ip("::g")  # Invalid IPv6
 
 
-#  Test `get_client_ip_from_x_forwarded_for` function :
-def test_get_client_ip_from_x_forwarded_for():
+#  Test `get_client_ip_from_header` function :
+def test_get_client_ip_from_header():
     # Test cases with valid IPs
-    assert get_client_ip_from_x_forwarded_for("192.168.1.1") == "192.168.1.1"
-    assert get_client_ip_from_x_forwarded_for("192.168.1.1, 10.0.0.1") == "192.168.1.1"
-    assert get_client_ip_from_x_forwarded_for("10.0.0.1, 192.168.1.1") == "10.0.0.1"
+    assert get_client_ip_from_header("192.168.1.1") == "192.168.1.1"
+    assert get_client_ip_from_header("192.168.1.1, 10.0.0.1") == "192.168.1.1"
+    assert get_client_ip_from_header("10.0.0.1, 192.168.1.1") == "10.0.0.1"
     assert (
-        get_client_ip_from_x_forwarded_for("2001:0db8:85a3:0000:0000:8a2e:0370:7334")
+        get_client_ip_from_header("2001:0db8:85a3:0000:0000:8a2e:0370:7334")
         == "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
     )
     assert (
-        get_client_ip_from_x_forwarded_for(
+        get_client_ip_from_header(
             "2001:0db8:85a3:0000:0000:8a2e:0370:7334, 192.168.1.1"
         )
         == "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
@@ -80,22 +191,18 @@ def test_get_client_ip_from_x_forwarded_for():
 
     # Test cases with mixed valid and invalid IPs
     assert (
-        get_client_ip_from_x_forwarded_for("256.256.256.256, 192.168.1.1")
-        == "192.168.1.1"
+        get_client_ip_from_header("256.256.256.256, 192.168.1.1") == "192.168.1.1"
     )  # Invalid IPv4 ignored
     assert (
-        get_client_ip_from_x_forwarded_for("192.168.1.1, abc.def.ghi.jkl")
-        == "192.168.1.1"
+        get_client_ip_from_header("192.168.1.1, abc.def.ghi.jkl") == "192.168.1.1"
     )  # Invalid IPv4 ignored
     assert (
-        get_client_ip_from_x_forwarded_for(
-            "::1, 2001:0db8:85a3:0000:0000:8a2e:0370:7334"
-        )
+        get_client_ip_from_header("::1, 2001:0db8:85a3:0000:0000:8a2e:0370:7334")
         == "::1"
     )  # Valid IPv6 preferred
 
     # Test cases with only invalid IPs
     assert (
-        get_client_ip_from_x_forwarded_for("abc.def.ghi.jkl, 256.256.256.256") is None
+        get_client_ip_from_header("abc.def.ghi.jkl, 256.256.256.256") is None
     )  # All invalid
-    assert get_client_ip_from_x_forwarded_for("") is None  # Empty string
+    assert get_client_ip_from_header("") is None  # Empty string

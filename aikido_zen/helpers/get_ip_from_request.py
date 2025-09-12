@@ -14,13 +14,12 @@ def get_ip_from_request(remote_address: str, headers: Headers) -> Optional[str]:
     """
     Tries and get the IP address from the request, checking for x-forwarded-for
     """
-    if headers.get_header("X_FORWARDED_FOR") and trust_proxy():
-        x_forwarded_for = get_client_ip_from_x_forwarded_for(
-            headers.get_header("X_FORWARDED_FOR")
-        )
+    ip_header = headers.get_header(get_ip_header_name())
+    if ip_header and trust_proxy():
+        ip_header_value = get_client_ip_from_header(ip_header)
 
-        if x_forwarded_for and is_ip(x_forwarded_for):
-            return x_forwarded_for
+        if ip_header_value and is_ip(ip_header_value):
+            return ip_header_value
 
     if remote_address and is_ip(remote_address):
         return remote_address
@@ -28,7 +27,7 @@ def get_ip_from_request(remote_address: str, headers: Headers) -> Optional[str]:
     return None
 
 
-def get_client_ip_from_x_forwarded_for(value):
+def get_client_ip_from_header(value):
     """
     Fetches the IP out of the X-Forwarder-For headers
     """
@@ -49,11 +48,25 @@ def get_client_ip_from_x_forwarded_for(value):
 
 def trust_proxy():
     """
-    Checks the enviornment variables for `AIKIDO_TRUST_PROXY`
+    Checks the environment variables for `AIKIDO_TRUST_PROXY`, Defaults to true.
     """
-    return not "AIKIDO_TRUST_PROXY" in os.environ or os.environ[
-        "AIKIDO_TRUST_PROXY"
-    ] in ["1", "true"]
+    trust_proxy_env = os.getenv("AIKIDO_TRUST_PROXY")
+    if not trust_proxy_env:
+        return True  # default to trusting proxy
+
+    if trust_proxy_env.lower() in ["0", "false"]:
+        return False
+    return True
+
+
+def get_ip_header_name():
+    # Allows for custom headers, which is useful depending on the proxy setup.
+    if os.getenv("AIKIDO_CLIENT_IP_HEADER", None):
+        client_ip_header = os.getenv("AIKIDO_CLIENT_IP_HEADER")
+        return Headers.normalize_header_key(client_ip_header)
+
+    # Default is the X-Forwarded-For header.
+    return "X_FORWARDED_FOR"
 
 
 def is_ip(value):

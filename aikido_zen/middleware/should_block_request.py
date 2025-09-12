@@ -11,6 +11,14 @@ from aikido_zen.helpers.match_endpoints import match_endpoints
 def should_block_request():
     """
     Checks for rate-limiting and checks if the current user is blocked.
+    Returns: {
+        block: boolean,
+        data: {
+            type: "blocked" | "ratelimited",
+            trigger: "ip" | "user" | "group",
+            ip?: string
+        }
+     }
     """
     try:
         context = get_current_context()
@@ -18,15 +26,13 @@ def should_block_request():
         if not context or not cache:
             return {"block": False}
 
-        context.executed_middleware = (
-            True  # Update context with middleware execution set to true
-        )
+        # These indicators allow us to check in core whether the middleware is installed correctly,
+        # and to display a warning when a user or group is set after this has run.
+        cache.middleware_installed = True
+        context.executed_middleware = True
         context.set_as_current_context()
 
-        # Make sure we set middleware installed to true (reports back to core) :
-        cache.middleware_installed = True
-
-        # Blocked users:
+        # User blocking allows customers to easily take action when attacks are coming from specific accounts
         if context.user and cache.is_user_blocked(context.user["id"]):
             return {"block": True, "type": "blocked", "trigger": "user"}
 
@@ -46,6 +52,7 @@ def should_block_request():
                 obj={
                     "route_metadata": route_metadata,
                     "user": context.user,
+                    "group": context.rate_limit_group,
                     "remote_address": context.remote_address,
                 },
                 receive=True,

@@ -9,6 +9,7 @@ from aikido_zen.background_process.test_uds_file_access import test_uds_file_acc
 # Re-export functions :
 from aikido_zen.context.users import set_user
 from aikido_zen.middleware import should_block_request
+from aikido_zen.middleware.set_rate_limit_group import set_rate_limit_group
 
 # Import logger
 from aikido_zen.helpers.logging import logger
