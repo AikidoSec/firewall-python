@@ -1,5 +1,6 @@
+import gzip
 import json
-import urllib
+import urllib.request
 
 
 def make_request(method, url, data=None, headers=None, timeout=3):
@@ -11,15 +12,22 @@ def make_request(method, url, data=None, headers=None, timeout=3):
             req.add_header(key, value)
 
     with urllib.request.urlopen(req, timeout=timeout) as response:
-        return Response(
-            status_code=response.getcode(), data=response.read().decode("utf-8")
-        )
+        return Response(response)
 
 
 class Response:
-    def __init__(self, status_code, data):
-        self.status_code = status_code
-        self.data = data
+    def __init__(self, response):
+        self.status_code = response.getcode()
+        if response.info().get("Content-Encoding") == "gzip":
+            # we need to do the gzip decoding ourselves, since urllib has no native support.
+            self.text = decode_gzip(response.read())
+        else:
+            self.text = response.read().decode("utf-8")
 
     def json(self):
-        return json.loads(self.data)
+        return json.loads(self.text)
+
+
+def decode_gzip(raw_bytes, encoding="utf-8"):
+    f = gzip.decompress(raw_bytes)
+    return f.decode(encoding)
