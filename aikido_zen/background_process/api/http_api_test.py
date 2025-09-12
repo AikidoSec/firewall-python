@@ -38,19 +38,26 @@ def test_report_local_valid():
     }
 
 
-def test_report_other_exception(monkeypatch):
-    # Create an instance of ReportingApiHTTP
-    api = ReportingApiHTTP("http://mocked-url.com/")
+def test_report_local_timeout():
+    api = ReportingApiHTTP("http://localhost:5000/timeout5/")
 
-    # Mock the requests.post method to raise a generic exception
-    def mock_post(url, json, timeout, headers):
-        raise Exception("Some error occurred")
+    response = api.report("mocked_token", sample_event, 4)
 
-    monkeypatch.setattr(requests, "post", mock_post)
+    assert response == {
+        "success": False,
+        "error": "timeout"
+    }
 
-    # Call the report method
-    response = api.report("mocked_token", sample_event, 5)
 
-    # Assert that the response is None (or however you want to handle it)
-    assert response["error"] is "unknown"
-    assert not response["success"]
+def test_local_gzip():
+    api = ReportingApiHTTP("http://localhost:5000/")
+    response = api.fetch_firewall_lists("token")
+
+    assert response == {
+        "success": True,
+        "allowedIPAddresses": [],
+        "blockedIPAddresses": [
+            {"description": "geo restrictions", "ips": ["1.2.3.4"], "source": "geoip"}
+        ],
+        "blockedUserAgents": "",
+    }
