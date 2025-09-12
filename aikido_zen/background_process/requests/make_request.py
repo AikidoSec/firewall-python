@@ -7,7 +7,7 @@ import urllib.error
 from aikido_zen.background_process.requests.errors import TimeoutExceeded
 
 
-def make_request(method, url, data=None, headers=None, timeout=3):
+def make_request(method, url, timeout, data=None, headers=None):
     req = urllib.request.Request(url, data=data, method=method)
 
     # Add headers
