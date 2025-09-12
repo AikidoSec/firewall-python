@@ -8,8 +8,8 @@ def get(url, headers=None, timeout=3):
 
 def post(url, json=None, headers=None, timeout=3):
     data = None
-    if headers is not None:
-        headers = headers
+    if headers is None:
+        headers = {}
     if json is not None:
         data = json_dumps(json).encode("utf-8")
         headers["Content-Type"] = "application/json"
