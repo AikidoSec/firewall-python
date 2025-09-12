@@ -1,7 +1,10 @@
 import gzip
 import json
+import socket
 import urllib.request
 import urllib.error
+
+from aikido_zen.background_process.requests.errors import TimeoutExceeded
 
 
 def make_request(method, url, data=None, headers=None, timeout=3):
@@ -16,6 +19,8 @@ def make_request(method, url, data=None, headers=None, timeout=3):
             return Response(response)
     except urllib.error.HTTPError as e:
         return FailedResponse(status_code=e.code)
+    except socket.timeout:
+        raise TimeoutExceeded()
 
 
 class Response:
