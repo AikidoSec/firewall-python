@@ -1,6 +1,7 @@
 import gzip
 import json
 import urllib.request
+import urllib.error
 
 
 def make_request(method, url, data=None, headers=None, timeout=3):
@@ -10,9 +11,11 @@ def make_request(method, url, data=None, headers=None, timeout=3):
     if headers:
         for key, value in headers.items():
             req.add_header(key, value)
-
-    with urllib.request.urlopen(req, timeout=timeout) as response:
-        return Response(response)
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as response:
+            return Response(response)
+    except urllib.error.HTTPError as e:
+        return FailedResponse(status_code=e.code)
 
 
 class Response:
@@ -26,6 +29,12 @@ class Response:
 
     def json(self):
         return json.loads(self.text)
+
+
+class FailedResponse:
+    def __init__(self, status_code):
+        self.status_code = status_code
+        self.text = ""
 
 
 def decode_gzip(raw_bytes, encoding="utf-8"):
