@@ -2,11 +2,11 @@ from aikido_zen.background_process.requests.make_request import make_request
 from json import dumps as json_dumps
 
 
-def get(url, headers=None, timeout=3):
+def get(url, headers, timeout):
     return make_request("GET", url, headers=headers, timeout=timeout)
 
 
-def post(url, json=None, headers=None, timeout=3):
+def post(url, json, headers, timeout):
     data = None
     if headers is None:
         headers = {}
