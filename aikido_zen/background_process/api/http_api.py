@@ -4,6 +4,7 @@ Exports the HTTP API class
 
 import aikido_zen.background_process.requests as requests
 from aikido_zen.background_process.api import ReportingApi
+from aikido_zen.background_process.requests.errors import TimeoutExceeded
 from aikido_zen.helpers.logging import logger
 
 
@@ -21,7 +22,7 @@ class ReportingApiHTTP(ReportingApi):
                 timeout=timeout_in_sec,
                 headers=get_headers(token),
             )
-        except TimeoutError as e:
+        except TimeoutExceeded as e:
             return {"success": False, "error": "timeout"}
         except Exception as e:
             logger.error("Failed to report event : %s(%s)", str(e.__class__), str(e))
@@ -46,7 +47,7 @@ class ReportingApiHTTP(ReportingApi):
                     "Authorization": str(token),
                 },
             )
-        except TimeoutError as e:
+        except TimeoutExceeded as e:
             return {"success": False, "error": "timeout"}
         except Exception as e:
             logger.error("Failed to fetch firewall lists: %s", str(e))
