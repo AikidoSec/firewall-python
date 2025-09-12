@@ -3,7 +3,7 @@ from json import dumps as json_dumps
 
 
 def get(url, headers, timeout):
-    return make_request("GET", url, headers=headers, timeout=timeout)
+    return make_request(method="GET", url=url, headers=headers, timeout=timeout)
 
 
 def post(url, json, headers, timeout):
@@ -14,4 +14,6 @@ def post(url, json, headers, timeout):
         data = json_dumps(json).encode("utf-8")
         headers["Content-Type"] = "application/json"
 
-    return make_request("POST", url, data, headers, timeout)
+    return make_request(
+        method="POST", url=url, data=data, headers=headers, timeout=timeout
+    )
