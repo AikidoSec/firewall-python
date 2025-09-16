@@ -24,6 +24,7 @@ HASH_REGEX = re.compile(
     r"^(?:[a-f0-9]{32}|[a-f0-9]{40}|[a-f0-9]{64}|[a-f0-9]{128})$", re.I
 )
 HASH_LENGTHS = [32, 40, 64, 128]
+NUMBER_ARRAY_REGEX = re.compile(r"^\d+(?:,\d+)*$")
 
 
 def build_route_from_url(url):
@@ -51,7 +52,8 @@ def build_route_from_url(url):
 
 def replace_url_segment_with_param(segment):
     """
-    ??????????
+    Tries and match the segment, which is a string representing one part of the current route, to a bunch of regexes.
+    Useful to heuristically remove route parameters with placeholders.
     """
     if not segment:  # Check if segment is empty
         return segment  # Return the segment as is if it's empty
@@ -60,6 +62,9 @@ def replace_url_segment_with_param(segment):
 
     if starts_with_number and NUMBER_REGEX.match(segment):
         return ":number"
+
+    if "," in segment and NUMBER_ARRAY_REGEX.match(segment):
+        return ":array(number)"
 
     if len(segment) == 36 and UUID_REGEX.match(segment):
         return ":uuid"
