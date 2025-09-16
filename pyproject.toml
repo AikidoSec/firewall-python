@@ -57,7 +57,6 @@ homepage = "https://www.aikido.dev/runtime/firewall/"
 [tool.poetry.dependencies]
 python = "^3.8"
 regex = "^2024.5.15"
-requests = "^2.32.3"
 packaging = "^24.1"
 wrapt = "^1.17.2"
 
@@ -84,8 +83,8 @@ openai = "^1.85.0"
 anthropic = "^0.54.0"
 mistralai = { version = "^1.8.2", python = ">=3.9,<4.0" }
 boto3 = { version = "^1.40.17", python = ">=3.9,<4.0" }
-
 django = "4"
+requests = "^2.32.3"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
