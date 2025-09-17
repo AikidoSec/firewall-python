@@ -47,7 +47,10 @@ def start_background_process():
 
     #  Daemon is set to True so that the process kills itself when the main process dies
     background_process = Process(
-        target=AikidoBackgroundProcess, args=(comms.address, comms.key), daemon=True
+        target=AikidoBackgroundProcess,
+        args=(comms.address, comms.key),
+        name="zen-agent-process",
+        daemon=True,
     )
     background_process.start()
 
