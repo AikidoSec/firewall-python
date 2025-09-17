@@ -41,7 +41,7 @@ class AikidoBackgroundProcess:
         self.queue = Queue()
         self.connection_manager = None
         # Start reporting thread :
-        Thread(target=self.reporting_thread).start()
+        Thread(target=self.reporting_thread, daemon=True).start()
 
         logger.debug(
             "Background process started successfully, with UDS File : %s", address
