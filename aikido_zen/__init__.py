@@ -8,6 +8,7 @@ from aikido_zen.background_process.test_uds_file_access import test_uds_file_acc
 
 # Re-export functions :
 from aikido_zen.context.users import set_user
+from aikido_zen.helpers.check_gevent import check_gevent
 from aikido_zen.middleware import should_block_request
 from aikido_zen.middleware.set_rate_limit_group import set_rate_limit_group
 
@@ -35,6 +36,8 @@ def protect(mode="daemon", token=""):
         return
     if not test_uds_file_access():
         return  # Unable to start background process
+    if check_gevent():
+        return  # gevent is not compatible with zen.
 
     if token:
         os.environ["AIKIDO_TOKEN"] = token
