@@ -6,6 +6,7 @@ from packaging.version import Version
 
 import aikido_zen.helpers.get_current_unixtime_ms as t
 from aikido_zen.helpers.logging import logger
+from aikido_zen.helpers.print_warning_if_gevent import print_warning_if_gevent
 
 # If any version is supported, this constant can be used
 ANY_VERSION = "0.0.0"
@@ -71,6 +72,7 @@ class PackagesStore:
 
     @staticmethod
     def add_package(package, version):
+        print_warning_if_gevent(package, version)
         global packages
         packages[package] = {
             "name": package,
