@@ -1,4 +1,9 @@
 # Gunicorn
+
+## gUnicorn with gevent
+Due to the way gevent changes the default behaviour of python-native modules such as `multiprocessing` 
+we **do not offer support for gevent**. ([read more](https://github.com/gevent/gevent/issues/993))
+
 ## Installation/Setup
 1. Install `aikido_zen` package with pip :
 ```sh
