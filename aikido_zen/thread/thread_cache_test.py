@@ -45,6 +45,7 @@ def test_initialization(thread_cache: ThreadCache):
         "rateLimited": 0,
         "aborted": 0,
         "attacksDetected": {"total": 0, "blocked": 0},
+        "attackWaves": {"total": 0, "blocked": 0},
     }
 
 
@@ -81,6 +82,7 @@ def test_reset(thread_cache: ThreadCache):
         "rateLimited": 0,
         "aborted": 0,
         "attacksDetected": {"total": 0, "blocked": 0},
+        "attackWaves": {"total": 0, "blocked": 0},
     }
 
 
@@ -105,6 +107,7 @@ def test_renew_with_no_comms(thread_cache: ThreadCache):
             "rateLimited": 0,
             "aborted": 0,
             "attacksDetected": {"total": 0, "blocked": 0},
+            "attackWaves": {"total": 0, "blocked": 0},
         }
 
 
@@ -291,6 +294,7 @@ def test_renew_called_with_correct_args(mock_get_comms, thread_cache: ThreadCach
                     "rateLimited": 0,
                     "aborted": 0,
                     "attacksDetected": {"blocked": 1, "total": 3},
+                    "attackWaves": {"total": 0, "blocked": 0},
                 },
                 "operations": {
                     "op1": {
@@ -376,6 +380,7 @@ def test_sync_data_for_users(mock_get_comms, thread_cache: ThreadCache):
                     "rateLimited": 0,
                     "aborted": 0,
                     "attacksDetected": {"total": 0, "blocked": 0},
+                    "attackWaves": {"total": 0, "blocked": 0},
                 },
                 "operations": {},
             },
@@ -429,6 +434,7 @@ def test_renew_called_with_empty_routes(mock_get_comms, thread_cache: ThreadCach
                     "rateLimited": 0,
                     "aborted": 0,
                     "attacksDetected": {"total": 0, "blocked": 0},
+                    "attackWaves": {"total": 0, "blocked": 0},
                 },
                 "operations": {},
             },
@@ -470,6 +476,7 @@ def test_renew_called_with_no_requests(mock_get_comms, thread_cache: ThreadCache
                     "rateLimited": 0,
                     "aborted": 0,
                     "attacksDetected": {"total": 0, "blocked": 0},
+                    "attackWaves": {"total": 0, "blocked": 0},
                 },
                 "operations": {},
             },
