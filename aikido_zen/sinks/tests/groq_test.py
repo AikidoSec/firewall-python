@@ -48,7 +48,7 @@ def test_groq_messages_create():
 
 @skip_no_api_key
 @pytest.mark.asyncio
-async def test_anthropic_messages_create_async():
+async def test_groq_messages_create_async():
     client = AsyncGroq()
     chat_completion = await client.chat.completions.create(
         messages=[
