@@ -1,5 +1,5 @@
 from aikido_zen.thread.thread_cache import get_cache
-from aikido_zen.helpers import protection_forced_off
+from aikido_zen.helpers.protection_forced_off import protection_forced_off
 from aikido_zen.context import Context
 
 
@@ -24,6 +24,7 @@ def is_protection_forced_off_cached(context: Context) -> bool:
     is_forced_off = protection_forced_off(
         context.get_route_metadata(), thread_cache.get_endpoints()
     )
-    context.set_force_protection_off(is_forced_off).set_as_current_context()
+    context.set_force_protection_off(is_forced_off)
+    context.set_as_current_context()
 
     return is_forced_off
