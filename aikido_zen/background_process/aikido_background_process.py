@@ -50,6 +50,7 @@ class AikidoBackgroundProcess:
             conn = listener.accept()
             while True:
                 try:
+                    logger.debug("Waiting for data...")
                     data = conn.recv()  #  because of this no sleep needed in thread
                     logger.debug("Incoming data : %s", data)
                     process_incoming_command(
