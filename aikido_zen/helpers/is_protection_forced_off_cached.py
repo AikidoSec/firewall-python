@@ -1,4 +1,4 @@
-from aikido_zen.helpers import get_cache
+from aikido_zen.thread.thread_cache import get_cache
 from aikido_zen.helpers import protection_forced_off
 from aikido_zen.context import Context
 
