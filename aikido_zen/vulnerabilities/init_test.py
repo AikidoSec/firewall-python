@@ -200,3 +200,36 @@ def test_ssrf_vulnerability_scan_bypassed_ip(get_context):
 
     # Verify that hostnames.add was not called due to bypassed IP
     assert get_cache().hostnames.as_array() == []
+
+
+def test_ssrf_vulnerability_scan_protection_gets_forced_off(get_context):
+    get_context.set_as_current_context()
+    get_cache().config.bypassed_ips = IPMatcher(["198.51.100.23"])
+
+    dns_results = MagicMock()
+    hostname = "example.com"
+    port = 80
+    assert get_context.protection_forced_off is None
+    run_vulnerability_scan(kind="ssrf", op="test", args=(dns_results, hostname, port))
+    assert get_context.protection_forced_off is False
+
+
+def test_sql_injection_with_protection_forced_off(caplog, get_context, monkeypatch):
+    get_context.set_as_current_context()
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
+    with patch("aikido_zen.background_process.comms.get_comms") as mock_get_comms:
+        # Create a mock comms object
+        mock_comms = MagicMock()
+        mock_get_comms.return_value = mock_comms  # Set the return value of get_comms
+        with pytest.raises(AikidoSQLInjection):
+            run_vulnerability_scan(
+                kind="sql_injection",
+                op="test_op",
+                args=("INSERT * INTO VALUES ('doggoss2', TRUE);", "mysql"),
+            )
+        get_context.set_force_protection_off(True)
+        run_vulnerability_scan(
+            kind="sql_injection",
+            op="test_op",
+            args=("INSERT * INTO VALUES ('doggoss2', TRUE);", "mysql"),
+        )
