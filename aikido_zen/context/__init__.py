@@ -54,7 +54,7 @@ class Context:
         self.headers: Headers = Headers()
         self.cookies = dict()
         self.query = dict()
-        self.protection_forced_off = None
+        self.should_skip_attack_scan = None
 
         # Parse WSGI/ASGI/... request :
         self.method = self.remote_address = self.url = None
@@ -139,5 +139,5 @@ class Context:
     def get_user_agent(self):
         return self.headers.get_header("USER_AGENT")
 
-    def set_force_protection_off(self, value: bool):
-        self.protection_forced_off = value
+    def set_should_skip_attack_scan(self, value: bool):
+        self.should_skip_attack_scan = value

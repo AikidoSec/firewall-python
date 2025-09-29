@@ -13,10 +13,10 @@ def should_skip_attack_scan(context: Context) -> bool:
     if not context:
         return False
 
-    if context.protection_forced_off is not None:
+    if context.should_skip_attack_scan is not None:
         # Retrieving from cache, we don't want to constantly go through
         # all the endpoints for every single vulnerability check.
-        return context.protection_forced_off
+        return context.should_skip_attack_scan
 
     thread_cache = get_cache()
     if not thread_cache:
