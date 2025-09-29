@@ -37,6 +37,10 @@ def run_vulnerability_scan(kind, op, args):
     raises error if blocking is enabled, communicates it with connection_manager
     """
     context = get_current_context()
+    if not context and kind != "ssrf":
+        # Make a special exception for SSRF:
+        # For stored ssrf we don't need a context
+        return
     if should_skip_attack_scan(context) and kind != "ssrf":
         # Make a special exception for SSRF:
         # For stored ssrf we don't want to check bypassed IPs or protection forced off.

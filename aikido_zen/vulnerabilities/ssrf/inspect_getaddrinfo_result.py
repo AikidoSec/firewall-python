@@ -28,7 +28,7 @@ def inspect_getaddrinfo_result(dns_results, hostname, port):
         return
 
     context = get_current_context()
-    if should_skip_attack_scan(context):
+    if not context or should_skip_attack_scan(context):
         return
 
     # attack_findings is an object containing source, pathToPayload and payload.
