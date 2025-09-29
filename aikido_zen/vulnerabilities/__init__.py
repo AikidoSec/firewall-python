@@ -16,8 +16,8 @@ import aikido_zen.background_process.comms as comm
 from aikido_zen.helpers.logging import logger
 from aikido_zen.helpers.get_clean_stacktrace import get_clean_stacktrace
 from aikido_zen.helpers.blocking_enabled import is_blocking_enabled
-from aikido_zen.helpers.is_protection_forced_off_cached import (
-    is_protection_forced_off_cached,
+from aikido_zen.helpers.should_skip_attack_scan import (
+    should_skip_attack_scan,
 )
 from aikido_zen.thread.thread_cache import get_cache
 from .sql_injection.context_contains_sql_injection import context_contains_sql_injection
@@ -37,25 +37,12 @@ def run_vulnerability_scan(kind, op, args):
     raises error if blocking is enabled, communicates it with connection_manager
     """
     context = get_current_context()
-
-    if is_protection_forced_off_cached(context):
+    if should_skip_attack_scan(context) and kind != "ssrf":
+        # Make a special exception for SSRF:
+        # For stored ssrf we don't want to check bypassed IPs or protection forced off.
         return
 
     comms = comm.get_comms()
-    thread_cache = get_cache()
-    if not context and kind != "ssrf":
-        # Make a special exception for SSRF, which checks itself if context is set.
-        # This is because some scans/tests for SSRF do not require a context to be set.
-        return
-
-    if not thread_cache and kind != "ssrf":
-        # Make a special exception for SSRF, which checks itself if thread cache is set.
-        # This is because some scans/tests for SSRF do not require a thread cache to be set.
-        return
-    if thread_cache and context:
-        if thread_cache.is_bypassed_ip(context.remote_address):
-            #  This IP is on the bypass list, not scanning
-            return
 
     error_type = AikidoException  # Default error
     error_args = tuple()
@@ -87,6 +74,7 @@ def run_vulnerability_scan(kind, op, args):
             injection_results = inspect_getaddrinfo_result(dns_results, hostname, port)
             error_type = AikidoSSRF
 
+            thread_cache = get_cache()
             if thread_cache and port > 0:
                 thread_cache.hostnames.add(hostname, port)
         else:
@@ -101,7 +89,10 @@ def run_vulnerability_scan(kind, op, args):
 
         blocked = is_blocking_enabled()
         operation = injection_results["operation"]
-        thread_cache.stats.on_detected_attack(blocked, operation)
+
+        thread_cache = get_cache()
+        if thread_cache:
+            thread_cache.stats.on_detected_attack(blocked, operation)
 
         stack = get_clean_stacktrace()
 

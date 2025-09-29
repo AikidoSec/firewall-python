@@ -13,6 +13,7 @@ from .is_private_ip import is_private_ip
 from .find_hostname_in_context import find_hostname_in_context
 from .extract_ip_array_from_results import extract_ip_array_from_results
 from .is_redirect_to_private_ip import is_redirect_to_private_ip
+from aikido_zen.helpers.should_skip_attack_scan import should_skip_attack_scan
 
 
 #  gets called when the result of the DNS resolution has come in
@@ -27,11 +28,7 @@ def inspect_getaddrinfo_result(dns_results, hostname, port):
         return
 
     context = get_current_context()
-    if not context:
-        return  # Context should be set to check user input.
-    if get_cache() and get_cache().is_bypassed_ip(context.remote_address):
-        # We check for bypassed ip's here since it is not checked for us
-        # in run_vulnerability_scan due to the exception for SSRF (see above code)
+    if should_skip_attack_scan(context):
         return
 
     # attack_findings is an object containing source, pathToPayload and payload.
