@@ -22,17 +22,17 @@ def should_skip_attack_scan(context: Context) -> bool:
     if not thread_cache:
         return False
 
-    is_forced_off = False
+    should_skip = False
     # We check for a boolean protectionForcedOff on the matching endpoints, allows users to disable scans on certain routes.
     if protection_forced_off(
         context.get_route_metadata(), thread_cache.get_endpoints()
     ):
-        is_forced_off = True
+        should_skip = True
     # We check for Bypassed IPs : Allows users to let their DAST not be blocked by Zen
     if thread_cache.is_bypassed_ip(context.remote_address):
-        is_forced_off = True
+        should_skip = True
 
-    context.set_force_protection_off(is_forced_off)
+    context.set_should_skip_attack_scan(should_skip)
     context.set_as_current_context()
 
-    return is_forced_off
+    return should_skip
