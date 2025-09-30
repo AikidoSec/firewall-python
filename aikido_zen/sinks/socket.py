@@ -7,11 +7,16 @@ from aikido_zen.helpers.register_call import register_call
 from aikido_zen.sinks import on_import, patch_function, after
 from aikido_zen.vulnerabilities import run_vulnerability_scan
 
+PERF_SKIP_HOSTS = ["collector.newrelic.com"]
+
 
 @after
 def _getaddrinfo(func, instance, args, kwargs, return_value):
     host = get_argument(args, kwargs, 0, "host")
     port = get_argument(args, kwargs, 1, "port")
+
+    if host in PERF_SKIP_HOSTS:
+        return
 
     op = "socket.getaddrinfo"
     register_call(op, "outgoing_http_op")
