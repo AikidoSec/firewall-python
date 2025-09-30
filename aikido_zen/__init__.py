@@ -86,7 +86,6 @@ def protect(mode="daemon", token=""):
         import aikido_zen.sinks.shutil
         import aikido_zen.sinks.io
 
-
     # Import shell sinks
     if not PERF_SKIP_SINKS["shell_op"]:
         import aikido_zen.sinks.os_system
