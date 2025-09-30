@@ -2,6 +2,8 @@
 Sink module for `subprocess`
 """
 
+from collections.abc import Iterable
+
 import aikido_zen.vulnerabilities as vulns
 from aikido_zen.helpers.get_argument import get_argument
 from aikido_zen.helpers.register_call import register_call
@@ -9,10 +11,9 @@ from aikido_zen.sinks import on_import, patch_function, before
 
 
 def try_join_iterable(iterable):
-    try:
-        return " ".join(iterable)
-    except Exception:
+    if not isinstance(iterable, Iterable):
         return None
+    return " ".join(iterable)
 
 
 @before
