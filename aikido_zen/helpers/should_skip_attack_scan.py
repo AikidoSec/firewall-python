@@ -1,6 +1,5 @@
 from aikido_zen.thread.thread_cache import get_cache
 from aikido_zen.helpers.protection_forced_off import protection_forced_off
-from aikido_zen.helpers.logging import logger
 from aikido_zen.context import Context
 
 
