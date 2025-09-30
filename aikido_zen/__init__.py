@@ -23,11 +23,12 @@ from aikido_zen.config import PKG_VERSION
 from aikido_zen.helpers.aikido_disabled_flag_active import aikido_disabled_flag_active
 
 PERF_SKIP_SINKS = {
-    "fs_op": False,
+    "fs_op": True,
     "sql_op": False,
     "framework_op": False,
     "ai_op": False,
     "shell_op": False,
+    "http_op": False,
 }
 
 
@@ -84,13 +85,16 @@ def protect(mode="daemon", token=""):
         import aikido_zen.sinks.os
         import aikido_zen.sinks.shutil
         import aikido_zen.sinks.io
-        import aikido_zen.sinks.http_client
-        import aikido_zen.sinks.socket
+
 
     # Import shell sinks
     if not PERF_SKIP_SINKS["shell_op"]:
         import aikido_zen.sinks.os_system
         import aikido_zen.sinks.subprocess
+
+    if not PERF_SKIP_SINKS["http_op"]:
+        import aikido_zen.sinks.http_client
+        import aikido_zen.sinks.socket
 
     # Import AI sinks
     if not PERF_SKIP_SINKS["ai_op"]:
