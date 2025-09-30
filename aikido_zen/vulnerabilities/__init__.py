@@ -48,6 +48,8 @@ def run_vulnerability_scan(kind, op, args):
 
     comms = comm.get_comms()
 
+    logger.debug("Running Vulnerability scan for %s [%s](%s)", kind, op, args[0])
+
     error_type = AikidoException  # Default error
     error_args = tuple()
     injection_results = {}
