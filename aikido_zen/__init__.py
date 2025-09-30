@@ -22,6 +22,14 @@ from aikido_zen.background_process import start_background_process
 from aikido_zen.config import PKG_VERSION
 from aikido_zen.helpers.aikido_disabled_flag_active import aikido_disabled_flag_active
 
+PERF_SKIP_SINKS = {
+    "fs_op": False,
+    "sql_op": False,
+    "framework_op": False,
+    "ai_op": False,
+    "shell_op": False,
+}
+
 
 def protect(mode="daemon", token=""):
     """
@@ -53,37 +61,42 @@ def protect(mode="daemon", token=""):
     import aikido_zen.sinks.builtins_import
 
     # Import sources
-    import aikido_zen.sources.django
-    import aikido_zen.sources.flask
-    import aikido_zen.sources.quart
-    import aikido_zen.sources.starlette
-    import aikido_zen.sources.xml_sources.xml
-    import aikido_zen.sources.xml_sources.lxml
+    if not PERF_SKIP_SINKS["framework_op"]:
+        import aikido_zen.sources.django
+        import aikido_zen.sources.flask
+        import aikido_zen.sources.quart
+        import aikido_zen.sources.starlette
+        import aikido_zen.sources.xml_sources.xml
+        import aikido_zen.sources.xml_sources.lxml
 
     # Import DB Sinks
-    import aikido_zen.sinks.pymysql
-    import aikido_zen.sinks.mysqlclient
-    import aikido_zen.sinks.pymongo
-    import aikido_zen.sinks.psycopg2
-    import aikido_zen.sinks.psycopg
-    import aikido_zen.sinks.asyncpg
-    import aikido_zen.sinks.clickhouse_driver
+    if not PERF_SKIP_SINKS["sql_op"]:
+        import aikido_zen.sinks.pymysql
+        import aikido_zen.sinks.mysqlclient
+        import aikido_zen.sinks.pymongo
+        import aikido_zen.sinks.psycopg2
+        import aikido_zen.sinks.psycopg
+        import aikido_zen.sinks.asyncpg
+        import aikido_zen.sinks.clickhouse_driver
 
-    import aikido_zen.sinks.builtins
-    import aikido_zen.sinks.os
-    import aikido_zen.sinks.shutil
-    import aikido_zen.sinks.io
-    import aikido_zen.sinks.http_client
-    import aikido_zen.sinks.socket
+    if not PERF_SKIP_SINKS["fs_op"]:
+        import aikido_zen.sinks.builtins
+        import aikido_zen.sinks.os
+        import aikido_zen.sinks.shutil
+        import aikido_zen.sinks.io
+        import aikido_zen.sinks.http_client
+        import aikido_zen.sinks.socket
 
     # Import shell sinks
-    import aikido_zen.sinks.os_system
-    import aikido_zen.sinks.subprocess
+    if not PERF_SKIP_SINKS["shell_op"]:
+        import aikido_zen.sinks.os_system
+        import aikido_zen.sinks.subprocess
 
     # Import AI sinks
-    import aikido_zen.sinks.openai
-    import aikido_zen.sinks.anthropic
-    import aikido_zen.sinks.mistralai
-    import aikido_zen.sinks.botocore
+    if not PERF_SKIP_SINKS["ai_op"]:
+        import aikido_zen.sinks.openai
+        import aikido_zen.sinks.anthropic
+        import aikido_zen.sinks.mistralai
+        import aikido_zen.sinks.botocore
 
     logger.info("Zen by Aikido v%s starting.", PKG_VERSION)
