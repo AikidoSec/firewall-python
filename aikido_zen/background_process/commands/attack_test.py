@@ -2,6 +2,7 @@ import pytest
 from queue import Queue
 from unittest.mock import MagicMock
 from .attack import process_attack
+from ..queue_helpers import ReportingQueueAttackWaveEvent
 
 
 class MockCloudConnectionManager:
@@ -57,13 +58,16 @@ def test_process_attack_with_different_data_formats():
     data1 = ("injection_results", "context", True, "stacktrace")
     data2 = ("injection_results", "context", False, "stacktrace")
     data3 = ("injection_results", "context", None, "stacktrace")
+    data4 = ReportingQueueAttackWaveEvent(None, {"a": "b"})
 
     process_attack(connection_manager, data1, queue)
     process_attack(connection_manager, data2, queue)
     process_attack(connection_manager, data3, queue)
+    process_attack(connection_manager, data4, queue)
 
     # Check if all data items are added to the queue
-    assert queue.qsize() == 3
+    assert queue.qsize() == 4
     assert queue.get() == data1
     assert queue.get() == data2
     assert queue.get() == data3
+    assert queue.get() == data4
