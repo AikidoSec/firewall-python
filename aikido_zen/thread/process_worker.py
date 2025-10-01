@@ -4,8 +4,8 @@ import time
 from aikido_zen.helpers.logging import logger
 from aikido_zen.thread import thread_cache
 
-# Renew the cache from this background worker every 5 seconds
-RENEW_CACHE_EVERY_X_SEC = 5
+# Renew the cache from this background worker every 15 seconds
+RENEW_CACHE_EVERY_X_SEC = 15
 
 
 def aikido_process_worker_thread():
