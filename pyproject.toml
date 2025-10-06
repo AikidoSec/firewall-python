@@ -83,9 +83,10 @@ openai = "^1.85.0"
 anthropic = "^0.54.0"
 mistralai = { version = "^1.8.2", python = ">=3.9,<4.0" }
 boto3 = { version = "^1.40.17", python = ">=3.9,<4.0" }
+langchain = { version = "^0.3.27", python = ">=3.9,<4.0" }
 django = "4"
 requests = "^2.32.3"
-groq = "^0.31.1"
+groq = "^0.31.1"    
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
