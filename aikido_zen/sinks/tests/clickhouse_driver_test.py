@@ -17,7 +17,7 @@ class Context1(Context):
         self.source = "express"
         self.route = "/"
         self.parsed_userinput = {}
-        self.protection_forced_off = False
+        self.should_skip_attack_scan = False
 
 
 @pytest.fixture(autouse=True)

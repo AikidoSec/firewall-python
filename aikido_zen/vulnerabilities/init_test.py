@@ -198,8 +198,13 @@ def test_ssrf_vulnerability_scan_bypassed_ip(get_context):
     run_vulnerability_scan(kind="ssrf", op="test", args=(dns_results, hostname, port))
     assert get_cache().stats.get_record()["requests"]["attacksDetected"]["total"] == 0
 
-    # Verify that hostnames.add was not called due to bypassed IP
-    assert get_cache().hostnames.as_array() == []
+    assert get_cache().hostnames.as_array() == [
+        {
+            "hits": 1,
+            "hostname": "example.com",
+            "port": 80,
+        },
+    ]
 
 
 def test_ssrf_vulnerability_scan_protection_gets_forced_off(get_context):
@@ -209,9 +214,9 @@ def test_ssrf_vulnerability_scan_protection_gets_forced_off(get_context):
     dns_results = MagicMock()
     hostname = "example.com"
     port = 80
-    assert get_context.protection_forced_off is None
+    assert get_context.should_skip_attack_scan is None
     run_vulnerability_scan(kind="ssrf", op="test", args=(dns_results, hostname, port))
-    assert get_context.protection_forced_off is False
+    assert get_context.should_skip_attack_scan is True  # Bypassed IP
 
 
 def test_sql_injection_with_protection_forced_off(caplog, get_context, monkeypatch):
@@ -227,7 +232,7 @@ def test_sql_injection_with_protection_forced_off(caplog, get_context, monkeypat
                 op="test_op",
                 args=("INSERT * INTO VALUES ('doggoss2', TRUE);", "mysql"),
             )
-        get_context.set_force_protection_off(True)
+        get_context.set_should_skip_attack_scan(True)
         run_vulnerability_scan(
             kind="sql_injection",
             op="test_op",
