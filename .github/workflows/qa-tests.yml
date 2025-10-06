@@ -20,7 +20,7 @@ jobs:
         with:
           repository: Aikido-demo-apps/zen-demo-python
           path: zen-demo-python
-          ref: dev-testing
+          ref: qa-test
           submodules: true
 
       - name: Set up Python
