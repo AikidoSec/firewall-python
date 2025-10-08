@@ -120,7 +120,6 @@ class AikidoBackgroundProcess:
                 )
 
 
-
 def add_exit_handlers():
     """
     We add graceful exit handlers here since the process keeps hanging otherwise.
