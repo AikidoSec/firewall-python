@@ -40,5 +40,5 @@ def starts_with_unsafe_path(file_path, user_input):
     return False
 
 
-def trim_leading_slashes(path: str) -> str:
+def ensure_one_leading_slash(path: str) -> str:
     return "/" + path.lstrip("/")
