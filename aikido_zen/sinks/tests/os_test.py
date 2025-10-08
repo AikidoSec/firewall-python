@@ -2,8 +2,40 @@ import pytest
 from pathlib import Path, PurePath
 from unittest.mock import patch
 import aikido_zen.sinks.os
+from aikido_zen.context import Context
+from aikido_zen.errors import AikidoPathTraversal
+from aikido_zen.sinks.tests.clickhouse_driver_test import set_blocking_to_true
 
 kind = "path_traversal"
+
+
+def set_context(param):
+    wsgi_request = {
+        "REQUEST_METHOD": "GET",
+        "HTTP_HEADER_1": "header 1 value",
+        "HTTP_HEADER_2": "Header 2 value",
+        "RANDOM_VALUE": "Random value",
+        "HTTP_COOKIE": "sessionId=abc123xyz456;",
+        "wsgi.url_scheme": "http",
+        "HTTP_HOST": "localhost:8080",
+        "PATH_INFO": "/hello",
+        "QUERY_STRING": "user=JohnDoe&age=30&age=35",
+        "CONTENT_TYPE": "application/json",
+        "REMOTE_ADDR": "198.51.100.23",
+    }
+    context = Context(
+        req=wsgi_request,
+        body={
+            "param": param,
+        },
+        source="flask",
+    )
+    context.set_as_current_context()
+
+
+@pytest.fixture(autouse=True)
+def set_blocking_to_true(monkeypatch):
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
 
 
 def test_ospath_commands():
@@ -37,6 +69,16 @@ def test_ospath_commands():
         args = (path1,)
         # Need to use assert_any_call, since python 3.12 it uses os.path.join
         mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
+
+
+def test_os_create_path_with_multiple_slashes():
+    import os
+
+    file_path = "////etc/passwd"
+    set_context(file_path)
+    with pytest.raises(AikidoPathTraversal):
+        full_path = Path("flaskr/resources/blogs/") / file_path
+        open(full_path, "r").close()
 
 
 def test_ospath_command_absolute_path():
