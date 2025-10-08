@@ -41,4 +41,6 @@ def starts_with_unsafe_path(file_path, user_input):
 
 
 def ensure_one_leading_slash(path: str) -> str:
-    return "/" + path.lstrip("/")
+    if path.startswith("/"):
+        return "/" + path.lstrip("/")
+    return path
