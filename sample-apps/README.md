@@ -44,3 +44,6 @@ Overview :
 - `flask-openai/` is a Flask app with openai
   - it runs **multi-threaded**
   - Runs on 8108. Without Aikido runs on 8109
+- `flask-postgres-gevent/` is a Flask app with gunicorn & gevent, runs async.
+  - it runs **multi-threaded & async**
+  - Runs on 8110. Without Aikido runs on 8111

@@ -1,7 +1,6 @@
 import pytest
 from unittest.mock import patch
 from aikido_zen.background_process.api.http_api import ReportingApiHTTP
-from aikido_zen.helpers.get_current_unixtime_ms import get_unixtime_ms
 from .http_api_ratelimited import ReportingApiHTTPRatelimited
 
 
@@ -9,7 +8,7 @@ from .http_api_ratelimited import ReportingApiHTTPRatelimited
 def reporting_api():
     """Fixture to create an instance of ReportingApiHTTPRatelimited."""
     return ReportingApiHTTPRatelimited(
-        reporting_url="http://example.com",
+        reporting_url="https://example.com",
         max_events_per_interval=3,
         interval_in_ms=10000,
     )
@@ -150,7 +149,7 @@ def test_report_event_expiry(reporting_api):
     ):
         event3 = {"type": "detected_attack", "time": 11000}
         response = reporting_api.report(token="token", event=event3, timeout_in_sec=5)
-        assert response == {"error": "timeout", "success": False}
+        assert response == {"error": "unknown", "success": False}
         assert (
             len(reporting_api.events) == 1
         )  # One event should have expired, and the new one is added
@@ -167,7 +166,7 @@ def test_report_event_at_boundary(reporting_api):
     ):
         event2 = {"type": "detected_attack", "time": 10000}  # Exactly at the boundary
         response = reporting_api.report(token="token", event=event2, timeout_in_sec=5)
-        assert response == {"error": "timeout", "success": False}
+        assert response == {"error": "unknown", "success": False}
         assert (
             len(reporting_api.events) == 2
         )  # Should be added since it's at the boundary

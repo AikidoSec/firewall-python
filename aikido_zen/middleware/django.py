@@ -8,7 +8,6 @@ class AikidoDjangoMiddleware:
     """Middleware for rate-limiting and user blocking for django"""
 
     def __init__(self, get_response):
-        logger.critical("Django middleware ised")
         self.get_response = get_response
         try:
             from django.http import HttpResponse

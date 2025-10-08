@@ -27,7 +27,10 @@ jobs:
           echo "Pylint check failed. Please fix the issues."
           exit 1
         fi
-
+    - name: Build and start aikido mock server
+      run: |
+        cd end2end/server && docker build -t mock_core .
+        docker run --name mock_core -d -p 5050:5000 mock_core
     - name: Run Black Check
       run: |
         poetry run black --check --diff aikido_zen/

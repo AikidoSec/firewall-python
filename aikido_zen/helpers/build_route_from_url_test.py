@@ -51,8 +51,15 @@ def test_replace_dates():
     assert build_route_from_url("/posts/01-05-2023") == "/posts/:date"
 
 
-def test_ignore_comma_numbers():
-    assert build_route_from_url("/posts/3,000") == "/posts/3,000"
+def test_matches_arrays():
+    assert build_route_from_url("/posts/3,000") == "/posts/:array(number)"
+    assert build_route_from_url("/posts/0,1,2,3,4") == "/posts/:array(number)"
+    assert build_route_from_url("/posts/,1,2,3,4") == "/posts/,1,2,3,4"
+    assert build_route_from_url("/posts/0,1,2,3,4,") == "/posts/0,1,2,3,4,"
+    assert build_route_from_url("/posts/,1,2,3,4,") == "/posts/,1,2,3,4,"
+    assert build_route_from_url("/posts/,") == "/posts/,"
+    assert build_route_from_url("/posts/1,2") == "/posts/:array(number)"
+    assert build_route_from_url("/posts/200000,2,20000") == "/posts/:array(number)"
 
 
 def test_ignore_api_version_numbers():
