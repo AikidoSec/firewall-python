@@ -28,13 +28,17 @@ dangerous_path_starts = linux_root_folders + ["c:/", "c:\\"]
 
 def starts_with_unsafe_path(file_path, user_input):
     """Check if the file path starts with any dangerous paths and the user input."""
-    lower_case_path = file_path.lower()
-    lower_case_user_input = user_input.lower()
+    path_parsed = trim_leading_slashes(file_path.lower())
+    input_parsed = trim_leading_slashes(user_input.lower())
 
     for dangerous_start in dangerous_path_starts:
-        if lower_case_path.startswith(dangerous_start) and lower_case_path.startswith(
-            lower_case_user_input
+        if path_parsed.startswith(dangerous_start) and path_parsed.startswith(
+            input_parsed
         ):
             return True
 
     return False
+
+
+def trim_leading_slashes(path: str) -> str:
+    return "/" + path.lstrip("/")
