@@ -79,7 +79,8 @@ def test_os_create_path_with_multiple_slashes():
     with pytest.raises(AikidoPathTraversal):
         full_path = Path("flaskr/resources/blogs/") / file_path
         open(full_path, "r").close()
-        
+
+
 def test_os_create_path_with_multiple_double_slashes():
     import os
 
