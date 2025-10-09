@@ -91,6 +91,16 @@ def test_os_create_path_with_multiple_double_slashes():
         open(full_path, "r").close()
 
 
+def test_os_path_traversal_with_multiple_slashes():
+    import os
+
+    file_path = "home///..////..////my_secret.txt"
+    set_context(file_path)
+    with pytest.raises(AikidoPathTraversal):
+        full_path = Path("flaskr/resources/blogs/") / file_path
+        open(full_path, "r").close()
+
+
 def test_ospath_command_absolute_path():
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
