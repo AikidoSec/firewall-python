@@ -6,7 +6,8 @@ import aikido_zen.test_utils as test_utils
 
 
 @pytest.fixture(autouse=True)
-def set_blocking_to_true(monkeypatch):
+def setup(monkeypatch):
+    reset_comms()
     monkeypatch.setenv("AIKIDO_BLOCK", "1")
 
 
@@ -20,14 +21,12 @@ def client():
 
 
 def test_client_execute_without_context(client):
-    reset_comms()
     dog_name = "Steve"
     sql = "INSERT INTO dogs (dog_name, isAdmin) VALUES ('{}' , 0)".format(dog_name)
     client.execute(sql)
 
 
 def test_client_execute_safe(client):
-    reset_comms()
     dog_name = "Steve"
     sql = "INSERT INTO dogs (dog_name, isAdmin) VALUES ('{}' , 0)".format(dog_name)
     test_utils.generate_and_set_context(value=dog_name)
@@ -35,7 +34,6 @@ def test_client_execute_safe(client):
 
 
 def test_client_execute_unsafe(client, monkeypatch):
-    reset_comms()
     dog_name = "Malicious dog', 1); -- "
     sql = "INSERT INTO dogs (dog_name, isAdmin) VALUES ('{}' , 0)".format(dog_name)
     test_utils.generate_and_set_context(value=dog_name)
@@ -51,7 +49,6 @@ def test_cursor_execute_safe():
     from clickhouse_driver import connect
 
     conn = connect("clickhouse://localhost:9000")
-    reset_comms()
     dog_name = "Steve"
     sql = "INSERT INTO dogs (dog_name, isAdmin) VALUES ('{}' , 0)".format(dog_name)
     test_utils.generate_and_set_context(value=dog_name)
@@ -62,7 +59,6 @@ def test_cursor_execute_unsafe(monkeypatch):
     from clickhouse_driver import connect
 
     conn = connect("clickhouse://localhost:9000")
-    reset_comms()
     dog_name = "Malicious dog', 1); -- "
     sql = "INSERT INTO dogs (dog_name, isAdmin) VALUES ('{}' , 0)".format(dog_name)
     test_utils.generate_and_set_context(value=dog_name)
@@ -75,7 +71,6 @@ def test_cursor_execute_unsafe(monkeypatch):
 
 
 def test_client_execute_with_progress_safe(client):
-    reset_comms()
     dog_name = "Steve"
     sql = "INSERT INTO dogs (dog_name, isAdmin) VALUES ('{}' , 0)".format(dog_name)
     test_utils.generate_and_set_context(value=dog_name)
@@ -83,7 +78,6 @@ def test_client_execute_with_progress_safe(client):
 
 
 def test_client_execute_with_progress_unsafe(client, monkeypatch):
-    reset_comms()
     dog_name = "Malicious dog', 1); -- "
     sql = "INSERT INTO dogs (dog_name, isAdmin) VALUES ('{}' , 0)".format(dog_name)
     test_utils.generate_and_set_context(value=dog_name)
@@ -96,7 +90,6 @@ def test_client_execute_with_progress_unsafe(client, monkeypatch):
 
 
 def test_client_execute_iter_safe(client):
-    reset_comms()
     dog_name = "Steve"
     sql = "INSERT INTO dogs (dog_name, isAdmin) VALUES ('{}' , 0)".format(dog_name)
     test_utils.generate_and_set_context(value=dog_name)
@@ -104,7 +97,6 @@ def test_client_execute_iter_safe(client):
 
 
 def test_client_execute_iter_unsafe(client, monkeypatch):
-    reset_comms()
     dog_name = "Malicious dog', 1); -- "
     sql = "INSERT INTO dogs (dog_name, isAdmin) VALUES ('{}' , 0)".format(dog_name)
     test_utils.generate_and_set_context(value=dog_name)
