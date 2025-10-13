@@ -1,22 +1,6 @@
 import pytest
-from aikido_zen.context import Context
 from .context_contains_sql_injection import context_contains_sql_injection
-
-
-class Context2(Context):
-    def __init__(self):
-        self.cookies = {}
-        self.headers = {}
-        self.remote_address = "ip"
-        self.method = "POST"
-        self.url = "url"
-        self.body = {}
-        self.query = {
-            "domain": "www.example`whoami`.com",
-        }
-        self.source = "express"
-        self.route = "/"
-        self.parsed_userinput = {}
+import aikido_zen.test_utils as test_utils
 
 
 @pytest.mark.parametrize(
@@ -38,7 +22,7 @@ class Context2(Context):
     ],
 )
 def test_doesnt_crash_with_invalid_sql(invalid_input):
-    context = Context2()
+    context = test_utils.generate_context(value=invalid_input)
     result = context_contains_sql_injection(
         sql=invalid_input,
         operation="mysqlclient.query",
