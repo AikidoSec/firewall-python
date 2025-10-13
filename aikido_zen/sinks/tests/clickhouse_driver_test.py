@@ -1,23 +1,8 @@
 import aikido_zen.sinks.clickhouse_driver
 import pytest
 from aikido_zen.background_process import reset_comms
-from aikido_zen.context import Context
 from aikido_zen.errors import AikidoSQLInjection
-
-
-class Context1(Context):
-    def __init__(self, body):
-        self.cookies = {}
-        self.headers = {}
-        self.remote_address = "1.1.1.1"
-        self.method = "POST"
-        self.url = "url"
-        self.query = {}
-        self.body = body
-        self.source = "express"
-        self.route = "/"
-        self.parsed_userinput = {}
-        self.protection_forced_off = False
+import aikido_zen.test_utils as test_utils
 
 
 @pytest.fixture(autouse=True)
@@ -45,7 +30,7 @@ def test_client_execute_safe(client):
     reset_comms()
     dog_name = "Steve"
     sql = "INSERT INTO dogs (dog_name, isAdmin) VALUES ('{}' , 0)".format(dog_name)
-    Context1({"dog_name": dog_name}).set_as_current_context()
+    test_utils.generate_and_set_context(value=dog_name)
     client.execute(sql)
 
 
@@ -53,7 +38,7 @@ def test_client_execute_unsafe(client, monkeypatch):
     reset_comms()
     dog_name = "Malicious dog', 1); -- "
     sql = "INSERT INTO dogs (dog_name, isAdmin) VALUES ('{}' , 0)".format(dog_name)
-    Context1({"dog_name": dog_name}).set_as_current_context()
+    test_utils.generate_and_set_context(value=dog_name)
 
     with pytest.raises(AikidoSQLInjection):
         client.execute(sql)
@@ -69,7 +54,7 @@ def test_cursor_execute_safe():
     reset_comms()
     dog_name = "Steve"
     sql = "INSERT INTO dogs (dog_name, isAdmin) VALUES ('{}' , 0)".format(dog_name)
-    Context1({"dog_name": dog_name}).set_as_current_context()
+    test_utils.generate_and_set_context(value=dog_name)
     conn.cursor().execute(sql)
 
 
@@ -80,7 +65,7 @@ def test_cursor_execute_unsafe(monkeypatch):
     reset_comms()
     dog_name = "Malicious dog', 1); -- "
     sql = "INSERT INTO dogs (dog_name, isAdmin) VALUES ('{}' , 0)".format(dog_name)
-    Context1({"dog_name": dog_name}).set_as_current_context()
+    test_utils.generate_and_set_context(value=dog_name)
 
     with pytest.raises(AikidoSQLInjection):
         conn.cursor().execute(sql)
@@ -93,7 +78,7 @@ def test_client_execute_with_progress_safe(client):
     reset_comms()
     dog_name = "Steve"
     sql = "INSERT INTO dogs (dog_name, isAdmin) VALUES ('{}' , 0)".format(dog_name)
-    Context1({"dog_name": dog_name}).set_as_current_context()
+    test_utils.generate_and_set_context(value=dog_name)
     client.execute_with_progress(sql)
 
 
@@ -101,7 +86,7 @@ def test_client_execute_with_progress_unsafe(client, monkeypatch):
     reset_comms()
     dog_name = "Malicious dog', 1); -- "
     sql = "INSERT INTO dogs (dog_name, isAdmin) VALUES ('{}' , 0)".format(dog_name)
-    Context1({"dog_name": dog_name}).set_as_current_context()
+    test_utils.generate_and_set_context(value=dog_name)
 
     with pytest.raises(AikidoSQLInjection):
         client.execute_with_progress(sql)
@@ -114,7 +99,7 @@ def test_client_execute_iter_safe(client):
     reset_comms()
     dog_name = "Steve"
     sql = "INSERT INTO dogs (dog_name, isAdmin) VALUES ('{}' , 0)".format(dog_name)
-    Context1({"dog_name": dog_name}).set_as_current_context()
+    test_utils.generate_and_set_context(value=dog_name)
     client.execute_iter(sql)
 
 
@@ -122,7 +107,7 @@ def test_client_execute_iter_unsafe(client, monkeypatch):
     reset_comms()
     dog_name = "Malicious dog', 1); -- "
     sql = "INSERT INTO dogs (dog_name, isAdmin) VALUES ('{}' , 0)".format(dog_name)
-    Context1({"dog_name": dog_name}).set_as_current_context()
+    test_utils.generate_and_set_context(value=dog_name)
 
     with pytest.raises(AikidoSQLInjection):
         client.execute_iter(sql)
