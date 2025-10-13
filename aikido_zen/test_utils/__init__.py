@@ -8,13 +8,15 @@ def generate_and_set_context(*args, **kwargs) -> Context:
     return context
 
 
-def generate_context(value=None, query_value=None) -> Context:
+def generate_context(value=None, query_value=None, user=None) -> Context:
     context = MockTestContext()
 
     if value is not None:
         context.body["key1"] = value
     if query_value is not None:
         context.query["key1"] = query_value
+    if user is not None:
+        context.user = user
 
     return context
 
