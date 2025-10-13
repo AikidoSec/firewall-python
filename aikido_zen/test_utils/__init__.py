@@ -31,3 +31,6 @@ class MockTestContext(Context):
         self.source = "flask"
         self.route = "/"
         self.parsed_userinput = {}
+        self.user = None
+        self.rate_limit_group = None
+        self.executed_middleware = False
