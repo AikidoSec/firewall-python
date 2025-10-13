@@ -8,7 +8,7 @@ def generate_and_set_context(*args, **kwargs) -> Context:
     return context
 
 
-def generate_context(value=None, query_value=None, user=None) -> Context:
+def generate_context(value=None, query_value=None, user=None, route=None) -> Context:
     context = MockTestContext()
 
     if value is not None:
@@ -17,6 +17,8 @@ def generate_context(value=None, query_value=None, user=None) -> Context:
         context.query["key1"] = query_value
     if user is not None:
         context.user = user
+    if route is not None:
+        context.route = route
 
     return context
 
@@ -27,7 +29,7 @@ class MockTestContext(Context):
         self.headers = Headers()
         self.remote_address = "1.1.1.1"
         self.method = "POST"
-        self.url = "url"
+        self.url = "http://localhost:8080/"
         self.body = {}
         self.query = {}
         self.source = "flask"
