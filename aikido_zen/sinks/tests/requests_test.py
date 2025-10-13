@@ -58,6 +58,14 @@ def set_context_and_lifecycle(url):
     context.set_as_current_context()
 
 
+def ssrf_check(monkeypatch, url):
+    reset_comms()
+    set_context_and_lifecycle(url)
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
+    with pytest.raises(AikidoSSRF):
+        requests.get(url)
+
+
 def test_srrf_test(monkeypatch):
     reset_comms()
     set_context_and_lifecycle(SSRF_TEST)
