@@ -6,7 +6,6 @@ import aikido_zen
 aikido_zen.protect()
 from aikido_zen.context import Context
 from aikido_zen.errors import AikidoPathTraversal
-from aikido_zen.sinks.tests.clickhouse_driver_test import set_blocking_to_true
 
 kind = "path_traversal"
 
