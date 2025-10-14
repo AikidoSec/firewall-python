@@ -2,7 +2,7 @@ import importlib
 import sys
 import types
 
-import aikido_zen
+import zipp
 class HashableNamespace(types.SimpleNamespace):
     def __hash__(self):
         return hash(tuple(vars(self)))
