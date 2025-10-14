@@ -1,8 +1,9 @@
 from unittest.mock import patch, MagicMock
 
 import pytest
-from aikido_zen.context import current_context, Context, get_current_context
-from aikido_zen.thread.thread_cache import ThreadCache, get_cache
+import aikido_zen.test_utils as test_utils
+from aikido_zen.context import current_context, get_current_context
+from aikido_zen.thread.thread_cache import get_cache
 from . import should_block_request
 from .. import set_rate_limit_group
 
@@ -22,35 +23,14 @@ def test_without_context():
     assert should_block_request() == {"block": False}
 
 
-def set_context(user=None, executed_middleware=False):
-    Context(
-        context_obj={
-            "remote_address": "::1",
-            "method": "POST",
-            "url": "http://localhost:4000",
-            "query": {
-                "abc": "def",
-            },
-            "headers": {},
-            "body": None,
-            "cookies": {},
-            "source": "flask",
-            "route": "/posts/:id",
-            "user": user,
-            "rate_limit_group": None,
-            "executed_middleware": executed_middleware,
-        }
-    ).set_as_current_context()
-
-
 def test_with_context_without_cache():
-    set_context()
+    test_utils.generate_and_set_context()
     get_cache().cache = None
     assert should_block_request() == {"block": False}
 
 
 def test_with_context_with_cache():
-    set_context(user={"id": "123"})
+    test_utils.generate_and_set_context(user={"id": "123"})
     thread_cache = get_cache()
 
     thread_cache.config.blocked_uids = ["123"]
@@ -76,7 +56,7 @@ def test_with_context_with_cache():
 
 
 def test_cache_comms_with_endpoints():
-    set_context(user={"id": "456"})
+    test_utils.generate_and_set_context(user={"id": "456"}, route="/posts/:id")
     set_rate_limit_group("my_group")
     thread_cache = get_cache()
     thread_cache.config.blocked_uids = ["123"]
@@ -145,11 +125,11 @@ def test_cache_comms_with_endpoints():
                 "route_metadata": {
                     "method": "POST",
                     "route": "/posts/:id",
-                    "url": "http://localhost:4000",
+                    "url": "http://localhost:8080/",
                 },
                 "user": {"id": "456"},
                 "group": "my_group",
-                "remote_address": "::1",
+                "remote_address": "1.1.1.1",
             },
             receive=True,
             timeout_in_sec=0.01,
@@ -168,7 +148,7 @@ def test_cache_comms_with_endpoints():
         assert thread_cache.stats.rate_limited_hits == 0
         assert should_block_request() == {
             "block": True,
-            "ip": "::1",
+            "ip": "1.1.1.1",
             "type": "ratelimited",
             "trigger": "my_trigger",
         }
