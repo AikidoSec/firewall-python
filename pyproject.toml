@@ -88,7 +88,7 @@ langchain-anthropic = { version = "^0.3.21", python = ">=3.9,<4.0" }
 langchain-openai = { version = "^0.3.34", python = ">=3.9,<4.0" }
 langchain-mistralai = { version = "^0.2.12", python = ">=3.9,<4.0" }
 zipp = { version = "^3.23.0", python = ">=3.9,<4.0" }
-importlib-metadata = { version = "^8.7.0", python = ">=3.9,<4.0" }
+importlib-metadata = { version = "8.6.1", python = ">=3.9,<4.0" }
 
 django = "4"
 requests = "^2.32.3"

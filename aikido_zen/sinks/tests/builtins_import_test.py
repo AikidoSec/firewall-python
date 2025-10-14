@@ -13,4 +13,7 @@ aikido_zen.protect()
 #    assert PackagesStore.get_package("flask")["version"] == "3.0.3"
 
 def test_recursion():
-    import aikido_zen.sinks.tests.test_recursion_module
+    import importlib
+    from importlib.metadata import version
+    version1 = version("aikido-zen")
+    version2 = version("zipp")
