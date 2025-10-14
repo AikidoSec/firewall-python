@@ -1,7 +1,7 @@
-import zipp
+import os
+env = os.getenv("TEST")
 import aikido_zen
 aikido_zen.protect()
-import aikido_zen.sinks.builtins_import
 #from aikido_zen.background_process.packages import PackagesStore
 
 
@@ -13,3 +13,4 @@ import aikido_zen.sinks.builtins_import
 def test_recursion(monkeypatch):
     monkeypatch.setenv("AIKIDO_DEBUG", "1")
     import zipp.compat.overlay
+    print(zipp.compat.overlay)
