@@ -1,5 +1,7 @@
 import os
-env = os.getenv("TEST")
+os.putenv("AIKIDO_DEBUG", "true")
+os.putenv("AIKIDO_TOKEN", "test")
+
 import aikido_zen
 aikido_zen.protect()
 #from aikido_zen.background_process.packages import PackagesStore
@@ -10,7 +12,6 @@ aikido_zen.protect()
 #    import flask
 #    assert PackagesStore.get_package("flask")["version"] == "3.0.3"
 
-def test_recursion(monkeypatch):
-    monkeypatch.setenv("AIKIDO_DEBUG", "1")
-    import zipp.compat.overlay
-    print(zipp.compat.overlay)
+def test_recursion():
+    import importlib
+    importlib.import_module('zipfile')
