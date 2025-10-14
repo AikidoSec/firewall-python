@@ -1,9 +1,9 @@
 import os
+import sys
+
 os.putenv("AIKIDO_DEBUG", "true")
 os.putenv("AIKIDO_TOKEN", "test")
 
-import aikido_zen
-aikido_zen.protect()
 #from aikido_zen.background_process.packages import PackagesStore
 
 
@@ -13,7 +13,6 @@ aikido_zen.protect()
 #    assert PackagesStore.get_package("flask")["version"] == "3.0.3"
 
 def test_recursion():
-    import importlib
-    from importlib.metadata import version
-    version1 = version("aikido-zen")
-    version2 = version("zipp")
+    import aikido_zen.sinks.builtins_import
+    __import__("aikido_zen.sinks.tests.builins_import_recursion_test")
+    module = sys.modules["aikido_zen.sinks.tests.builins_import_recursion_test"]
