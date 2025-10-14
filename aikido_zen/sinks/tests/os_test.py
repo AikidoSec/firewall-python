@@ -2,36 +2,13 @@ import pytest
 from pathlib import Path, PurePath
 from unittest.mock import patch
 import aikido_zen
+import aikido_zen.test_utils as test_utils
 
 aikido_zen.protect()
 from aikido_zen.context import Context
 from aikido_zen.errors import AikidoPathTraversal
 
 kind = "path_traversal"
-
-
-def set_context(param):
-    wsgi_request = {
-        "REQUEST_METHOD": "GET",
-        "HTTP_HEADER_1": "header 1 value",
-        "HTTP_HEADER_2": "Header 2 value",
-        "RANDOM_VALUE": "Random value",
-        "HTTP_COOKIE": "sessionId=abc123xyz456;",
-        "wsgi.url_scheme": "http",
-        "HTTP_HOST": "localhost:8080",
-        "PATH_INFO": "/hello",
-        "QUERY_STRING": "user=JohnDoe&age=30&age=35",
-        "CONTENT_TYPE": "application/json",
-        "REMOTE_ADDR": "198.51.100.23",
-    }
-    context = Context(
-        req=wsgi_request,
-        body={
-            "param": param,
-        },
-        source="flask",
-    )
-    context.set_as_current_context()
 
 
 @pytest.fixture(autouse=True)
@@ -76,7 +53,7 @@ def test_os_create_path_with_multiple_slashes():
     import os
 
     file_path = "////etc/passwd"
-    set_context(file_path)
+    test_utils.generate_and_set_context(file_path)
     with pytest.raises(AikidoPathTraversal):
         full_path = Path("flaskr/resources/blogs/") / file_path
         open(full_path, "r").close()
@@ -86,7 +63,7 @@ def test_os_create_path_with_multiple_double_slashes():
     import os
 
     file_path = "////etc//passwd"
-    set_context(file_path)
+    test_utils.generate_and_set_context(file_path)
     with pytest.raises(AikidoPathTraversal):
         full_path = Path("flaskr/resources/blogs/") / file_path
         open(full_path, "r").close()
@@ -96,7 +73,7 @@ def test_os_path_traversal_with_multiple_slashes():
     import os
 
     file_path = "home///..////..////my_secret.txt"
-    set_context(file_path)
+    test_utils.generate_and_set_context(file_path)
     with pytest.raises(AikidoPathTraversal):
         full_path = Path("flaskr/resources/blogs/") / file_path
         open(full_path, "r").close()
