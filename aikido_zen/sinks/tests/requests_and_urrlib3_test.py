@@ -96,7 +96,7 @@ def ssrf_check(monkeypatch, url):
         "http://[::ffff:127.0.0.1]:8081",
     ],
 )
-def test_srrf_1(monkeypatch, url):
+def test_ssrf_1(monkeypatch, url):
     ssrf_check(monkeypatch, url)
 
 
