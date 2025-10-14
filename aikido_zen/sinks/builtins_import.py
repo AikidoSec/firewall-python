@@ -1,12 +1,18 @@
+from aikido_zen.sinks import on_import, patch_function, after
+import contextvars
 import importlib.metadata
 from importlib.metadata import PackageNotFoundError
-
 from aikido_zen.background_process.packages import PackagesStore
-from aikido_zen.sinks import on_import, patch_function, after
+
+running_import_scan = contextvars.ContextVar("running_import_scan", default=False)
 
 
 @after
 def _import(func, instance, args, kwargs, return_value):
+    if running_import_scan.get():
+        return
+    running_import_scan.set(True)
+
     if not hasattr(return_value, "__file__"):
         return  # Would be built-in into the interpreter (system package)
 
@@ -18,9 +24,6 @@ def _import(func, instance, args, kwargs, return_value):
         # Make sure the name exists
         return
     name = name.split(".")[0]  # Remove submodules
-    if name == "importlib" or name == "importlib_metadata":
-        # Avoid circular dependencies
-        return
 
     if PackagesStore.get_package(name):
         return
@@ -32,6 +35,8 @@ def _import(func, instance, args, kwargs, return_value):
         pass
     if version:
         PackagesStore.add_package(name, version)
+
+    running_import_scan.set(False)
 
 
 @on_import("builtins")
