@@ -107,6 +107,7 @@ def test_initial_heartbeat():
         {
             "aborted": 0,
             "attacksDetected": {"blocked": 2, "total": 2},
+            "attackWaves": {"total": 0, "blocked": 0},
             "total": 3,
             'rateLimited': 0
         },

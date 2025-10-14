@@ -21,6 +21,7 @@ from aikido_zen.background_process.api.http_api_ratelimited import (
 )
 from aikido_zen.helpers.urls.get_api_url import get_api_url
 from .commands import process_incoming_command
+from .queue_helpers import ReportingQueueAttackWaveEvent
 
 EMPTY_QUEUE_INTERVAL = 5  # 5 seconds
 
@@ -102,12 +103,21 @@ class AikidoBackgroundProcess:
         )
         while not self.queue.empty():
             queue_attack_item = self.queue.get()
-            self.connection_manager.on_detected_attack(
-                attack=queue_attack_item[0],
-                context=queue_attack_item[1],
-                blocked=queue_attack_item[2],
-                stack=queue_attack_item[3],
-            )
+            # Queue can contain multiple types of events (attack, attack wave)
+            if isinstance(queue_attack_item, ReportingQueueAttackWaveEvent):
+                attack_wave_event: ReportingQueueAttackWaveEvent = queue_attack_item
+                self.connection_manager.on_detected_attack_wave(
+                    attack_wave_event.context, attack_wave_event.metadata
+                )
+            else:
+                # Since the queue item is not of type ReportingQueueAttackWaveEvent,
+                # we default to regular attack reporting.
+                self.connection_manager.on_detected_attack(
+                    attack=queue_attack_item[0],
+                    context=queue_attack_item[1],
+                    blocked=queue_attack_item[2],
+                    stack=queue_attack_item[3],
+                )
 
 
 def add_exit_handlers():
