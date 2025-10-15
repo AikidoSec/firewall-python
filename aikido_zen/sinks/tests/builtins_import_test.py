@@ -22,3 +22,33 @@ def test_django_import():
     import django
 
     assert PackagesStore.get_package("django")["version"] == "4.0"
+
+
+def recursive_get_package(name):
+    """Recursively add package and its dependencies to PackagesStore."""
+    import flask
+
+
+def test_recursive_package_store(monkeypatch):
+    PackagesStore.clear()
+    monkeypatch.setattr(PackagesStore, "get_package", recursive_get_package)
+
+    import flask
+
+    # Restore the original method after the test
+    monkeypatch.undo()
+
+
+def recursive_add_package(name, version):
+    """Recursively add package and its dependencies to PackagesStore."""
+    if name == "django":
+        import django
+
+
+def test_recursive_package_store_2(monkeypatch):
+    PackagesStore.clear()
+    monkeypatch.setattr(PackagesStore, "add_package", recursive_add_package)
+    import django
+
+    # Restore the original method after the test
+    monkeypatch.undo()
