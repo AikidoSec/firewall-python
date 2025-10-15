@@ -47,6 +47,7 @@ def recursive_add_package(name, version):
 
 
 def test_recursive_package_store_2(monkeypatch):
+      """Test that recursive imports during package scanning don't cause max recursion depth errors."""
     PackagesStore.clear()
     monkeypatch.setattr(PackagesStore, "add_package", recursive_add_package)
     import django
