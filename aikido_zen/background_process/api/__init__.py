@@ -2,14 +2,15 @@
 init.py file for api/ folder. Includes abstract class ReportingApi
 """
 
-import json
+from aikido_zen.background_process.requests.make_request import Response
 from aikido_zen.helpers.logging import logger
 
 
 class ReportingApi:
     """This is the super class for the reporting API's"""
 
-    def to_api_response(self, res):
+    @staticmethod
+    def to_api_response(res: Response):
         """Converts results into an Api response obj"""
         status = res.status_code
         if status == 429:
@@ -18,10 +19,11 @@ class ReportingApi:
             return {"success": False, "error": "invalid_token"}
         elif status == 200:
             try:
-                return json.loads(res.text)
+                return res.json()
             except Exception as e:
-                logger.debug(e)
-                logger.debug(res.text)
+                logger.debug(
+                    "Trying to load json, failed: %s (body=%s)", str(e), res.text
+                )
         return {"success": False, "error": "unknown_error"}
 
     def report(self, token, event, timeout_in_sec):

@@ -3,7 +3,7 @@ Code to poll for realtime changes
 """
 
 import os
-import requests
+import aikido_zen.background_process.requests as requests
 from aikido_zen.helpers.logging import logger
 from aikido_zen.helpers.urls.get_api_url import get_api_url
 

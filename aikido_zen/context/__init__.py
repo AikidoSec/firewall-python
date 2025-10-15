@@ -46,6 +46,7 @@ class Context:
         # Define emtpy variables/Properties :
         self.source = source
         self.user = None
+        self.rate_limit_group = None
         self.parsed_userinput = {}
         self.xml = {}
         self.outgoing_req_redirects = []
@@ -53,6 +54,7 @@ class Context:
         self.headers: Headers = Headers()
         self.cookies = dict()
         self.query = dict()
+        self.protection_forced_off = None
 
         # Parse WSGI/ASGI/... request :
         self.method = self.remote_address = self.url = None
@@ -84,6 +86,7 @@ class Context:
                     "route": self.route,
                     "subdomains": self.subdomains,
                     "user": self.user,
+                    "rate_limit_group": self.rate_limit_group,
                     "xml": self.xml,
                     "outgoing_req_redirects": self.outgoing_req_redirects,
                     "executed_middleware": self.executed_middleware,
@@ -135,3 +138,6 @@ class Context:
 
     def get_user_agent(self):
         return self.headers.get_header("USER_AGENT")
+
+    def set_force_protection_off(self, value: bool):
+        self.protection_forced_off = value

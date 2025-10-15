@@ -48,5 +48,14 @@ def benchmark():
     return "OK"
 
 
+@app.route("/benchmark_io", methods=['GET'])
+def benchmark_io():
+    for i in range(50):
+        with open("benchmark_temp.txt", "w") as f:
+            f.write("This is a benchmark file.")
+        with open("benchmark_temp.txt", "r") as f:
+            content = f.read()
+    return "OK"
+
 if __name__ == '__main__':
     app.run()

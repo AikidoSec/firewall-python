@@ -1,44 +1,10 @@
 import pytest
 from .check_context_for_shell_injection import check_context_for_shell_injection
-from aikido_zen.context import Context
+import aikido_zen.test_utils as test_utils
 
 
-class Context1(Context):
-    def __init__(self):
-        self.cookies = {}
-        self.headers = {}
-        self.remote_address = "1.1.1.1"
-        self.method = "POST"
-        self.url = "url"
-        self.query = {}
-        self.body = {
-            "domain": "www.example`whoami`.com",
-        }
-        self.source = "express"
-        self.route = "/"
-        self.parsed_userinput = {}
-
-
-class Context2(Context):
-    def __init__(self):
-        self.cookies = {}
-        self.headers = {}
-        self.remote_address = "ip"
-        self.method = "POST"
-        self.url = "url"
-        self.body = {}
-        self.query = {
-            "domain": "www.example`whoami`.com",
-        }
-        self.source = "express"
-        self.route = "/"
-        self.parsed_userinput = {}
-
-
-def test_detect_shell_injection(monkeypatch):
-    monkeypatch.setattr("aikido_zen.context.get_current_context", lambda: None)
-
-    context = Context1()
+def test_detect_shell_injection():
+    context = test_utils.generate_context(value="www.example`whoami`.com")
     result = check_context_for_shell_injection(
         command="binary --domain www.example`whoami`.com",
         operation="child_process.exec",
@@ -49,7 +15,7 @@ def test_detect_shell_injection(monkeypatch):
         "operation": "child_process.exec",
         "kind": "shell_injection",
         "source": "body",
-        "pathToPayload": ".domain",
+        "pathToPayload": ".key1",
         "metadata": {
             "command": "binary --domain www.example`whoami`.com",
         },
@@ -59,10 +25,8 @@ def test_detect_shell_injection(monkeypatch):
     assert result == expected
 
 
-def test_detect_shell_injection_from_route_params(monkeypatch):
-    monkeypatch.setattr("aikido_zen.context.get_current_context", lambda: None)
-
-    context = Context2()
+def test_detect_shell_injection_from_route_params():
+    context = test_utils.generate_context(query_value="www.example`whoami`.com")
     result = check_context_for_shell_injection(
         command="binary --domain www.example`whoami`.com",
         operation="child_process.exec",
@@ -73,7 +37,7 @@ def test_detect_shell_injection_from_route_params(monkeypatch):
         "operation": "child_process.exec",
         "kind": "shell_injection",
         "source": "query",
-        "pathToPayload": ".domain",
+        "pathToPayload": ".key1",
         "metadata": {
             "command": "binary --domain www.example`whoami`.com",
         },
@@ -102,7 +66,7 @@ def test_detect_shell_injection_from_route_params(monkeypatch):
     ],
 )
 def test_doesnt_crash_with_invalid_command(invalid_input):
-    context = Context2()
+    context = test_utils.generate_context(value=invalid_input)
     result = check_context_for_shell_injection(
         command=invalid_input,
         operation="child_process.exec",

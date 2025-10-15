@@ -3,6 +3,7 @@ Simply exports the aikido background process
 """
 
 import multiprocessing.connection as con
+import signal
 import time
 import sched
 import traceback
@@ -40,11 +41,13 @@ class AikidoBackgroundProcess:
         self.queue = Queue()
         self.connection_manager = None
         # Start reporting thread :
-        Thread(target=self.reporting_thread).start()
+        Thread(target=self.reporting_thread, daemon=True).start()
 
         logger.debug(
             "Background process started successfully, with UDS File : %s", address
         )
+
+        add_exit_handlers()
 
         while True:
             conn = listener.accept()
@@ -106,3 +109,17 @@ class AikidoBackgroundProcess:
                 blocked=queue_attack_item[2],
                 stack=queue_attack_item[3],
             )
+
+
+def add_exit_handlers():
+    """
+    We add graceful exit handlers here since the process keeps hanging otherwise.
+    """
+
+    def exit_gracefully(sig, frame):
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, exit_gracefully)
+    signal.signal(signal.SIGTERM, exit_gracefully)
+    signal.signal(signal.SIGQUIT, exit_gracefully)
+    signal.signal(signal.SIGHUP, exit_gracefully)
