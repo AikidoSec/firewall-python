@@ -24,13 +24,13 @@ def test_django_import():
     assert PackagesStore.get_package("django")["version"] == "4.0"
 
 
-def recursive_get_package(name):
-    """Recursively add package and its dependencies to PackagesStore."""
-    import flask
-
-
 def test_recursive_package_store(monkeypatch):
     """Test that recursive imports during package scanning don't cause max recursion depth errors."""
+
+    def recursive_get_package(name):
+        """Recursively add package and its dependencies to PackagesStore."""
+        import flask
+
     PackagesStore.clear()
     monkeypatch.setattr(PackagesStore, "get_package", recursive_get_package)
 
@@ -40,14 +40,14 @@ def test_recursive_package_store(monkeypatch):
     monkeypatch.undo()
 
 
-def recursive_add_package(name, version):
-    """Recursively add package and its dependencies to PackagesStore."""
-    if name == "django":
-        import django
-
-
 def test_recursive_package_store_2(monkeypatch):
     """Test that recursive imports during package scanning don't cause max recursion depth errors."""
+
+    def recursive_add_package(name, version):
+        """Recursively add package and its dependencies to PackagesStore."""
+        if name == "django":
+            import django
+
     PackagesStore.clear()
     monkeypatch.setattr(PackagesStore, "add_package", recursive_add_package)
     import django
