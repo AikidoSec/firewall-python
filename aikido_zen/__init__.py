@@ -10,6 +10,7 @@ from aikido_zen.background_process.test_uds_file_access import test_uds_file_acc
 from aikido_zen.lambda_helper import protect_lambda
 from aikido_zen.context.users import set_user
 from aikido_zen.helpers.check_gevent import check_gevent
+from aikido_zen.helpers.python_version_not_supported import python_version_not_supported
 from aikido_zen.middleware import should_block_request
 from aikido_zen.middleware.set_rate_limit_group import set_rate_limit_group
 
@@ -34,6 +35,8 @@ def protect(mode="daemon", token=""):
     """
     if aikido_disabled_flag_active():
         # Do not run any aikido code when the disabled flag is on
+        return
+    if python_version_not_supported():
         return
     if not test_uds_file_access():
         return  # Unable to start background process
@@ -72,6 +75,7 @@ def protect(mode="daemon", token=""):
 
     import aikido_zen.sinks.builtins
     import aikido_zen.sinks.os
+    import aikido_zen.sinks.pathlib
     import aikido_zen.sinks.shutil
     import aikido_zen.sinks.io
     import aikido_zen.sinks.http_client

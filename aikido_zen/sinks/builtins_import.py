@@ -14,11 +14,14 @@ def _import(func, instance, args, kwargs, return_value):
             return
         running_import_scan.set(True)
 
-        if not hasattr(return_value, "__file__"):
-            return  # Would be built-in into the interpreter (system package)
+    if not hasattr(return_value, "__package__"):
+        return
 
-        if not hasattr(return_value, "__package__"):
+    try:
+        if running_import_scan.get():
             return
+        running_import_scan.set(True)
+
         name = getattr(return_value, "__package__")
 
         if not name:
