@@ -3,6 +3,8 @@ Only exports find_hostname_in_userinput function
 """
 
 from typing import List
+from urllib.parse import unquote_plus, unquote
+
 from aikido_zen.helpers.get_port_from_url import get_port_from_url
 from aikido_zen.helpers.try_parse_url import try_parse_url
 
@@ -16,7 +18,20 @@ def find_hostname_in_userinput(user_input, hostname_options: List[str], port=Non
     if len(hostname_options) == 0:
         return False
 
-    variants = [user_input, f"http://{user_input}", f"https://{user_input}"]
+    variants = [
+        user_input,
+        f"http://{user_input}",
+        f"https://{user_input}"
+    ]
+    unquoted_user_input = unquote(user_input)
+    if unquoted_user_input != user_input:
+        variants += [
+            unquoted_user_input,
+            f"http://{unquoted_user_input}",
+            f"https://{unquoted_user_input}"
+        ]
+
+
     for variant in variants:
         user_input_url = try_parse_url(variant)
         if user_input_url and user_input_url.hostname in hostname_options:
