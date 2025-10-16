@@ -82,7 +82,7 @@ def test_initial_heartbeat():
     assert len(heartbeat_events) == 1
     validate_heartbeat(
         heartbeat_events[0],
-        [{
+        routes=[{
             "apispec": {
                 'body': {
                     'type': 'form-urlencoded',
@@ -104,7 +104,7 @@ def test_initial_heartbeat():
             "method": "POST",
             "path": "/app/create"
         }],
-        {'wrapt', 'asgiref', 'aikido_zen', 'django', 'sqlparse', 'mysqlclient'}
+        packages={'wrapt', 'asgiref', 'aikido_zen', 'django', 'sqlparse', 'mysqlclient'}
     )
     req_stats = heartbeat_events[0]["stats"]["requests"]
     assert req_stats["aborted"] == 0
