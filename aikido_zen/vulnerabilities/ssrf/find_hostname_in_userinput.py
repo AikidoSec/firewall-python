@@ -18,19 +18,14 @@ def find_hostname_in_userinput(user_input, hostname_options: List[str], port=Non
     if len(hostname_options) == 0:
         return False
 
-    variants = [
-        user_input,
-        f"http://{user_input}",
-        f"https://{user_input}"
-    ]
+    variants = [user_input, f"http://{user_input}", f"https://{user_input}"]
     unquoted_user_input = unquote(user_input)
     if unquoted_user_input != user_input:
         variants += [
             unquoted_user_input,
             f"http://{unquoted_user_input}",
-            f"https://{unquoted_user_input}"
+            f"https://{unquoted_user_input}",
         ]
-
 
     for variant in variants:
         user_input_url = try_parse_url(variant)
