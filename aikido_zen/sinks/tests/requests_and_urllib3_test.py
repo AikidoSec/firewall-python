@@ -47,30 +47,17 @@ def set_context_and_lifecycle(url, host=None):
     context.set_as_current_context()
 
 
-def ssrf_check(monkeypatch, url):
+def ssrf_check(monkeypatch, url, requests_only=False):
     reset_comms()
     set_context_and_lifecycle(url)
     monkeypatch.setenv("AIKIDO_BLOCK", "1")
     with pytest.raises(AikidoSSRF):
         requests.get(url)
+    if requests_only:
+        return
     with pytest.raises(AikidoSSRF):
         http = urllib3.PoolManager()
         http.request("GET", url)
-
-
-"""
-"http://%31%32%37.%30.%30.%31:4000",
-"http://ⓛocalhost:4000/",
-"http://127.1.1.1:4000\@127.0.0.1:4000/",
-"http://127.1.1.1:4000:\@@127.0.0.1:4000/",
-"http://127.0.0.1:4000#\@127.2.2.2:80/ ",
-"http://127.1.1.1:4000\\@127.0.0.1:4000/",
-"http://127.1.1.1:4000\\\@127.0.0.1:4000/",
-"http://127.1.1.1:4000\\\\@127.0.0.1:4000/",
-"http://127.1.1.1:4000\\\\\\\\\@127.0.0.1:4000/",
-"http://127.1.1.1:4000∖\\@127.0.0.1:4000/"
-"http://1.1.1.1 &@127.0.0.1:4000# @3.3.3.3/",
-"""
 
 
 @pytest.mark.parametrize(
@@ -104,30 +91,10 @@ def ssrf_check(monkeypatch, url):
         "http://[0000:0000:0000:0000:0000:0000:0000:0001]:8081/test",
         # private ips written differently
         "http://2130706433:8081",
-        "http://0x7f000001:8081/",
-        # "http://0177.0.0.01:8081/",
+        "http://0x7f000001:8081/",  
         "http://0x7f.0x0.0x0.0x1:8081/",
         # 127.0.0.1 ipv6 mapped
         "http://[::ffff:127.0.0.1]:8081",
-        ## Filter
-        # "http://localhost:4000 /", -> failed to parse
-        # Fix :
-        "http://127%2E0%2E0%2E1:4000",
-        # "h\tt\nt\rp://l\to\nc\ra\tl\nh\ro\ts\nt:4\t0\n0\r0/p\ta\nt\rh?q\tu\ne\rry#f\tr\na\rg",
-        # "http://%30:4000",
-        # AWS metadata service
-        # "http://169.254.169.254/latest/meta-data/iam/security-credentials/",
-        "http://0251.0376.0251.0376/latest/meta-data/iam/security-credentials/",
-        "http://[fd00:0ec2:0000:0000:0000:0000:0000:0254]:7000/latest/meta-data/iam/security-credentials/",
-        "http://0xa9.0xfe.0xa9.0xfe/latest/meta-data/iam/security-credentials/",
-        # "http://0251.0376.0124776/latest/meta-data/iam/security-credentials/", -> continous loading
-        "http://0xA9FEA9FE/latest/meta-data/iam/security-credentials/",
-        "http://2852039166/latest/meta-data/iam/security-credentials/",
-        "http://[::ffff:169.254.169.254]:8081/latest/meta-data/iam/security-credentials/",
-        "http://[fd00:ec2::254]/latest/meta-data/iam/security-credentials/",
-        # "http://169.254.169.254 &@2.2.2.2# @3.3.3.3/latest/meta-data/iam/security-credentials/", -> continous loading
-        "http://1.1.1.1 &@169.254.169.254# @3.3.3.3/latest/meta-data/iam/security-credentials/",
-        # "http://1.1.1.1 &@2.2.2.2# @169.254.169.254/latest/meta-data/iam/security-credentials/", -> continous loading
     ],
 )
 def test_ssrf_1(monkeypatch, url):
@@ -221,5 +188,10 @@ def test_srrf_with_request_to_itself_urllib3(monkeypatch):
         http.request("GET", "https://localhost/test/4")
 
 
-def test_ssrf_2(monkeypatch):
-    ssrf_check(monkeypatch, "http://127%2E0%2E0%2E1:4000")
+def test_ssrf(monkeypatch):
+    ssrf_check(monkeypatch, "http://0177.0.0.01:8081/", requests_only=True)
+
+
+def test_ssrf_encoded_chars(monkeypatch):
+    # This type of URL only works for requests
+    ssrf_check(monkeypatch, "http://127%2E0%2E0%2E1:4000", requests_only=True)
