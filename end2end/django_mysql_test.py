@@ -82,7 +82,7 @@ def test_initial_heartbeat():
     assert len(heartbeat_events) == 1
     validate_heartbeat(
         heartbeat_events[0],
-        [{
+        routes=[{
             "apispec": {
                 'body': {
                     'type': 'form-urlencoded',
@@ -103,12 +103,16 @@ def test_initial_heartbeat():
             "hits_delta_since_sync": 0,
             "method": "POST",
             "path": "/app/create"
-        }], 
-        {
-            "aborted": 0,
-            "attacksDetected": {"blocked": 2, "total": 2},
-            "total": 3,
-            'rateLimited': 0
-        },
-        {'wrapt', 'asgiref', 'aikido_zen', 'django', 'sqlparse', 'mysqlclient'}
+        }],
+        packages={'wrapt', 'asgiref', 'aikido_zen', 'django', 'sqlparse', 'mysqlclient'}
     )
+    req_stats = heartbeat_events[0]["stats"]["requests"]
+    assert req_stats["aborted"] == 0
+    assert req_stats["rateLimited"] == 0
+    assert req_stats["attacksDetected"] == {"blocked": 2, "total": 2}
+    # There are 3-4 requests :
+    # 1. is website live request, first request not always counted
+    # 2. /app/create safe
+    # 3. /app/create sql inj
+    # 4. /app/shell/ls -la shell inj
+    assert 3 <= req_stats["total"] <= 4, f"Unexpected amount of total requests {req_stats['total']}"

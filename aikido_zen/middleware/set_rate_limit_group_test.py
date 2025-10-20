@@ -1,6 +1,6 @@
 import pytest
-from aikido_zen.context import get_current_context, Context
 from aikido_zen.thread.thread_cache import get_cache
+import aikido_zen.test_utils as test_utils
 from .set_rate_limit_group import set_rate_limit_group
 
 
@@ -15,31 +15,8 @@ def run_around_tests():
     get_cache().reset()
 
 
-def set_context_and_lifecycle():
-    wsgi_request = {
-        "REQUEST_METHOD": "GET",
-        "HTTP_HEADER_1": "header 1 value",
-        "HTTP_HEADER_2": "Header 2 value",
-        "RANDOM_VALUE": "Random value",
-        "HTTP_COOKIE": "sessionId=abc123xyz456;",
-        "wsgi.url_scheme": "http",
-        "HTTP_HOST": "localhost:8080",
-        "PATH_INFO": "/hello",
-        "QUERY_STRING": "user=JohnDoe&age=30&age=35",
-        "CONTENT_TYPE": "application/json",
-        "REMOTE_ADDR": "198.51.100.23",
-    }
-    context = Context(
-        req=wsgi_request,
-        body=None,
-        source="flask",
-    )
-    context.set_as_current_context()
-    return context
-
-
 def test_set_rate_limit_group_valid_group_id(caplog):
-    context1 = set_context_and_lifecycle()
+    context1 = test_utils.generate_and_set_context()
     assert context1.rate_limit_group is None
     set_rate_limit_group("group1")
     assert context1.rate_limit_group == "group1"
@@ -49,7 +26,7 @@ def test_set_rate_limit_group_valid_group_id(caplog):
 
 
 def test_set_rate_limit_group_empty_group_id(caplog):
-    context1 = set_context_and_lifecycle()
+    context1 = test_utils.generate_and_set_context()
     assert context1.rate_limit_group is None
     set_rate_limit_group("")
     assert context1.rate_limit_group is None
@@ -57,7 +34,7 @@ def test_set_rate_limit_group_empty_group_id(caplog):
 
 
 def test_set_rate_limit_group_none_group_id(caplog):
-    context1 = set_context_and_lifecycle()
+    context1 = test_utils.generate_and_set_context()
     assert context1.rate_limit_group is None
     set_rate_limit_group(None)
     assert context1.rate_limit_group is None
@@ -73,7 +50,7 @@ def test_set_rate_limit_group_no_context(caplog):
 
 
 def test_set_rate_limit_group_middleware_already_executed(caplog):
-    context1 = set_context_and_lifecycle()
+    context1 = test_utils.generate_and_set_context()
     context1.executed_middleware = True
     set_rate_limit_group("group1")
     assert "must be called before the Zen middleware is executed" in caplog.text
@@ -81,14 +58,14 @@ def test_set_rate_limit_group_middleware_already_executed(caplog):
 
 
 def test_set_rate_limit_group_non_string_group_id(caplog):
-    context1 = set_context_and_lifecycle()
+    context1 = test_utils.generate_and_set_context()
     assert context1.rate_limit_group is None
     set_rate_limit_group(123)
     assert context1.rate_limit_group == "123"
 
 
 def test_set_rate_limit_group_non_string_group_id_non_number(caplog):
-    context1 = set_context_and_lifecycle()
+    context1 = test_utils.generate_and_set_context()
     assert context1.rate_limit_group is None
     set_rate_limit_group({"a": "b"})
     assert context1.rate_limit_group is None
@@ -96,7 +73,7 @@ def test_set_rate_limit_group_non_string_group_id_non_number(caplog):
 
 
 def test_set_rate_limit_group_overwrite_existing_group():
-    context1 = set_context_and_lifecycle()
+    context1 = test_utils.generate_and_set_context()
     assert context1.rate_limit_group is None
     set_rate_limit_group("group1")
     assert context1.rate_limit_group == "group1"
