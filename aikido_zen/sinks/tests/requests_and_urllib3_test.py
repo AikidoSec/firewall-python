@@ -91,10 +91,12 @@ def ssrf_check(monkeypatch, url, requests_only=False):
         "http://[0000:0000:0000:0000:0000:0000:0000:0001]:8081/test",
         # private ips written differently
         "http://2130706433:8081",
-        "http://0x7f000001:8081/",  
+        "http://0x7f000001:8081/",
         "http://0x7f.0x0.0x0.0x1:8081/",
         # 127.0.0.1 ipv6 mapped
         "http://[::ffff:127.0.0.1]:8081",
+        # 127.0.0.1 with 0 padding
+        "http://0127.0.0.01:8081",
     ],
 )
 def test_ssrf_1(monkeypatch, url):
@@ -186,10 +188,6 @@ def test_srrf_with_request_to_itself_urllib3(monkeypatch):
     monkeypatch.setenv("AIKIDO_BLOCK", "1")
     with pytest.raises(urllib3.exceptions.MaxRetryError):
         http.request("GET", "https://localhost/test/4")
-
-
-def test_ssrf(monkeypatch):
-    ssrf_check(monkeypatch, "http://0177.0.0.01:8081/", requests_only=True)
 
 
 def test_ssrf_encoded_chars(monkeypatch):
