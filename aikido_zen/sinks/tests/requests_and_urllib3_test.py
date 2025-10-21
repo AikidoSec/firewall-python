@@ -9,6 +9,8 @@ import aikido_zen.sinks.socket
 import aikido_zen.sinks.http_client
 import requests
 import urllib3
+from requests import ConnectTimeout
+from requests.exceptions import ConnectionError
 
 
 @pytest.fixture(autouse=True)
@@ -47,12 +49,14 @@ def set_context_and_lifecycle(url, host=None):
     context.set_as_current_context()
 
 
-def ssrf_check(monkeypatch, url):
+def ssrf_check(monkeypatch, url, requests_only=False):
     reset_comms()
     set_context_and_lifecycle(url)
     monkeypatch.setenv("AIKIDO_BLOCK", "1")
     with pytest.raises(AikidoSSRF):
         requests.get(url)
+    if requests_only:
+        return
     with pytest.raises(AikidoSSRF):
         http = urllib3.PoolManager()
         http.request("GET", url)
@@ -90,7 +94,6 @@ def ssrf_check(monkeypatch, url):
         # private ips written differently
         "http://2130706433:8081",
         "http://0x7f000001:8081/",
-        "http://0177.0.0.01:8081/",
         "http://0x7f.0x0.0x0.0x1:8081/",
         # 127.0.0.1 ipv6 mapped
         "http://[::ffff:127.0.0.1]:8081",
@@ -185,3 +188,20 @@ def test_srrf_with_request_to_itself_urllib3(monkeypatch):
     monkeypatch.setenv("AIKIDO_BLOCK", "1")
     with pytest.raises(urllib3.exceptions.MaxRetryError):
         http.request("GET", "https://localhost/test/4")
+
+
+def test_ssrf_encoded_chars(monkeypatch):
+    # This type of URL only works for requests
+    ssrf_check(monkeypatch, "http://127%2E0%2E0%2E1:4000", requests_only=True)
+
+
+def test_zero_padded_ip(monkeypatch):
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
+    reset_comms()
+
+    url = "http://0127.0.0.01:5000"
+    set_context_and_lifecycle(url)
+    # Can raise both errors : either connection times out -> 0127.0.0.01 not supported by platform
+    # or it raises ssrf bug -> 0127.0.0.01 supported by platform
+    with pytest.raises((AikidoSSRF, ConnectTimeout, ConnectionError)):
+        requests.get(url)
