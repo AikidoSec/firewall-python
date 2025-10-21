@@ -9,6 +9,7 @@ import aikido_zen.sinks.socket
 import aikido_zen.sinks.http_client
 import requests
 import urllib3
+from requests import ConnectTimeout
 
 
 @pytest.fixture(autouse=True)
@@ -95,8 +96,6 @@ def ssrf_check(monkeypatch, url, requests_only=False):
         "http://0x7f.0x0.0x0.0x1:8081/",
         # 127.0.0.1 ipv6 mapped
         "http://[::ffff:127.0.0.1]:8081",
-        # 127.0.0.1 with 0 padding
-        "http://0127.0.0.01:5000",
     ],
 )
 def test_ssrf_1(monkeypatch, url):
@@ -193,3 +192,15 @@ def test_srrf_with_request_to_itself_urllib3(monkeypatch):
 def test_ssrf_encoded_chars(monkeypatch):
     # This type of URL only works for requests
     ssrf_check(monkeypatch, "http://127%2E0%2E0%2E1:4000", requests_only=True)
+
+
+def test_zero_padded_ip(monkeypatch):
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
+    reset_comms()
+
+    url = "http://0127.0.0.01:5000"
+    set_context_and_lifecycle(url)
+    # Can raise both errors : either connection times out -> 0127.0.0.01 not supported by platform
+    # or it raises ssrf bug -> 0127.0.0.01 supported by platform
+    with pytest.raises((AikidoSSRF, ConnectTimeout)):
+        requests.get(url)
