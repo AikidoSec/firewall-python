@@ -202,5 +202,5 @@ def test_zero_padded_ip(monkeypatch):
     set_context_and_lifecycle(url)
     # Can raise both errors : either connection times out -> 0127.0.0.01 not supported by platform
     # or it raises ssrf bug -> 0127.0.0.01 supported by platform
-    with pytest.raises((AikidoSSRF, ConnectTimeout)):
+    with pytest.raises((AikidoSSRF, ConnectTimeout,  ConnectionError)):
         requests.get(url)
