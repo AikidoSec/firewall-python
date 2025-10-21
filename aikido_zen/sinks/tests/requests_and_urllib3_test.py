@@ -96,7 +96,7 @@ def ssrf_check(monkeypatch, url, requests_only=False):
         # 127.0.0.1 ipv6 mapped
         "http://[::ffff:127.0.0.1]:8081",
         # 127.0.0.1 with 0 padding
-        "http://0127.0.0.01:8081",
+        "http://0127.0.0.01:5000",
     ],
 )
 def test_ssrf_1(monkeypatch, url):
