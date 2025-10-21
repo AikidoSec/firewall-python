@@ -10,6 +10,7 @@ import aikido_zen.sinks.http_client
 import requests
 import urllib3
 from requests import ConnectTimeout
+from requests.exceptions import ConnectionError
 
 
 @pytest.fixture(autouse=True)
@@ -202,5 +203,5 @@ def test_zero_padded_ip(monkeypatch):
     set_context_and_lifecycle(url)
     # Can raise both errors : either connection times out -> 0127.0.0.01 not supported by platform
     # or it raises ssrf bug -> 0127.0.0.01 supported by platform
-    with pytest.raises((AikidoSSRF, ConnectTimeout,  ConnectionError)):
+    with pytest.raises((AikidoSSRF, ConnectTimeout, ConnectionError)):
         requests.get(url)
