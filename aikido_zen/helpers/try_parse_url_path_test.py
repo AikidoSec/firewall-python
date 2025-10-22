@@ -22,6 +22,13 @@ def test_try_parse_url_path_for_absolute_url():
     assert try_parse_url_path("http://localhost/posts/3") == "/posts/3"
 
 
+def test_try_parse_url_path_for_absolute_url_with_multiple_slashes():
+    assert try_parse_url_path("http://localhost/posts//////3////") == "/posts/3/"
+    assert try_parse_url_path("http://localhost/posts//3//") == "/posts/3/"
+    assert try_parse_url_path("http://localhost////") == "/"
+    assert try_parse_url_path("http://localhost//") == "/"
+
+
 def test_try_parse_url_path_for_absolute_url_with_query():
     assert try_parse_url_path("http://localhost/posts/3?abc=def") == "/posts/3"
 

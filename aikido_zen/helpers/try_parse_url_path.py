@@ -5,6 +5,7 @@ Includes try_parse_url_path
 """
 
 from urllib.parse import urlparse
+import regex as re
 
 
 def try_parse_url(url):
@@ -26,4 +27,9 @@ def try_parse_url_path(url):
         return None
     if parsed.path == "":
         return "/"
-    return parsed.path
+
+    # Multiple slashes are ignored in python, so we want to also remove them here
+    # This allows the route building & endpoint matching to work properly.
+    normalized_path = re.sub(r"/+", "/", parsed.path)
+
+    return normalized_path
