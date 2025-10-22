@@ -55,8 +55,8 @@ def resolves_to_imds_ip(resolved_ip_addresses, hostname):
     otherwise returns an empty string.
     """
     if is_trusted_hostname(hostname):
-        return
+        return False
     for ip in resolved_ip_addresses:
         if is_imds_ip_address(ip):
             return ip
-    return
+    return False
