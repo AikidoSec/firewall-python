@@ -24,12 +24,16 @@ def inspect_getaddrinfo_result(dns_results, hostname, port):
         return
 
     ip_addresses = extract_ip_array_from_results(dns_results)
-    stored_ssrf_findings = resolves_to_imds_ip(ip_addresses, hostname)
-    if stored_ssrf_findings:
+    imds_ip = resolves_to_imds_ip(ip_addresses, hostname)
+    if imds_ip:
         return {
             "module": "socket",
             "operation": "socket.getaddrinfo",
-            "kind": "ssrf",
+            "kind": "stored_ssrf",
+            "source": "",
+            "path": "",
+            "metadata": {"hostname": hostname, "privateIP": imds_ip},
+            "payload": hostname,
         }
 
     if not ip_addresses_contain_private_ip(ip_addresses):
