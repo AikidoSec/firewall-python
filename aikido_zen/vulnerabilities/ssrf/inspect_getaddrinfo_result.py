@@ -23,7 +23,16 @@ def inspect_getaddrinfo_result(dns_results, hostname, port):
         logger.debug("Hostname %s is actually an IP address, ignoring", hostname)
         return
 
-    if not inspect_dns_results(dns_results, hostname):
+    ip_addresses = extract_ip_array_from_results(dns_results)
+    stored_ssrf_findings = resolves_to_imds_ip(ip_addresses, hostname)
+    if stored_ssrf_findings:
+        return {
+            "module": "socket",
+            "operation": "socket.getaddrinfo",
+            "kind": "ssrf",
+        }
+
+    if not ip_addresses_contain_private_ip(ip_addresses):
         return
 
     context = get_current_context()
@@ -60,18 +69,6 @@ def get_metadata_for_ssrf_attack(hostname, port):
     return {"hostname": hostname}
 
 
-def inspect_dns_results(dns_results, hostname):
-    """
-    Blocks stored SSRF attack that target IMDS IP addresses and returns True
-    if a private_ip is present.
-    This function gets called by inspect_getaddrinfo_result after parsing the hostname.
-    """
-    ip_addresses = extract_ip_array_from_results(dns_results)
-    if resolves_to_imds_ip(ip_addresses, hostname):
-        #  An attacker could have stored a hostname in a database that points to an IMDS IP address
-        #  We don't check if the user input contains the hostname because there's no context
-        if is_blocking_enabled():
-            raise AikidoSSRF()
-
-    private_ip = next((ip for ip in ip_addresses if is_private_ip(ip)), None)
-    return private_ip
+def ip_addresses_contain_private_ip(ip_addresses) -> bool:
+    has_private_ip = next((ip for ip in ip_addresses if is_private_ip(ip)), None)
+    return has_private_ip
