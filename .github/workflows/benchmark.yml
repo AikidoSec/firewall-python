@@ -2,6 +2,8 @@ name: 📊 Benchmarks
 on:
   push: {}
   workflow_call: {}
+permissions:
+  contents: read
 
 jobs:
   benchmark_sql_algorithm:

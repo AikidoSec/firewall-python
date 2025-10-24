@@ -1,6 +1,7 @@
 name: End-to-End tests
-
 on: [pull_request]
+permissions:
+  contents: read
 
 jobs:
   build:

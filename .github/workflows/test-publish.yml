@@ -1,9 +1,11 @@
 name: Publish Python 🐍 distribution 📦 to TestPyPI
-
 on:
   push:
     tags:
       - 'dev-v*'
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   tests:
