@@ -1,4 +1,4 @@
-name: Linting
+name: 🧹 Linting check
 on: [pull_request]
 permissions:
   contents: read
