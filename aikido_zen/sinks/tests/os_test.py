@@ -1,9 +1,19 @@
 import pytest
 from pathlib import Path, PurePath
 from unittest.mock import patch
-import aikido_zen.sinks.os
+import aikido_zen
+import aikido_zen.test_utils as test_utils
+
+aikido_zen.protect()
+from aikido_zen.context import Context
+from aikido_zen.errors import AikidoPathTraversal
 
 kind = "path_traversal"
+
+
+@pytest.fixture(autouse=True)
+def set_blocking_to_true(monkeypatch):
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
 
 
 def test_ospath_commands():
@@ -37,6 +47,36 @@ def test_ospath_commands():
         args = (path1,)
         # Need to use assert_any_call, since python 3.12 it uses os.path.join
         mock_run_vulnerability_scan.assert_any_call(kind=kind, op=op, args=args)
+
+
+def test_os_create_path_with_multiple_slashes():
+    import os
+
+    file_path = "////etc/passwd"
+    test_utils.generate_and_set_context(file_path)
+    with pytest.raises(AikidoPathTraversal):
+        full_path = Path("flaskr/resources/blogs/") / file_path
+        open(full_path, "r").close()
+
+
+def test_os_create_path_with_multiple_double_slashes():
+    import os
+
+    file_path = "////etc//passwd"
+    test_utils.generate_and_set_context(file_path)
+    with pytest.raises(AikidoPathTraversal):
+        full_path = Path("flaskr/resources/blogs/") / file_path
+        open(full_path, "r").close()
+
+
+def test_os_path_traversal_with_multiple_slashes():
+    import os
+
+    file_path = "home///..////..////my_secret.txt"
+    test_utils.generate_and_set_context(file_path)
+    with pytest.raises(AikidoPathTraversal):
+        full_path = Path("flaskr/resources/blogs/") / file_path
+        open(full_path, "r").close()
 
 
 def test_ospath_command_absolute_path():
