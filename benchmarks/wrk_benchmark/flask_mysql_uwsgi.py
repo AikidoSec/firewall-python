@@ -14,5 +14,5 @@ run_benchmark(
     "http://localhost:8088/benchmark_io",
     "http://localhost:8089/benchmark_io",
     "a route that makes multiple I/O calls",
-    percentage_limit=35
+    percentage_limit=25
 )

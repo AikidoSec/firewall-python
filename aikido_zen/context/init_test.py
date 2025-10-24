@@ -72,7 +72,7 @@ def test_wsgi_context_1():
         "outgoing_req_redirects": [],
         "executed_middleware": False,
         "route_params": [],
-        "protection_forced_off": None,
+        "should_skip_attack_scan": None,
     }
     assert context.get_user_agent() is None
 
@@ -104,7 +104,7 @@ def test_wsgi_context_2():
         "outgoing_req_redirects": [],
         "executed_middleware": False,
         "route_params": [],
-        "protection_forced_off": None,
+        "should_skip_attack_scan": None,
     }
     assert context.get_user_agent() == "Mozilla/5.0"
 
@@ -288,11 +288,11 @@ def test_set_valid_json_with_special_characters_bytes():
     assert context.body == {"key": "value with special characters !@#$%^&*()"}
 
 
-def test_set_protection_forced_off():
+def test_set_should_skip_attack_scan():
     context = Context(req=basic_wsgi_req, body=None, source="flask")
-    context.set_force_protection_off(True)
-    assert context.protection_forced_off is True
-    context.set_force_protection_off(False)
-    assert context.protection_forced_off is False
-    context.set_force_protection_off(None)
-    assert context.protection_forced_off is None
+    context.set_should_skip_attack_scan(True)
+    assert context.should_skip_attack_scan is True
+    context.set_should_skip_attack_scan(False)
+    assert context.should_skip_attack_scan is False
+    context.set_should_skip_attack_scan(None)
+    assert context.should_skip_attack_scan is None
