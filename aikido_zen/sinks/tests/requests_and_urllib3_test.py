@@ -94,6 +94,14 @@ def ssrf_check(monkeypatch, url):
         "http://0x7f.0x0.0x0.0x1:8081/",
         # 127.0.0.1 ipv6 mapped
         "http://[::ffff:127.0.0.1]:8081",
+        # Stored IMDS
+        "http://169.254.169.254/latest/meta-data/iam/security-credentials/",
+        "http://[fd00:0ec2:0000:0000:0000:0000:0000:0254]:7000/latest/meta-data/iam/security-credentials/",
+        "http://0xa9.0xfe.0xa9.0xfe/latest/meta-data/iam/security-credentials/",
+        "http://0xA9FEA9FE/latest/meta-data/iam/security-credentials/",
+        "http://2852039166/latest/meta-data/iam/security-credentials/",
+        "http://[::ffff:169.254.169.254]:8081/latest/meta-data/iam/security-credentials/",
+        "http://[fd00:ec2::254]/latest/meta-data/iam/security-credentials/",
     ],
 )
 def test_ssrf_1(monkeypatch, url):
