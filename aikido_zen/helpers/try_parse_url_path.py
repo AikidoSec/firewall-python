@@ -28,8 +28,10 @@ def try_parse_url_path(url):
     if parsed.path == "":
         return "/"
 
-    # Multiple slashes are ignored in python, so we want to also remove them here
-    # This allows the route building & endpoint matching to work properly.
-    normalized_path = re.sub(r"/+", "/", parsed.path)
+    normalized_path = parsed.path
+    if "//" in normalized_path:
+        # Multiple slashes are ignored in python, so we want to also remove them here
+        # This allows the route building & endpoint matching to work properly.
+        normalized_path = re.sub(r"/+", "/", normalized_path)
 
     return normalized_path
