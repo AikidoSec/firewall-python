@@ -1,4 +1,4 @@
-name: Smoke Test for FFI
+name: 🔥 Smoke Tests for FFI
 on: [push]
 permissions:
   contents: read
