@@ -1,6 +1,7 @@
 name: Smoke Test for FFI
-
 on: [push]
+permissions:
+  contents: read
 
 jobs:
   test:
