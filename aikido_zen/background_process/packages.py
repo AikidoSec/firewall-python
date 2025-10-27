@@ -61,7 +61,6 @@ packages = {}
 class PackagesStore:
     @staticmethod
     def export():
-        global packages
         result = []
         for package in packages.values():
             if package.get("cleared", False):
@@ -71,7 +70,6 @@ class PackagesStore:
 
     @staticmethod
     def add_package(package, version):
-        global packages
         packages[package] = {
             "name": package,
             "version": version,
@@ -81,7 +79,6 @@ class PackagesStore:
 
     @staticmethod
     def get_package(package_name):
-        global packages
         if package_name in packages:
             return packages[package_name]
         return None
@@ -91,7 +88,6 @@ class PackagesStore:
         # To clear we set the `cleared` attribute to True
         # This is to ensure you can still get the packages
         # But that they will not show up during an export
-        global packages
         for package in packages.items():
             package["cleared"] = True
 
@@ -100,5 +96,4 @@ class PackagesStore:
         for package in imported_packages:
             if PackagesStore.get_package(package["name"]):
                 continue
-            global packages
             packages[package["name"]] = package

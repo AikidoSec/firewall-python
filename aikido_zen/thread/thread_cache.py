@@ -94,11 +94,9 @@ def get_cache():
     Returns the cache, protected by Python's GIL (so not our own mutex),
     and starts the process worker (which syncs info between the cache and agent), if it doesn't already exist.
     """
-    global global_thread_cache
     process_worker_loader.load_worker()
     return global_thread_cache
 
 
 def renew():
-    global global_thread_cache
     global_thread_cache.renew()
