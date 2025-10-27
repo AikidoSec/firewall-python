@@ -92,8 +92,8 @@ class PackagesStore:
         # This is to ensure you can still get the packages
         # But that they will not show up during an export
         global packages
-        for package in packages:
-            packages[package]["cleared"] = True
+        for package in packages.items():
+            package["cleared"] = True
 
     @staticmethod
     def import_list(imported_packages):

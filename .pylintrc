@@ -36,7 +36,6 @@ disable =
     global-variable-not-assigned,
     attribute-defined-outside-init,
     protected-access,
-    consider-using-dict-items,
     super-init-not-called,
     f-string-without-interpolation,
     redefined-argument-from-local,
