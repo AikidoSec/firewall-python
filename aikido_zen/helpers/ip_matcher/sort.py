@@ -47,7 +47,7 @@ def binary_search_for_insertion_index(network, sorted_networks):
             return middle + 1
         if cmp_result == EQUALS:
             return middle + 1
-        elif cmp_result == BEFORE:
+        if cmp_result == BEFORE:
             left = middle + 1
         else:  # AFTER
             right = middle - 1

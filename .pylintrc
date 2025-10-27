@@ -29,7 +29,6 @@ disable =
     no-value-for-parameter,
     unexpected-keyword-arg,
     inconsistent-return-statements,
-    no-else-return,
     duplicate-code,
     global-variable-not-assigned,
     attribute-defined-outside-init,
