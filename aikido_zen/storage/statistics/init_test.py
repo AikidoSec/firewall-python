@@ -1,4 +1,5 @@
 import pytest
+import aikido_zen.test_utils as test_utils
 from . import Statistics, Operations
 
 
@@ -8,38 +9,28 @@ def stats():
 
 
 def test_initialization(monkeypatch):
-    # Mock the current time
-    mock_time = 1234567890000
-    monkeypatch.setattr(
-        "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms", lambda: mock_time
-    )
-
-    stats = Statistics()
+    with test_utils.patch_time(time_s=1234567890):
+        stats = Statistics()
     assert stats.total_hits == 0
     assert stats.attacks_detected == 0
     assert stats.attacks_blocked == 0
-    assert stats.started_at == mock_time
+    assert stats.started_at == 1234567890000
     assert isinstance(stats.operations, Operations)
 
 
 def test_clear(monkeypatch):
-    # Mock the current time
-    mock_time = 1234567890000
-    monkeypatch.setattr(
-        "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms", lambda: mock_time
-    )
-
     stats = Statistics()
     stats.total_hits = 10
     stats.attacks_detected = 5
     stats.attacks_blocked = 3
     stats.operations.register_call("test", "sql_op")
-    stats.clear()
+    with test_utils.patch_time(time_s=1234567890):
+        stats.clear()
 
     assert stats.total_hits == 0
     assert stats.attacks_detected == 0
     assert stats.attacks_blocked == 0
-    assert stats.started_at == mock_time
+    assert stats.started_at == 1234567890000
     assert stats.operations == {}
 
 
@@ -60,13 +51,8 @@ def test_on_detected_attack(stats):
 
 
 def test_get_record(monkeypatch):
-    # Mock the current time
-    mock_time = 1234567890000
-    monkeypatch.setattr(
-        "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms", lambda: mock_time
-    )
-
-    stats = Statistics()
+    with test_utils.patch_time(time_s=1234567890):
+        stats = Statistics()
     stats.total_hits = 10
     stats.on_rate_limit()
     stats.on_rate_limit()
@@ -75,9 +61,10 @@ def test_get_record(monkeypatch):
     stats.attacks_detected = 5
     stats.attacks_blocked = 3
 
-    record = stats.get_record()
-    assert record["startedAt"] == stats.started_at
-    assert record["endedAt"] == mock_time
+    with test_utils.patch_time(time_s=9999999999):
+        record = stats.get_record()
+    assert record["startedAt"] == 1234567890000
+    assert record["endedAt"] == 9999999999000
     assert record["requests"]["total"] == 10
     assert record["requests"]["rateLimited"] == 2
     assert record["requests"]["aborted"] == 0
