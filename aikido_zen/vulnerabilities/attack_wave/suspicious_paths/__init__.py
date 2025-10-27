@@ -1,0 +1,2 @@
+from .suspicious_file_names import suspicious_file_names
+from .suspicious_directory_names import suspicious_directory_names
