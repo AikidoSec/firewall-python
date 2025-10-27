@@ -1,7 +1,5 @@
-from aikido_zen.vulnerabilities.attack_wave.is_web_scan_path import (
-    is_web_scan_path,
-)
-from aikido_zen.vulnerabilities.attack_wave.suspicious_paths import (
+from .is_web_scan_path import is_web_scan_path
+from .suspicious_paths import (
     suspicious_file_names,
     suspicious_directory_names,
 )
