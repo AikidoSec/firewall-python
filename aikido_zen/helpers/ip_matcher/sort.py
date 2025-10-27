@@ -16,9 +16,9 @@ def compare_networks(a, b):
     b_bytes = b.addr.bytes()
     if len(a_bytes) != len(b_bytes):
         return len(a_bytes) - len(b_bytes)
-    for i in range(len(a_bytes)):
-        if a_bytes[i] != b_bytes[i]:
-            return a_bytes[i] - b_bytes[i]
+    for i, a_byte in enumerate(a_bytes):
+        if a_byte != b_bytes[i]:
+            return a_byte - b_bytes[i]
     a_cidr = a.cidr()
     b_cidr = b.cidr()
     if math.isnan(a_cidr) and math.isnan(b_cidr):
