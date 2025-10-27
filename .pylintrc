@@ -23,6 +23,7 @@ disable =
     too-many-arguments,
     too-many-instance-attributes,
     too-many-return-statements,
+    consider-using-from-import,
 # temporary
     cyclic-import,
     no-value-for-parameter,
@@ -31,7 +32,6 @@ disable =
 
     consider-using-enumerate,
     consider-iterating-dictionary,
-    consider-using-from-import,
     no-else-return,
     duplicate-code,
     global-variable-not-assigned,
