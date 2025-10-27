@@ -32,4 +32,3 @@ disable =
     duplicate-code,
     attribute-defined-outside-init,
     super-init-not-called,
-    f-string-without-interpolation,
