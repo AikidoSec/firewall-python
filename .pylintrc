@@ -31,7 +31,6 @@ disable =
     consider-iterating-dictionary,
     consider-using-from-import,
     no-else-return,
-    pointless-string-statement,
     duplicate-code,
     deprecated-method,
     global-variable-not-assigned,
