@@ -1,6 +1,7 @@
 """Exports get_api_info function"""
 
 from aikido_zen.helpers.logging import logger
+from aikido_zen.helpers.env_vars.feature_flags import is_feature_enabled
 from .get_body_data_type import get_body_data_type
 from .get_data_schema import get_data_schema
 from .get_auth_types import get_auth_types

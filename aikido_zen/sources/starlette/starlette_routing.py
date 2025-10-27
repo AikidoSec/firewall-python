@@ -1,7 +1,7 @@
 from aikido_zen.helpers.logging import logger
 from .extract_data_from_request import extract_data_from_request
 from ..functions.request_handler import request_handler
-from ...sinks import on_import, patch_function
+from ...sinks import on_import, patch_function, before
 
 
 def _request_response(func, instance, args, kwargs):

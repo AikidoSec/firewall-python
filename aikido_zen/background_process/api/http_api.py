@@ -22,7 +22,7 @@ class ReportingApiHTTP(ReportingApi):
                 timeout=timeout_in_sec,
                 headers=get_headers(token),
             )
-        except TimeoutExceeded:
+        except TimeoutExceeded as e:
             return {"success": False, "error": "timeout"}
         except Exception as e:
             logger.error("Failed to report event : %s(%s)", str(e.__class__), str(e))
@@ -47,7 +47,7 @@ class ReportingApiHTTP(ReportingApi):
                     "Authorization": str(token),
                 },
             )
-        except TimeoutExceeded:
+        except TimeoutExceeded as e:
             return {"success": False, "error": "timeout"}
         except Exception as e:
             logger.error("Failed to fetch firewall lists: %s", str(e))

@@ -1,7 +1,7 @@
 from aikido_zen.helpers.get_argument import get_argument
 from aikido_zen.helpers.on_ai_call import on_ai_call
 from aikido_zen.helpers.register_call import register_call
-from aikido_zen.sinks import after, on_import, patch_function
+from aikido_zen.sinks import after, on_import, patch_function, before
 
 
 def get_tokens_from_converse(api_response):

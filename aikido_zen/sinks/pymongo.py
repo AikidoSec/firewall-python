@@ -8,6 +8,7 @@ from aikido_zen.helpers.get_argument import get_argument
 import aikido_zen.vulnerabilities as vulns
 from . import patch_function, on_import, before
 from aikido_zen.helpers.register_call import register_call
+from aikido_zen.helpers.logging import logger
 
 
 @before
