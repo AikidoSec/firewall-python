@@ -22,7 +22,6 @@ disable =
     too-many-return-statements,
     no-value-for-parameter,
     unexpected-keyword-arg,
-    no-value-for-parameter,
     inconsistent-return-statements,
     too-many-branches,
     too-many-locals,
