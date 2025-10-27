@@ -2,7 +2,6 @@
 # Disable the unused-argument warning
 disable = unused-argument
 ignore-patterns=(.)*_test\.py,test_(.)*\.py
-load-plugins=pylint.extensions.bad_builtin
 
 [MESSAGES CONTROL]
 disable =
@@ -16,6 +15,7 @@ disable =
     import-outside-toplevel,
     line-too-long,
     invalid-name,
+    import-error,
 # temporary
     cyclic-import,
     too-many-return-statements,
@@ -50,4 +50,3 @@ disable =
     redefined-outer-name,
     unnecessary-comprehension,
     use-a-generator,
-    bad-builtin,
