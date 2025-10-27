@@ -30,7 +30,6 @@ disable =
     unexpected-keyword-arg,
     inconsistent-return-statements,
     duplicate-code,
-    global-variable-not-assigned,
     attribute-defined-outside-init,
     super-init-not-called,
     f-string-without-interpolation,
