@@ -41,7 +41,6 @@ disable =
     too-many-instance-attributes,
     consider-using-dict-items,
     super-init-not-called,
-    broad-exception-raised,
     f-string-without-interpolation,
     useless-parent-delegation,
     redefined-argument-from-local,
