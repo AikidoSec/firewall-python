@@ -13,8 +13,9 @@ def _get_response_before(func, instance, args, kwargs):
 
     run_init_stage(request)
 
-    if pre_response_middleware not in instance._view_middleware:
+    if pre_response_middleware not in getattr(instance, "_view_middleware"):
         # The rate limiting middleware needs to be last in the chain.
+        # pylint:disable=protected-access
         instance._view_middleware += [pre_response_middleware]
 
 
