@@ -33,7 +33,7 @@ def process_sync_data(connection_manager, data, conn, queue=None):
         connection_manager.middleware_installed = True
 
     # Sync hostnames
-    for hostnames_entry in data.get("hostnames", list()):
+    for hostnames_entry in data.get("hostnames", []):
         connection_manager.hostnames.add(
             hostnames_entry["hostname"],
             hostnames_entry["port"],
@@ -41,7 +41,7 @@ def process_sync_data(connection_manager, data, conn, queue=None):
         )
 
     # Sync users
-    for user_entry in data.get("users", list()):
+    for user_entry in data.get("users", []):
         connection_manager.users.add_user_from_entry(user_entry)
 
     # Sync stats
