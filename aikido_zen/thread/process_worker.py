@@ -29,5 +29,5 @@ def aikido_process_worker_thread():
         try:
             thread_cache.renew()
         except Exception as e:
-            logger.warn("An error occurred during data synchronization: %s", e)
+            logger.warning("An error occurred during data synchronization: %s", e)
         time.sleep(RENEW_CACHE_EVERY_X_SEC)
