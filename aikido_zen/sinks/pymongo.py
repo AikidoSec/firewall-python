@@ -71,10 +71,11 @@ def _bulk_write(func, instance, args, kwargs):
     # Filter requests that contain "_filter"
     requests_with_filter = [req for req in requests if hasattr(req, "_filter")]
     for request in requests_with_filter:
+        nosql_filter = getattr(request, "_filter")
         vulns.run_vulnerability_scan(
             kind="nosql_injection",
             op=operation,
-            args=(request._filter,),
+            args=(nosql_filter,),
         )
 
 
