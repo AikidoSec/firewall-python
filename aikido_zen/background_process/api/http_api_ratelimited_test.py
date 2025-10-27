@@ -1,4 +1,5 @@
 import pytest
+import aikido_zen.test_utils as test_utils
 from unittest.mock import patch
 from aikido_zen.background_process.api.http_api import ReportingApiHTTP
 from .http_api_ratelimited import ReportingApiHTTPRatelimited
@@ -21,10 +22,7 @@ def test_report_within_limit(reporting_api):
     with patch.object(
         ReportingApiHTTP, "report", return_value={"success": True}
     ) as mock_report:
-        with patch(
-            "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms",
-            return_value=2000,
-        ):
+        with test_utils.patch_time(time_s=2):
             response = reporting_api.report(
                 token="token", event=event, timeout_in_sec=5
             )
@@ -44,10 +42,7 @@ def test_report_exceeds_limit(reporting_api):
         {"type": "detected_attack", "time": 3000},
     ]
 
-    with patch(
-        "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms",
-        return_value=4000,
-    ):
+    with test_utils.patch_time(time_s=4):
         response = reporting_api.report(token="token", event=event, timeout_in_sec=5)
         assert response == {"success": False, "error": "max_attacks_reached"}
         assert len(reporting_api.events) == 3  # Should not add the new event
@@ -64,10 +59,7 @@ def test_report_within_limit_after_expiry(reporting_api):
     with patch.object(
         ReportingApiHTTP, "report", return_value={"success": True}
     ) as mock_report:
-        with patch(
-            "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms",
-            return_value=12000,
-        ):
+        with test_utils.patch_time(time_s=12):
             event3 = {"type": "detected_attack", "time": 11000}
             response = reporting_api.report(
                 token="token", event=event3, timeout_in_sec=5
@@ -102,10 +94,7 @@ def test_report_multiple_events_within_limit(reporting_api):
     with patch.object(
         ReportingApiHTTP, "report", return_value={"success": True}
     ) as mock_report:
-        with patch(
-            "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms",
-            return_value=4000,
-        ):
+        with test_utils.patch_time(time_s=4):
             for event in events:
                 response = reporting_api.report(
                     token="token", event=event, timeout_in_sec=5
@@ -143,10 +132,7 @@ def test_report_event_expiry(reporting_api):
     reporting_api.events = [event1, event2]
 
     # Simulate time passing
-    with patch(
-        "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms",
-        return_value=12000,
-    ):
+    with test_utils.patch_time(time_s=12):
         event3 = {"type": "detected_attack", "time": 11000}
         response = reporting_api.report(token="token", event=event3, timeout_in_sec=5)
         assert response == {"error": "unknown", "success": False}
@@ -160,10 +146,7 @@ def test_report_event_at_boundary(reporting_api):
     event1 = {"type": "detected_attack", "time": 1000}
     reporting_api.events = [event1]
 
-    with patch(
-        "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms",
-        return_value=10000,
-    ):
+    with test_utils.patch_time(time_s=10):
         event2 = {"type": "detected_attack", "time": 10000}  # Exactly at the boundary
         response = reporting_api.report(token="token", event=event2, timeout_in_sec=5)
         assert response == {"error": "unknown", "success": False}
@@ -194,10 +177,7 @@ def test_report_no_events(reporting_api):
     with patch.object(
         ReportingApiHTTP, "report", return_value={"success": True}
     ) as mock_report:
-        with patch(
-            "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms",
-            return_value=2000,
-        ):
+        with test_utils.patch_time(time_s=2):
             response = reporting_api.report(
                 token="token", event=event, timeout_in_sec=5
             )
