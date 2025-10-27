@@ -14,7 +14,7 @@ def load_worker():
 
     # The name is aikido-process-worker- + the current PID
     thread_name = "aikido-process-worker-" + str(multiprocessing.current_process().pid)
-    if any([thread.name == thread_name for thread in threading.enumerate()]):
+    if any(thread.name == thread_name for thread in threading.enumerate()):
         return  # The thread already exists, returning.
 
     # Create a new daemon thread tht will handle communication to and from background agent
