@@ -33,4 +33,3 @@ disable =
     attribute-defined-outside-init,
     super-init-not-called,
     f-string-without-interpolation,
-    redefined-argument-from-local,
