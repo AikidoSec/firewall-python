@@ -15,7 +15,7 @@ class Operations(dict):
 
     def ensure_operation(self, operation, kind):
         if not kind in SUPPORTED_KINDS:
-            raise Exception(f"Kind {kind} is not supported for operations.")
+            raise ValueError(f"Kind {kind} is not supported for operations.")
         if not operation in self.keys():
             self[operation] = {
                 "kind": kind,
