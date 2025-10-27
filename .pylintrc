@@ -39,7 +39,6 @@ disable =
     protected-access,
     too-many-instance-attributes,
     consider-using-dict-items,
-    reimported,
     super-init-not-called,
     broad-exception-raised,
     raise-missing-from,
