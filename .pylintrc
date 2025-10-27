@@ -29,7 +29,6 @@ disable =
     no-value-for-parameter,
     unexpected-keyword-arg,
     inconsistent-return-statements,
-
     consider-using-enumerate,
     consider-iterating-dictionary,
     no-else-return,
@@ -40,7 +39,6 @@ disable =
     consider-using-dict-items,
     super-init-not-called,
     f-string-without-interpolation,
-    useless-parent-delegation,
     redefined-argument-from-local,
     redefined-outer-name,
     use-a-generator,
