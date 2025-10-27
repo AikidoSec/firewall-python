@@ -19,7 +19,7 @@ async def extract_data_from_request(request):
         form_data = await request.form()
         if form_data:
             # Convert to dict object :
-            context.set_body({key: value for key, value in form_data.items()})
+            context.set_body(dict(form_data.items()))
     if not context.body:
         context.set_body(await request.body())
 

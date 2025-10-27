@@ -48,5 +48,4 @@ disable =
     useless-parent-delegation,
     redefined-argument-from-local,
     redefined-outer-name,
-    unnecessary-comprehension,
     use-a-generator,
