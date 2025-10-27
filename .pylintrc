@@ -16,6 +16,7 @@ disable =
     line-too-long,
     invalid-name,
     import-error,
+    raise-missing-from,
 # temporary
     cyclic-import,
     too-many-return-statements,
@@ -41,7 +42,6 @@ disable =
     consider-using-dict-items,
     super-init-not-called,
     broad-exception-raised,
-    raise-missing-from,
     f-string-without-interpolation,
     useless-parent-delegation,
     redefined-argument-from-local,
