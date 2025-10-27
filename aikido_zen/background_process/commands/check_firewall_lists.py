@@ -1,11 +1,8 @@
 """Exports process_check_firewall_lists"""
 
-from aikido_zen.api_discovery.update_route_info import update_route_info
 from aikido_zen.background_process.cloud_connection_manager import (
     CloudConnectionManager,
 )
-from aikido_zen.background_process.packages import PackagesStore
-from aikido_zen.helpers.logging import logger
 
 
 def process_check_firewall_lists(
