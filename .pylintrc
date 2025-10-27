@@ -43,7 +43,6 @@ disable =
     super-init-not-called,
     broad-exception-raised,
     raise-missing-from,
-    consider-using-in,
     f-string-without-interpolation,
     useless-parent-delegation,
     redefined-argument-from-local,
