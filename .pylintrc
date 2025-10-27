@@ -36,4 +36,3 @@ disable =
     f-string-without-interpolation,
     redefined-argument-from-local,
     redefined-outer-name,
-    use-a-generator,
