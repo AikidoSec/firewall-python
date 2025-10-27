@@ -55,14 +55,14 @@ def is_version_supported(version, required_version):
 
 
 # packages store, uses python's built in GlobalInterpreterLock (GIL)
-packages = {}
+packages_store = {}
 
 
 class PackagesStore:
     @staticmethod
     def export():
         result = []
-        for package in packages.values():
+        for package in packages_store.values():
             if package.get("cleared", False):
                 continue
             result.append(dict(package))
@@ -70,7 +70,7 @@ class PackagesStore:
 
     @staticmethod
     def add_package(package, version):
-        packages[package] = {
+        packages_store[package] = {
             "name": package,
             "version": version,
             "requiredAt": t.get_unixtime_ms(),
@@ -79,8 +79,8 @@ class PackagesStore:
 
     @staticmethod
     def get_package(package_name):
-        if package_name in packages:
-            return packages[package_name]
+        if package_name in packages_store:
+            return packages_store[package_name]
         return None
 
     @staticmethod
@@ -88,7 +88,7 @@ class PackagesStore:
         # To clear we set the `cleared` attribute to True
         # This is to ensure you can still get the packages
         # But that they will not show up during an export
-        for package in packages.items():
+        for package in packages_store.items():
             package["cleared"] = True
 
     @staticmethod
@@ -96,4 +96,4 @@ class PackagesStore:
         for package in imported_packages:
             if PackagesStore.get_package(package["name"]):
                 continue
-            packages[package["name"]] = package
+            packages_store[package["name"]] = package
