@@ -8,5 +8,4 @@ def patch_time(monotonic=False, time_s=None, time_ms=None):
         time_s = time_ms / 1000
     if monotonic:
         return patch("time.monotonic", return_value=time_s)
-    else:
-        return patch("time.time", return_value=time_s)
+    return patch("time.time", return_value=time_s)
