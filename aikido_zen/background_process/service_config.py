@@ -2,8 +2,6 @@
 Exports ServiceConfig class
 """
 
-from typing import Pattern
-
 from aikido_zen.helpers.ip_matcher import IPMatcher
 from aikido_zen.helpers.match_endpoints import match_endpoints
 

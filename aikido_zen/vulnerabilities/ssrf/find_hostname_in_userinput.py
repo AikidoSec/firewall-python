@@ -3,7 +3,7 @@ Only exports find_hostname_in_userinput function
 """
 
 from typing import List
-from urllib.parse import unquote_plus, unquote
+from urllib.parse import unquote
 
 from aikido_zen.helpers.get_port_from_url import get_port_from_url
 from aikido_zen.helpers.try_parse_url import try_parse_url

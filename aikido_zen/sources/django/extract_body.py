@@ -1,6 +1,4 @@
 import json
-
-from aikido_zen.context import get_current_context
 from aikido_zen.helpers.logging import logger
 
 
