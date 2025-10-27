@@ -88,7 +88,7 @@ class PackagesStore:
         # To clear we set the `cleared` attribute to True
         # This is to ensure you can still get the packages
         # But that they will not show up during an export
-        for package in packages_store.items():
+        for package in packages_store.values():
             package["cleared"] = True
 
     @staticmethod
