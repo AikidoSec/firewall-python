@@ -8,7 +8,9 @@ def generate_and_set_context(*args, **kwargs) -> Context:
     return context
 
 
-def generate_context(value=None, query_value=None, user=None, route=None) -> Context:
+def generate_context(
+    value=None, query_value=None, user=None, route=None, ip=None
+) -> Context:
     context = MockTestContext()
 
     if value is not None:
@@ -19,6 +21,8 @@ def generate_context(value=None, query_value=None, user=None, route=None) -> Con
         context.user = user
     if route is not None:
         context.route = route
+    if ip is not None:
+        context.remote_address = ip
 
     return context
 
