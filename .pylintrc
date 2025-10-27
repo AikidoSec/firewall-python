@@ -32,7 +32,6 @@ disable =
     consider-using-from-import,
     no-else-return,
     duplicate-code,
-    deprecated-method,
     global-variable-not-assigned,
     attribute-defined-outside-init,
     protected-access,
