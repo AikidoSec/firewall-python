@@ -34,4 +34,3 @@ disable =
     super-init-not-called,
     f-string-without-interpolation,
     redefined-argument-from-local,
-    redefined-outer-name,
