@@ -30,7 +30,6 @@ disable =
     unexpected-keyword-arg,
     inconsistent-return-statements,
     consider-using-enumerate,
-    consider-iterating-dictionary,
     no-else-return,
     duplicate-code,
     global-variable-not-assigned,
