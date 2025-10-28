@@ -28,7 +28,6 @@ class LRUCache:
                 < self.time_to_live_in_ms
             ):
                 return self.cache[key]["value"]  # Return the actual value
-            # Remove expired item
             del self.cache[key]
         return None
 
