@@ -19,7 +19,7 @@ def is_useful_route(status_code, route, method):
     """
     status_code = int(status_code)
 
-    is_valid_code = status_code >= 200 and status_code < 400
+    is_valid_code = 200 <= status_code < 400
     if not is_valid_code:
         # Status code needs to be between 200 and 400 in order for it to be "useful"
         return False
@@ -162,7 +162,9 @@ well_known = {
 
 
 def is_well_known_uri(path):
-    """Check if a path is a well-known URI"""
-    """e.g. /.well-known/acme-challenge"""
-    """https://www.iana.org/assignments/well-known-uris/well-known-uris.xhtml"""
+    """
+    Check if a path is a well-known URI
+    e.g. /.well-known/acme-challenge
+    https://www.iana.org/assignments/well-known-uris/well-known-uris.xhtml
+    """
     return path in well_known

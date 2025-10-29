@@ -19,25 +19,25 @@ def is_package_compatible(package=None, required_version=ANY_VERSION, packages=N
     if packages is None:
         return False  # no package names provided, return false.
     try:
-        for package in packages:
+        for package_name in packages:
             # Checks if we already looked up the package :
-            if PackagesStore.get_package(package) is not None:
-                package_version = PackagesStore.get_package(package)["version"]
+            if PackagesStore.get_package(package_name) is not None:
+                package_version = PackagesStore.get_package(package_name)["version"]
                 return is_version_supported(package_version, required_version)
 
             # Safely get the package version, with an exception for when the package was not found
             try:
-                package_version = importlib_metadata.version(package)
+                package_version = importlib_metadata.version(package_name)
             except importlib_metadata.PackageNotFoundError:
                 continue
 
             # Check support and store package for later
             supported = is_version_supported(package_version, required_version)
-            PackagesStore.add_package(package, package_version)
+            PackagesStore.add_package(package_name, package_version)
 
             if supported:
                 logger.debug(
-                    "Instrumentation for %s=%s supported", package, package_version
+                    "Instrumentation for %s=%s supported", package_name, package_version
                 )
                 return True
 
@@ -55,15 +55,14 @@ def is_version_supported(version, required_version):
 
 
 # packages store, uses python's built in GlobalInterpreterLock (GIL)
-packages = dict()
+packages_store = {}
 
 
 class PackagesStore:
     @staticmethod
     def export():
-        global packages
         result = []
-        for package in packages.values():
+        for package in packages_store.values():
             if package.get("cleared", False):
                 continue
             result.append(dict(package))
@@ -71,8 +70,7 @@ class PackagesStore:
 
     @staticmethod
     def add_package(package, version):
-        global packages
-        packages[package] = {
+        packages_store[package] = {
             "name": package,
             "version": version,
             "requiredAt": t.get_unixtime_ms(),
@@ -81,9 +79,8 @@ class PackagesStore:
 
     @staticmethod
     def get_package(package_name):
-        global packages
-        if package_name in packages:
-            return packages[package_name]
+        if package_name in packages_store:
+            return packages_store[package_name]
         return None
 
     @staticmethod
@@ -91,14 +88,12 @@ class PackagesStore:
         # To clear we set the `cleared` attribute to True
         # This is to ensure you can still get the packages
         # But that they will not show up during an export
-        global packages
-        for package in packages:
-            packages[package]["cleared"] = True
+        for package in packages_store.values():
+            package["cleared"] = True
 
     @staticmethod
     def import_list(imported_packages):
         for package in imported_packages:
             if PackagesStore.get_package(package["name"]):
                 continue
-            global packages
-            packages[package["name"]] = package
+            packages_store[package["name"]] = package

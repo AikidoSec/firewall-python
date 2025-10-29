@@ -15,9 +15,9 @@ class ReportingApi:
         status = res.status_code
         if status == 429:
             return {"success": False, "error": "rate_limited"}
-        elif status == 401:
+        if status == 401:
             return {"success": False, "error": "invalid_token"}
-        elif status == 200:
+        if status == 200:
             try:
                 return res.json()
             except Exception as e:

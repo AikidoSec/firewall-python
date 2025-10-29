@@ -50,11 +50,11 @@ def match_filter_part_in_user(user_input, filter_part, path_to_payload=None):
     return {"match": False}
 
 
-def remove_keys_that_dont_start_with_dollar_sign(filter):
+def remove_keys_that_dont_start_with_dollar_sign(nosql_filter):
     """
     This removes key that don't start with $, since they are not dangerous
     """
-    return {key: value for key, value in filter.items() if key.startswith("$")}
+    return {key: value for key, value in nosql_filter.items() if key.startswith("$")}
 
 
 def find_filter_part_with_operators(user_input, part_of_filter):
@@ -95,17 +95,19 @@ def find_filter_part_with_operators(user_input, part_of_filter):
     return {"found": False}
 
 
-def detect_nosql_injection(request, _filter):
+def detect_nosql_injection(request, nosql_filter):
     """
     Give a context object and a nosql filter and this function
     checks if there is a NoSQL injection
     """
-    if not is_mapping(_filter) and not isinstance(_filter, list):
+    if not is_mapping(nosql_filter) and not isinstance(nosql_filter, list):
         return {}
 
     for source in UINPUT_SOURCES:
         if hasattr(request, source):
-            result = find_filter_part_with_operators(getattr(request, source), _filter)
+            result = find_filter_part_with_operators(
+                getattr(request, source), nosql_filter
+            )
 
             if result.get("found"):
                 return {
