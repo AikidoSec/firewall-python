@@ -32,8 +32,6 @@ def on_detected_attack(connection_manager, attack, context, blocked, stack):
                 "url": context.url,
                 "ipAddress": context.remote_address,
                 "userAgent": context.get_user_agent(),
-                "body": context.body,
-                "headers": context.headers,
                 "source": context.source,
                 "route": context.route,
             },
