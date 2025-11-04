@@ -13,9 +13,9 @@ def test_returns_false_for_non_imds_ip_addresses():
 
 
 # --- Tests ---
-def test_trusted_hostname_returns_false():
-    """Test that trusted hostnames always return False."""
-    assert resolves_to_imds_ip(["1.1.1.1"], "metadata.google.internal") is False
+def test_trusted_hostname_returns_none():
+    """Test that trusted hostnames always return None."""
+    assert resolves_to_imds_ip(["1.1.1.1"], "metadata.google.internal") is None
 
 
 def test_aws_imds_ipv4_present_returns_ip():
@@ -42,14 +42,14 @@ def test_alibaba_imds_ip_present_returns_ip():
     )
 
 
-def test_no_imds_ip_present_returns_false():
-    """Test that False is returned if no IMDS IP is present."""
-    assert resolves_to_imds_ip(["8.8.8.8", "1.1.1.1"], "example.com") is False
+def test_no_imds_ip_present_returns_none():
+    """Test that None is returned if no IMDS IP is present."""
+    assert resolves_to_imds_ip(["8.8.8.8", "1.1.1.1"], "example.com") is None
 
 
-def test_empty_ip_list_returns_false():
-    """Test that False is returned if the IP list is empty."""
-    assert resolves_to_imds_ip([], "example.com") is False
+def test_empty_ip_list_returns_none():
+    """Test that None is returned if the IP list is empty."""
+    assert resolves_to_imds_ip([], "example.com") is None
 
 
 def test_mixed_imds_and_normal_ips():

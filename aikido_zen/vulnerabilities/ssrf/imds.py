@@ -51,12 +51,11 @@ def is_trusted_hostname(hostname):
 
 def resolves_to_imds_ip(resolved_ip_addresses, hostname):
     """
-    Returns the IMDS IP address as a string if it exists in resolved_ip_addresses,
-    otherwise returns an empty string.
+    Returns the IMDS IP address as a string if it exists in resolved_ip_addresses, otherwise returns None
     """
     if is_trusted_hostname(hostname):
-        return False
+        return None
     for ip in resolved_ip_addresses:
         if is_imds_ip_address(ip):
             return ip
-    return False
+    return None
