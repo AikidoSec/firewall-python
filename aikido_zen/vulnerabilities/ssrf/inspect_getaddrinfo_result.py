@@ -74,5 +74,4 @@ def get_metadata_for_ssrf_attack(hostname, port):
 
 
 def ip_addresses_contain_private_ip(ip_addresses) -> bool:
-    has_private_ip = next((ip for ip in ip_addresses if is_private_ip(ip)), None)
-    return has_private_ip
+    return any(is_private_ip(ip) for ip in ip_addresses)
