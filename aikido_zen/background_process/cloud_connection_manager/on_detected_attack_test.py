@@ -189,3 +189,33 @@ def test_on_detected_attack_with_user(mock_connection_manager):
 
     # Verify the user is included in the attack data
     assert event["attack"]["user"] == "test_user"
+
+
+def test_on_detected_attack_no_context_and_attack_data(mock_connection_manager):
+    attack = {
+        "payload": {"key": "value"},
+        "metadata": {"test": "true"},
+    }
+
+    on_detected_attack(
+        mock_connection_manager,
+        attack=attack,
+        context=None,
+        blocked=False,
+        stack=None,
+    )
+
+    # Extract the call arguments for the report method
+    _, event, _ = mock_connection_manager.api.report.call_args[0]
+
+    # Verify the request attribute in the payload
+    request_data = event["request"]
+    attack_data = event["attack"]
+
+    assert request_data is None
+    assert attack_data["user"] is None
+
+    assert attack_data["blocked"] == False
+    assert attack_data["metadata"] == {"test": "true"}
+    assert attack_data["payload"] == '{"key": "value"}'
+    assert attack_data["stack"] is None
