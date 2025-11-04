@@ -8,7 +8,6 @@ from aikido_zen.helpers.get_argument import get_argument
 import aikido_zen.vulnerabilities as vulns
 from . import patch_function, on_import, before
 from aikido_zen.helpers.register_call import register_call
-from aikido_zen.helpers.logging import logger
 
 
 @before
@@ -72,10 +71,11 @@ def _bulk_write(func, instance, args, kwargs):
     # Filter requests that contain "_filter"
     requests_with_filter = [req for req in requests if hasattr(req, "_filter")]
     for request in requests_with_filter:
+        nosql_filter = getattr(request, "_filter")
         vulns.run_vulnerability_scan(
             kind="nosql_injection",
             op=operation,
-            args=(request._filter,),
+            args=(nosql_filter,),
         )
 
 

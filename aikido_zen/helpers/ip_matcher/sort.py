@@ -16,9 +16,9 @@ def compare_networks(a, b):
     b_bytes = b.addr.bytes()
     if len(a_bytes) != len(b_bytes):
         return len(a_bytes) - len(b_bytes)
-    for i in range(len(a_bytes)):
-        if a_bytes[i] != b_bytes[i]:
-            return a_bytes[i] - b_bytes[i]
+    for i, a_byte in enumerate(a_bytes):
+        if a_byte != b_bytes[i]:
+            return a_byte - b_bytes[i]
     a_cidr = a.cidr()
     b_cidr = b.cidr()
     if math.isnan(a_cidr) and math.isnan(b_cidr):
@@ -47,7 +47,7 @@ def binary_search_for_insertion_index(network, sorted_networks):
             return middle + 1
         if cmp_result == EQUALS:
             return middle + 1
-        elif cmp_result == BEFORE:
+        if cmp_result == BEFORE:
             left = middle + 1
         else:  # AFTER
             right = middle - 1

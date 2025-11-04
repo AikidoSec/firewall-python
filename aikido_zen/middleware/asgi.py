@@ -20,7 +20,8 @@ class AikidoASGIMiddleware:
             if result["trigger"] == "ip" and result["ip"]:
                 message += " (Your IP: " + result["ip"] + ")"
             return await send_status_code_and_text(send, (message, 429))
-        elif result["type"] == "blocked":
+
+        if result["type"] == "blocked":
             return await send_status_code_and_text(
                 send, ("You are blocked by Zen.", 403)
             )
