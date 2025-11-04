@@ -9,7 +9,14 @@ def generate_and_set_context(*args, **kwargs) -> Context:
 
 
 def generate_context(
-    value=None, query_value=None, user=None, route=None, ip=None
+    value=None,
+    query_value=None,
+    user=None,
+    route=None,
+    ip=None,
+    method=None,
+    url=None,
+    headers=None,
 ) -> Context:
     context = MockTestContext()
 
@@ -23,6 +30,13 @@ def generate_context(
         context.route = route
     if ip is not None:
         context.remote_address = ip
+    if method is not None:
+        context.method = method
+    if url is not None:
+        context.url = url
+    if headers is not None:
+        for header_k, header_v in headers.items():
+            context.headers.store_header(header_k, header_v)
 
     return context
 
