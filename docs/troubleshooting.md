@@ -30,7 +30,7 @@ Add this early in your app to surface initialization details:
 ```python
 import logging
 logging.basicConfig(level=logging.INFO)
-logging.getLogger("aikido_zen").setLevel(logging.INFO)   # use DEBUG if needed
+logging.getLogger("aikido_zen").setLevel(logging.INFO)   # use DEBUG or TRACE if needed
 ```
 
 If you use Gunicorn or Uvicorn, also run them with higher verbosity so stdout includes the module logs.
