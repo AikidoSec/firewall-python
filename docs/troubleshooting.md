@@ -30,12 +30,6 @@ Set the `AIKIDO_DEBUG=true` environment variable before starting your app to sur
 
 This will make Zen log additional information during startup and operation.
 
-## Confirm the package is installed
-
-```
-pip show aikido-zen || python -m pip show aikido-zen
-```
-
 ## Contact support
 
 If you still can’t resolve the issue:
