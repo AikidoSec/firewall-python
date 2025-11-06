@@ -9,6 +9,10 @@ include = [
     "docs/*",
     { path = "aikido_zen/libs/*", format = ["sdist", "wheel"] }
 ]
+exclude = [
+    "**/*_test.py",
+    "aikido_zen/test_utils/**"
+]
 keywords = [
     "web application firewall",
     "WAF",
