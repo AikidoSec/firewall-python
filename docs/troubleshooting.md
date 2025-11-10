@@ -22,7 +22,7 @@ Common places:
 - systemd: `journalctl -u <your-app-service> --since "1 hour ago"`
 - Local dev: your terminal or IDE run console
 
-Tip: search for lines that contain `Aikido` or `aikido_zen`.
+Tip: search for lines that contain `aikido_zen`.
 
 ## Enable debug logs temporarily
 
