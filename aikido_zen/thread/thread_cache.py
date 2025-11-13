@@ -17,11 +17,13 @@ class ThreadCache:
     """
 
     def __init__(self):
+        self.config = ServiceConfig.new()
+        self.middleware_installed = False
+        self.routes = Routes(max_size=1000)
         self.hostnames = Hostnames(200)
         self.users = Users(1000)
         self.stats = Statistics()
         self.ai_stats = AIStatistics()
-        self.reset()  # Initialize values
 
     def is_bypassed_ip(self, ip):
         """Checks the given IP against the list of bypassed ips"""
@@ -36,15 +38,8 @@ class ThreadCache:
 
     def reset(self):
         """Empties out all values of the cache"""
-        self.routes = Routes(max_size=1000)
-        self.config = ServiceConfig(
-            endpoints=[],
-            blocked_uids=set(),
-            bypassed_ips=[],
-            last_updated_at=-1,
-            received_any_stats=False,
-        )
-        self.middleware_installed = False
+        self.config = ServiceConfig.new()
+        self.routes.clear()
         self.hostnames.clear()
         self.users.clear()
         self.stats.clear()
