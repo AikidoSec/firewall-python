@@ -37,6 +37,7 @@ class ThreadCache:
         return self.config.endpoints
 
     def reset(self):
+        self.middleware_installed = False
         self.config = ServiceConfig()
         self.routes.clear()
         self.hostnames.clear()
