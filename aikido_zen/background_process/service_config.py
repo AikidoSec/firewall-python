@@ -9,7 +9,6 @@ from aikido_zen.helpers.match_endpoints import match_endpoints
 # noinspection PyAttributeOutsideInit
 class ServiceConfig:
     """Class holding the config of the connection_manager"""
-
     def __init__(
         self,
         endpoints,
@@ -21,6 +20,16 @@ class ServiceConfig:
         # Init the class using update function :
         self.update(
             endpoints, last_updated_at, blocked_uids, bypassed_ips, received_any_stats
+        )
+
+    @staticmethod
+    def new():
+        return ServiceConfig(
+            endpoints=[],
+            blocked_uids=set(),
+            bypassed_ips=[],
+            last_updated_at=-1,
+            received_any_stats=False,
         )
 
     def update(
