@@ -47,7 +47,6 @@ class CloudConnectionManager:
             max_items=5000, time_to_live_in_ms=120 * 60 * 1000  # 120 minutes
         )
         self.users = Users(1000)
-        self.packages = {}
         self.statistics = Statistics()
         self.ai_stats = AIStatistics()
         self.middleware_installed = False
