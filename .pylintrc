@@ -29,5 +29,4 @@ disable =
     no-value-for-parameter,
     unexpected-keyword-arg,
     inconsistent-return-statements,
-    duplicate-code,
-    super-init-not-called,
+    duplicate-code
