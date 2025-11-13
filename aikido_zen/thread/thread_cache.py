@@ -17,7 +17,7 @@ class ThreadCache:
     """
 
     def __init__(self):
-        self.config = ServiceConfig.new()
+        self.config = ServiceConfig()
         self.middleware_installed = False
         self.routes = Routes(max_size=1000)
         self.hostnames = Hostnames(200)
@@ -37,8 +37,7 @@ class ThreadCache:
         return self.config.endpoints
 
     def reset(self):
-        """Empties out all values of the cache"""
-        self.config = ServiceConfig.new()
+        self.config = ServiceConfig()
         self.routes.clear()
         self.hostnames.clear()
         self.users.clear()
