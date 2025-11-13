@@ -43,6 +43,7 @@ def generate_context(
 
 class MockTestContext(Context):
     def __init__(self):
+        super().__init__()
         self.cookies = {}
         self.headers = Headers()
         self.remote_address = "1.1.1.1"
