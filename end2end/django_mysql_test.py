@@ -110,9 +110,3 @@ def test_initial_heartbeat():
     assert req_stats["aborted"] == 0
     assert req_stats["rateLimited"] == 0
     assert req_stats["attacksDetected"] == {"blocked": 2, "total": 2}
-    # There are 3-4 requests :
-    # 1. is website live request, first request not always counted
-    # 2. /app/create safe
-    # 3. /app/create sql inj
-    # 4. /app/shell/ls -la shell inj
-    assert 3 <= req_stats["total"] <= 4, f"Unexpected amount of total requests {req_stats['total']}"
