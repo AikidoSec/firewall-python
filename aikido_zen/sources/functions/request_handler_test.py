@@ -146,19 +146,16 @@ def set_context(remote_address, user_agent=""):
 
 
 def create_service_config():
-    config = ServiceConfig(
-        endpoints=[
+    config = ServiceConfig()
+    config.set_endpoints(
+        [
             {
                 "method": "POST",
                 "route": "/posts/:number",
                 "graphql": False,
                 "allowedIPAddresses": ["1.1.1.1", "2.2.2.2", "3.3.3.3"],
             }
-        ],
-        last_updated_at=None,
-        blocked_uids=set(),
-        bypassed_ips=[],
-        received_any_stats=False,
+        ]
     )
     get_cache().config = config
     return config
