@@ -150,26 +150,27 @@ def test_increment_stats_thread_safety(thread_cache):
 def test_parses_routes_correctly(mock_get_comms, thread_cache: ThreadCache):
     """Test renewing the cache multiple times if TTL has expired."""
     mock_get_comms.return_value = MagicMock()
+    service_config = ServiceConfig()
+    service_config.set_endpoints(
+        [
+            {
+                "graphql": False,
+                "method": "POST",
+                "route": "/v2",
+                "rate_limiting": {
+                    "enabled": False,
+                },
+                "force_protection_off": False,
+            }
+        ]
+    )
+    service_config.set_bypassed_ips(["192.168.1.1"])
+    service_config.set_blocked_user_ids({"user123"})
+    service_config.enable_received_any_stats()
     mock_get_comms.return_value.send_data_to_bg_process.return_value = {
         "success": True,
         "data": {
-            "config": ServiceConfig(
-                endpoints=[
-                    {
-                        "graphql": False,
-                        "method": "POST",
-                        "route": "/v2",
-                        "rate_limiting": {
-                            "enabled": False,
-                        },
-                        "force_protection_off": False,
-                    }
-                ],
-                bypassed_ips=["192.168.1.1"],
-                blocked_uids={"user123"},
-                last_updated_at=-1,
-                received_any_stats=True,
-            ),
+            "config": service_config,
             "routes": {
                 "POST:/body": {
                     "method": "POST",
