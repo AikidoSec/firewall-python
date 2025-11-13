@@ -50,7 +50,7 @@ class Context:
         self.parsed_userinput = {}
         self.xml = {}
         self.outgoing_req_redirects = []
-        self.set_body(body)
+        self.body = Context.parse_body_object(body)
         self.headers: Headers = Headers()
         self.cookies = {}
         self.query = {}
@@ -107,26 +107,28 @@ class Context:
         self.cookies = cookies
 
     def set_body(self, body):
-        try:
-            self.set_body_internal(body)
-        except Exception as e:
-            logger.debug("Exception occurred whilst setting body: %s", e)
+        self.body = Context.parse_body_object(body)
 
-    def set_body_internal(self, body):
+    @staticmethod
+    def parse_body_object(body):
         """Sets the body and checks if it's possibly JSON"""
-        self.body = body
-        if isinstance(self.body, (str, bytes)) and len(body) == 0:
-            # Make sure that empty bodies like b"" don't get sent.
-            self.body = None
-        if isinstance(self.body, bytes):
-            self.body = self.body.decode("utf-8")  # Decode byte input to string.
-        if not isinstance(self.body, str):
-            return
-        if self.body.strip()[0] in ["{", "[", '"']:
-            # Might be JSON, but might not have been parsed correctly by server because of wrong headers
-            parsed_body = json.loads(self.body)
-            if parsed_body:
-                self.body = parsed_body
+        try:
+            if isinstance(body, (str, bytes)) and len(body) == 0:
+                # Make sure that empty bodies like b"" don't get sent.
+                return None
+            if isinstance(body, bytes):
+                body = body.decode("utf-8")  # Decode byte input to string.
+            if not isinstance(body, str):
+                return body
+            if body.strip()[0] in ["{", "[", '"']:
+                # Might be JSON, but might not have been parsed correctly by server because of wrong headers
+                parsed_body = json.loads(body)
+                if parsed_body:
+                    return parsed_body
+            return body
+        except Exception as e:
+            logger.debug("Exception occurred whilst parsing body: %s", e)
+            return body
 
     def get_route_metadata(self):
         """Returns a route_metadata object"""
