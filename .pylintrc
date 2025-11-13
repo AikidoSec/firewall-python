@@ -30,5 +30,4 @@ disable =
     unexpected-keyword-arg,
     inconsistent-return-statements,
     duplicate-code,
-    attribute-defined-outside-init,
     super-init-not-called,
