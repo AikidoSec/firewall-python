@@ -100,8 +100,6 @@ def run_vulnerability_scan(kind, op, args):
         logger.debug("Exception occurred in run_vulnerability_scan : %s", e)
 
     if injection_results:
-        logger.debug("Injection results : %s", serialize_to_json(injection_results))
-
         blocked = is_blocking_enabled()
         operation = injection_results["operation"]
         thread_cache.stats.on_detected_attack(blocked, operation)
@@ -111,6 +109,7 @@ def run_vulnerability_scan(kind, op, args):
         event = create_detected_attack_api_event(
             injection_results, context, blocked, stack
         )
+        logger.debug("Attack: %s", serialize_to_json(event)[:5000])
         if comms and event:
             send_payload(comms, PutEventCommand.generate(event))
         if blocked:
