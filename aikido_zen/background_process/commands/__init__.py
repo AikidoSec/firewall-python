@@ -1,5 +1,5 @@
 from aikido_zen.helpers.logging import logger
-from .command import CommandContext
+from aikido_zen.helpers.ipc.command_types import CommandContext
 from .put_event import PutEventCommand
 from .check_firewall_lists import process_check_firewall_lists
 from .read_property import process_read_property

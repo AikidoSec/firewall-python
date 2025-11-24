@@ -1,4 +1,4 @@
-from .command import Command, CommandContext, Payload
+from aikido_zen.helpers.ipc.command_types import Command, CommandContext, Payload
 
 
 class PutEventReq:
