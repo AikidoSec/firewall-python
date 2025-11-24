@@ -1,7 +1,7 @@
 from aikido_zen.helpers.ip_matcher import IPMatcher
 import regex as re
 
-from aikido_zen.vulnerabilities.ssrf.is_private_ip import is_private_ip
+from aikido_zen.helpers.net.is_private_ip import is_private_ip
 
 
 class FirewallLists:
