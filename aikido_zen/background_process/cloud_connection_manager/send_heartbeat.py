@@ -2,7 +2,6 @@
 
 from aikido_zen.background_process.packages import PackagesStore
 from aikido_zen.helpers.logging import logger
-from aikido_zen.helpers.get_current_unixtime_ms import get_unixtime_ms
 
 
 def send_heartbeat(connection_manager):
@@ -26,12 +25,9 @@ def send_heartbeat(connection_manager):
     connection_manager.ai_stats.clear()
     PackagesStore.clear()
 
-    res = connection_manager.api.report(
-        connection_manager.token,
+    res = connection_manager.report_event(
         {
             "type": "heartbeat",
-            "time": get_unixtime_ms(),
-            "agent": connection_manager.get_manager_info(),
             "stats": stats,
             "ai": ai_stats,
             "hostnames": outgoing_domains,
@@ -39,7 +35,6 @@ def send_heartbeat(connection_manager):
             "routes": routes,
             "users": users,
             "middlewareInstalled": connection_manager.middleware_installed,
-        },
-        connection_manager.timeout_in_sec,
+        }
     )
     connection_manager.update_service_config(res)
