@@ -106,12 +106,10 @@ def run_vulnerability_scan(kind, op, args):
 
         stack = get_clean_stacktrace()
 
-        if comms:
-            event = create_detected_attack_api_event(
-                injection_results, context, blocked, stack
-            )
-            comms.send_data_to_bg_process(
-                "ATTACK", (injection_results, context, blocked, stack)
-            )
+        event = create_detected_attack_api_event(
+            injection_results, context, blocked, stack
+        )
+        if comms and event:
+            comms.send_data_to_bg_process("ATTACK", (event))
         if blocked:
             raise error_type(*error_args)
