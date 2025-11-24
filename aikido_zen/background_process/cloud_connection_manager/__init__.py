@@ -10,6 +10,7 @@ from ..service_config import ServiceConfig
 from aikido_zen.storage.users import Users
 from aikido_zen.storage.hostnames import Hostnames
 from ..realtime.start_polling_for_changes import start_polling_for_changes
+from ...helpers.get_current_unixtime_ms import get_unixtime_ms
 from ...storage.ai_statistics import AIStatistics
 from ...storage.firewall_lists import FirewallLists
 from ...storage.statistics import Statistics
@@ -57,7 +58,7 @@ class CloudConnectionManager:
 
     def start(self, event_scheduler):
         """Send out start event and add heartbeats"""
-        res = self.on_start()
+        res = on_start(self)
         if res.get("error", None) == "invalid_token":
             logger.info(
                 "Token was invalid, not starting heartbeats and realtime polling."
@@ -85,17 +86,9 @@ class CloudConnectionManager:
         """This will send something to the API when an attack is detected"""
         return on_detected_attack(self, attack, context, blocked, stack)
 
-    def on_start(self):
-        """This will send out an Event signalling the start to the server"""
-        return on_start(self)
-
     def send_heartbeat(self):
         """This will send a heartbeat to the server"""
         return send_heartbeat(self)
-
-    def get_manager_info(self):
-        """This returns info about the connection_manager"""
-        return get_manager_info(self)
 
     def update_service_config(self, res):
         """Update configuration based on the server's response"""
