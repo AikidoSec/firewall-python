@@ -98,7 +98,7 @@ class CloudConnectionManager:
         """Will update service config with blocklist of IP addresses"""
         return update_firewall_lists(self)
 
-    def report_event(self, event):
+    def report_api_event(self, event):
         if not self.token:
             return {"success": False, "error": "invalid_token"}
         try:

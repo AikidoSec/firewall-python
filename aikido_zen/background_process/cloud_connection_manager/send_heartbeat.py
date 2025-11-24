@@ -25,7 +25,7 @@ def send_heartbeat(connection_manager):
     connection_manager.ai_stats.clear()
     PackagesStore.clear()
 
-    res = connection_manager.report_event(
+    res = connection_manager.report_api_event(
         {
             "type": "heartbeat",
             "stats": stats,
