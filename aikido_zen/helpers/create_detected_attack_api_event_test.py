@@ -1,111 +1,77 @@
 import pytest
 from unittest.mock import MagicMock
-from .on_detected_attack import on_detected_attack
-from ...context import Context
+from .create_detected_attack_api_event import create_detected_attack_api_event
+from aikido_zen.context import Context
 import aikido_zen.test_utils as test_utils
 
 
-@pytest.fixture
-def mock_connection_manager():
-    connection_manager = MagicMock()
-    connection_manager.token = "test_token"
-    connection_manager.block = True
-    connection_manager.timeout_in_sec = 5
-    connection_manager.api.report = MagicMock(return_value={"status": "success"})
-    connection_manager.get_manager_info = lambda: {}
-    return connection_manager
-
-
-def test_on_detected_attack_no_token():
-    connection_manager = MagicMock()
-    connection_manager.token = None
-
-    on_detected_attack(
-        connection_manager,
-        attack={},
-        context=test_utils.generate_context(),
-        blocked=False,
-        stack=None,
-    )
-
-    connection_manager.api.report.assert_not_called()
-
-
-def test_on_detected_attack_with_long_payload(mock_connection_manager):
+def test_create_attack_event_with_long_payload():
     long_payload = "x" * 5000  # Create a payload longer than 4096 characters
     attack = {
         "payload": long_payload,
         "metadata": {"test": "1"},
     }
 
-    on_detected_attack(
-        mock_connection_manager,
+    event = create_detected_attack_api_event(
         attack=attack,
         context=test_utils.generate_context(),
         blocked=False,
         stack=None,
     )
 
-    assert len(attack["payload"]) == 4096  # Ensure payload is truncated
-    mock_connection_manager.api.report.assert_called_once()
+    assert len(event["attack"]["payload"]) == 4096  # Ensure payload is truncated
 
 
-def test_on_detected_attack_with_long_metadata(mock_connection_manager):
+def test_create_attack_event_with_long_metadata():
     long_metadata = "x" * 5000  # Create metadata longer than 4096 characters
     attack = {
         "payload": {},
         "metadata": {"test": long_metadata},
     }
 
-    on_detected_attack(
-        mock_connection_manager,
+    event = create_detected_attack_api_event(
         attack=attack,
         context=test_utils.generate_context(),
         blocked=False,
         stack=None,
     )
 
-    assert attack["metadata"]["test"] == long_metadata[:4096]
-    mock_connection_manager.api.report.assert_called_once()
+    assert event["attack"]["metadata"]["test"] == long_metadata[:4096]
 
 
-def test_on_detected_attack_success(mock_connection_manager):
+def test_create_attack_event_success():
     attack = {
         "payload": {"key": "value"},
         "metadata": {},
     }
 
-    on_detected_attack(
-        mock_connection_manager,
+    event = create_detected_attack_api_event(
         attack=attack,
         context=test_utils.generate_context(),
         blocked=False,
         stack=None,
     )
-    assert mock_connection_manager.api.report.call_count == 1
-
-
-def test_on_detected_attack_exception_handling(mock_connection_manager, caplog):
-    attack = {
-        "payload": {"key": "value"},
-        "metadata": {"key": "value"},
+    assert event == {
+        "attack": {
+            "blocked": False,
+            "metadata": {},
+            "payload": '{"key": "value"}',
+            "stack": None,
+            "user": None,
+        },
+        "request": {
+            "ipAddress": "1.1.1.1",
+            "method": "POST",
+            "route": "/",
+            "source": "flask",
+            "url": "http://localhost:8080/",
+            "userAgent": None,
+        },
+        "type": "detected_attack",
     }
 
-    # Simulate an exception during the API call
-    mock_connection_manager.api.report.side_effect = Exception("API error")
 
-    on_detected_attack(
-        mock_connection_manager,
-        attack=attack,
-        context=test_utils.generate_context(),
-        blocked=False,
-        stack=None,
-    )
-
-    assert "Failed to report an attack" in caplog.text
-
-
-def test_on_detected_attack_with_blocked_and_stack(mock_connection_manager):
+def test_create_attack_event_with_blocked_and_stack():
     attack = {
         "payload": {"key": "value"},
         "metadata": {},
@@ -113,8 +79,7 @@ def test_on_detected_attack_with_blocked_and_stack(mock_connection_manager):
     blocked = True
     stack = "sample stack trace"
 
-    on_detected_attack(
-        mock_connection_manager,
+    event = create_detected_attack_api_event(
         attack=attack,
         context=test_utils.generate_context(),
         blocked=blocked,
@@ -122,19 +87,17 @@ def test_on_detected_attack_with_blocked_and_stack(mock_connection_manager):
     )
 
     # Check that the attack dictionary has the blocked and stack fields set
-    assert attack["blocked"] is True
-    assert attack["stack"] == stack
-    assert mock_connection_manager.api.report.call_count == 1
+    assert event["attack"]["blocked"] is True
+    assert event["attack"]["stack"] == stack
 
 
-def test_on_detected_attack_request_data_and_attack_data(mock_connection_manager):
+def test_create_attack_event_request_data_and_attack_data():
     attack = {
         "payload": {"key": "value"},
         "metadata": {"test": "true"},
     }
 
-    on_detected_attack(
-        mock_connection_manager,
+    event = create_detected_attack_api_event(
         attack=attack,
         context=test_utils.generate_context(
             method="GET",
@@ -146,9 +109,6 @@ def test_on_detected_attack_request_data_and_attack_data(mock_connection_manager
         blocked=False,
         stack=None,
     )
-
-    # Extract the call arguments for the report method
-    _, event, _ = mock_connection_manager.api.report.call_args[0]
 
     # Verify the request attribute in the payload
     request_data = event["request"]
@@ -170,43 +130,35 @@ def test_on_detected_attack_request_data_and_attack_data(mock_connection_manager
     assert attack_data["user"] is None
 
 
-def test_on_detected_attack_with_user(mock_connection_manager):
+def test_create_attack_event_with_user():
     attack = {
         "payload": {"key": "value"},
         "metadata": {},
     }
 
-    on_detected_attack(
-        mock_connection_manager,
+    event = create_detected_attack_api_event(
         attack=attack,
         context=test_utils.generate_context(user="test_user"),
         blocked=False,
         stack=None,
     )
 
-    # Extract the call arguments for the report method
-    _, event, _ = mock_connection_manager.api.report.call_args[0]
-
     # Verify the user is included in the attack data
     assert event["attack"]["user"] == "test_user"
 
 
-def test_on_detected_attack_no_context_and_attack_data(mock_connection_manager):
+def test_create_attack_event_no_context_and_attack_data():
     attack = {
         "payload": {"key": "value"},
         "metadata": {"test": "true"},
     }
 
-    on_detected_attack(
-        mock_connection_manager,
+    event = create_detected_attack_api_event(
         attack=attack,
         context=None,
         blocked=False,
         stack=None,
     )
-
-    # Extract the call arguments for the report method
-    _, event, _ = mock_connection_manager.api.report.call_args[0]
 
     # Verify the request attribute in the payload
     request_data = event["request"]
