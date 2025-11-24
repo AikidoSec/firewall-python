@@ -1,4 +1,4 @@
-from .command import Command, CommandContext
+from .command import Command, CommandContext, Payload
 
 
 class PutEventReq:
@@ -14,5 +14,13 @@ class PutEventCommand(Command):
         return "put_event"
 
     @classmethod
+    def returns_data(cls) -> bool:
+        return False
+
+    @classmethod
     def run(cls, context: CommandContext, request: PutEventReq):
         context.queue.put(request.event)
+
+    @classmethod
+    def generate(cls, event) -> Payload:
+        return Payload(cls, PutEventReq(event))
