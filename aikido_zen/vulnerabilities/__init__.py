@@ -29,6 +29,7 @@ from .shell_injection.check_context_for_shell_injection import (
 from .path_traversal.check_context_for_path_traversal import (
     check_context_for_path_traversal,
 )
+from ..helpers.create_detected_attack_api_event import create_detected_attack_api_event
 
 
 def run_vulnerability_scan(kind, op, args):
@@ -106,6 +107,9 @@ def run_vulnerability_scan(kind, op, args):
         stack = get_clean_stacktrace()
 
         if comms:
+            event = create_detected_attack_api_event(
+                injection_results, context, blocked, stack
+            )
             comms.send_data_to_bg_process(
                 "ATTACK", (injection_results, context, blocked, stack)
             )
