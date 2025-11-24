@@ -101,13 +101,7 @@ class AikidoBackgroundProcess:
             EMPTY_QUEUE_INTERVAL, 1, self.send_to_connection_manager, (event_scheduler,)
         )
         while not self.queue.empty():
-            queue_attack_item = self.queue.get()
-            self.connection_manager.on_detected_attack(
-                attack=queue_attack_item[0],
-                context=queue_attack_item[1],
-                blocked=queue_attack_item[2],
-                stack=queue_attack_item[3],
-            )
+            self.connection_manager.report_api_event(self.queue.get())
 
 
 def add_exit_handlers():
