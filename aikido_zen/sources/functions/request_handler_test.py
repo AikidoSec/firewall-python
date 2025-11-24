@@ -42,7 +42,7 @@ class MyMockComms:
     def send_data_to_bg_process(self, action, obj, receive=False, timeout_in_sec=0.1):
         if action != "CHECK_FIREWALL_LISTS":
             return {"success": False}
-        res = process_check_firewall_lists(self.conn_manager, obj, None, None)
+        res = process_check_firewall_lists(self.conn_manager, obj)
         return {
             "success": True,
             "data": res,

@@ -4,7 +4,7 @@ from aikido_zen.api_discovery.update_route_info import update_route_info
 from aikido_zen.background_process.packages import PackagesStore
 
 
-def process_sync_data(connection_manager, data, conn, queue=None):
+def process_sync_data(connection_manager, data):
     """
     Synchronizes data between the thread-local cache (with a TTL of usually 1 minute) and the
     background thread. Which data gets synced?
