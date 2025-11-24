@@ -29,6 +29,7 @@ from .shell_injection.check_context_for_shell_injection import (
 from .path_traversal.check_context_for_path_traversal import (
     check_context_for_path_traversal,
 )
+from ..background_process.commands import PutEventCommand
 from ..helpers.create_detected_attack_api_event import create_detected_attack_api_event
 
 
@@ -110,6 +111,6 @@ def run_vulnerability_scan(kind, op, args):
             injection_results, context, blocked, stack
         )
         if comms and event:
-            comms.send_data_to_bg_process("ATTACK", (event))
+            comms.send_payload(PutEventCommand.generate(event))
         if blocked:
             raise error_type(*error_args)

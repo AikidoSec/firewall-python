@@ -5,6 +5,8 @@ Exports the AikidoIPCCommunications class
 
 import multiprocessing.connection as con
 from threading import Thread
+
+from aikido_zen.background_process.commands.command import Payload
 from aikido_zen.helpers.logging import logger
 
 # pylint: disable=invalid-name # This variable does change
@@ -98,3 +100,8 @@ class AikidoIPCCommunications:
         if receive:
             return {"success": True, "data": result_obj[1]}
         return {"success": True, "data": None}
+
+    def send_payload(self, payload: Payload):
+        return self.send_data_to_bg_process(
+            payload.identifier, payload.request, payload.returns_data
+        )
