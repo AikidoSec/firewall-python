@@ -144,13 +144,29 @@ def test_sql_injection_with_comms(caplog, get_context, monkeypatch):
             )
         mock_comms.send_data_to_bg_process.assert_called_once()
         call_args = mock_comms.send_data_to_bg_process.call_args[0]
-        assert call_args[0] == "ATTACK"
-        assert call_args[1][0]["kind"] == "sql_injection"
-        assert (
-            call_args[1][0]["metadata"]["sql"]
-            == "INSERT * INTO VALUES ('doggoss2', TRUE);"
-        )
-        assert call_args[1][0]["metadata"]["dialect"] == "mysql"
+        assert call_args[0] == "put_event"
+        assert call_args[1].event["request"] == {
+            "ipAddress": "198.51.100.23",
+            "method": "GET",
+            "route": "/hello",
+            "source": "flask",
+            "url": "http://localhost:8080/hello",
+            "userAgent": None,
+        }
+        del call_args[1].event["attack"]["stack"]  # Hard to test
+        assert call_args[1].event["attack"] == {
+            "blocked": True,
+            "kind": "sql_injection",
+            "metadata": {
+                "dialect": "mysql",
+                "sql": "INSERT * INTO VALUES ('doggoss2', TRUE);",
+            },
+            "operation": "test_op",
+            "pathToPayload": ".test_input_sql",
+            "payload": '"doggoss2\', TRUE"',
+            "source": "body",
+            "user": None,
+        }
 
 
 def test_ssrf_vulnerability_scan_adds_hostname(get_context):
