@@ -16,7 +16,6 @@ from ...storage.firewall_lists import FirewallLists
 from ...storage.statistics import Statistics
 
 # Import functions :
-from .on_detected_attack import on_detected_attack
 from .get_manager_info import get_manager_info
 from .update_service_config import update_service_config
 from .on_start import on_start
@@ -81,10 +80,6 @@ class CloudConnectionManager:
         should_report_initial_stats = data_present and not self.conf.received_any_stats
         if should_report_initial_stats:
             self.send_heartbeat()
-
-    def on_detected_attack(self, attack, context, blocked, stack):
-        """This will send something to the API when an attack is detected"""
-        return on_detected_attack(self, attack, context, blocked, stack)
 
     def send_heartbeat(self):
         """This will send a heartbeat to the server"""
