@@ -22,5 +22,5 @@ class PutEventCommand(Command):
         context.queue.put(request.event)
 
     @classmethod
-    def generate(cls, event) -> Payload:
-        return Payload(cls, PutEventReq(event))
+    def generate(cls, request) -> Payload:
+        return Payload(cls, PutEventReq(request))

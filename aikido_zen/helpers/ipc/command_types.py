@@ -11,6 +11,13 @@ class CommandContext:
         self.connection.send(response)
 
 
+class Payload:
+    def __init__(self, command, request):
+        self.identifier = command.identifier()
+        self.returns_data = command.returns_data()
+        self.request = request
+
+
 class Command(ABC):
     @classmethod
     @abstractmethod
@@ -29,12 +36,5 @@ class Command(ABC):
 
     @classmethod
     @abstractmethod
-    def generate(cls, *args, **kwargs):
+    def generate(cls, request) -> Payload:
         pass
-
-
-class Payload:
-    def __init__(self, command: type[Command], request):
-        self.identifier = command.identifier()
-        self.returns_data = command.returns_data()
-        self.request = request
