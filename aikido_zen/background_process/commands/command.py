@@ -19,5 +19,22 @@ class Command(ABC):
 
     @classmethod
     @abstractmethod
+    def returns_data(cls) -> bool:
+        pass
+
+    @classmethod
+    @abstractmethod
     def run(cls, context: CommandContext, request):
         pass
+
+    @classmethod
+    @abstractmethod
+    def generate(cls, *args, **kwargs):
+        pass
+
+
+class Payload:
+    def __init__(self, command: type[Command], request):
+        self.identifier = command.identifier()
+        self.returns_data = command.returns_data()
+        self.request = request
