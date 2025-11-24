@@ -10,7 +10,7 @@ def serialize_to_json(obj):
     if that fails it returns an empty JSON string "{}"
     """
     try:
-        return json.dumps(obj)
+        return json.dumps(obj)[:5000]
     except Exception:
         try:
             return json.dumps(dict(obj))
