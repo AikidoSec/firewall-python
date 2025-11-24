@@ -3,7 +3,8 @@ from .command import Command, CommandContext
 
 class PutEventReq:
     def __init__(self, event):
-        # Event is a JSON object ready to be sent to core.
+        # Event is a dictionary containing data that is going to be reported to core
+        # "time" and "agent" fields are added by default from the CloudConnectionManager
         self.event = event
 
 
