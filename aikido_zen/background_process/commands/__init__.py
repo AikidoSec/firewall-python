@@ -23,7 +23,7 @@ def process_incoming_command(connection_manager, obj, conn, queue):
     inbound_request = obj[1]
     if inbound_identifier in commands_map:
         func = commands_map[inbound_identifier]
-        return conn.send(func(connection_manager, inbound_identifier, queue))
+        return conn.send(func(connection_manager, inbound_request))
 
     for cmd in modern_commands:
         if cmd.identifier() == inbound_identifier:

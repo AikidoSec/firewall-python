@@ -3,7 +3,7 @@
 import aikido_zen.ratelimiting as ratelimiting
 
 
-def process_should_ratelimit(connection_manager, data, queue=None):
+def process_should_ratelimit(connection_manager, data):
     """
     Called to check if the context passed along as data should be rate limited
     data object should be a dict including route_metadata, remote_address and user
