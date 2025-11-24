@@ -105,3 +105,26 @@ class CloudConnectionManager:
     def update_firewall_lists(self):
         """Will update service config with blocklist of IP addresses"""
         return update_firewall_lists(self)
+
+    def report_event(self, event):
+        if not self.token:
+            return {"success": False, "error": "invalid_token"}
+        try:
+            payload = {
+                "time": get_unixtime_ms(),
+                "agent": get_manager_info(self),
+            }
+            payload.update(event)  # Merge default fields with event fields
+
+            result = self.api.report(self.token, payload, self.timeout_in_sec)
+            if not result.get("success", True):
+                logger.error(
+                    "CloudConnectionManager: Reporting to api failed, error=%s",
+                    result.get("error", "unknown"),
+                )
+            return result
+        except Exception as e:
+            logger.debug(e)
+            logger.error(
+                "CloudConnectionManager: Reporting to api failed, unexpected error (see debug logs)"
+            )
