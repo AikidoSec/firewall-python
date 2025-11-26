@@ -28,9 +28,11 @@ class AikidoDjangoMiddleware:
             if result["trigger"] == "ip" and result["ip"]:
                 message += " (Your IP: " + result["ip"] + ")"
             return self.HttpResponse(message, content_type="text/plain", status=429)
-        elif result["type"] == "blocked":
+
+        if result["type"] == "blocked":
             return self.HttpResponse(
                 "You are blocked by Zen.", content_type="text/plain", status=403
             )
+
         logger.debug("Unknown type for blocking request: %s", result["type"])
         return self.get_response(request)

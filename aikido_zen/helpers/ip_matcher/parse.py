@@ -38,10 +38,10 @@ def looks_like_ipv4(s):
 
 def parse_int_range(old, min_val, max_val):
     s = ""
-    for i in range(len(old)):
-        if not old[i].isdigit():
+    for old_i in old:
+        if not old_i.isdigit():
             break
-        s += old[i]
+        s += old_i
     if not s:
         return None
     x = int(s)
@@ -100,9 +100,9 @@ def parse_hextet(s):
     if len(s) < 1 or len(s) > 4:
         return float("nan")
     val = 0
-    for i in range(len(s)):
+    for i, s_i in enumerate(s):
         try:
-            x = int(s[i], 16)
+            x = int(s_i, 16)
         except ValueError:
             return float("nan")
         val += x * (2 ** (4 * (len(s) - i - 1)))
@@ -113,14 +113,14 @@ def parse_left_half(bytes_data, left_half):
     left_byte_index = 0
     if left_half != "":
         left_parts = left_half.split(":")
-        for i in range(len(left_parts)):
+        for left_part in left_parts:
             if left_byte_index >= 16:
                 return None
-            ipv4_parts = left_parts[i].split(".")
+            ipv4_parts = left_part.split(".")
             if len(ipv4_parts) == 0:
                 return None
             if len(ipv4_parts) != 4:
-                x = parse_hextet(left_parts[i])
+                x = parse_hextet(left_part)
                 if isinstance(x, float) and math.isnan(x):
                     return None
                 if x < 0 or x > 65535:
@@ -129,9 +129,9 @@ def parse_left_half(bytes_data, left_half):
                 bytes_data[left_byte_index + 1] = x % 256
                 left_byte_index += 2
             else:
-                for j in range(len(ipv4_parts)):
+                for ipv4_part in ipv4_parts:
                     try:
-                        x = int(ipv4_parts[j])
+                        x = int(ipv4_part)
                     except ValueError:
                         return None
                     if x < 0 or x > 255:

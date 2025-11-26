@@ -11,11 +11,11 @@ def test_with_urlencoded_urls():
 
 
 def test_uses_keys():
-    url = "http://localhost:8080/app/shell/me@woutfeys.be/017shell/127.0.0.1/"
+    url = "http://localhost:8080/app/shell/test@example.org/017shell/127.0.0.1/"
     assert extract_route_params(url) == [
-        "me@woutfeys.be",
+        "test@example.org",
         "127.0.0.1",
-        "app/shell/me@woutfeys.be/017shell/127.0.0.1/",
+        "app/shell/test@example.org/017shell/127.0.0.1/",
     ]
 
 

@@ -144,3 +144,22 @@ def test_replaces_ulid_strings():
 
     # 25 characters
     assert build_route_from_url("/posts/01arz3ndektsv4rrffq69g5fa") != "/posts/:ulid"
+
+
+def test_multiple_slashes():
+    assert build_route_from_url("//test_ratelimiting_1//") == "/test_ratelimiting_1"
+
+    assert (
+        build_route_from_url("////posts/66ec29159d00113616fc7184//")
+        == "/posts/:objectId"
+    )
+
+    assert (
+        build_route_from_url("/posts///66ec29159d00113616fc71845")
+        == "/posts/66ec29159d00113616fc71845"
+    )
+
+    assert (
+        build_route_from_url("//posts//66ec29159d00113616fc718//")
+        == "/posts/66ec29159d00113616fc718"
+    )

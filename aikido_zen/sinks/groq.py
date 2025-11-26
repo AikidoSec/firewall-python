@@ -12,7 +12,7 @@ def get_provider_and_model_from_groq_model(groq_model: str):
 
 @after
 def _completions_create(func, instance, args, kwargs, return_value):
-    op = f"groq.resources.chat.completions.Completions.create"
+    op = "groq.resources.chat.completions.Completions.create"
     register_call(op, "ai_op")
 
     provider, model = get_provider_and_model_from_groq_model(return_value.model)
@@ -26,7 +26,7 @@ def _completions_create(func, instance, args, kwargs, return_value):
 
 @after_async
 async def _completions_create_async(func, instance, args, kwargs, return_value):
-    op = f"groq.resources.chat.completions.AsyncCompletions.create"
+    op = "groq.resources.chat.completions.AsyncCompletions.create"
     register_call(op, "ai_op")
 
     provider, model = get_provider_and_model_from_groq_model(return_value.model)

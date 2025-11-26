@@ -4,4 +4,30 @@ disable = unused-argument
 ignore-patterns=(.)*_test\.py,test_(.)*\.py
 
 [MESSAGES CONTROL]
-disable=too-few-public-methods,broad-exception-caught
+disable =
+    too-few-public-methods,
+    broad-exception-caught,
+    missing-function-docstring,
+    missing-module-docstring,
+    missing-class-docstring,
+    wrong-import-order,
+    ungrouped-imports,
+    import-outside-toplevel,
+    line-too-long,
+    invalid-name,
+    import-error,
+    raise-missing-from,
+    too-many-branches,
+    too-many-locals,
+    too-many-boolean-expressions,
+    too-many-arguments,
+    too-many-instance-attributes,
+    too-many-return-statements,
+    consider-using-from-import,
+# temporary
+    cyclic-import,
+    no-value-for-parameter,
+    unexpected-keyword-arg,
+    inconsistent-return-statements,
+    duplicate-code,
+    attribute-defined-outside-init,

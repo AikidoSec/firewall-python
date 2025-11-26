@@ -20,12 +20,14 @@ def aikido_process_worker_thread():
     while True:
         # Print information about the process
         logger.debug(
-            f"Process ID: {current_process.pid}, Name: {current_process.name} - process_worker renewing thread cache."
+            "PID=%s Name=%s - process_worker renewing thread cache.",
+            current_process.pid,
+            current_process.name,
         )
 
         # Renew the cache every 5 seconds
         try:
             thread_cache.renew()
         except Exception as e:
-            logger.warn("An error occurred during data synchronization: %s", e)
+            logger.warning("An error occurred during data synchronization: %s", e)
         time.sleep(RENEW_CACHE_EVERY_X_SEC)

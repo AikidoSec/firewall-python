@@ -2,7 +2,7 @@ import sys
 
 
 def check_gevent():
-    if "gevent" in sys.modules.keys():
+    if "gevent" in sys.modules:
         print(
             "\033[1m"  # bold
             + "\nWARNING: gevent is not compatible with Aikido Zen.\n"

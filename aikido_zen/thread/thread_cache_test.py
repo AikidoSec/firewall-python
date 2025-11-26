@@ -1,32 +1,26 @@
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+import aikido_zen.test_utils as test_utils
+
 from aikido_zen.background_process.routes import Routes
 from .thread_cache import ThreadCache, get_cache
 from .. import set_user
 from ..background_process.packages import PackagesStore
 from ..background_process.service_config import ServiceConfig
-from ..context import current_context, Context
+from ..context import current_context
 from aikido_zen.helpers.ip_matcher import IPMatcher
 
 
 @pytest.fixture
 def thread_cache():
     """Fixture to create a ThreadCache instance."""
-    with patch(
-        "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms", return_value=-1
-    ):
+    with test_utils.patch_time(time_ms=-1):
         return ThreadCache()
-
-
-class Context2(Context):
-    def __init__(self):
-        self.executed_middleware = False
-        self.remote_address = "5.6.7.8"
 
 
 @pytest.fixture(autouse=True)
 def run_around_tests():
-    Context2().set_as_current_context()
+    test_utils.generate_and_set_context()
     yield
     # Make sure to reset thread cache after every test so it does not
     # interfere with other tests
@@ -153,10 +147,7 @@ def test_increment_stats_thread_safety(thread_cache):
 
 
 @patch("aikido_zen.background_process.comms.get_comms")
-@patch("aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms")
-def test_parses_routes_correctly(
-    mock_get_unixtime_ms, mock_get_comms, thread_cache: ThreadCache
-):
+def test_parses_routes_correctly(mock_get_comms, thread_cache: ThreadCache):
     """Test renewing the cache multiple times if TTL has expired."""
     mock_get_comms.return_value = MagicMock()
     mock_get_comms.return_value.send_data_to_bg_process.return_value = {
@@ -253,9 +244,7 @@ def test_renew_called_with_correct_args(mock_get_comms, thread_cache: ThreadCach
     thread_cache.ai_stats.on_ai_call("openai", "gpt-4o3", 8223, 173)
 
     # Call renew
-    with patch(
-        "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms", return_value=-1
-    ):
+    with test_utils.patch_time(time_ms=-1):
         PackagesStore.add_package("test-package-4", "4.3.0")
         PackagesStore.clear()
         PackagesStore.add_package("test-package-1", "4.3.0")
@@ -346,21 +335,16 @@ def test_sync_data_for_users(mock_get_comms, thread_cache: ThreadCache):
     """Test that renew calls send_data_to_bg_process with correct arguments."""
     mock_comms = MagicMock()
     mock_get_comms.return_value = mock_comms
-    Context2().set_as_current_context()
+    test_utils.generate_and_set_context(ip="5.6.7.8")
 
     # Setup initial state
     thread_cache.stats.increment_total_hits()
     with patch("aikido_zen.thread.thread_cache.get_cache", return_value=thread_cache):
-        with patch(
-            "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms", return_value=1
-        ):
+        with test_utils.patch_time(time_ms=1):
             set_user({"id": "123", "name": "test"})
             set_user({"id": "567", "name": "test"})
 
-    # Call renew
-    with patch(
-        "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms", return_value=-1
-    ):
+    with test_utils.patch_time(time_ms=-1):
         thread_cache.renew()
 
     # Assert that send_data_to_bg_process was called with the correct arguments
@@ -410,10 +394,7 @@ def test_renew_called_with_empty_routes(mock_get_comms, thread_cache: ThreadCach
     mock_comms = MagicMock()
     mock_get_comms.return_value = mock_comms
 
-    # Call renew without initializing any routes
-    with patch(
-        "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms", return_value=-1
-    ):
+    with test_utils.patch_time(time_ms=-1):
         thread_cache.renew()
 
     # Assert that send_data_to_bg_process was called with the correct arguments
@@ -451,10 +432,7 @@ def test_renew_called_with_no_requests(mock_get_comms, thread_cache: ThreadCache
     # Setup initial state with a route but no requests
     thread_cache.routes.initialize_route({"method": "GET", "route": "/test"})
 
-    # Call renew
-    with patch(
-        "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms", return_value=-1
-    ):
+    with test_utils.patch_time(time_ms=-1):
         thread_cache.renew()
 
     # Assert that send_data_to_bg_process was called with the correct arguments

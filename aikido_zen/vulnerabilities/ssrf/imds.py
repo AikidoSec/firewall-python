@@ -51,10 +51,11 @@ def is_trusted_hostname(hostname):
 
 def resolves_to_imds_ip(resolved_ip_addresses, hostname):
     """
-    returns a boolean, true if the IP is an imds ip
+    Returns the IMDS IP address as a string if it exists in resolved_ip_addresses, otherwise returns None
     """
-    #  Allow access to Google Cloud metadata service as you need to set specific headers to access it
-    #  We don't want to block legitimate requests
     if is_trusted_hostname(hostname):
-        return False
-    return any(is_imds_ip_address(ip) for ip in resolved_ip_addresses)
+        return None
+    for ip in resolved_ip_addresses:
+        if is_imds_ip_address(ip):
+            return ip
+    return None

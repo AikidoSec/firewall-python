@@ -21,7 +21,7 @@ class RateLimiter:
         Checks if the request is allowed given the history
         """
         current_time = get_unixtime_ms()
-        request_timestamps = self.rate_limited_items.get(key) or list()
+        request_timestamps = self.rate_limited_items.get(key) or []
 
         # clear entries that are not in the rate-limiting window anymore
         request_timestamps = [

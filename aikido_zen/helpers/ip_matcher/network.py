@@ -51,7 +51,7 @@ class Network:
             self.destroy()
         else:
             cidr = math.floor(cidr)
-            if cidr >= 0 and cidr <= len(self.addr.bytes()) * 8:
+            if 0 <= cidr <= len(self.addr.bytes()) * 8:
                 self.netbits = cidr
             else:
                 self.destroy()

@@ -14,7 +14,7 @@ def on_detected_attack(connection_manager, attack, context, blocked, stack):
     """
     if not connection_manager.token:
         return
-    # Modify attack so we can send it out :
+
     try:
         attack["user"] = getattr(context, "user", None)
         attack["payload"] = json.dumps(attack["payload"])[:4096]
@@ -27,16 +27,7 @@ def on_detected_attack(connection_manager, attack, context, blocked, stack):
             "time": get_unixtime_ms(),
             "agent": connection_manager.get_manager_info(),
             "attack": attack,
-            "request": {
-                "method": context.method,
-                "url": context.url,
-                "ipAddress": context.remote_address,
-                "userAgent": context.get_user_agent(),
-                "body": context.body,
-                "headers": context.headers,
-                "source": context.source,
-                "route": context.route,
-            },
+            "request": extract_request_if_possible(context),
         }
         logger.debug(serialize_to_json(payload))
         result = connection_manager.api.report(
@@ -48,3 +39,16 @@ def on_detected_attack(connection_manager, attack, context, blocked, stack):
     except Exception as e:
         logger.debug(e)
         logger.info("Failed to report an attack")
+
+
+def extract_request_if_possible(context):
+    if not context:
+        return None
+    return {
+        "method": getattr(context, "method", None),
+        "url": getattr(context, "url", None),
+        "ipAddress": getattr(context, "remote_address", None),
+        "source": getattr(context, "source", None),
+        "route": getattr(context, "route", None),
+        "userAgent": context.get_user_agent(),
+    }

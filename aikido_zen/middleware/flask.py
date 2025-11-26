@@ -29,10 +29,12 @@ class AikidoFlaskMiddleware:
                 message += " (Your IP: " + result["ip"] + ")"
             res = self.Response(message, mimetype="text/plain", status=429)
             return res(environ, start_response)
-        elif result["type"] == "blocked":
+
+        if result["type"] == "blocked":
             res = self.Response(
                 "You are blocked by Zen.", mimetype="text/plain", status=403
             )
             return res(environ, start_response)
+
         logger.debug("Unknown type for blocking request: %s", result["type"])
         return self.app(environ, start_response)

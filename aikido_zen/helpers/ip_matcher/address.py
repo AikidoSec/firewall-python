@@ -59,10 +59,10 @@ class Address:
         if len(self.arr) > len(address.arr):
             return AFTER
 
-        for i in range(len(self.arr)):
-            if self.arr[i] < address.arr[i]:
+        for i, adr in enumerate(self.arr):
+            if adr < address.arr[i]:
                 return BEFORE
-            if self.arr[i] > address.arr[i]:
+            if adr > address.arr[i]:
                 return AFTER
 
         return EQUALS

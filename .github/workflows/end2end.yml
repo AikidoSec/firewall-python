@@ -1,6 +1,7 @@
-name: End-to-End tests
-
+name: 🕵️ End to end tests
 on: [pull_request]
+permissions:
+  contents: read
 
 jobs:
   build:
