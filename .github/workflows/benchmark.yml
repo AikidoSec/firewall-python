@@ -104,4 +104,4 @@ jobs:
           timeout_minutes: 20
           max_attempts: 3
           command: |
-            cd ./benchmakrs/wrk_benchmark && make benchmark_${{ matrix.app }}
+            cd ./benchmarks/wrk_benchmark && make benchmark_${{ matrix.app }}
