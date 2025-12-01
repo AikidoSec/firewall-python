@@ -124,6 +124,6 @@ def add_exit_handlers():
     signal.signal(signal.SIGINT, exit_gracefully)
     signal.signal(signal.SIGTERM, exit_gracefully)
 
-    if current_platform in ('Linux', 'Darwin'):
+    if current_platform in ("Linux", "Darwin"):
         signal.signal(signal.SIGQUIT, exit_gracefully)
         signal.signal(signal.SIGHUP, exit_gracefully)
