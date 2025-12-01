@@ -60,7 +60,6 @@ jobs:
         run: nohup make runBenchmark & nohup make runZenDisabled &
       - name: Install K6
         uses: grafana/setup-k6-action@ffe7d7290dfa715e48c2ccc924d068444c94bde2 # v1
-
       - name: Run flask-mysql k6 Benchmark (max 3 attempts)
         uses: nick-fields/retry@14672906e672a08bd6eeb15720e9ed3ce869cdd4 # v2.9.0
         with:
