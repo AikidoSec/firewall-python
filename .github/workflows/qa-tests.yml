@@ -1,0 +1,53 @@
+name: 🧪 QA Tests
+permissions:
+  contents: read
+on:
+  push: {}
+  workflow_call: {}
+
+jobs:
+  qa-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout firewall-python
+        uses: actions/checkout@v5
+        with:
+          path: firewall-python
+
+      - name: Checkout zen-demo-python
+        uses: actions/checkout@v5
+        with:
+          repository: Aikido-demo-apps/zen-demo-python
+          path: zen-demo-python
+          ref: qa-test
+          submodules: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install poetry
+        run: pip install poetry
+
+      - name: Build firewall-python dev package
+        run: |
+          cd firewall-python
+          make build
+
+          # Move the built wheel to zen-demo-python directory
+          # poetry build creates both .tar.gz and .whl, we only need the wheel
+          mv dist/*.whl ../zen-demo-python/
+
+      - name: Replace Dockerfile with QA version
+        run: |
+          cp firewall-python/.github/workflows/Dockerfile.qa zen-demo-python/Dockerfile
+
+      - name: Run Firewall QA Tests
+        uses: AikidoSec/firewall-tester-action@v1.0.0
+        with:
+          dockerfile_path: ./zen-demo-python/Dockerfile
+          app_port: 8080
+          sleep_before_test: 10
+          skip_tests: test_bypassed_ip_for_geo_blocking,test_demo_apps_generic_tests,test_path_traversal,test_wave_attack

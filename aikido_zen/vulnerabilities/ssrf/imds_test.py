@@ -12,6 +12,11 @@ def test_returns_false_for_non_imds_ip_addresses():
     assert is_imds_ip_address("example.com") is False
 
 
+def test_is_imds_ip_address_ipv6_mapped():
+    assert is_imds_ip_address("::ffff:169.254.169.254") is True
+    assert is_imds_ip_address("::ffff:100.100.100.200") is True
+
+
 # --- Tests ---
 def test_trusted_hostname_returns_none():
     """Test that trusted hostnames always return None."""
