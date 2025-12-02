@@ -10,12 +10,12 @@ from ..service_config import ServiceConfig
 from aikido_zen.storage.users import Users
 from aikido_zen.storage.hostnames import Hostnames
 from ..realtime.start_polling_for_changes import start_polling_for_changes
+from ...helpers.get_current_unixtime_ms import get_unixtime_ms
 from ...storage.ai_statistics import AIStatistics
 from ...storage.firewall_lists import FirewallLists
 from ...storage.statistics import Statistics
 
 # Import functions :
-from .on_detected_attack import on_detected_attack
 from .get_manager_info import get_manager_info
 from .update_service_config import update_service_config
 from .on_start import on_start
@@ -57,7 +57,7 @@ class CloudConnectionManager:
 
     def start(self, event_scheduler):
         """Send out start event and add heartbeats"""
-        res = self.on_start()
+        res = on_start(self)
         if res.get("error", None) == "invalid_token":
             logger.info(
                 "Token was invalid, not starting heartbeats and realtime polling."
@@ -81,21 +81,9 @@ class CloudConnectionManager:
         if should_report_initial_stats:
             self.send_heartbeat()
 
-    def on_detected_attack(self, attack, context, blocked, stack):
-        """This will send something to the API when an attack is detected"""
-        return on_detected_attack(self, attack, context, blocked, stack)
-
-    def on_start(self):
-        """This will send out an Event signalling the start to the server"""
-        return on_start(self)
-
     def send_heartbeat(self):
         """This will send a heartbeat to the server"""
         return send_heartbeat(self)
-
-    def get_manager_info(self):
-        """This returns info about the connection_manager"""
-        return get_manager_info(self)
 
     def update_service_config(self, res):
         """Update configuration based on the server's response"""
@@ -104,3 +92,26 @@ class CloudConnectionManager:
     def update_firewall_lists(self):
         """Will update service config with blocklist of IP addresses"""
         return update_firewall_lists(self)
+
+    def report_api_event(self, event):
+        if not self.token:
+            return {"success": False, "error": "invalid_token"}
+        try:
+            payload = {
+                "time": get_unixtime_ms(),
+                "agent": get_manager_info(self),
+            }
+            payload.update(event)  # Merge default fields with event fields
+
+            result = self.api.report(self.token, payload, self.timeout_in_sec)
+            if not result.get("success", True):
+                logger.error(
+                    "CloudConnectionManager: Reporting to api failed, error=%s",
+                    result.get("error", "unknown"),
+                )
+            return result
+        except Exception as e:
+            logger.debug(e)
+            logger.error(
+                "CloudConnectionManager: Reporting to api failed, unexpected error (see debug logs)"
+            )

@@ -1,13 +1,7 @@
 """Exports process_check_firewall_lists"""
 
-from aikido_zen.background_process.cloud_connection_manager import (
-    CloudConnectionManager,
-)
 
-
-def process_check_firewall_lists(
-    connection_manager: CloudConnectionManager, data, conn, queue=None
-):
+def process_check_firewall_lists(connection_manager, data):
     """
     Checks whether an IP is blocked
     data: {"ip": string, "user-agent": string}

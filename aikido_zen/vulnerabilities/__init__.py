@@ -29,6 +29,9 @@ from .shell_injection.check_context_for_shell_injection import (
 from .path_traversal.check_context_for_path_traversal import (
     check_context_for_path_traversal,
 )
+from ..background_process.commands import PutEventCommand
+from ..helpers.create_detected_attack_api_event import create_detected_attack_api_event
+from ..helpers.ipc.send_payload import send_payload
 
 
 def run_vulnerability_scan(kind, op, args):
@@ -97,17 +100,17 @@ def run_vulnerability_scan(kind, op, args):
         logger.debug("Exception occurred in run_vulnerability_scan : %s", e)
 
     if injection_results:
-        logger.debug("Injection results : %s", serialize_to_json(injection_results))
-
         blocked = is_blocking_enabled()
         operation = injection_results["operation"]
         thread_cache.stats.on_detected_attack(blocked, operation)
 
         stack = get_clean_stacktrace()
 
-        if comms:
-            comms.send_data_to_bg_process(
-                "ATTACK", (injection_results, context, blocked, stack)
-            )
+        event = create_detected_attack_api_event(
+            injection_results, context, blocked, stack
+        )
+        logger.debug("Attack: %s", serialize_to_json(event)[:5000])
+        if comms and event:
+            send_payload(comms, PutEventCommand.generate(event))
         if blocked:
             raise error_type(*error_args)

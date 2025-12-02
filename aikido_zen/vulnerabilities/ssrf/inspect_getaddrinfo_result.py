@@ -7,7 +7,7 @@ from aikido_zen.context import get_current_context
 from aikido_zen.helpers.logging import logger
 from aikido_zen.thread.thread_cache import get_cache
 from .imds import resolves_to_imds_ip
-from .is_private_ip import is_private_ip
+from aikido_zen.helpers.net.is_private_ip import is_private_ip
 from .find_hostname_in_context import find_hostname_in_context
 from .extract_ip_array_from_results import extract_ip_array_from_results
 from .is_redirect_to_private_ip import is_redirect_to_private_ip
