@@ -77,6 +77,7 @@ class AikidoIPCCommunications:
                 result_obj[0] = True  #  Connection ended gracefully
             except Exception as e:
                 logger.debug("Exception occurred in thread : %s", e)
+                logger.debug("Address: %s", address)
 
         # Create a shared result object between the thread and this process :
         result_obj = [False, None]  # Needs to be an array so we can make a ref.
