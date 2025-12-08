@@ -22,9 +22,12 @@ class ReportingApi:
                 return res.json()
             except Exception as e:
                 logger.debug(
-                    "Trying to load json, failed: %s (body=%s)", str(e), res.text
+                    "Parsing JSON response from core failed: %s (body=%s)",
+                    str(e),
+                    res.text,
                 )
-        logger.debug("ReportingApi.to_api_response: Failed for [%s] %s", status, res.text)
+                return {"success": False, "error": "json_parsing_failed"}
+        logger.debug("Parsing response from core failed: [%s] %s", status, res.text)
         return {"success": False, "error": "status_code_not_200"}
 
     def report(self, token, event, timeout_in_sec):
