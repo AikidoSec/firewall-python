@@ -34,15 +34,19 @@ PRIVATE_IPV6_RANGES = [
     "3fff::/20",  # Documentation prefix (RFC 9637)
 ]
 
-private_ip_list = IPMatcher()
 
-for ip_range in PRIVATE_IP_RANGES:
-    private_ip_list.add(ip_range)
-    private_ip_list.add(map_ipv4_to_ipv6(ip_range))
-for ip_range in PRIVATE_IPV6_RANGES:
-    private_ip_list.add(ip_range)
+def init_private_ip_list():
+    ip_list = IPMatcher()
+    for ip_range in PRIVATE_IP_RANGES:
+        ip_list.add(ip_range)
+        ip_list.add(map_ipv4_to_ipv6(ip_range))
+    for ip_range in PRIVATE_IPV6_RANGES:
+        ip_list.add(ip_range)
+    return ip_list
+
+
+private_ip_list = init_private_ip_list()
 
 
 def is_private_ip(ip):
-    """Returns true if the ip entered is private"""
     return private_ip_list.has(ip)
