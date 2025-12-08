@@ -1,5 +1,6 @@
 import pytricia
 
+
 class IPMatcher:
     def __init__(self, networks=None):
         self.trie = pytricia.PyTricia(128)
