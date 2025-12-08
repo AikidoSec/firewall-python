@@ -2,7 +2,7 @@ import pytricia
 
 class IPMatcher:
     def __init__(self, networks=None):
-        self.trie = pytricia.PyTricia()
+        self.trie = pytricia.PyTricia(128)
         if networks is not None:
             for s in networks:
                 self.add(s)
