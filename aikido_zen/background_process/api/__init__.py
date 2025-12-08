@@ -24,7 +24,8 @@ class ReportingApi:
                 logger.debug(
                     "Trying to load json, failed: %s (body=%s)", str(e), res.text
                 )
-        return {"success": False, "error": "unknown_error"}
+        logger.debug("ReportingApi.to_api_response: Failed for [%s] %s", status, res.text)
+        return {"success": False, "error": "status_code_not_200"}
 
     def report(self, token, event, timeout_in_sec):
         """Report event to aikido server"""
