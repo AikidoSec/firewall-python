@@ -18,6 +18,8 @@ from aikido_zen.background_process.comms import (
     reset_comms,
 )
 from .aikido_background_process import AikidoBackgroundProcess
+from .commands import PingCommand
+from ..helpers.ipc.send_payload import send_payload
 
 
 def start_background_process():
@@ -64,8 +66,8 @@ def get_uds_filename():
 
 
 def background_process_already_active(comms):
-    res = comms.send_data_to_bg_process(action="PING", obj=tuple(), receive=True)
-    if res["success"] and res["data"] == "Received":
+    res = send_payload(comms, PingCommand.generate())
+    if res["success"] and res["data"] == "recv":
         # Ping is active, return.
         logger.debug(
             "A background agent is already running, not starting a new background agent."

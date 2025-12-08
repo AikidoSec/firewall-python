@@ -1,21 +1,20 @@
 from aikido_zen.helpers.logging import logger
 from aikido_zen.helpers.ipc.command_types import CommandContext
+from .ping import PingCommand
 from .put_event import PutEventCommand
 from .check_firewall_lists import process_check_firewall_lists
 from .read_property import process_read_property
 from .should_ratelimit import process_should_ratelimit
-from .ping import process_ping
 from .sync_data import process_sync_data
 
 commands_map = {
     "SYNC_DATA": process_sync_data,
     "READ_PROPERTY": process_read_property,
     "SHOULD_RATELIMIT": process_should_ratelimit,
-    "PING": process_ping,
     "CHECK_FIREWALL_LISTS": process_check_firewall_lists,
 }
 
-modern_commands = [PutEventCommand]
+modern_commands = [PutEventCommand, PingCommand]
 
 
 def process_incoming_command(connection_manager, obj, conn, queue):

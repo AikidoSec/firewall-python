@@ -1,6 +1,18 @@
-"""exports `process_ping`"""
+from aikido_zen.helpers.ipc.command_types import Command, Payload, CommandContext
 
+class PingCommand(Command):
+    @classmethod
+    def identifier(cls) -> str:
+        return "ping"
 
-def process_ping(connection_manager, data):
-    """when main process quits , or during testing etc"""
-    return "Received"
+    @classmethod
+    def returns_data(cls) -> bool:
+        return True
+
+    @classmethod
+    def run(cls, context: CommandContext, request):
+        context.send("recv")
+
+    @classmethod
+    def generate(cls) -> Payload:
+        return Payload(cls, {})
