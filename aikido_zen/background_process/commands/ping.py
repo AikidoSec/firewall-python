@@ -1,5 +1,6 @@
 from aikido_zen.helpers.ipc.command_types import Command, Payload, CommandContext
 
+
 class PingCommand(Command):
     @classmethod
     def identifier(cls) -> str:
@@ -11,7 +12,7 @@ class PingCommand(Command):
 
     @classmethod
     def run(cls, context: CommandContext, request):
-        context.send("recv")
+        return "recv"
 
     @classmethod
     def generate(cls) -> Payload:

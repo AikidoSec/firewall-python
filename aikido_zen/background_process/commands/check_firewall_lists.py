@@ -1,36 +1,46 @@
 """Exports process_check_firewall_lists"""
 
+from aikido_zen.helpers.ipc.command_types import Command, Payload, CommandContext
 
-def process_check_firewall_lists(connection_manager, data):
-    """
-    Checks whether an IP is blocked
-    data: {"ip": string, "user-agent": string}
-    returns -> {"blocked": boolean, "type": string, "reason": string}
-    """
-    ip = data["ip"]
-    if ip is not None and isinstance(ip, str):
-        # Global IP Allowlist (e.g. for geofencing)
-        if not connection_manager.firewall_lists.is_allowed_ip(ip):
-            return {"blocked": True, "type": "allowlist"}
 
-        # Global IP Blocklist (e.g. blocking known threat actors)
-        reason = connection_manager.firewall_lists.is_blocked_ip(ip)
-        if reason:
-            return {
-                "blocked": True,
-                "type": "blocklist",
-                "reason": reason,
-            }
+class CheckFirewallListsCommand(Command):
 
-    user_agent = data["user-agent"]
-    if user_agent is not None and isinstance(user_agent, str):
+    @classmethod
+    def identifier(cls) -> str:
+        return "cfl"  # [C]heck [F]irewall [L]ists
+
+    @classmethod
+    def returns_data(cls) -> bool:
+        return True
+
+    @classmethod
+    def run(cls, ctx: CommandContext, request):
+        ip = request["ip"]
+        if ip is not None and isinstance(ip, str):
+            # Global IP Allowlist (e.g. for geofencing)
+            if not ctx.connection_manager.firewall_lists.is_allowed_ip(ip):
+                return {"blocked": True, "type": "allowlist"}
+
+            # Global IP Blocklist (e.g. blocking known threat actors)
+            reason = ctx.connection_manager.firewall_lists.is_blocked_ip(ip)
+            if reason:
+                return {
+                    "blocked": True,
+                    "type": "blocklist",
+                    "reason": reason,
+                }
+
         # User agent blocking (e.g. blocking AI scrapers)
-        if connection_manager.firewall_lists.is_user_agent_blocked(user_agent):
-            return {
-                "blocked": True,
-                "type": "bot-blocking",
-            }
+        user_agent = request["user-agent"]
+        if user_agent is not None and isinstance(user_agent, str):
+            if ctx.connection_manager.firewall_lists.is_user_agent_blocked(user_agent):
+                return {
+                    "blocked": True,
+                    "type": "bot-blocking",
+                }
 
-    return {
-        "blocked": False,
-    }
+        return {"blocked": False}
+
+    @classmethod
+    def generate(cls, request) -> Payload:
+        return Payload(cls, request)
