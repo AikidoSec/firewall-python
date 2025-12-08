@@ -5,7 +5,6 @@ Exports the AikidoIPCCommunications class
 
 import multiprocessing.connection as con
 from threading import Thread
-
 from aikido_zen.helpers.logging import logger
 
 # pylint: disable=invalid-name # This variable does change
