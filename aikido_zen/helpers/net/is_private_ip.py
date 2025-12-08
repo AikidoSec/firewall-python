@@ -1,6 +1,5 @@
-"""Only exports is_private_ip function"""
-
-import ipaddress
+from aikido_zen.helpers.ip_matcher import IPMatcher
+from aikido_zen.helpers.ip_matcher.map_ipv4_to_ipv6 import map_ipv4_to_ipv6
 
 # Define private IP ranges
 PRIVATE_IP_RANGES = [
@@ -35,40 +34,15 @@ PRIVATE_IPV6_RANGES = [
     "3fff::/20",  # Documentation prefix (RFC 9637)
 ]
 
-# Create a set to hold private IP networks
-private_ip_networks = set()
+private_ip_list = IPMatcher()
 
-# Add private IPv4 ranges to the set
 for ip_range in PRIVATE_IP_RANGES:
-    private_ip_networks.add(ipaddress.ip_network(ip_range))
-
-# Add private IPv6 ranges to the set
+    private_ip_list.add(ip_range)
+    private_ip_list.add(map_ipv4_to_ipv6(ip_range))
 for ip_range in PRIVATE_IPV6_RANGES:
-    private_ip_networks.add(ipaddress.ip_network(ip_range))
-
-
-def normalize_ip(ip):
-    """Normalize the IP address by removing leading zeros."""
-    if not ":" in ip:
-        # Normalize IPv4 ip's
-        parts = ip.split(".")
-        normalized_parts = [
-            str(int(part)) for part in parts
-        ]  # Convert to int and back to str to remove leading zeros
-        return ".".join(normalized_parts)
-    return ip
+    private_ip_list.add(ip_range)
 
 
 def is_private_ip(ip):
     """Returns true if the ip entered is private"""
-    try:
-        normalized_ip = normalize_ip(ip)
-        ip_obj = ipaddress.ip_address(normalized_ip)
-        if isinstance(ip_obj, ipaddress.IPv6Address) and ip_obj.ipv4_mapped:
-            # If it's an IPv4-mapped IPv6 addresses, check if the IPv4 address is in any of the private networks
-            return any(ip_obj.ipv4_mapped in network for network in private_ip_networks)
-
-        # Check if the IP address is in any of the private networks
-        return any(ip_obj in network for network in private_ip_networks)
-    except ValueError:
-        return False  # Return False if the IP address is invalid
+    return private_ip_list.has(ip)
