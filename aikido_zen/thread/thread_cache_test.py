@@ -44,10 +44,10 @@ def test_initialization(thread_cache: ThreadCache):
 
 def test_is_bypassed_ip(thread_cache: ThreadCache):
     """Test checking if an IP is bypassed."""
-    thread_cache.config.bypassed_ips.add("192.168.1.1")
+    thread_cache.config.bypassed_ips = IPMatcher(["192.168.1.1"])
     assert thread_cache.is_bypassed_ip("192.168.1.1") is True
     assert thread_cache.is_bypassed_ip("192.168.1.2") is False
-    thread_cache.config.bypassed_ips.add("10.0.0.1/32")
+    thread_cache.config.bypassed_ips = IPMatcher(["192.168.1.1", "10.0.0.1/32"])
     assert thread_cache.is_bypassed_ip("10.0.0.1") is True
     assert thread_cache.is_bypassed_ip("10.0.0.2.2") is False
 
@@ -61,7 +61,7 @@ def test_is_user_blocked(thread_cache: ThreadCache):
 
 def test_reset(thread_cache: ThreadCache):
     """Test that reset empties the cache."""
-    thread_cache.config.bypassed_ips.add("192.168.1.1")
+    thread_cache.config.bypassed_ips = IPMatcher(["192.168.1.1"])
     thread_cache.config.blocked_uids.add("user123")
     thread_cache.stats.increment_total_hits()
     thread_cache.stats.on_detected_attack(blocked=True, operation="test")
@@ -122,7 +122,7 @@ def test_renew_with_invalid_response(mock_get_comms, thread_cache: ThreadCache):
 
 def test_is_bypassed_ip_case_insensitivity(thread_cache: ThreadCache):
     """Test that IP check is case-insensitive."""
-    thread_cache.config.bypassed_ips.add("192.168.1.1")
+    thread_cache.config.bypassed_ips = IPMatcher(["192.168.1.1"])
     assert thread_cache.is_bypassed_ip("192.168.1.1") is True
     assert thread_cache.is_bypassed_ip("192.168.1.1".upper()) is True
 
