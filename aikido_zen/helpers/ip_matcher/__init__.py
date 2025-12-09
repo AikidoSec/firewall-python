@@ -1,7 +1,6 @@
 import ipaddress
 
-import pytricia
-
+import radix
 
 def preparse(network: str) -> str:
     # Remove the brackets around IPv6 addresses if they are there.
@@ -17,22 +16,23 @@ def preparse(network: str) -> str:
 
 class IPMatcher:
     def __init__(self, networks=None):
-        self.trie = pytricia.PyTricia(128)
+        self.trie = radix.Radix()
         if networks is not None:
             for s in networks:
                 self._add(s)
         # We freeze in constructor ensuring that after initialization the IPMatcher is always frozen.
-        self.trie.freeze()
+        #self.trie.()
 
     def has(self, network):
         try:
-            return self.trie.get(preparse(network)) is not None
+            bool(self.trie.search_exact(preparse(network)))
         except ValueError:
             return False
 
     def _add(self, network):
         try:
-            self.trie[preparse(network)] = True
+            rnode = self.trie.add(preparse(network))
+            rnode.data["subnet"] = preparse(network)
         except ValueError:
             pass
         except SystemError:
@@ -40,4 +40,4 @@ class IPMatcher:
         return self
 
     def is_empty(self):
-        return len(self.trie) == 0
+        return len(self.trie.nodes) == 0
