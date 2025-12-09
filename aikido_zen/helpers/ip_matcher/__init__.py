@@ -1,6 +1,12 @@
 import pytricia
 
 
+def preparse(network: str) -> str:
+    # Remove the brackets around IPv6 addresses if they are there.
+    network = network.strip("[]")
+    return network
+
+
 class IPMatcher:
     def __init__(self, networks=None):
         self.trie = pytricia.PyTricia(128)
@@ -11,20 +17,14 @@ class IPMatcher:
         self.trie.freeze()
 
     def has(self, network):
-        """
-        Checks if the given IP address or network is in the list of networks.
-        """
         try:
-            return self.trie.get(network) is not None
+            return self.trie.get(preparse(network)) is not None
         except ValueError:
             return False
 
     def _add(self, network):
-        """
-        Adds a network to the trie.
-        """
         try:
-            self.trie[network] = True
+            self.trie[preparse(network)] = True
         except ValueError:
             pass
         except SystemError:
