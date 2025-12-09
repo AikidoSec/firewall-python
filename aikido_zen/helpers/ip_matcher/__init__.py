@@ -6,7 +6,9 @@ class IPMatcher:
         self.trie = pytricia.PyTricia(128)
         if networks is not None:
             for s in networks:
-                self.add(s)
+                self._add(s)
+        # We freeze in constructor ensuring that after initialization the IPMatcher is always frozen.
+        self.trie.freeze()
 
     def has(self, network):
         """
@@ -17,7 +19,7 @@ class IPMatcher:
         except ValueError:
             return False
 
-    def add(self, network):
+    def _add(self, network):
         """
         Adds a network to the trie.
         """
