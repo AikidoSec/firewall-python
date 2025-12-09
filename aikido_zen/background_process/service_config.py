@@ -67,9 +67,7 @@ class ServiceConfig:
 
     def set_bypassed_ips(self, bypassed_ips):
         """Creates an IPMatcher from the given bypassed ip set"""
-        self.bypassed_ips = IPMatcher()
-        for ip in bypassed_ips:
-            self.bypassed_ips.add(ip)
+        self.bypassed_ips = IPMatcher(bypassed_ips).freeze()
 
     def is_bypassed_ip(self, ip):
         """Checks if the IP is on the bypass list"""
