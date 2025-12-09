@@ -36,17 +36,15 @@ PRIVATE_IPV6_RANGES = [
 
 
 def init_private_ip_list():
-    ip_list = IPMatcher()
+    ip_list = []
     for ip_range in PRIVATE_IP_RANGES:
-        ip_list.add(ip_range)
-        ip_list.add(map_ipv4_to_ipv6(ip_range))
+        ip_list.append(ip_range)
+        ip_list.append(map_ipv4_to_ipv6(ip_range))
+
     for ip_range in PRIVATE_IPV6_RANGES:
-        ip_list.add(ip_range)
+        ip_list.append(ip_range)
 
-    # memory optimization: makes sure it's in the most optimized format:
-    ip_list.freeze()
-
-    return ip_list
+    return IPMatcher(ip_list)
 
 
 private_ip_list = init_private_ip_list()
