@@ -1,9 +1,17 @@
+import ipaddress
+
 import pytricia
 
 
 def preparse(network: str) -> str:
     # Remove the brackets around IPv6 addresses if they are there.
     network = network.strip("[]")
+    try:
+        ip = ipaddress.IPv6Address(network)
+        if ip.ipv4_mapped:
+            return str(ip.ipv4_mapped)
+    except ValueError:
+        pass
     return network
 
 
