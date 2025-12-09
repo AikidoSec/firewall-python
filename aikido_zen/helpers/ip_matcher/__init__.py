@@ -34,3 +34,4 @@ class IPMatcher:
 
     def freeze(self):
         self.trie.freeze()
+        return self
