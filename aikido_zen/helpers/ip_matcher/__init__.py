@@ -31,3 +31,6 @@ class IPMatcher:
 
     def is_empty(self):
         return len(self.trie) == 0
+
+    def freeze(self):
+        self.trie.freeze()
