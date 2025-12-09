@@ -130,8 +130,7 @@ def test_add_ips_later():
     matcher = IPMatcher()
     assert matcher.has("2001:db8::0") == False
     assert matcher.has("2002:db8::1") == False
-    for ip in input_list:
-        matcher.add(ip)
+    matcher = IPMatcher(input_list)
     assert matcher.has("2001:db8::1") == False
     assert matcher.has("2001:db8::0") == False
     assert matcher.has("2002:db8::1") == True

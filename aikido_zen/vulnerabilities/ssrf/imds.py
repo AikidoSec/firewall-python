@@ -16,7 +16,7 @@ imds_addresses = IPMatcher(
         "100.100.100.200",
         map_ipv4_to_ipv6("100.100.100.200"),
     ]
-).freeze()
+)
 
 
 def is_imds_ip_address(ip):
