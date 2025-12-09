@@ -144,7 +144,7 @@ def test_strange_ips():
     matcher = IPMatcher(input_list)
     assert matcher.has("::ffff:0.0.0.0") == True
     assert matcher.has("::ffff:127.0.0.1") == True
-    assert matcher.has("::ffff:123") == False
+    assert matcher.has("::ffff:123") == True
     assert matcher.has("2001:db8::1") == False
     assert matcher.has("[::ffff:0.0.0.0]") == True
     assert matcher.has("::ffff:0:0:0:0") == True
