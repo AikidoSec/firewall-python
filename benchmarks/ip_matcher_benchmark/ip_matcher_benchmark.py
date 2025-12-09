@@ -34,10 +34,12 @@ ipv6_add_time = benchmark_add(ipv6_networks)
 ipv4_matcher = IPMatcher()
 for net in ipv4_networks:
     ipv4_matcher.add(net)
+ipv4_matcher.freeze()
 
 ipv6_matcher = IPMatcher()
 for net in ipv6_networks:
     ipv6_matcher.add(net)
+ipv6_matcher.freeze()
 
 ipv4_has_time = benchmark_has(ipv4_matcher, ipv4_networks)
 ipv6_has_time = benchmark_has(ipv6_matcher, ipv6_networks)
