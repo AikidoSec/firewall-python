@@ -42,6 +42,10 @@ def init_private_ip_list():
         ip_list.add(map_ipv4_to_ipv6(ip_range))
     for ip_range in PRIVATE_IPV6_RANGES:
         ip_list.add(ip_range)
+
+    # memory optimization: makes sure it's in the most optimized format:
+    ip_list.freeze()
+
     return ip_list
 
 
