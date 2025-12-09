@@ -63,6 +63,7 @@ python = "^3.8"
 regex = "^2024.5.15"
 packaging = "^24.1"
 wrapt = "^1.17.2"
+py-radix = "^1.1.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"

@@ -2203,6 +2203,80 @@ files = [
 ]
 
 [[package]]
+name = "py-radix"
+version = "1.1.0"
+description = "Radix tree implementation"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "py_radix-1.1.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:3c8a20519e5c79d9afb5d7bd765e100e4ae1057b6d9a4ad0a335548c2853c69e"},
+    {file = "py_radix-1.1.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:f217c1ed2d84fc58a8ee257597082f09455e84afd5ca434cedcc2d5a01d68843"},
+    {file = "py_radix-1.1.0-cp310-cp310-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:18eac0f8ce10730ca3d0fa4b0bb2bc1b4cdb6620ddeae4c4231c208d1e2d3d86"},
+    {file = "py_radix-1.1.0-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:27ee59e0687e7185f79c36c06c5a52ebe603d82eee2e7bd39d3446c31ac6409b"},
+    {file = "py_radix-1.1.0-cp310-cp310-musllinux_1_2_aarch64.whl", hash = "sha256:e1e993ed2e2fc8fb0ecb47951fe3a75cc9540dca650aeba2bd330e51f5bed863"},
+    {file = "py_radix-1.1.0-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:31c4b8acca0d1793cc93e2da9e6fbe3fccf1574eadc7883208a988e8338592a3"},
+    {file = "py_radix-1.1.0-cp310-cp310-win32.whl", hash = "sha256:9991f263f9ac3c9462de9c309b007de97f360631ca3cbf63f9e0f00f1886b484"},
+    {file = "py_radix-1.1.0-cp310-cp310-win_amd64.whl", hash = "sha256:d24734e6c3ed40820a63f2da8aa1767b236c44b06778b9d224ee995c07cd616a"},
+    {file = "py_radix-1.1.0-cp310-cp310-win_arm64.whl", hash = "sha256:36ab4e396b8d344f399850f2ab510a1aeeaa4fbf4805c3cbd9d269f45bca7196"},
+    {file = "py_radix-1.1.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:00a56888b89fdcdbe54134ea8f981b4285202124aa5fa0456509af512006601e"},
+    {file = "py_radix-1.1.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:1806e383843dc444b9f24cc2e39d1e5c2738fe2b7970ee505215601e0c7f9bcb"},
+    {file = "py_radix-1.1.0-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:99b0e36188962be8bbc650297940b1e46e97797e2f3fa46c026ea82544b91dd3"},
+    {file = "py_radix-1.1.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:990f3ff629d963a5c56ef061fa080e8c7a7b97f044aa01a5c060ac77a2832167"},
+    {file = "py_radix-1.1.0-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:a633ce104361bbcea28e083b2795d2772142d54f68c760b0252b7173a84a7951"},
+    {file = "py_radix-1.1.0-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:1e023245c5835f24e49b1fbc6c85fd01aec21efed4c82d5442746f49546f207a"},
+    {file = "py_radix-1.1.0-cp311-cp311-win32.whl", hash = "sha256:c8aff7eff35c277380435071d9c132c89213d6b3a130a33812925e2bec18261c"},
+    {file = "py_radix-1.1.0-cp311-cp311-win_amd64.whl", hash = "sha256:8a471cdc34921991579e4433f9653be3dc6269af21ed7fabbfbe8516e828e9bd"},
+    {file = "py_radix-1.1.0-cp311-cp311-win_arm64.whl", hash = "sha256:5721a9f7878bc769b4df314af3506cd8fe368e954f2b7d6735e33a7f6ddb8800"},
+    {file = "py_radix-1.1.0-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:6c88ca6c4fbc29b082f77323882f2a150c89acaabaa0c414fe40c8be484a3d48"},
+    {file = "py_radix-1.1.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:865dbb263d6281c2346ec3fdc5608a0d38f86686560096cb207a33a37cc2e371"},
+    {file = "py_radix-1.1.0-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:3aa762ed243e1c7bfae39acc43c127dd6b687a5222a1e042b168b862d94c5f8c"},
+    {file = "py_radix-1.1.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:7058d80bc1c359879431b7840d2060b103c7d09046ac4cdd8c7021e7843463a9"},
+    {file = "py_radix-1.1.0-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:ac40a4940bcfb440b3c0bd0789f6954df50868c211436862bfb8d9f93603835f"},
+    {file = "py_radix-1.1.0-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:0472b85a15b56a442445f01c38d2f0f379ac32ca7d3da15c484bc9fdcf46a744"},
+    {file = "py_radix-1.1.0-cp312-cp312-win32.whl", hash = "sha256:1b5972bb72772ba6f090d42096aaa80b33de8df0e6f9d3514db78b96231c72b3"},
+    {file = "py_radix-1.1.0-cp312-cp312-win_amd64.whl", hash = "sha256:5546b37e6236c19de49f17914526a78aebc8e0c7ce4c7f4931b7088f7d912898"},
+    {file = "py_radix-1.1.0-cp312-cp312-win_arm64.whl", hash = "sha256:a6a507a095218de334f198ad64f720ce6f120b7289f208f999348b4519e60099"},
+    {file = "py_radix-1.1.0-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:25d4d0af82d3163bd36b0352edff88e83aeab32d0863cbd4a13d05d82125e6c4"},
+    {file = "py_radix-1.1.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:8b2b3371951317143b6b5ec54f0f55d32722ff166ac4b83bc07c7dee292f88e8"},
+    {file = "py_radix-1.1.0-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:f6673273e3f1fd1311a3228d67a5717b31a4ffa2829e79e5b79435836f34a0fc"},
+    {file = "py_radix-1.1.0-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:dc97d274ab70810ca9de81468ff985090816d5fb02be461d184a7a209e07586c"},
+    {file = "py_radix-1.1.0-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:e73449df8422558d441aef759ffc7c49560bf231c4ba88d911904564da657913"},
+    {file = "py_radix-1.1.0-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:f568e0388f1b5ddb0b47e6758f786de8ca9cb57d3e6f06fe1f69abccc098ba20"},
+    {file = "py_radix-1.1.0-cp313-cp313-win32.whl", hash = "sha256:960d691660096da5b40142d89c66d06aca2c76a632d1dd5272633471fe075717"},
+    {file = "py_radix-1.1.0-cp313-cp313-win_amd64.whl", hash = "sha256:e65852ffcd3ace108d65a2143dbf646286d95b4f28bbfaeb94e6ef89692aecfa"},
+    {file = "py_radix-1.1.0-cp313-cp313-win_arm64.whl", hash = "sha256:f63681e132ebe2b6d61598787a5e0f5b300e7c9c289c0512c57c15c232aa9430"},
+    {file = "py_radix-1.1.0-cp314-cp314-macosx_10_15_x86_64.whl", hash = "sha256:87dbb4e1aabc014418b35a8b80872059e011a78ce41306db97b07f3582b95081"},
+    {file = "py_radix-1.1.0-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:94b85334b4e5d4ca9368dd74e3d3759bd389e186a63fe85a4f6c9393a41fc93b"},
+    {file = "py_radix-1.1.0-cp314-cp314-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:94fb9595fba0eace7df4d8756d015a7327058180356dc64c3356b3a36aa140b3"},
+    {file = "py_radix-1.1.0-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:134ff75a354d0dd0ff650f70d5f4511d981eaf06f4f958cf4a62959ddafce34d"},
+    {file = "py_radix-1.1.0-cp314-cp314-musllinux_1_2_aarch64.whl", hash = "sha256:d03bef08134def5cd23a662141dbe8091f551401c8ad5c2370a558d8ff868dbb"},
+    {file = "py_radix-1.1.0-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:0e538d8deee5cf2ee9033fc27fbfa9a9702d5fd95e99a8530e9630b0dcce7c3b"},
+    {file = "py_radix-1.1.0-cp314-cp314-win32.whl", hash = "sha256:05a03d3513101ffd7ff81313fb87b81825adaedea7d5baceb7ad04dd2eb05c28"},
+    {file = "py_radix-1.1.0-cp314-cp314-win_amd64.whl", hash = "sha256:70b3bcb3b077747184e91f3aca32735d8c0f4eba875c218f43f338caf802f205"},
+    {file = "py_radix-1.1.0-cp314-cp314-win_arm64.whl", hash = "sha256:3a484ab205a5002487fb62498d6881e8033e39d5ecc9abc0893878421cdfc68a"},
+    {file = "py_radix-1.1.0-cp314-cp314t-macosx_10_15_x86_64.whl", hash = "sha256:eb3699ef63f5ccd2d820f242b900ace8e402af409b7613ed2822c9514e0a25c8"},
+    {file = "py_radix-1.1.0-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:45124628f68d14aee80e0468334a88560be9f6ef5dc2121a21b5a4e4787bb7dd"},
+    {file = "py_radix-1.1.0-cp314-cp314t-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:473d7d9182ecea2c5d78e4a78423654ff77f9a4ee5a6a4c754338c262022ec20"},
+    {file = "py_radix-1.1.0-cp314-cp314t-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:fd8002c2779c8aadc973e08ec24e7452a3bd8cda310248ae2ff570dff407e5d3"},
+    {file = "py_radix-1.1.0-cp314-cp314t-musllinux_1_2_aarch64.whl", hash = "sha256:ba22cf1897e5d18ded797ab7bb7403f9707b3c2e96f0f28a43d71daf6fe974d7"},
+    {file = "py_radix-1.1.0-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:43b956232a7cafaaa5f0c24534295b6a4056829578ed2fbf1e3d7ac4b27a4e4a"},
+    {file = "py_radix-1.1.0-cp314-cp314t-win32.whl", hash = "sha256:d2391a9c113bd2fdccf7acea4becfebf68160e8d61b220be6c8e0a5c71fe37e8"},
+    {file = "py_radix-1.1.0-cp314-cp314t-win_amd64.whl", hash = "sha256:2cfa00c8c5397437153893bfe2f2b9c2e6fbcfe45f0b6e6a85870ba0aa38515d"},
+    {file = "py_radix-1.1.0-cp314-cp314t-win_arm64.whl", hash = "sha256:d2dbf7ed1e6e52ce7d9209dcb87dcc902058f1635dccb8f6ed0e52cf04817daa"},
+    {file = "py_radix-1.1.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:c26d0280b7a86455f6c1b98824f618d1d5f1b989c6751200702a5ef688e9cde6"},
+    {file = "py_radix-1.1.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:66ec5c33656c94cce6124ab7c6c9f29ce43cd84bf8d63a2989f5d1cdf34589ee"},
+    {file = "py_radix-1.1.0-cp39-cp39-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:25a0345dd4881270f80ff36e393ba1b47c69c844194b5ffd498da550274ea5b7"},
+    {file = "py_radix-1.1.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:b5f481e14611086c2016745e10904ef374306885acf6d9c5a192a2884b079b0b"},
+    {file = "py_radix-1.1.0-cp39-cp39-musllinux_1_2_aarch64.whl", hash = "sha256:9a2129ef3b74f02a7054827e84d3dd947b6c48a416ca4ec66045651aaf846ecf"},
+    {file = "py_radix-1.1.0-cp39-cp39-musllinux_1_2_x86_64.whl", hash = "sha256:0934a2c668711d004cb1539913ab90a04f1654d222844a8c51e48239e87a18cf"},
+    {file = "py_radix-1.1.0-cp39-cp39-win32.whl", hash = "sha256:a2a2d8d3337a23caeb915d0e83db6162d8259930a45fbb090c09dba550e1844f"},
+    {file = "py_radix-1.1.0-cp39-cp39-win_amd64.whl", hash = "sha256:08f359bf27aba082e9510145d4252b45c67f8eb735c8f4712afc4945eeaf100f"},
+    {file = "py_radix-1.1.0-cp39-cp39-win_arm64.whl", hash = "sha256:f635a579c5c6bdfe4cb01043e3a0caa329ca59f8cd95b554e98470c290d89d7c"},
+    {file = "py_radix-1.1.0.tar.gz", hash = "sha256:4abdb4e4969aaeef40eeb186bada2911462183788a6f445b971d18aa5d1af9be"},
+]
+
+[[package]]
 name = "pycparser"
 version = "2.22"
 description = "C parser in Python"
@@ -3464,4 +3538,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.8"
-content-hash = "08fbb5aeae5a82462f5fc620d063cabbe6373a1bb5be6ab62c0e5ce230acf548"
+content-hash = "2bd3ada3a8a7daa31c91e995c9b60c48d363730011079e82216b6330ece334cd"
