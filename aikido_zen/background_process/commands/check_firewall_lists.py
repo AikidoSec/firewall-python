@@ -16,7 +16,9 @@ def process_check_firewall_lists(connection_manager, data):
         # Global IP Blocklist (e.g. blocking known threat actors)
         reason = connection_manager.firewall_lists.is_blocked_ip(ip)
         if reason:
-            return CheckFirewallListsRes(blocked=True, blocking_type="blocklist", reason=reason)
+            return CheckFirewallListsRes(
+                blocked=True, blocking_type="blocklist", reason=reason
+            )
 
     user_agent = data["user-agent"]
     if user_agent is not None and isinstance(user_agent, str):
