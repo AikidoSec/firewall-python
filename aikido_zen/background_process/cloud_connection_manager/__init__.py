@@ -4,7 +4,6 @@ from aikido_zen.background_process.heartbeats import send_heartbeats_every_x_sec
 from aikido_zen.background_process.routes import Routes
 from aikido_zen.ratelimiting.rate_limiter import RateLimiter
 from aikido_zen.helpers.logging import logger
-from .on_detected_attack_wave import on_detected_attack_wave
 from .update_firewall_lists import update_firewall_lists
 from ..api.http_api import ReportingApiHTTP
 from ..service_config import ServiceConfig
