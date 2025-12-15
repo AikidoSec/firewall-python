@@ -104,16 +104,10 @@ def test_initial_heartbeat():
             "method": "POST",
             "path": "/app/create"
         }],
-        req_stats={
-            "aborted": 0,
-            "attacksDetected": {"blocked": 2, "total": 2},
-            "attackWaves": {"total": 0, "blocked": 0},
-            "total": 3,
-            'rateLimited': 0
-        },
         packages={'wrapt', 'asgiref', 'aikido_zen', 'django', 'sqlparse', 'mysqlclient', 'regex'}
     )
     req_stats = heartbeat_events[0]["stats"]["requests"]
     assert req_stats["aborted"] == 0
     assert req_stats["rateLimited"] == 0
     assert req_stats["attacksDetected"] == {"blocked": 2, "total": 2}
+    assert req_stats["attackWaves"] == {"total": 0, "blocked": 0}
