@@ -4,14 +4,15 @@ Sink module for `socket`
 
 from aikido_zen.helpers.get_argument import get_argument
 from aikido_zen.helpers.register_call import register_call
-from aikido_zen.sinks import on_import, patch_function, before
+from aikido_zen.sinks import on_import, patch_function, before, after
 from aikido_zen.vulnerabilities import run_vulnerability_scan
 from aikido_zen.thread.thread_cache import get_cache
 from aikido_zen.errors import AikidoSSRF
 
 
 @before
-def _getaddrinfo(func, instance, args, kwargs):
+def _getaddrinfo_before(func, instance, args, kwargs):
+    """Before wrapper for getaddrinfo - handles blocking"""
     host = get_argument(args, kwargs, 0, "host")
     port = get_argument(args, kwargs, 1, "port")
 
@@ -26,8 +27,16 @@ def _getaddrinfo(func, instance, args, kwargs):
     op = "socket.getaddrinfo"
     register_call(op, "outgoing_http_op")
 
-    # Run vulnerability scan after getting the result
-    arguments = (return_value, host, port)  # return_value = dns response
+
+@after
+def _getaddrinfo_after(func, instance, args, kwargs, return_value):
+    """After wrapper for getaddrinfo - handles vulnerability scanning"""
+    host = get_argument(args, kwargs, 0, "host")
+    port = get_argument(args, kwargs, 1, "port")
+
+    op = "socket.getaddrinfo"
+    # Run vulnerability scan with the return value (DNS results)
+    arguments = (return_value, host, port)
     run_vulnerability_scan(kind="ssrf", op=op, args=arguments)
 
 
@@ -37,4 +46,5 @@ def patch(m):
     patching module socket
     - patches getaddrinfo(host, port, ...)
     """
-    patch_function(m, "getaddrinfo", _getaddrinfo)
+    patch_function(m, "getaddrinfo", _getaddrinfo_before)
+    patch_function(m, "getaddrinfo", _getaddrinfo_after)
