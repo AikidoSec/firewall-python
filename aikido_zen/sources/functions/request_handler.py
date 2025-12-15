@@ -9,7 +9,6 @@ from .ip_allowed_to_access_route import ip_allowed_to_access_route
 import aikido_zen.background_process.comms as c
 from ...background_process.commands import PutEventCommand
 from ...background_process.commands.check_firewall_lists import CheckFirewallListsRes
-from ...background_process.queue_helpers import ReportingQueueAttackWaveEvent
 from ...helpers.ipc.send_payload import send_payload
 from ...vulnerabilities.attack_wave_detection.is_web_scanner import is_web_scanner
 
