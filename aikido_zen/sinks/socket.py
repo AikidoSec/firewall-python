@@ -26,7 +26,6 @@ def _getaddrinfo(func, instance, args, kwargs):
     op = "socket.getaddrinfo"
     register_call(op, "outgoing_http_op")
 
-    # Call the original function to get the return value for vulnerability scanning
     return_value = func(*args, **kwargs)
 
     # Run vulnerability scan after getting the result
