@@ -22,7 +22,6 @@ from aikido_zen.background_process.api.http_api_ratelimited import (
 )
 from aikido_zen.helpers.urls.get_api_url import get_api_url
 from .commands import process_incoming_command
-from .queue_helpers import ReportingQueueAttackWaveEvent
 
 EMPTY_QUEUE_INTERVAL = 5  # 5 seconds
 
