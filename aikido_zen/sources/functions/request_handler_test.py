@@ -603,6 +603,7 @@ def test_attack_wave_detection_in_post_response(firewall_lists):
 
     # Reset attack wave detector store for clean test
     from aikido_zen.storage.attack_wave_detector_store import attack_wave_detector_store
+
     detector = attack_wave_detector_store._get_detector()
     detector.suspicious_requests_map.clear()
     detector.sent_events_map.clear()
@@ -655,6 +656,7 @@ def test_attack_wave_detection_threshold_not_reached(firewall_lists):
 
     # Reset attack wave detector store for clean test
     from aikido_zen.storage.attack_wave_detector_store import attack_wave_detector_store
+
     detector = attack_wave_detector_store._get_detector()
     detector.suspicious_requests_map.clear()
     detector.sent_events_map.clear()
@@ -681,6 +683,7 @@ def test_attack_wave_detection_with_cooldown(firewall_lists):
 
     # Reset attack wave detector store for clean test
     from aikido_zen.storage.attack_wave_detector_store import attack_wave_detector_store
+
     detector = attack_wave_detector_store._get_detector()
     detector.suspicious_requests_map.clear()
     detector.sent_events_map.clear()
@@ -734,6 +737,7 @@ def test_attack_wave_detection_with_different_routes(firewall_lists):
 
     # Reset attack wave detector store for clean test
     from aikido_zen.storage.attack_wave_detector_store import attack_wave_detector_store
+
     detector = attack_wave_detector_store._get_detector()
     detector.suspicious_requests_map.clear()
     detector.sent_events_map.clear()
@@ -743,7 +747,7 @@ def test_attack_wave_detection_with_different_routes(firewall_lists):
 
     # Test with different suspicious routes
     suspicious_routes = ["/.env", "/.git/config", "/wp-admin/", "/admin/", "/.htaccess"]
-    
+
     for route in suspicious_routes:
         set_context("5.5.5.5", route=route)
         for i in range(3):  # 3 requests per route
@@ -784,6 +788,7 @@ def test_attack_wave_detection_post_response_only(firewall_lists):
 
     # Reset attack wave detector store for clean test
     from aikido_zen.storage.attack_wave_detector_store import attack_wave_detector_store
+
     detector = attack_wave_detector_store._get_detector()
     detector.suspicious_requests_map.clear()
     detector.sent_events_map.clear()
@@ -819,6 +824,7 @@ def test_attack_wave_detection_multiple_ips(firewall_lists):
 
     # Reset attack wave detector store for clean test
     from aikido_zen.storage.attack_wave_detector_store import attack_wave_detector_store
+
     detector = attack_wave_detector_store._get_detector()
     detector.suspicious_requests_map.clear()
     detector.sent_events_map.clear()
@@ -828,7 +834,7 @@ def test_attack_wave_detection_multiple_ips(firewall_lists):
 
     # Test with multiple IPs, each making some requests
     ips = ["8.8.8.8", "9.9.9.9", "10.10.10.10"]
-    
+
     for ip in ips:
         set_context(ip, route="/test")
         for i in range(15):  # 15 requests per IP (threshold)
