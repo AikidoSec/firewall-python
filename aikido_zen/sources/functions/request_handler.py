@@ -13,7 +13,6 @@ from ...background_process.commands.check_firewall_lists import CheckFirewallLis
 from ...helpers.ipc.send_payload import send_payload
 from ...helpers.serialize_to_json import serialize_to_json
 from ...storage.attack_wave_detector_store import attack_wave_detector_store
-from ...vulnerabilities.attack_wave_detection.is_web_scanner import is_web_scanner
 
 
 def request_handler(stage, status_code=0):
@@ -55,10 +54,6 @@ def pre_response():
         if context.remote_address:
             message += f" (Your IP: {context.remote_address})"
         return message, 403
-
-    is_attack_wave_request = is_web_scanner(context)
-    if is_attack_wave_request:
-        logger.debug("Web scan detected for %s:%s", context.method, context.route)
 
     # Do a check on firewall lists & attack waves, this happens in background because of the heavy data.
     # For the timeout we notice the request during heavy loads usually takes 2ms - 2.5ms, we set timeout at 10ms.
