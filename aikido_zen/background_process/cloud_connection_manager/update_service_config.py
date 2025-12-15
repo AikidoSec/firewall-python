@@ -22,3 +22,12 @@ def update_service_config(connection_manager, res):
         bypassed_ips=res.get("allowedIPAddresses", []),
         received_any_stats=res.get("receivedAnyStats", True),
     )
+
+    # Handle outbound request blocking configuration
+    if "blockNewOutgoingRequests" in res:
+        connection_manager.conf.set_block_new_outgoing_requests(
+            res["blockNewOutgoingRequests"]
+        )
+
+    if "domains" in res:
+        connection_manager.conf.update_domains(res["domains"])
