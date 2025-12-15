@@ -55,7 +55,7 @@ def pre_response():
             message += f" (Your IP: {context.remote_address})"
         return message, 403
 
-    # Do a check on firewall lists & attack waves, this happens in background because of the heavy data.
+    # Do a check on firewall lists, this happens in background because of the heavy data.
     # For the timeout we notice the request during heavy loads usually takes 2ms - 2.5ms, we set timeout at 10ms.
     # That way we have a very small timeout with very little risk of not blocking ips.
     comms = c.get_comms()
