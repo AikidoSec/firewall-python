@@ -80,6 +80,10 @@ class ServiceConfig:
     def update_domains(self, domains):
         self.domains = {domain["hostname"]: domain["mode"] for domain in domains}
 
+    def set_block_new_outgoing_requests(self, value: bool):
+        """Set whether to block new outgoing requests"""
+        self.block_new_outgoing_requests = bool(value)
+
     def should_block_outgoing_request(self, hostname: str) -> bool:
         mode = self.domains.get(hostname)
 
