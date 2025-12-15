@@ -85,36 +85,38 @@ def pre_response():
         msg = "You are not allowed to access this resource because you have been identified as a bot."
         return msg, 403
 
-    # We only check for attack waves after IP/Bot blocking, the reason being that if you already block the scanner
-    # There is no attack wave happening.
-    attack_wave = attack_wave_detector_store.is_attack_wave(context.remote_address)
-    if attack_wave:
-        cache.stats.on_detected_attack_wave(blocked=res.blocked)
-        event = create_attack_wave_event(context, metadata={})
-        logger.debug("Attack wave: %s", serialize_to_json(event)[:5000])
-        if comms and event:
-            send_payload(comms, PutEventCommand.generate(event))
-
     return None
 
 
 def post_response(status_code):
-    """Checks if the current route is useful"""
+    """Checks if the current route is useful and performs attack wave detection"""
     context = ctx.get_current_context()
     if not context:
         return
     route_metadata = context.get_route_metadata()
 
+    cache = get_cache()
+    if not cache:
+        return
+
+    attack_wave = attack_wave_detector_store.is_attack_wave(context.remote_address)
+    if attack_wave:
+        cache.stats.on_detected_attack_wave(blocked=False)
+
+        event = create_attack_wave_event(context, metadata={})
+        logger.debug("Attack wave: %s", serialize_to_json(event)[:5000])
+
+        # Report in background to core (send event over IPC)
+        if c.get_comms() and event:
+            send_payload(c.get_comms(), PutEventCommand.generate(event))
+
+    # Check if the current route is useful for API discovery
     is_curr_route_useful = is_useful_route(
         status_code,
         context.route,
         context.method,
     )
-    if not is_curr_route_useful:
-        return
-
-    cache = get_cache()
-    if cache:
+    if is_curr_route_useful:
         cache.routes.increment_route(route_metadata)
 
         # api spec generation
