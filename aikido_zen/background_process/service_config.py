@@ -74,3 +74,13 @@ class ServiceConfig:
     def is_bypassed_ip(self, ip):
         """Checks if the IP is on the bypass list"""
         return self.bypassed_ips.has(ip)
+    def should_block_outgoing_request(self, hostname: str) -> bool:
+        mode = self.domains.get(hostname)
+
+        if self.block_new_outgoing_requests:
+            # Only allow outgoing requests if the mode is "allow"
+            # mode is None for unknown hostnames, so they get blocked
+            return mode != "allow"
+
+        # Only block outgoing requests if the mode is "block"
+        return mode == "block"
