@@ -18,7 +18,7 @@ def get_patched_socket_module():
     import aikido_zen.sinks.socket
 
     # Manually apply the patch
-    patch_function(socket, "getaddrinfo", aikido_zen.sinks.socket._getaddrinfo_wrapper)
+    patch_function(socket, "getaddrinfo", aikido_zen.sinks.socket._getaddrinfo)
 
     return socket
 
