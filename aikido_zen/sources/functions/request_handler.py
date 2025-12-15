@@ -7,8 +7,10 @@ from aikido_zen.helpers.logging import logger
 from aikido_zen.thread.thread_cache import get_cache
 from .ip_allowed_to_access_route import ip_allowed_to_access_route
 import aikido_zen.background_process.comms as c
+from ...background_process.commands import PutEventCommand
 from ...background_process.commands.check_firewall_lists import CheckFirewallListsRes
 from ...background_process.queue_helpers import ReportingQueueAttackWaveEvent
+from ...helpers.ipc.send_payload import send_payload
 from ...vulnerabilities.attack_wave_detection.is_web_scanner import is_web_scanner
 
 
@@ -90,11 +92,11 @@ def pre_response():
     # We only check for attack waves after IP/Bot blocking, the reason being that if you already block the scanner
     # There is no attack wave happening.
     if res.is_attack_wave:
-        # Report to core & increase stats
-        comms.send_data_to_bg_process(
-            "ATTACK", ReportingQueueAttackWaveEvent(context, metadata={})
-        )
+        attack_wave_event = {}
+        send_payload(comms, PutEventCommand.generate(attack_wave_event))
         cache.stats.on_detected_attack_wave(blocked=res.blocked)
+
+    return None
 
 
 def post_response(status_code):
