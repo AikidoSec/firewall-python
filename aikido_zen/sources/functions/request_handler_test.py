@@ -813,9 +813,8 @@ def test_attack_wave_detection_post_response_only(firewall_lists):
 
 
 @patch_firewall_lists
-def test_attack_wave_detection_time_based_cooldown(firewall_lists):
-    """Test attack wave detection respects time-based cooldown period"""
-    set_context("7.7.7.7", route="/test")
+def test_attack_wave_detection_multiple_ips(firewall_lists):
+    """Test attack wave detection with multiple different IPs"""
     create_service_config()
 
     # Reset attack wave detector store for clean test
@@ -827,34 +826,16 @@ def test_attack_wave_detection_time_based_cooldown(firewall_lists):
     # Reset stats
     get_cache().stats.clear()
 
-    # Trigger first attack wave
-    for i in range(15):
-        request_handler("post_response", status_code=200)
-
-    assert get_cache().stats.get_record()["requests"]["attackWaves"] == {
-        "total": 1,
-        "blocked": 0,
-    }
-
-    # Try to trigger another attack wave immediately (should be blocked by cooldown)
-    for i in range(15):
-        request_handler("post_response", status_code=200)
-
-    # Should still be 1 due to cooldown
-    assert get_cache().stats.get_record()["requests"]["attackWaves"] == {
-        "total": 1,
-        "blocked": 0,
-    }
-
-    # Simulate time passing (21 minutes later) to bypass cooldown
-    # The cooldown period is 20 minutes (20 * 60 * 1000 ms)
-    with patch("aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms", return_value=21 * 60 * 1000):
-        # Try to trigger another attack wave after cooldown
-        for i in range(15):
+    # Test with multiple IPs, each making some requests
+    ips = ["8.8.8.8", "9.9.9.9", "10.10.10.10"]
+    
+    for ip in ips:
+        set_context(ip, route="/test")
+        for i in range(15):  # 15 requests per IP (threshold)
             request_handler("post_response", status_code=200)
 
-    # Should now be 2 since cooldown has passed
+    # Should have 45 total requests (15 * 3 IPs) which should trigger attack wave for each IP
     assert get_cache().stats.get_record()["requests"]["attackWaves"] == {
-        "total": 2,
+        "total": 3,  # One attack wave per IP
         "blocked": 0,
     }
