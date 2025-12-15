@@ -4,12 +4,14 @@ import aikido_zen.context as ctx
 from aikido_zen.api_discovery.update_route_info import update_route_info_from_context
 from aikido_zen.helpers.is_useful_route import is_useful_route
 from aikido_zen.helpers.logging import logger
+from aikido_zen.helpers.create_attack_wave_event import create_attack_wave_event
 from aikido_zen.thread.thread_cache import get_cache
 from .ip_allowed_to_access_route import ip_allowed_to_access_route
 import aikido_zen.background_process.comms as c
 from ...background_process.commands import PutEventCommand
 from ...background_process.commands.check_firewall_lists import CheckFirewallListsRes
 from ...helpers.ipc.send_payload import send_payload
+from ...helpers.serialize_to_json import serialize_to_json
 from ...vulnerabilities.attack_wave_detection.is_web_scanner import is_web_scanner
 
 
@@ -66,7 +68,6 @@ def pre_response():
         obj={
             "ip": context.remote_address,
             "user-agent": context.get_user_agent(),
-            "is_attack_wave_request": bool(is_attack_wave_request),
         },
         receive=True,
         timeout_in_sec=(10 / 1000),
@@ -90,10 +91,14 @@ def pre_response():
 
     # We only check for attack waves after IP/Bot blocking, the reason being that if you already block the scanner
     # There is no attack wave happening.
-    if res.is_attack_wave:
-        attack_wave_event = {}
-        send_payload(comms, PutEventCommand.generate(attack_wave_event))
+    attack_wave = {}
+    if attack_wave:
         cache.stats.on_detected_attack_wave(blocked=res.blocked)
+
+        event = create_attack_wave_event(context, attack_wave)
+        logger.debug("Attack wave: %s", serialize_to_json(event)[:5000])
+        if comms and event:
+            send_payload(comms, PutEventCommand.generate(event))
 
     return None
 
