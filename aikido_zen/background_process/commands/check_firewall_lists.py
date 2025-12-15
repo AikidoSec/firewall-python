@@ -4,7 +4,7 @@
 def process_check_firewall_lists(connection_manager, data):
     """
     Checks whether an IP is blocked and whether there is an ongoing attack wave
-    data: {"ip": string, "user-agent": string, "is_attack_wave_request" ?: bool}
+    data: {"ip": string, "user-agent": string}
     returns -> CheckFirewallListsRes
     """
     ip = data["ip"]
@@ -24,17 +24,11 @@ def process_check_firewall_lists(connection_manager, data):
         if connection_manager.firewall_lists.is_user_agent_blocked(user_agent):
             return CheckFirewallListsRes(blocked=True, type="bot-blocking")
 
-    is_attack_wave_request = data.get("is_attack_wave_request", None)
-    if is_attack_wave_request and ip is not None:
-        if connection_manager.attack_wave_detector.is_attack_wave(ip):
-            return CheckFirewallListsRes(blocked=False, is_attack_wave=True)
-
     return CheckFirewallListsRes()
 
 
 class CheckFirewallListsRes:
-    def __init__(self, blocked=False, is_attack_wave=False, type=None, reason=None):
+    def __init__(self, blocked=False, type=None, reason=None):
         self.blocked = blocked
-        self.is_attack_wave = is_attack_wave
         self.type = type
         self.reason = reason
