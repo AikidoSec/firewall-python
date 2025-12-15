@@ -14,7 +14,6 @@ from aikido_zen.errors import AikidoSSRF
 def _getaddrinfo_before(func, instance, args, kwargs):
     """Before wrapper for getaddrinfo - handles blocking"""
     host = get_argument(args, kwargs, 0, "host")
-    port = get_argument(args, kwargs, 1, "port")
 
     # Check if we should block this outgoing request based on configuration
     cache = get_cache()
