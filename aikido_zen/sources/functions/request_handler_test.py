@@ -596,46 +596,30 @@ def test_multiple_blocked(firewall_lists):
 
 
 @patch_firewall_lists
-def test_is_attack_waves_doesnt_work_when_ip_blocked(firewall_lists):
+def test_attack_wave_detection_in_post_response(firewall_lists):
+    """Test attack wave detection happens in post_response stage"""
     set_context("1.1.1.1", route="/.env")
     create_service_config()
-    blocked_ips = [
-        {"source": "test", "description": "Blocked for testing", "ips": ["1.1.1.1"]}
-    ]
-    firewall_lists.set_blocked_ips(blocked_ips)
 
-    for i in range(16):
-        result = request_handler("pre_response")
-        assert result == (
-            "Your IP address is blocked due to Blocked for testing (Your IP: 1.1.1.1)",
-            403,
-        )
+    # Reset attack wave detector store for clean test
+    from aikido_zen.storage.attack_wave_detector_store import attack_wave_detector_store
+    detector = attack_wave_detector_store._get_detector()
+    detector.suspicious_requests_map.clear()
+    detector.sent_events_map.clear()
+
+    # Reset stats
+    get_cache().stats.clear()
+
     assert get_cache().stats.get_record()["requests"]["attackWaves"] == {
         "total": 0,
         "blocked": 0,
     }
 
-
-@patch_firewall_lists
-def test_is_attack_waves_doesnt_work_when_ip_blocked(firewall_lists, attacks):
-    set_context("1.1.1.1", route="/.env")
-    create_service_config()
-
-    assert len(attacks) == 0
-    assert get_cache().stats.get_record()["requests"]["attackWaves"] == {
-        "total": 0,
-        "blocked": 0,
-    }
-
-    # Call request_handler 15 times to trigger attack wave detection
-    # Note: With the current implementation, every request counts toward attack wave
-    # regardless of whether it's a web scanner or not
+    # Call request_handler 15 times in post_response to trigger attack wave detection
     for i in range(15):
-        request_handler("pre_response")
+        request_handler("post_response", status_code=200)
 
-    # The attack wave should be detected and an event should be created
-    # However, since we're using a mock comms that doesn't handle PutEventCommand,
-    # the event won't be added to the attacks list. We can only verify the stats.
+    # The attack wave should be detected
     assert get_cache().stats.get_record()["requests"]["attackWaves"] == {
         "total": 1,
         "blocked": 0,
@@ -643,7 +627,7 @@ def test_is_attack_waves_doesnt_work_when_ip_blocked(firewall_lists, attacks):
 
     # now try again (should not be possible due to cooldown window)
     for i in range(15):
-        request_handler("pre_response")
+        request_handler("post_response", status_code=200)
 
     # Should still be 1 because of cooldown
     assert get_cache().stats.get_record()["requests"]["attackWaves"] == {
@@ -654,9 +638,222 @@ def test_is_attack_waves_doesnt_work_when_ip_blocked(firewall_lists, attacks):
     # now try with another IP
     set_context("4.4.4.4", route="/.htaccess")
     for i in range(15):
-        request_handler("pre_response")
+        request_handler("post_response", status_code=200)
 
     # Should now be 2 (one for each IP)
+    assert get_cache().stats.get_record()["requests"]["attackWaves"] == {
+        "total": 2,
+        "blocked": 0,
+    }
+
+
+@patch_firewall_lists
+def test_attack_wave_detection_threshold_not_reached(firewall_lists):
+    """Test attack wave detection when threshold is not reached"""
+    set_context("2.2.2.2", route="/test")
+    create_service_config()
+
+    # Reset attack wave detector store for clean test
+    from aikido_zen.storage.attack_wave_detector_store import attack_wave_detector_store
+    detector = attack_wave_detector_store._get_detector()
+    detector.suspicious_requests_map.clear()
+    detector.sent_events_map.clear()
+
+    # Reset stats
+    get_cache().stats.clear()
+
+    # Call request_handler 14 times (below threshold of 15)
+    for i in range(14):
+        request_handler("post_response", status_code=200)
+
+    # No attack wave should be detected
+    assert get_cache().stats.get_record()["requests"]["attackWaves"] == {
+        "total": 0,
+        "blocked": 0,
+    }
+
+
+@patch_firewall_lists
+def test_attack_wave_detection_with_cooldown(firewall_lists):
+    """Test attack wave detection respects cooldown period"""
+    set_context("3.3.3.3", route="/admin")
+    create_service_config()
+
+    # Reset attack wave detector store for clean test
+    from aikido_zen.storage.attack_wave_detector_store import attack_wave_detector_store
+    detector = attack_wave_detector_store._get_detector()
+    detector.suspicious_requests_map.clear()
+    detector.sent_events_map.clear()
+
+    # Reset stats
+    get_cache().stats.clear()
+
+    # Trigger first attack wave
+    for i in range(15):
+        request_handler("post_response", status_code=200)
+
+    assert get_cache().stats.get_record()["requests"]["attackWaves"] == {
+        "total": 1,
+        "blocked": 0,
+    }
+
+    # Try to trigger another attack wave immediately (should be blocked by cooldown)
+    for i in range(15):
+        request_handler("post_response", status_code=200)
+
+    # Should still be 1 due to cooldown
+    assert get_cache().stats.get_record()["requests"]["attackWaves"] == {
+        "total": 1,
+        "blocked": 0,
+    }
+
+
+@patch_firewall_lists
+def test_attack_wave_detection_no_context(firewall_lists):
+    """Test attack wave detection when there is no context"""
+    create_service_config()
+
+    # Reset stats
+    get_cache().stats.clear()
+
+    # Call request_handler without context
+    with patch("aikido_zen.context.get_current_context", return_value=None):
+        request_handler("post_response", status_code=200)
+
+    # No attack wave should be detected
+    assert get_cache().stats.get_record()["requests"]["attackWaves"] == {
+        "total": 0,
+        "blocked": 0,
+    }
+
+
+@patch_firewall_lists
+def test_attack_wave_detection_with_different_routes(firewall_lists):
+    """Test attack wave detection with different routes"""
+    create_service_config()
+
+    # Reset attack wave detector store for clean test
+    from aikido_zen.storage.attack_wave_detector_store import attack_wave_detector_store
+    detector = attack_wave_detector_store._get_detector()
+    detector.suspicious_requests_map.clear()
+    detector.sent_events_map.clear()
+
+    # Reset stats
+    get_cache().stats.clear()
+
+    # Test with different suspicious routes
+    suspicious_routes = ["/.env", "/.git/config", "/wp-admin/", "/admin/", "/.htaccess"]
+    
+    for route in suspicious_routes:
+        set_context("5.5.5.5", route=route)
+        for i in range(3):  # 3 requests per route
+            request_handler("post_response", status_code=200)
+
+    # Should have 15 total requests (3 * 5 routes) which should trigger attack wave
+    assert get_cache().stats.get_record()["requests"]["attackWaves"] == {
+        "total": 1,
+        "blocked": 0,
+    }
+
+
+@patch_firewall_lists
+def test_attack_wave_detection_with_null_ip(firewall_lists):
+    """Test attack wave detection with null/empty IP"""
+    set_context("", route="/test")  # Empty IP
+    create_service_config()
+
+    # Reset stats
+    get_cache().stats.clear()
+
+    # Call request_handler multiple times with empty IP
+    for i in range(20):
+        request_handler("post_response", status_code=200)
+
+    # No attack wave should be detected for null IP
+    assert get_cache().stats.get_record()["requests"]["attackWaves"] == {
+        "total": 0,
+        "blocked": 0,
+    }
+
+
+@patch_firewall_lists
+def test_attack_wave_detection_post_response_only(firewall_lists):
+    """Test that attack wave detection only happens in post_response stage"""
+    set_context("6.6.6.6", route="/.env")
+    create_service_config()
+
+    # Reset attack wave detector store for clean test
+    from aikido_zen.storage.attack_wave_detector_store import attack_wave_detector_store
+    detector = attack_wave_detector_store._get_detector()
+    detector.suspicious_requests_map.clear()
+    detector.sent_events_map.clear()
+
+    # Reset stats
+    get_cache().stats.clear()
+
+    # Call pre_response multiple times - should not trigger attack wave detection
+    for i in range(20):
+        request_handler("pre_response")
+
+    # No attack wave should be detected in pre_response
+    assert get_cache().stats.get_record()["requests"]["attackWaves"] == {
+        "total": 0,
+        "blocked": 0,
+    }
+
+    # Now call post_response to actually trigger detection
+    for i in range(15):
+        request_handler("post_response", status_code=200)
+
+    # Attack wave should now be detected
+    assert get_cache().stats.get_record()["requests"]["attackWaves"] == {
+        "total": 1,
+        "blocked": 0,
+    }
+
+
+@patch_firewall_lists
+def test_attack_wave_detection_time_based_cooldown(firewall_lists):
+    """Test attack wave detection respects time-based cooldown period"""
+    set_context("7.7.7.7", route="/test")
+    create_service_config()
+
+    # Reset attack wave detector store for clean test
+    from aikido_zen.storage.attack_wave_detector_store import attack_wave_detector_store
+    detector = attack_wave_detector_store._get_detector()
+    detector.suspicious_requests_map.clear()
+    detector.sent_events_map.clear()
+
+    # Reset stats
+    get_cache().stats.clear()
+
+    # Trigger first attack wave
+    for i in range(15):
+        request_handler("post_response", status_code=200)
+
+    assert get_cache().stats.get_record()["requests"]["attackWaves"] == {
+        "total": 1,
+        "blocked": 0,
+    }
+
+    # Try to trigger another attack wave immediately (should be blocked by cooldown)
+    for i in range(15):
+        request_handler("post_response", status_code=200)
+
+    # Should still be 1 due to cooldown
+    assert get_cache().stats.get_record()["requests"]["attackWaves"] == {
+        "total": 1,
+        "blocked": 0,
+    }
+
+    # Simulate time passing (21 minutes later) to bypass cooldown
+    # The cooldown period is 20 minutes (20 * 60 * 1000 ms)
+    with patch("aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms", return_value=21 * 60 * 1000):
+        # Try to trigger another attack wave after cooldown
+        for i in range(15):
+            request_handler("post_response", status_code=200)
+
+    # Should now be 2 since cooldown has passed
     assert get_cache().stats.get_record()["requests"]["attackWaves"] == {
         "total": 2,
         "blocked": 0,
