@@ -26,13 +26,9 @@ def _getaddrinfo(func, instance, args, kwargs):
     op = "socket.getaddrinfo"
     register_call(op, "outgoing_http_op")
 
-    return_value = func(*args, **kwargs)
-
     # Run vulnerability scan after getting the result
     arguments = (return_value, host, port)  # return_value = dns response
     run_vulnerability_scan(kind="ssrf", op=op, args=arguments)
-
-    return return_value
 
 
 @on_import("socket")
