@@ -12,6 +12,7 @@ from ...background_process.commands import PutEventCommand
 from ...background_process.commands.check_firewall_lists import CheckFirewallListsRes
 from ...helpers.ipc.send_payload import send_payload
 from ...helpers.serialize_to_json import serialize_to_json
+from ...storage.attack_wave_detector_store import attack_wave_detector_store
 from ...vulnerabilities.attack_wave_detection.is_web_scanner import is_web_scanner
 
 
@@ -91,11 +92,10 @@ def pre_response():
 
     # We only check for attack waves after IP/Bot blocking, the reason being that if you already block the scanner
     # There is no attack wave happening.
-    attack_wave = {}
+    attack_wave = attack_wave_detector_store.is_attack_wave(context.remote_address)
     if attack_wave:
         cache.stats.on_detected_attack_wave(blocked=res.blocked)
-
-        event = create_attack_wave_event(context, attack_wave)
+        event = create_attack_wave_event(context, metadata={})
         logger.debug("Attack wave: %s", serialize_to_json(event)[:5000])
         if comms and event:
             send_payload(comms, PutEventCommand.generate(event))
