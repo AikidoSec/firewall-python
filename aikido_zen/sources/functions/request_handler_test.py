@@ -678,7 +678,7 @@ def test_attack_wave_detection_threshold_not_reached(firewall_lists):
 @patch_firewall_lists
 def test_attack_wave_detection_with_cooldown(firewall_lists):
     """Test attack wave detection respects cooldown period"""
-    set_context("3.3.3.3", route="/admin")
+    set_context("3.3.3.3", route="/.env")
     create_service_config()
 
     # Reset attack wave detector store for clean test
@@ -745,15 +745,15 @@ def test_attack_wave_detection_with_different_routes(firewall_lists):
     # Reset stats
     get_cache().stats.clear()
 
-    # Test with different suspicious routes
-    suspicious_routes = ["/.env", "/.git/config", "/wp-admin/", "/admin/", "/.htaccess"]
+    # Test with different suspicious routes (only use routes that are actually suspicious)
+    suspicious_routes = ["/.env", "/.git/config", "/.htaccess"]
 
     for route in suspicious_routes:
         set_context("5.5.5.5", route=route)
-        for i in range(3):  # 3 requests per route
+        for i in range(5):  # 5 requests per route to reach threshold
             request_handler("post_response", status_code=200)
 
-    # Should have 15 total requests (3 * 5 routes) which should trigger attack wave
+    # Should have 15 total requests (5 * 3 routes) which should trigger attack wave
     assert get_cache().stats.get_record()["requests"]["attackWaves"] == {
         "total": 1,
         "blocked": 0,
@@ -832,11 +832,11 @@ def test_attack_wave_detection_multiple_ips(firewall_lists):
     # Reset stats
     get_cache().stats.clear()
 
-    # Test with multiple IPs, each making some requests
+    # Test with multiple IPs, each making some requests (using suspicious route)
     ips = ["8.8.8.8", "9.9.9.9", "10.10.10.10"]
 
     for ip in ips:
-        set_context(ip, route="/test")
+        set_context(ip, route="/.env")
         for i in range(15):  # 15 requests per IP (threshold)
             request_handler("post_response", status_code=200)
 
