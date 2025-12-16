@@ -32,19 +32,15 @@ def test_create_attack_wave_event_with_samples():
     """Test attack wave event creation with samples from store"""
     context = test_utils.generate_context()
 
-    # Create sample data
+    # Create sample data (now only method and url)
     samples = [
         {
             "method": "GET",
-            "route": "/test1",
-            "user_agent": "Mozilla/5.0",
-            "timestamp": 1234567890,
+            "url": "/test1",
         },
         {
             "method": "POST",
-            "route": "/test2",
-            "user_agent": "curl/7.0",
-            "timestamp": 1234567891,
+            "url": "/test2",
         },
     ]
 
@@ -61,14 +57,21 @@ def test_create_attack_wave_event_with_samples():
         assert event["type"] == "detected_attack_wave"
         assert event["attack"]["user"] is None
         assert "samples" in event["attack"]["metadata"]
-        assert len(event["attack"]["metadata"]["samples"]) == 2
 
-        # Check that samples are in the expected format (raw format from store)
-        sample1 = event["attack"]["metadata"]["samples"][0]
+        # Check that samples are now JSON stringified
+        import json
+
+        samples_json = event["attack"]["metadata"]["samples"]
+        samples = json.loads(samples_json)
+
+        assert len(samples) == 2
+
+        # Check that samples contain only method and url
+        sample1 = samples[0]
         assert sample1["method"] == "GET"
-        assert sample1["route"] == "/test1"
-        assert sample1["user_agent"] == "Mozilla/5.0"  # Raw format from store
-        assert sample1["timestamp"] == 1234567890
+        assert sample1["url"] == "/test1"
+        assert "user_agent" not in sample1
+        assert "timestamp" not in sample1
 
 
 def test_create_attack_wave_event_with_user():
@@ -97,9 +100,7 @@ def test_create_attack_wave_event_with_long_metadata():
     samples = [
         {
             "method": "GET",
-            "route": "/test" + long_value,  # Very long route
-            "user_agent": "Mozilla/5.0",
-            "timestamp": 1234567890,
+            "url": "/test" + long_value,  # Very long url
         },
     ]
 
@@ -127,9 +128,7 @@ def test_create_attack_wave_event_with_multiple_long_metadata_fields():
     samples = [
         {
             "method": "GET" + long_value1,
-            "route": "/test" + long_value2,
-            "user_agent": "Mozilla/5.0",
-            "timestamp": 1234567890,
+            "url": "/test" + long_value2,
         },
     ]
 
@@ -259,19 +258,15 @@ def test_create_attack_wave_event_complex_metadata():
     """Test attack wave event creation with complex nested samples"""
     context = test_utils.generate_context()
 
-    # Create complex samples
+    # Create complex samples (now only method and url)
     samples = [
         {
             "method": "GET",
-            "route": "/complex",
-            "user_agent": "Mozilla/5.0",
-            "timestamp": 1234567890,
+            "url": "/complex",
         },
         {
             "method": "POST",
-            "route": "/nested",
-            "user_agent": "curl/7.0",
-            "timestamp": 1234567891,
+            "url": "/nested",
         },
     ]
 
@@ -284,7 +279,14 @@ def test_create_attack_wave_event_complex_metadata():
 
         event = create_attack_wave_event(context)
 
-        assert "samples" in event["attack"]["metadata"]
-        assert len(event["attack"]["metadata"]["samples"]) == 2
-        assert event["attack"]["metadata"]["samples"][0]["method"] == "GET"
-        assert event["attack"]["metadata"]["samples"][1]["method"] == "POST"
+        # Check that samples are now JSON stringified
+        import json
+
+        samples_json = event["attack"]["metadata"]["samples"]
+        samples = json.loads(samples_json)
+
+        assert len(samples) == 2
+        assert samples[0]["method"] == "GET"
+        assert samples[1]["method"] == "POST"
+        assert samples[0]["url"] == "/complex"
+        assert samples[1]["url"] == "/nested"

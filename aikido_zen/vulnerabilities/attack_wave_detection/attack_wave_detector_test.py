@@ -140,7 +140,7 @@ def test_samples_tracking():
         samples = detector.get_samples_for_ip(context.remote_address)
         assert len(samples) == 3
         assert all(sample["method"] == "POST" for sample in samples)
-        assert all(sample["route"] == "/" for sample in samples)
+        assert all(sample["url"] == "http://localhost:8080/" for sample in samples)
 
         # Make more requests to exceed the sample limit
         for i in range(10):
