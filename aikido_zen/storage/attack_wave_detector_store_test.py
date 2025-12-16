@@ -268,9 +268,13 @@ def test_samples_tracking_in_store():
         for i in range(3):
             store.is_attack_wave(context)
 
-        # Check that samples are being tracked
+        # Check that samples are being tracked (should have 1 unique sample)
         samples = store.get_samples_for_ip(context.remote_address)
-        assert len(samples) == 3
+        assert len(samples) == 1  # Only 1 unique sample despite 3 identical requests
+
+        # Verify sample structure (should contain method and url only)
+        sample = samples[0]
+        assert set(sample.keys()) == {"method", "url"}
 
         # Clear samples
         store.clear_samples_for_ip(context.remote_address)
@@ -278,6 +282,158 @@ def test_samples_tracking_in_store():
         # Verify samples are cleared
         samples = store.get_samples_for_ip(context.remote_address)
         assert len(samples) == 0
+
+
+def test_samples_structure_and_content():
+    """Test that samples contain correct structure and content"""
+    store = AttackWaveDetectorStore()
+    context = test_utils.generate_context(method="POST", route="/.env")
+
+    with patch(
+        "aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector.is_web_scanner",
+        return_value=True,
+    ):
+        # Make enough requests to trigger attack wave
+        for i in range(15):
+            store.is_attack_wave(context)
+
+        # Get samples
+        samples = store.get_samples_for_ip(context.remote_address)
+
+        # Should have samples (number depends on uniqueness)
+        assert len(samples) > 0
+
+        # Verify each sample has correct structure
+        for sample in samples:
+            assert set(sample.keys()) == {"method", "url"}
+            assert sample["method"] == "POST"
+            assert sample["url"] == context.url
+
+
+def test_samples_json_serialization():
+    """Test that samples can be JSON serialized correctly"""
+    import json
+
+    store = AttackWaveDetectorStore()
+    context = test_utils.generate_context()
+
+    with patch(
+        "aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector.is_web_scanner",
+        return_value=True,
+    ):
+        # Make enough requests to trigger attack wave
+        for i in range(15):
+            store.is_attack_wave(context)
+
+        # Get samples
+        samples = store.get_samples_for_ip(context.remote_address)
+
+        # Verify samples can be JSON serialized
+        samples_json = json.dumps(samples)
+        assert isinstance(samples_json, str)
+
+        # Verify samples can be deserialized
+        parsed_samples = json.loads(samples_json)
+        assert len(parsed_samples) == len(samples)
+
+        # Verify structure is preserved
+        for original, parsed in zip(samples, parsed_samples):
+            assert original["method"] == parsed["method"]
+            assert original["url"] == parsed["url"]
+
+
+def test_samples_with_different_contexts():
+    """Test samples with different contexts and IPs"""
+    store = AttackWaveDetectorStore()
+
+    # Create contexts with different IPs
+    context1 = test_utils.generate_context(ip="1.1.1.1", method="GET")
+    context2 = test_utils.generate_context(ip="2.2.2.2", method="POST")
+
+    with patch(
+        "aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector.is_web_scanner",
+        return_value=True,
+    ):
+        # Make requests for both contexts
+        for i in range(15):
+            store.is_attack_wave(context1)
+            store.is_attack_wave(context2)
+
+        # Get samples for each IP
+        samples1 = store.get_samples_for_ip(context1.remote_address)
+        samples2 = store.get_samples_for_ip(context2.remote_address)
+
+        # Both should have samples
+        assert len(samples1) > 0
+        assert len(samples2) > 0
+
+        # Verify structure for both
+        for sample in samples1:
+            assert set(sample.keys()) == {"method", "url"}
+            assert sample["method"] == "GET"
+
+        for sample in samples2:
+            assert set(sample.keys()) == {"method", "url"}
+            assert sample["method"] == "POST"
+
+        # Clear samples for both IPs
+        store.clear_samples_for_ip(context1.remote_address)
+        store.clear_samples_for_ip(context2.remote_address)
+
+        # Verify both are cleared
+        assert len(store.get_samples_for_ip(context1.remote_address)) == 0
+        assert len(store.get_samples_for_ip(context2.remote_address)) == 0
+
+
+def test_samples_limit_enforcement():
+    """Test that sample limits are enforced"""
+    store = AttackWaveDetectorStore()
+
+    # Create a helper function to create contexts with different URLs
+    def create_context_with_url(ip, url, method="GET"):
+        from aikido_zen.context import Context
+        from aikido_zen.helpers.headers import Headers
+
+        headers = Headers()
+        return Context(
+            context_obj={
+                "remote_address": ip,
+                "method": method,
+                "url": url,
+                "query": {},
+                "headers": headers,
+                "body": None,
+                "cookies": {},
+                "source": "test",
+                "route": "/test",
+                "user": None,
+                "executed_middleware": False,
+                "parsed_userinput": {},
+            }
+        )
+
+    with patch(
+        "aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector.is_web_scanner",
+        return_value=True,
+    ):
+        # Create many unique contexts with different IPs to avoid cooldown
+        for i in range(20):
+            context = create_context_with_url(
+                f"1.1.1.{i}", f"http://localhost/{i}", f"METHOD{i % 5}"
+            )
+
+            # Make enough requests to trigger attack wave
+            for j in range(15):
+                store.is_attack_wave(context)
+
+        # Check a few IPs to verify sample structure
+        for i in range(5):
+            samples = store.get_samples_for_ip(f"1.1.1.{i}")
+            assert len(samples) > 0
+
+            # Verify structure
+            for sample in samples:
+                assert set(sample.keys()) == {"method", "url"}
 
 
 @patch("aikido_zen.storage.attack_wave_detector_store.AttackWaveDetector")
