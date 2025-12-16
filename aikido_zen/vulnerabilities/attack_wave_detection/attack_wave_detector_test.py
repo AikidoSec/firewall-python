@@ -1,7 +1,7 @@
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from .attack_wave_detector import AttackWaveDetector
-from aikido_zen.context import Context
+import aikido_zen.test_utils as test_utils
 
 
 def new_attack_wave_detector():
@@ -11,17 +11,6 @@ def new_attack_wave_detector():
         min_time_between_events=60 * 60 * 1000,
         max_lru_entries=10_000,
     )
-
-
-def create_test_context(ip="::1", method="GET", route="/test", user_agent="test-agent"):
-    """Create a test context for testing"""
-    context = MagicMock(spec=Context)
-    context.remote_address = ip
-    context.method = method
-    context.route = route
-    context.query = {}
-    context.get_user_agent.return_value = user_agent
-    return context
 
 
 # Mock for get_unixtime_ms
@@ -36,13 +25,13 @@ def test_no_context():
 
 def test_no_ip_address_in_context():
     detector = new_attack_wave_detector()
-    context = create_test_context(ip=None)
+    context = test_utils.generate_context(ip=None)
     assert not detector.is_attack_wave(context)
 
 
 def test_a_web_scanner():
     detector = new_attack_wave_detector()
-    context = create_test_context()
+    context = test_utils.generate_context()
     
     # Mock is_web_scanner to return True for this test
     with patch('aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector.is_web_scanner', return_value=True):
@@ -59,7 +48,7 @@ def test_a_web_scanner():
 
 def test_non_web_scanner():
     detector = new_attack_wave_detector()
-    context = create_test_context()
+    context = test_utils.generate_context()
     
     # Mock is_web_scanner to return False for this test
     with patch('aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector.is_web_scanner', return_value=False):
@@ -69,7 +58,7 @@ def test_non_web_scanner():
 
 
 def test_a_web_scanner_with_delays():
-    context = create_test_context()
+    context = test_utils.generate_context()
     
     with patch(
         "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms",
@@ -119,7 +108,7 @@ def test_a_web_scanner_with_delays():
 def test_samples_tracking():
     """Test that samples are tracked correctly"""
     detector = new_attack_wave_detector()
-    context = create_test_context()
+    context = test_utils.generate_context()
     
     with patch('aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector.is_web_scanner', return_value=True):
         # Make a few requests
@@ -129,8 +118,8 @@ def test_samples_tracking():
         # Check that samples are being tracked
         samples = detector.get_samples_for_ip(context.remote_address)
         assert len(samples) == 3
-        assert all(sample['method'] == 'GET' for sample in samples)
-        assert all(sample['route'] == '/test' for sample in samples)
+        assert all(sample['method'] == 'POST' for sample in samples)
+        assert all(sample['route'] == '/' for sample in samples)
         
         # Make more requests to exceed the sample limit
         for i in range(10):
@@ -144,7 +133,7 @@ def test_samples_tracking():
 def test_clear_samples():
     """Test that samples can be cleared"""
     detector = new_attack_wave_detector()
-    context = create_test_context()
+    context = test_utils.generate_context()
     
     with patch('aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector.is_web_scanner', return_value=True):
         # Make some requests
@@ -164,7 +153,7 @@ def test_clear_samples():
 
 
 def test_a_slow_web_scanner_that_triggers_in_the_second_interval():
-    context = create_test_context()
+    context = test_utils.generate_context()
     
     with patch(
         "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms",
@@ -189,7 +178,7 @@ def test_a_slow_web_scanner_that_triggers_in_the_second_interval():
 
 
 def test_a_slow_web_scanner_that_triggers_in_the_third_interval():
-    context = create_test_context()
+    context = test_utils.generate_context()
     
     with patch(
         "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms",
