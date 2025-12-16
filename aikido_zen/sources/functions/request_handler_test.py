@@ -877,8 +877,8 @@ def test_attack_wave_samples_structure(firewall_lists):
     # Get the samples that were stored for this IP
     samples = detector.get_samples_for_ip("11.11.11.11")
 
-    # Verify samples structure
-    assert len(samples) == 10  # Should keep last 10 samples
+    # Verify samples structure - should have only 1 unique sample since all requests are identical
+    assert len(samples) == 1  # Only 1 unique sample despite 15 identical requests
 
     # Verify each sample has correct structure (method and url only)
     for sample in samples:

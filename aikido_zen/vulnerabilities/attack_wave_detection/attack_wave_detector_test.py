@@ -136,11 +136,11 @@ def test_samples_tracking():
         for i in range(3):
             detector.is_attack_wave(context)
 
-        # Check that samples are being tracked
+        # Check that samples are being tracked (should have only 1 unique sample)
         samples = detector.get_samples_for_ip(context.remote_address)
-        assert len(samples) == 3
-        assert all(sample["method"] == "POST" for sample in samples)
-        assert all(sample["url"] == "http://localhost:8080/" for sample in samples)
+        assert len(samples) == 1  # Only 1 unique sample despite 3 identical requests
+        assert samples[0]["method"] == "POST"
+        assert samples[0]["url"] == "http://localhost:8080/"
 
         # Make more requests to exceed the sample limit
         for i in range(10):
@@ -164,9 +164,9 @@ def test_clear_samples():
         for i in range(5):
             detector.is_attack_wave(context)
 
-        # Verify samples exist
+        # Verify samples exist (should have only 1 unique sample)
         samples = detector.get_samples_for_ip(context.remote_address)
-        assert len(samples) == 5
+        assert len(samples) == 1  # Only 1 unique sample despite 5 identical requests
 
         # Clear samples
         detector.clear_samples_for_ip(context.remote_address)
