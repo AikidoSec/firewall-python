@@ -98,16 +98,22 @@ def post_response(status_code):
     if not cache:
         return
 
-    attack_wave = attack_wave_detector_store.is_attack_wave(context.remote_address)
+    attack_wave = attack_wave_detector_store.is_attack_wave(context)
     if attack_wave:
         cache.stats.on_detected_attack_wave(blocked=False)
 
-        event = create_attack_wave_event(context, metadata={})
+        # Get samples for this IP to include in metadata
+        samples = attack_wave_detector_store.get_samples_for_ip(context.remote_address)
+        
+        event = create_attack_wave_event(context, metadata={}, samples=samples)
         logger.debug("Attack wave: %s", serialize_to_json(event)[:5000])
 
         # Report in background to core (send event over IPC)
         if c.get_comms() and event:
             send_payload(c.get_comms(), PutEventCommand.generate(event))
+        
+        # Clear samples after reporting to avoid memory buildup
+        attack_wave_detector_store.clear_samples_for_ip(context.remote_address)
 
     # Check if the current route is useful for API discovery
     is_curr_route_useful = is_useful_route(

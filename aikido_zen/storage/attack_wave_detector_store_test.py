@@ -5,11 +5,23 @@ Test cases for AttackWaveDetectorStore
 import pytest
 import threading
 import time
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from .attack_wave_detector_store import (
     AttackWaveDetectorStore,
     attack_wave_detector_store,
 )
+from aikido_zen.context import Context
+
+
+def create_test_context(ip="1.1.1.1", method="GET", route="/test", user_agent="test-agent"):
+    """Create a test context for testing"""
+    context = MagicMock(spec=Context)
+    context.remote_address = ip
+    context.method = method
+    context.route = route
+    context.query = {}
+    context.get_user_agent.return_value = user_agent
+    return context
 
 
 def test_attack_wave_detector_store_initialization():
@@ -28,44 +40,52 @@ def test_attack_wave_detector_store_singleton():
 def test_is_attack_wave_basic_functionality():
     """Test basic attack wave detection functionality"""
     store = AttackWaveDetectorStore()
+    context = create_test_context()
 
-    # Should return False for first few calls
-    assert not store.is_attack_wave("1.1.1.1")
-    assert not store.is_attack_wave("1.1.1.1")
+    # Mock is_web_scanner to return True for this test
+    with patch('aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector.is_web_scanner', return_value=True):
+        # Should return False for first few calls
+        assert not store.is_attack_wave(context)
+        assert not store.is_attack_wave(context)
 
-    # Call 12 more times to get to 14 total (still below threshold)
-    for _ in range(12):
-        result = store.is_attack_wave("1.1.1.1")
-        assert not result
+        # Call 12 more times to get to 14 total (still below threshold)
+        for _ in range(12):
+            result = store.is_attack_wave(context)
+            assert not result
 
-    # The 15th call should trigger attack wave detection and return True
-    assert store.is_attack_wave("1.1.1.1")
+        # The 15th call should trigger attack wave detection and return True
+        assert store.is_attack_wave(context)
 
 
 def test_is_attack_wave_different_ips():
     """Test that different IPs are tracked separately"""
     store = AttackWaveDetectorStore()
+    context1 = create_test_context(ip="1.1.1.1")
+    context2 = create_test_context(ip="2.2.2.2")
 
-    # Call multiple times for different IPs
-    for _ in range(10):
-        store.is_attack_wave("1.1.1.1")
-        store.is_attack_wave("2.2.2.2")
+    # Mock is_web_scanner to return True for this test
+    with patch('aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector.is_web_scanner', return_value=True):
+        # Call multiple times for different IPs
+        for _ in range(10):
+            store.is_attack_wave(context1)
+            store.is_attack_wave(context2)
 
-    # Neither should trigger attack wave yet
-    assert not store.is_attack_wave("1.1.1.1")
-    assert not store.is_attack_wave("2.2.2.2")
+        # Neither should trigger attack wave yet
+        assert not store.is_attack_wave(context1)
+        assert not store.is_attack_wave(context2)
 
 
-def test_is_attack_wave_none_ip():
-    """Test handling of None IP address"""
+def test_is_attack_wave_none_context():
+    """Test handling of None context"""
     store = AttackWaveDetectorStore()
     assert not store.is_attack_wave(None)
 
 
-def test_is_attack_wave_empty_ip():
-    """Test handling of empty IP address"""
+def test_is_attack_wave_no_ip_in_context():
+    """Test handling of context with no IP address"""
     store = AttackWaveDetectorStore()
-    assert not store.is_attack_wave("")
+    context = create_test_context(ip=None)
+    assert not store.is_attack_wave(context)
 
 
 def test_thread_safety_multiple_threads():
@@ -77,10 +97,10 @@ def test_thread_safety_multiple_threads():
 
     def worker(ip_suffix, result_list):
         """Worker function that calls is_attack_wave multiple times"""
-        ip = f"192.168.1.{ip_suffix}"
+        context = create_test_context(ip=f"192.168.1.{ip_suffix}")
         for _ in range(5):
-            result = store.is_attack_wave(ip)
-            result_list.append((ip, result))
+            result = store.is_attack_wave(context)
+            result_list.append((context.remote_address, result))
             time.sleep(0.001)  # Small delay to simulate real usage
 
     # Create and start multiple threads
@@ -110,8 +130,9 @@ def test_thread_safety_same_ip():
 
     def worker(result_list):
         """Worker function that calls is_attack_wave for the same IP"""
+        context = create_test_context(ip="10.0.0.1")
         for _ in range(10):
-            result = store.is_attack_wave("10.0.0.1")
+            result = store.is_attack_wave(context)
             with lock:
                 result_list.append(result)
             time.sleep(0.001)
@@ -136,34 +157,40 @@ def test_thread_safety_same_ip():
 def test_attack_wave_cooldown():
     """Test that attack wave detection respects the cooldown period"""
     store = AttackWaveDetectorStore()
+    context = create_test_context()
 
-    # Call 14 times to get close to threshold
-    for _ in range(14):
-        store.is_attack_wave("1.1.1.1")
+    # Mock is_web_scanner to return True for this test
+    with patch('aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector.is_web_scanner', return_value=True):
+        # Call 14 times to get close to threshold
+        for _ in range(14):
+            store.is_attack_wave(context)
 
-    # The 15th call should trigger attack wave detection and return True
-    assert store.is_attack_wave("1.1.1.1")
+        # The 15th call should trigger attack wave detection and return True
+        assert store.is_attack_wave(context)
 
-    # Subsequent calls should return False due to cooldown
-    assert not store.is_attack_wave("1.1.1.1")
+        # Subsequent calls should return False due to cooldown
+        assert not store.is_attack_wave(context)
 
 
 def test_attack_wave_time_frame():
     """Test that attack wave detection respects the time frame"""
     store = AttackWaveDetectorStore()
+    context = create_test_context()
 
-    # Make some calls
-    for _ in range(5):
-        store.is_attack_wave("1.1.1.1")
+    # Mock is_web_scanner to return True for this test
+    with patch('aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector.is_web_scanner', return_value=True):
+        # Make some calls
+        for _ in range(5):
+            store.is_attack_wave(context)
 
-    # Should not trigger attack wave yet
-    assert not store.is_attack_wave("1.1.1.1")
+        # Should not trigger attack wave yet
+        assert not store.is_attack_wave(context)
 
-    # Wait for the time frame to expire (60 seconds)
-    # We can't actually wait 60 seconds in a test, but we can verify the behavior
-    # by checking that the detector is tracking the requests correctly
-    detector = store._get_detector()
-    assert detector.suspicious_requests_map.get("1.1.1.1") == 6
+        # Wait for the time frame to expire (60 seconds)
+        # We can't actually wait 60 seconds in a test, but we can verify the behavior
+        # by checking that the detector is tracking the requests correctly
+        detector = store._get_detector()
+        assert detector.suspicious_requests_map.get(context.remote_address) == 6
 
 
 def test__get_detector_returns_same_instance():
@@ -203,9 +230,9 @@ def test_stress_test_high_concurrency():
         """Worker function for stress test"""
         try:
             for i in range(10):
-                ip = f"192.168.{worker_id}.{i}"
-                result = store.is_attack_wave(ip)
-                results.append((worker_id, ip, result))
+                context = create_test_context(ip=f"192.168.{worker_id}.{i}")
+                result = store.is_attack_wave(context)
+                results.append((worker_id, context.remote_address, result))
         except Exception as e:
             results.append((worker_id, "error", str(e)))
 
@@ -227,6 +254,28 @@ def test_stress_test_high_concurrency():
     assert len(results) == 100  # 10 threads * 10 IPs each
 
 
+def test_samples_tracking_in_store():
+    """Test that samples are tracked correctly through the store"""
+    store = AttackWaveDetectorStore()
+    context = create_test_context()
+    
+    with patch('aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector.is_web_scanner', return_value=True):
+        # Make a few requests
+        for i in range(3):
+            store.is_attack_wave(context)
+        
+        # Check that samples are being tracked
+        samples = store.get_samples_for_ip(context.remote_address)
+        assert len(samples) == 3
+        
+        # Clear samples
+        store.clear_samples_for_ip(context.remote_address)
+        
+        # Verify samples are cleared
+        samples = store.get_samples_for_ip(context.remote_address)
+        assert len(samples) == 0
+
+
 @patch("aikido_zen.storage.attack_wave_detector_store.AttackWaveDetector")
 def test_mock_detector_integration(mock_detector_class):
     """Test integration with mocked AttackWaveDetector"""
@@ -235,8 +284,9 @@ def test_mock_detector_integration(mock_detector_class):
     mock_detector.is_attack_wave.return_value = True
 
     store = AttackWaveDetectorStore()
+    context = create_test_context()
 
     # Should use the mocked detector
-    result = store.is_attack_wave("1.1.1.1")
+    result = store.is_attack_wave(context)
     assert result is True
-    mock_detector.is_attack_wave.assert_called_once_with("1.1.1.1")
+    mock_detector.is_attack_wave.assert_called_once_with(context)
