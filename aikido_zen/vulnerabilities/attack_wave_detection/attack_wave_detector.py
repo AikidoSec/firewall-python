@@ -54,6 +54,9 @@ class AttackWaveDetector:
 
         self.track_sample(ip, context)
 
+        if suspicious_requests < self.attack_wave_threshold:
+            return False
+
         # Mark event as sent
         self.sent_events_map.set(ip, internal_time.get_unixtime_ms(monotonic=True))
         return True
