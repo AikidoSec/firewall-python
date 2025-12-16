@@ -18,6 +18,7 @@ class AttackWaveDetector:
         self.attack_wave_time_frame = attack_wave_time_frame
         self.min_time_between_events = min_time_between_events
         self.max_lru_entries = max_lru_entries
+        self.max_samples_per_ip = 15
 
         self.suspicious_requests_map = LRUCache(
             max_items=self.max_lru_entries,
@@ -51,32 +52,7 @@ class AttackWaveDetector:
         suspicious_requests = (self.suspicious_requests_map.get(ip) or 0) + 1
         self.suspicious_requests_map.set(ip, suspicious_requests)
 
-        samples = self.samples_map.get(ip) or []
-
-        # There's no use in reporting a sample twice.
-        sample_exists = False
-        for existing_sample in samples:
-            if (
-                existing_sample["method"] == context.method
-                and existing_sample["url"] == context.url
-            ):
-                sample_exists = True
-                break
-        if not sample_exists:
-            samples.append(
-                {
-                    "method": context.method,
-                    "url": context.url,
-                }
-            )
-
-        # Keep only the most recent samples (limit to avoid memory issues)
-        if len(samples) > 10:
-            samples = samples[-10:]
-        self.samples_map.set(ip, samples)
-
-        if suspicious_requests < self.attack_wave_threshold:
-            return False
+        self.track_sample(ip, context)
 
         # Mark event as sent
         self.sent_events_map.set(ip, internal_time.get_unixtime_ms(monotonic=True))
@@ -87,3 +63,24 @@ class AttackWaveDetector:
 
     def clear_samples_for_ip(self, ip: str):
         self.samples_map.delete(ip)
+
+    def track_sample(self, ip, context):
+        samples = self.samples_map.get(ip) or []
+
+        if len(samples) > self.max_samples_per_ip:
+            return
+
+        for existing_sample in samples:
+            method_same = existing_sample["method"] == context.method
+            url_same = existing_sample["url"] == context.url
+            if method_same and url_same:
+                return
+
+        samples.append(
+            {
+                "method": context.method,
+                "url": context.url,
+            }
+        )
+
+        self.samples_map.set(ip, samples)
