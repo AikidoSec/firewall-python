@@ -41,8 +41,7 @@ def is_web_scan_path(path: str) -> bool:
             if ext in file_extensions:
                 return True
 
-    segments_without_filename = segments[:-1]
-    for directory in segments_without_filename:
+    for directory in segments:
         if directory in directories:
             return True
     return False
