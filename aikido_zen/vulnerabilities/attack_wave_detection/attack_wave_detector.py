@@ -52,12 +52,23 @@ class AttackWaveDetector:
         self.suspicious_requests_map.set(ip, suspicious_requests)
 
         samples = self.samples_map.get(ip) or []
-        samples.append(
-            {
-                "method": context.method,
-                "url": context.url,
-            }
-        )
+
+        # There's no use in reporting a sample twice.
+        sample_exists = False
+        for existing_sample in samples:
+            if (
+                existing_sample["method"] == context.method
+                and existing_sample["url"] == context.url
+            ):
+                sample_exists = True
+                break
+        if not sample_exists:
+            samples.append(
+                {
+                    "method": context.method,
+                    "url": context.url,
+                }
+            )
 
         # Keep only the most recent samples (limit to avoid memory issues)
         if len(samples) > 10:
