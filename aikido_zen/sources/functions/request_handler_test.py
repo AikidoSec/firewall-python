@@ -845,3 +845,56 @@ def test_attack_wave_detection_multiple_ips(firewall_lists):
         "total": 3,  # One attack wave per IP
         "blocked": 0,
     }
+
+
+@patch_firewall_lists
+def test_attack_wave_samples_structure(firewall_lists):
+    """Test that attack wave samples contain correct structure with method and URL"""
+    set_context("11.11.11.11", route="/.env")
+    create_service_config()
+
+    # Reset attack wave detector store for clean test
+    from aikido_zen.storage.attack_wave_detector_store import attack_wave_detector_store
+
+    detector = attack_wave_detector_store._get_detector()
+    detector.suspicious_requests_map.clear()
+    detector.sent_events_map.clear()
+
+    # Reset stats
+    get_cache().stats.clear()
+
+    # Trigger attack wave detection by calling the detector directly
+    from aikido_zen.context import get_current_context
+
+    with patch(
+        "aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector.is_web_scanner",
+        return_value=True,
+    ):
+        for i in range(15):
+            context = get_current_context()
+            detector.is_attack_wave(context)
+
+    # Get the samples that were stored for this IP
+    samples = detector.get_samples_for_ip("11.11.11.11")
+
+    # Verify samples structure
+    assert len(samples) == 10  # Should keep last 10 samples
+
+    # Verify each sample has correct structure (method and url only)
+    for sample in samples:
+        assert sample["method"] == "POST"
+        assert sample["url"] == "http://localhost:4000"  # Full URL from context
+
+
+@patch_firewall_lists
+def test_attack_wave_samples_json_format(firewall_lists):
+    """Test that attack wave event contains JSON stringified samples"""
+    set_context("12.12.12.12", route="/.git/config")
+    create_service_config()
+
+    # Reset attack wave detector store for clean test
+    from aikido_zen.storage.attack_wave_detector_store import attack_wave_detector_store
+
+    detector = attack_wave_detector_store._get_detector()
+    detector.suspicious_requests_map.clear()
+    detector.sent_events_map.clear()
