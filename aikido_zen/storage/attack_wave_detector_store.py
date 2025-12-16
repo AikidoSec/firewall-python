@@ -15,12 +15,10 @@ class AttackWaveDetectorStore:
             return self._detector.is_attack_wave(context)
 
     def get_samples_for_ip(self, ip: str):
-        """Get samples for a specific IP address"""
         with self._lock:
             return self._detector.get_samples_for_ip(ip)
 
     def clear_samples_for_ip(self, ip: str):
-        """Clear samples for a specific IP address"""
         with self._lock:
             return self._detector.clear_samples_for_ip(ip)
 
