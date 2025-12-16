@@ -68,23 +68,23 @@ def pre_response():
         receive=True,
         timeout_in_sec=(10 / 1000),
     )
-    if not check_fw_lists_res.get("success", False):
+    if not check_fw_lists_res["success"] or not check_fw_lists_res["data"]["blocked"]:
         return
-    res: CheckFirewallListsRes = check_fw_lists_res.get("data")
 
-    if res.blocked and res.blocking_type == "allowlist":
+    block_type = check_fw_lists_res["data"]["type"]
+
+    if block_type == "allowlist":
         message = "Your IP address is not allowed."
         message += " (Your IP: " + context.remote_address + ")"
         return message, 403
-    if res.blocked and res.blocking_type == "blocklist":
+    if block_type == "blocklist":
         message = "Your IP address is blocked due to "
-        message += res.reason
+        message += check_fw_lists_res["data"]["reason"]
         message += " (Your IP: " + context.remote_address + ")"
         return message, 403
-    if res.blocked and res.blocking_type == "bot-blocking":
+    if block_type == "bot-blocking":
         msg = "You are not allowed to access this resource because you have been identified as a bot."
         return msg, 403
-
     return None
 
 
