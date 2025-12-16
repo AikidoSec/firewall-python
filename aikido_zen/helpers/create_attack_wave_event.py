@@ -1,3 +1,4 @@
+import json
 from aikido_zen.helpers.limit_length_metadata import limit_length_metadata
 from aikido_zen.helpers.logging import logger
 from aikido_zen.storage.attack_wave_detector_store import attack_wave_detector_store
@@ -9,7 +10,8 @@ def create_attack_wave_event(context):
 
         samples = attack_wave_detector_store.get_samples_for_ip(context.remote_address)
         if samples:
-            metadata["samples"] = samples
+            # Convert samples to JSON string, since metadata is a key-value store of strings.
+            metadata["samples"] = json.dumps(samples)
 
         attack_wave_detector_store.clear_samples_for_ip(context.remote_address)
 

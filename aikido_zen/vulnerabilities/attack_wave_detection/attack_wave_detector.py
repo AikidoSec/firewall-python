@@ -55,9 +55,7 @@ class AttackWaveDetector:
         samples.append(
             {
                 "method": context.method,
-                "route": context.route,
-                "user_agent": context.get_user_agent(),
-                "timestamp": internal_time.get_unixtime_ms(monotonic=True),
+                "url": context.url,
             }
         )
 
