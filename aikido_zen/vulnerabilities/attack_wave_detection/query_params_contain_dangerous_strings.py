@@ -36,7 +36,8 @@ def query_params_contain_dangerous_strings(context: Context) -> bool:
         if len(s) < 5 or len(s) > 1000:
             continue
 
+        s_upper = s.upper()
         for keyword in keywords:
-            if keyword.upper() in s.upper():
+            if keyword.upper() in s_upper:
                 return True
     return False
