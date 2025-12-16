@@ -104,6 +104,7 @@ class AikidoBackgroundProcess:
         while not self.queue.empty():
             self.connection_manager.report_api_event(self.queue.get())
 
+
 def add_exit_handlers():
     """
     We add graceful exit handlers here since the process keeps hanging otherwise.
