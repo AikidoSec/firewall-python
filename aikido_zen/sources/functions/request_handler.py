@@ -9,7 +9,6 @@ from aikido_zen.thread.thread_cache import get_cache
 from .ip_allowed_to_access_route import ip_allowed_to_access_route
 import aikido_zen.background_process.comms as c
 from ...background_process.commands import PutEventCommand
-from ...background_process.commands.check_firewall_lists import CheckFirewallListsRes
 from ...helpers.ipc.send_payload import send_payload
 from ...helpers.serialize_to_json import serialize_to_json
 from ...storage.attack_wave_detector_store import attack_wave_detector_store
