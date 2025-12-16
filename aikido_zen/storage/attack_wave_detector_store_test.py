@@ -32,7 +32,10 @@ def test_is_attack_wave_basic_functionality():
     context = test_utils.generate_context()
 
     # Mock is_web_scanner to return True for this test
-    with patch('aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector.is_web_scanner', return_value=True):
+    with patch(
+        "aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector.is_web_scanner",
+        return_value=True,
+    ):
         # Should return False for first few calls
         assert not store.is_attack_wave(context)
         assert not store.is_attack_wave(context)
@@ -53,7 +56,10 @@ def test_is_attack_wave_different_ips():
     context2 = test_utils.generate_context(ip="2.2.2.2")
 
     # Mock is_web_scanner to return True for this test
-    with patch('aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector.is_web_scanner', return_value=True):
+    with patch(
+        "aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector.is_web_scanner",
+        return_value=True,
+    ):
         # Call multiple times for different IPs
         for _ in range(10):
             store.is_attack_wave(context1)
@@ -149,7 +155,10 @@ def test_attack_wave_cooldown():
     context = test_utils.generate_context()
 
     # Mock is_web_scanner to return True for this test
-    with patch('aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector.is_web_scanner', return_value=True):
+    with patch(
+        "aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector.is_web_scanner",
+        return_value=True,
+    ):
         # Call 14 times to get close to threshold
         for _ in range(14):
             store.is_attack_wave(context)
@@ -167,7 +176,10 @@ def test_attack_wave_time_frame():
     context = test_utils.generate_context()
 
     # Mock is_web_scanner to return True for this test
-    with patch('aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector.is_web_scanner', return_value=True):
+    with patch(
+        "aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector.is_web_scanner",
+        return_value=True,
+    ):
         # Make some calls
         for _ in range(5):
             store.is_attack_wave(context)
@@ -247,19 +259,22 @@ def test_samples_tracking_in_store():
     """Test that samples are tracked correctly through the store"""
     store = AttackWaveDetectorStore()
     context = test_utils.generate_context()
-    
-    with patch('aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector.is_web_scanner', return_value=True):
+
+    with patch(
+        "aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector.is_web_scanner",
+        return_value=True,
+    ):
         # Make a few requests
         for i in range(3):
             store.is_attack_wave(context)
-        
+
         # Check that samples are being tracked
         samples = store.get_samples_for_ip(context.remote_address)
         assert len(samples) == 3
-        
+
         # Clear samples
         store.clear_samples_for_ip(context.remote_address)
-        
+
         # Verify samples are cleared
         samples = store.get_samples_for_ip(context.remote_address)
         assert len(samples) == 0

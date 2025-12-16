@@ -25,21 +25,21 @@ def test_create_attack_wave_event_with_samples():
     """Test attack wave event creation with samples"""
     metadata = {"test": "value"}
     context = test_utils.generate_context()
-    
+
     # Create sample data
     samples = [
         {
-            'method': 'GET',
-            'route': '/test1',
-            'user_agent': 'Mozilla/5.0',
-            'timestamp': 1234567890
+            "method": "GET",
+            "route": "/test1",
+            "user_agent": "Mozilla/5.0",
+            "timestamp": 1234567890,
         },
         {
-            'method': 'POST',
-            'route': '/test2',
-            'user_agent': 'curl/7.0',
-            'timestamp': 1234567891
-        }
+            "method": "POST",
+            "route": "/test2",
+            "user_agent": "curl/7.0",
+            "timestamp": 1234567891,
+        },
     ]
 
     event = create_attack_wave_event(context, metadata, samples)
@@ -49,13 +49,13 @@ def test_create_attack_wave_event_with_samples():
     assert event["attack"]["user"] is None
     assert "samples" in event["attack"]["metadata"]
     assert len(event["attack"]["metadata"]["samples"]) == 2
-    
+
     # Check that samples are in the expected format
     sample1 = event["attack"]["metadata"]["samples"][0]
-    assert sample1['method'] == 'GET'
-    assert sample1['route'] == '/test1'
-    assert sample1['ua'] == 'Mozilla/5.0'  # Should be shortened key
-    assert sample1['ts'] == 1234567890
+    assert sample1["method"] == "GET"
+    assert sample1["route"] == "/test1"
+    assert sample1["ua"] == "Mozilla/5.0"  # Should be shortened key
+    assert sample1["ts"] == 1234567890
 
 
 def test_create_attack_wave_event_with_user():

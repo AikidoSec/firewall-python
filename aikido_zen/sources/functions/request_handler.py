@@ -104,14 +104,14 @@ def post_response(status_code):
 
         # Get samples for this IP to include in metadata
         samples = attack_wave_detector_store.get_samples_for_ip(context.remote_address)
-        
+
         event = create_attack_wave_event(context, metadata={}, samples=samples)
         logger.debug("Attack wave: %s", serialize_to_json(event)[:5000])
 
         # Report in background to core (send event over IPC)
         if c.get_comms() and event:
             send_payload(c.get_comms(), PutEventCommand.generate(event))
-        
+
         # Clear samples after reporting to avoid memory buildup
         attack_wave_detector_store.clear_samples_for_ip(context.remote_address)
 

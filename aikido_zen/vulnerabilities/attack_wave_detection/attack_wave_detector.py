@@ -1,7 +1,9 @@
 import aikido_zen.helpers.get_current_unixtime_ms as internal_time
 from aikido_zen.ratelimiting.lru_cache import LRUCache
 from aikido_zen.context import Context
-from aikido_zen.vulnerabilities.attack_wave_detection.is_web_scanner import is_web_scanner
+from aikido_zen.vulnerabilities.attack_wave_detection.is_web_scanner import (
+    is_web_scanner,
+)
 
 
 class AttackWaveDetector:
@@ -54,12 +56,14 @@ class AttackWaveDetector:
 
         # Track samples for metadata
         samples = self.samples_map.get(ip) or []
-        samples.append({
-            'method': context.method,
-            'route': context.route,
-            'user_agent': context.get_user_agent(),
-            'timestamp': internal_time.get_unixtime_ms(monotonic=True)
-        })
+        samples.append(
+            {
+                "method": context.method,
+                "route": context.route,
+                "user_agent": context.get_user_agent(),
+                "timestamp": internal_time.get_unixtime_ms(monotonic=True),
+            }
+        )
         # Keep only the most recent samples (limit to avoid memory issues)
         if len(samples) > 10:
             samples = samples[-10:]
