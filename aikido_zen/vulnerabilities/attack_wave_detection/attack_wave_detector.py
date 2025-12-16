@@ -39,14 +39,11 @@ class AttackWaveDetector:
         """
         if not context or not context.remote_address:
             return False
-
         ip = context.remote_address
 
-        # Check if an event was sent recently
         if self.sent_events_map.get(ip) is not None:
             return False
 
-        # Check if this is a web scanner request
         if not is_web_scanner(context):
             return False
 
@@ -54,7 +51,6 @@ class AttackWaveDetector:
         suspicious_requests = (self.suspicious_requests_map.get(ip) or 0) + 1
         self.suspicious_requests_map.set(ip, suspicious_requests)
 
-        # Track samples for metadata
         samples = self.samples_map.get(ip) or []
         samples.append(
             {
@@ -64,6 +60,7 @@ class AttackWaveDetector:
                 "timestamp": internal_time.get_unixtime_ms(monotonic=True),
             }
         )
+
         # Keep only the most recent samples (limit to avoid memory issues)
         if len(samples) > 10:
             samples = samples[-10:]
@@ -77,13 +74,7 @@ class AttackWaveDetector:
         return True
 
     def get_samples_for_ip(self, ip: str):
-        """
-        Get samples for a specific IP address
-        """
         return self.samples_map.get(ip) or []
 
     def clear_samples_for_ip(self, ip: str):
-        """
-        Clear samples for a specific IP address
-        """
         self.samples_map.delete(ip)
