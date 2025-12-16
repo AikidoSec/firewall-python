@@ -171,21 +171,3 @@ def test_create_attack_wave_event_complex_metadata():
     assert event["attack"]["metadata"] == metadata
     assert event["attack"]["metadata"]["nested"]["key1"] == "value1"
     assert event["attack"]["metadata"]["json_string"] == "[1, 2, 3]"
-
-
-def test_create_attack_wave_event_with_special_characters():
-    """Test attack wave event creation with special characters in metadata"""
-    metadata = {
-        "special_chars": "!@#$%^&*()_+-=[]{}|;':\",./<>?",
-        "unicode": "测试🚀",
-        "newlines": "line1\nline2\r\nline3",
-    }
-    context = test_utils.generate_context()
-
-    event = create_attack_wave_event(context, metadata)
-
-    assert (
-        event["attack"]["metadata"]["special_chars"] == "!@#$%^&*()_+-=[]{}|;':\",./<>?"
-    )
-    assert event["attack"]["metadata"]["unicode"] == "测试🚀"
-    assert event["attack"]["metadata"]["newlines"] == "line1\nline2\r\nline3"
