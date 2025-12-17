@@ -33,7 +33,6 @@ def is_trusted_hostname(hostname):
 
     # If the hostname is an ip itself, no resolving happens. We can safely ignore this, it's not an attack.
     if imds_addresses.has(hostname):
-        # hostname comes from user input, then I guess they just inputted IMDS ip, could be malicious
         return True
 
     # If the hostname is a trusted host (like metadata.goog), there was no spoofing of hostnames, so it's not an attack
