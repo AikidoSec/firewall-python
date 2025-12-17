@@ -28,7 +28,9 @@ trusted_hosts = ["metadata.google.internal", "metadata.goog"]
 
 
 def is_trusted_hostname(hostname):
-    """Checks if this hostname is trusted"""
+    """Checks if this hostname is trusted or if the hostname is actually an IP address"""
+    if imds_addresses.has(hostname):
+        return True
     return hostname in trusted_hosts
 
 
