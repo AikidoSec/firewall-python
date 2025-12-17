@@ -38,6 +38,9 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get install libmysqlclient-dev
 
+      - name: Setup safe-chain
+        run: curl -fsSL https://raw.githubusercontent.com/AikidoSec/safe-chain/main/install-scripts/install-safe-chain.sh | sh -s -- --ci
+
       - name: Install dependencies
         run: make install && cp -r .cache/binaries/* aikido_zen/libs
 
