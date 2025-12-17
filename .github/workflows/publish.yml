@@ -18,6 +18,10 @@ jobs:
     - name: Add local.aikido.io to /etc/hosts
       run: |
           sudo echo "127.0.0.1 local.aikido.io" | sudo tee -a /etc/hosts
+
+    - name: Setup safe-chain
+      run: curl -fsSL https://raw.githubusercontent.com/AikidoSec/safe-chain/main/install-scripts/install-safe-chain.sh | sh -s -- --ci
+
     - name: Installation
       run: make dev_install
     - name: Run Pylint
