@@ -28,10 +28,19 @@ trusted_hosts = ["metadata.google.internal", "metadata.goog"]
 
 
 def is_trusted_hostname(hostname):
-    """Checks if this hostname is trusted or if the hostname is actually an IP address"""
+    # Stored SSRF attacks happen when an attacker can alter how hostnames are resolved by
+    # e.g. having inserted an entry in /etc/hosts, or having spoofed the DNS
+
+    # If the hostname is an ip itself, no resolving happens. We can safely ignore this, it's not an attack.
     if imds_addresses.has(hostname):
+        # hostname comes from user input, then I guess they just inputted IMDS ip, could be malicious
         return True
-    return hostname in trusted_hosts
+
+    # If the hostname is a trusted host (like metadata.goog), there was no spoofing of hostnames, so it's not an attack
+    if hostname in trusted_hosts:
+        return True
+
+    return False
 
 
 def resolves_to_imds_ip(resolved_ip_addresses, hostname):
