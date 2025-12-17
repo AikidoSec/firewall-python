@@ -15,10 +15,13 @@ jobs:
       - name: Start databases
         working-directory:  ./sample-apps/databases
         run: docker compose up --build -d
+
       - name: Set up Python 3.9
         uses: actions/setup-python@v5
         with:
           python-version: 3.9
+      - name: Setup safe-chain
+        run: curl -fsSL https://raw.githubusercontent.com/AikidoSec/safe-chain/main/install-scripts/install-safe-chain.sh | sh -s -- --ci
 
       - name: Install dependencies
         run: |
