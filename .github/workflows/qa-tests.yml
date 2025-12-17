@@ -45,7 +45,7 @@ jobs:
           cp firewall-python/.github/workflows/Dockerfile.qa zen-demo-python/Dockerfile
 
       - name: Run Firewall QA Tests
-        uses: AikidoSec/firewall-tester-action@release/v1
+        uses: AikidoSec/firewall-tester-action@releases/v1
         with:
           dockerfile_path: ./zen-demo-python/Dockerfile
           app_port: 8080
