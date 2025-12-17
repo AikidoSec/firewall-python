@@ -84,4 +84,4 @@ def test_doesnt_flag_ip_address():
     assert (
         resolves_to_imds_ip(["169.254.169.254", "8.8.8.8"], "169.254.169.254") is None
     )
-    assert resolves_to_imds_ip(["169.254.169.254", "8.8.8.8"], "fd00:ec2::254") is None
+    assert resolves_to_imds_ip(["fd00:ec2::254", "8.8.8.8"], "fd00:ec2::254") is None
