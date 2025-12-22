@@ -26,6 +26,8 @@ responses = {
             }
         ],
         "blockedUserIds": [],
+        "domains": [],
+        "blockNewOutgoingRequests": False,
     },
     "lists": {
         "success": True,
