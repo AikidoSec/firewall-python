@@ -2,11 +2,11 @@
 Test module for socket sink
 """
 
-import importlib
 import socket
 import pytest
 from unittest.mock import patch, MagicMock
 import aikido_zen.sinks.socket  # Import to ensure patching
+from aikido_zen.test_utils import generate_context
 from aikido_zen.thread.thread_cache import get_cache
 from aikido_zen.background_process.service_config import ServiceConfig
 
@@ -161,3 +161,76 @@ def test_service_config_set_block_new_outgoing_requests():
     # Test setting to False
     config.set_block_new_outgoing_requests(False)
     assert not config.block_new_outgoing_requests
+
+
+def test_socket_getaddrinfo_bypassed_ip():
+    """Test that getaddrinfo works when IP is in bypassed_ips list"""
+    # Reset cache and set up bypassed IPs
+    cache = get_cache()
+    cache.reset()
+    cache.config.set_bypassed_ips(["192.168.1.0/24"])
+    cache.config.set_block_new_outgoing_requests(True)
+    cache.config.update_domains([{"hostname": "allowed.com", "mode": "allow"}])
+
+    # Bypassed IP not enforced : no context
+    with pytest.raises(Exception) as exc_info:
+        socket.getaddrinfo("unknown.com", 80)
+    assert (
+        "Zen has blocked an outbound connection: socket.getaddrinfo to unknown.com"
+        in str(exc_info.value)
+    )
+
+    generate_context(ip="1.1.1.1").set_as_current_context()
+    with pytest.raises(Exception) as exc_info:
+        socket.getaddrinfo("unknown.com", 80)
+    assert (
+        "Zen has blocked an outbound connection: socket.getaddrinfo to unknown.com"
+        in str(exc_info.value)
+    )
+
+    generate_context(ip="192.168.1.80").set_as_current_context()
+    try:
+        socket.getaddrinfo("unknown.com", 80)
+    except Exception:
+        pytest.fail("getaddrinfo should not throw an error if IP is bypassed")
+
+
+def test_socket_getaddrinfo_ip_address_as_hostname():
+    """Test that getaddrinfo works when hostname is an IP address"""
+    # Reset cache to ensure clean state
+    get_cache().reset()
+
+    # Test that IP address as hostname doesn't throw an error
+    try:
+        socket.getaddrinfo("8.8.8.8", 53)  # Google DNS
+    except Exception:
+        pytest.fail(
+            "getaddrinfo should not throw an error for IP addresses as hostnames"
+        )
+
+
+def test_socket_getaddrinfo_blocked_punycode_hostname():
+    """Test that getaddrinfo blocks when punycode hostname is explicitly blocked"""
+    # Reset cache and set up blocking for specific punycode domain
+    cache = get_cache()
+    cache.reset()
+    cache.config.update_domains(
+        [
+            {"hostname": "xn--blocked-7ta.com", "mode": "block"},
+            {"hostname": "xn--allowed-8ta.com", "mode": "allow"},
+        ]
+    )
+
+    # Test that blocked punycode domain raises exception
+    with pytest.raises(Exception) as exc_info:
+        socket.getaddrinfo("xn--blocked-7ta.com", 80)
+    assert (
+        "Zen has blocked an outbound connection: socket.getaddrinfo to xn--blocked-7ta.com"
+        in str(exc_info.value)
+    )
+
+    # Test that allowed punycode domain works normally
+    try:
+        socket.getaddrinfo("xn--allowed-8ta.com", 80)
+    except Exception as e:
+        assert not "Zen has blocked an outbound connection" in str(e)
