@@ -101,7 +101,7 @@ def test_direct_imds_ips_are_still_ssrf_ips():
     assert attacks[3]["attack"]['metadata']['hostname'] == '169.254.169.254'
     assert attacks[3]["attack"]['metadata']['port'] == '80'
     assert attacks[3]["attack"]["operation"] == 'socket.getaddrinfo'
-    assert attacks[3]["attack"]["pathToPayload"] == '.url'
+    assert attacks[3]["attack"]["path"] == '.url'
     assert attacks[3]["attack"]["payload"] == '"http://169.254.169.254/metadata/test"'
     assert attacks[3]["attack"]["source"] == "body"
     assert attacks[3]["attack"]["user"]["id"] == "123"
