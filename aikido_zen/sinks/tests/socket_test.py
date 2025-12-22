@@ -11,31 +11,16 @@ from aikido_zen.thread.thread_cache import get_cache
 from aikido_zen.background_process.service_config import ServiceConfig
 
 
-def get_patched_socket_module():
-    """Get a patched socket module"""
-    import socket
-    from aikido_zen.sinks import patch_function
-    import aikido_zen.sinks.socket
-
-    # Manually apply the patch
-    patch_function(socket, "getaddrinfo", aikido_zen.sinks.socket._getaddrinfo)
-
-    return socket
-
-
 def test_socket_getaddrinfo_no_blocking():
     """Test that getaddrinfo works normally when no blocking is configured"""
     # Reset cache to ensure clean state
     get_cache().reset()
 
-    # Get patched socket module
-    socket_module = get_patched_socket_module()
-
-    # Mock getaddrinfo to return a known value
-    mock_result = [(2, 1, 6, "", ("127.0.0.1", 80))]
-    with patch.object(socket_module, "getaddrinfo", return_value=mock_result):
-        result = socket_module.getaddrinfo("example.com", 80)
-        assert result == mock_result
+    # Test that allowed domain doesn't throw an error
+    try:
+        socket.getaddrinfo("example.com", 80)
+    except Exception:
+        pytest.fail("getaddrinfo should not throw an error for allowed domains")
 
 
 def test_socket_getaddrinfo_block_specific_domain():
@@ -50,22 +35,16 @@ def test_socket_getaddrinfo_block_specific_domain():
         ]
     )
 
-    # Get patched socket module
-    socket_module = get_patched_socket_module()
-
     # Test that blocked domain raises exception
     with pytest.raises(Exception) as exc_info:
-        socket_module.getaddrinfo("blocked.com", 80)
+        socket.getaddrinfo("blocked.com", 80)
     assert (
         "Zen has blocked an outbound connection: socket.getaddrinfo to blocked.com"
         in str(exc_info.value)
     )
 
     # Test that allowed domain works normally
-    mock_result = [(2, 1, 6, "", ("127.0.0.1", 80))]
-    with patch.object(socket_module, "getaddrinfo", return_value=mock_result):
-        result = socket_module.getaddrinfo("allowed.com", 80)
-        assert result == mock_result
+    socket.getaddrinfo("allowed.com", 80)
 
 
 def test_socket_getaddrinfo_block_all_new_requests():
@@ -76,35 +55,34 @@ def test_socket_getaddrinfo_block_all_new_requests():
     cache.config.set_block_new_outgoing_requests(True)
     cache.config.update_domains([{"hostname": "allowed.com", "mode": "allow"}])
 
-    # Get patched socket module
-    socket_module = get_patched_socket_module()
-
     # Test that unknown domain raises exception
     with pytest.raises(Exception) as exc_info:
-        socket_module.getaddrinfo("unknown.com", 80)
+        socket.getaddrinfo("unknown.com", 80)
     assert (
         "Zen has blocked an outbound connection: socket.getaddrinfo to unknown.com"
         in str(exc_info.value)
     )
 
-    # Test that explicitly allowed domain works even when block_new_outgoing_requests is True
-    mock_result = [(2, 1, 6, "", ("127.0.0.1", 80))]
-    with patch.object(socket_module, "getaddrinfo", return_value=mock_result):
-        result = socket_module.getaddrinfo("allowed.com", 80)
-        assert result == mock_result
+    # Test that explicitly allowed domain doesn't throw an error
+    try:
+        socket.getaddrinfo("allowed.com", 80)
+    except Exception:
+        pytest.fail(
+            "getaddrinfo should not throw an error for explicitly allowed domains"
+        )
 
 
 def test_socket_getaddrinfo_no_cache():
     """Test that getaddrinfo works normally when cache is not available"""
-    # Get patched socket module
-    socket_module = get_patched_socket_module()
-
     # Mock get_cache to return None
     with patch("aikido_zen.sinks.socket.get_cache", return_value=None):
-        mock_result = [(2, 1, 6, "", ("127.0.0.1", 80))]
-        with patch.object(socket_module, "getaddrinfo", return_value=mock_result):
-            result = socket_module.getaddrinfo("example.com", 80)
-            assert result == mock_result
+        # Test that allowed domain doesn't throw an error when cache is unavailable
+        try:
+            socket.getaddrinfo("example.com", 80)
+        except Exception:
+            pytest.fail(
+                "getaddrinfo should not throw an error when cache is unavailable"
+            )
 
 
 def test_service_config_should_block_outgoing_request():

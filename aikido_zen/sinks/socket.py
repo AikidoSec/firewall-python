@@ -1,6 +1,7 @@
 """
 Sink module for `socket`
 """
+
 from aikido_zen.context import get_current_context
 from aikido_zen.helpers.get_argument import get_argument
 from aikido_zen.helpers.register_call import register_call
