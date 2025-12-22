@@ -98,11 +98,12 @@ def test_direct_imds_ips_are_still_ssrf_ips():
     print(attacks[3]["attack"])
     assert attacks[3]["attack"]["blocked"] == True
     assert attacks[3]["attack"]["kind"] == "ssrf"
-    assert attacks[3]["attack"]['metadata'] == {}
-    assert attacks[3]["attack"]["operation"] == 'subprocess.Popen'
-    assert attacks[3]["attack"]["pathToPayload"] == '.command'
-    assert attacks[3]["attack"]["payload"] == '"ls -la"'
-    assert attacks[3]["attack"]["source"] == "route_params"
+    assert attacks[3]["attack"]['metadata']['hostname'] == '169.254.169.254'
+    assert attacks[3]["attack"]['metadata']['port'] == '80'
+    assert attacks[3]["attack"]["operation"] == 'socket.getaddrinfo'
+    assert attacks[3]["attack"]["pathToPayload"] == '.url'
+    assert attacks[3]["attack"]["payload"] == '"http://169.254.169.254/metadata/test"'
+    assert attacks[3]["attack"]["source"] == "body"
     assert attacks[3]["attack"]["user"]["id"] == "123"
     assert attacks[3]["attack"]["user"]["name"] == "John Doe"
 
