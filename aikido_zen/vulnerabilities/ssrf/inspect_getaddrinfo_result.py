@@ -2,7 +2,6 @@
 Mainly exports inspect_getaddrinfo_result function
 """
 
-from aikido_zen.helpers.try_parse_url import try_parse_url
 from aikido_zen.context import get_current_context
 from aikido_zen.helpers.logging import logger
 from aikido_zen.thread.thread_cache import get_cache
