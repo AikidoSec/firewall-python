@@ -1,7 +1,7 @@
 """
 Sink module for `socket`
 """
-
+from aikido_zen.context import get_current_context
 from aikido_zen.helpers.get_argument import get_argument
 from aikido_zen.helpers.register_call import register_call
 from aikido_zen.sinks import on_import, patch_function, before, after
@@ -18,6 +18,12 @@ def _getaddrinfo_before(func, instance, args, kwargs):
     # Check if we should block this outgoing request based on configuration
     cache = get_cache()
     if cache and cache.config:
+
+        # Allow bypassed ips to access all hostnames
+        context = get_current_context()
+        if context and cache.is_bypassed_ip(context.remote_address):
+            return
+
         if cache.config.should_block_outgoing_request(host):
             raise AikidoSSRF(
                 f"Zen has blocked an outbound connection: socket.getaddrinfo to {host}"
