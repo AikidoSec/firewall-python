@@ -17,8 +17,8 @@ from .is_redirect_to_private_ip import is_redirect_to_private_ip
 def inspect_getaddrinfo_result(dns_results, hostname, port):
     """Inspect the results of a getaddrinfo() call"""
     if not hostname or try_parse_url(hostname) is not None:
-        #  If the hostname is an IP address, we don't need to inspect it
-        logger.debug("Hostname %s is actually an IP address, ignoring", hostname)
+        #  If we cannot parse the hostname, there's no reason to continue with the scan.
+        logger.debug("Hostname %s invalid, not running scans", hostname)
         return
 
     ip_addresses = extract_ip_array_from_results(dns_results)
