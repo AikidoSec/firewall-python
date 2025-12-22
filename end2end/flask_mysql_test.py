@@ -85,6 +85,27 @@ def test_dangerous_response_with_firewall_query_params():
     assert attacks[2]["attack"]["source"] == "query"
 
 
+def test_direct_imds_ips_are_still_ssrf_ips():
+    imds_url = "http://169.254.169.254/metadata/test"
+    res = requests.post(base_url_fw + "/request", data={'url': imds_url})
+    assert res.status_code == 500
+
+    time.sleep(5)  # Wait for attack to be reported
+    events = fetch_events_from_mock("http://localhost:5000")
+    attacks = filter_on_event_type(events, "detected_attack")
+
+    assert len(attacks) == 4
+    print(attacks[3]["attack"])
+    assert attacks[3]["attack"]["blocked"] == True
+    assert attacks[3]["attack"]["kind"] == "ssrf"
+    assert attacks[3]["attack"]['metadata'] == {}
+    assert attacks[3]["attack"]["operation"] == 'subprocess.Popen'
+    assert attacks[3]["attack"]["pathToPayload"] == '.command'
+    assert attacks[3]["attack"]["payload"] == '"ls -la"'
+    assert attacks[3]["attack"]["source"] == "route_params"
+    assert attacks[3]["attack"]["user"]["id"] == "123"
+    assert attacks[3]["attack"]["user"]["name"] == "John Doe"
+
 def test_dangerous_response_without_firewall():
     dog_name = 'Dangerous bobby", 1); -- '
     res = requests.post(base_url_nofw + "/create", data={'dog_name': dog_name})
