@@ -6,9 +6,18 @@ import socket
 import pytest
 from unittest.mock import patch, MagicMock
 import aikido_zen.sinks.socket  # Import to ensure patching
+from aikido_zen.context import current_context
 from aikido_zen.test_utils import generate_context
 from aikido_zen.thread.thread_cache import get_cache
 from aikido_zen.background_process.service_config import ServiceConfig
+
+
+@pytest.fixture(autouse=True)
+def run_around_tests():
+    yield
+    # Make sure to reset thread cache after every test
+    get_cache().reset()
+    current_context.set(None)
 
 
 def test_socket_getaddrinfo_no_blocking():
