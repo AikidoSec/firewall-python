@@ -110,3 +110,4 @@ def test_initial_heartbeat():
     assert req_stats["aborted"] == 0
     assert req_stats["rateLimited"] == 0
     assert req_stats["attacksDetected"] == {"blocked": 2, "total": 2}
+    assert req_stats["attackWaves"] == {"total": 0, "blocked": 0}

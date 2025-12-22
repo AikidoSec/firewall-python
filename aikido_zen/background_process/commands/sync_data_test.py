@@ -93,6 +93,7 @@ def test_process_sync_data_initialization(setup_connection_manager):
     assert connection_manager.statistics.get_record()["requests"] == {
         "aborted": 0,
         "attacksDetected": {"blocked": 0, "total": 5},
+        "attackWaves": {"total": 0, "blocked": 0},
         "total": 10,
         "rateLimited": 0,
     }
@@ -168,6 +169,7 @@ def test_process_sync_data_with_last_updated_at_below_zero(setup_connection_mana
     assert connection_manager.statistics.get_record()["requests"] == {
         "aborted": 0,
         "attacksDetected": {"blocked": 0, "total": 5},
+        "attackWaves": {"total": 0, "blocked": 0},
         "total": 10,
         "rateLimited": 0,
     }
@@ -255,6 +257,7 @@ def test_process_sync_data_existing_route_and_hostnames(setup_connection_manager
     assert connection_manager.statistics.get_record()["requests"] == {
         "aborted": 0,
         "attacksDetected": {"blocked": 0, "total": 10},
+        "attackWaves": {"total": 0, "blocked": 0},
         "total": 20,
         "rateLimited": 0,
     }

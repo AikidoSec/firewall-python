@@ -2,7 +2,6 @@
 Mainly exports inspect_getaddrinfo_result function
 """
 
-from aikido_zen.helpers.try_parse_url import try_parse_url
 from aikido_zen.context import get_current_context
 from aikido_zen.helpers.logging import logger
 from aikido_zen.thread.thread_cache import get_cache
@@ -16,10 +15,8 @@ from .is_redirect_to_private_ip import is_redirect_to_private_ip
 #  gets called when the result of the DNS resolution has come in
 def inspect_getaddrinfo_result(dns_results, hostname, port):
     """Inspect the results of a getaddrinfo() call"""
-    if not hostname or try_parse_url(hostname) is not None:
-        #  If the hostname is an IP address, we don't need to inspect it
-        logger.debug("Hostname %s is actually an IP address, ignoring", hostname)
-        return
+    if not hostname or not dns_results:
+        return  # Ensure that the data we get isnt empty
 
     ip_addresses = extract_ip_array_from_results(dns_results)
     imds_ip = resolves_to_imds_ip(ip_addresses, hostname)
