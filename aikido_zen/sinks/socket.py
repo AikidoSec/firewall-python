@@ -25,6 +25,8 @@ def _getaddrinfo_before(func, instance, args, kwargs):
         if context and cache.is_bypassed_ip(context.remote_address):
             return
 
+        # get_hostname_options normalizes IPv6 addresses, punycode, etc.
+        # making sure that even if the hostname is added by the user, we still block it.
         hostnames = [host_argument] + get_hostname_options(host_argument)
         for host in hostnames:
             if cache.config.should_block_outgoing_request(host):
