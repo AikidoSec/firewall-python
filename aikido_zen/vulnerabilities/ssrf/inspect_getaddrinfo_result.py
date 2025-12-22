@@ -16,10 +16,8 @@ from .is_redirect_to_private_ip import is_redirect_to_private_ip
 #  gets called when the result of the DNS resolution has come in
 def inspect_getaddrinfo_result(dns_results, hostname, port):
     """Inspect the results of a getaddrinfo() call"""
-    if not hostname or try_parse_url(hostname) is not None:
-        #  If we cannot parse the hostname, there's no reason to continue with the scan.
-        logger.debug("Hostname %s invalid, not running scans", hostname)
-        return
+    if not hostname or not dns_results:
+        return  # Ensure that the data we get isnt empty
 
     ip_addresses = extract_ip_array_from_results(dns_results)
     imds_ip = resolves_to_imds_ip(ip_addresses, hostname)
