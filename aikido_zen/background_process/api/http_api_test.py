@@ -34,6 +34,8 @@ def test_report_local_valid():
                 "route": "/test_ratelimiting_1",
             }
         ],
+        "domains": [],
+        "blockNewOutgoingRequests": False,
         "receivedAnyStats": False,
     }
 
