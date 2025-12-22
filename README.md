@@ -32,18 +32,17 @@ Zen operates autonomously on the same server as your Python app to:
 
 Zen for Python 3 is compatible with:
 
-### Web frameworks
-
-* ✅ [Django](docs/django.md) (WSGI only)
+### WSGI
+* ✅ [Django](docs/django.md)
 * ✅ [Flask](docs/flask.md) ^2.2.4
+#### WSGI Servers
+* ✅ [Gunicorn](docs/gunicorn.md)
+* ✅ [uWSGI](docs/uwsgi.md)
+
+### ASGI
 * ✅ [Quart](docs/quart.md)
 * ✅ [Starlette](docs/starlette.md)
 * ✅ [FastAPI](docs/fastapi.md)
-
-
-### WSGI servers
-* ✅ [Gunicorn](docs/gunicorn.md)
-* ✅ [uWSGI](docs/uwsgi.md)
 
 ### Database drivers
 * ✅ [`mysqlclient`](https://pypi.org/project/mysqlclient/) ^1.5
