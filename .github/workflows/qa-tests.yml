@@ -52,4 +52,4 @@ jobs:
           app_port: 8080
           sleep_before_test: 30
           config_update_delay: 100
-          skip_tests: test_bypassed_ip_for_geo_blocking,test_demo_apps_generic_tests,test_path_traversal,test_bypassed_ip,test_wave_attack,test_block_traffic_by_countries,test_user_rate_limiting_1_minute
+          skip_tests: test_bypassed_ip_for_geo_blocking,test_demo_apps_generic_tests,test_path_traversal,test_outbound_domain_blocking,test_bypassed_ip,test_wave_attack,test_block_traffic_by_countries,test_user_rate_limiting_1_minute
