@@ -3,6 +3,140 @@ from .service_config import ServiceConfig
 from aikido_zen.helpers.ip_matcher import IPMatcher
 
 
+def test_service_config_outbound_blocking_initialization():
+    """Test that ServiceConfig initializes outbound blocking fields correctly"""
+    config = ServiceConfig(
+        endpoints=[],
+        last_updated_at=0,
+        blocked_uids=set(),
+        bypassed_ips=[],
+        received_any_stats=False,
+    )
+
+    # Test initial values
+    assert hasattr(config, "block_new_outgoing_requests")
+    assert hasattr(config, "domains")
+    assert config.block_new_outgoing_requests is False
+    assert config.domains == {}
+
+
+def test_service_config_set_block_new_outgoing_requests():
+    """Test the set_block_new_outgoing_requests method"""
+    config = ServiceConfig(
+        endpoints=[],
+        last_updated_at=0,
+        blocked_uids=set(),
+        bypassed_ips=[],
+        received_any_stats=False,
+    )
+
+    # Test setting to True
+    config.set_block_new_outgoing_requests(True)
+    assert config.block_new_outgoing_requests is True
+
+    # Test setting to False
+    config.set_block_new_outgoing_requests(False)
+    assert config.block_new_outgoing_requests is False
+
+    # Test setting with non-boolean values
+    config.set_block_new_outgoing_requests(1)
+    assert config.block_new_outgoing_requests is True
+
+    config.set_block_new_outgoing_requests(0)
+    assert config.block_new_outgoing_requests is False
+
+    config.set_block_new_outgoing_requests("true")
+    assert config.block_new_outgoing_requests is True
+
+    config.set_block_new_outgoing_requests("")
+    assert config.block_new_outgoing_requests is False
+
+
+def test_service_config_update_domains():
+    """Test the update_domains method"""
+    config = ServiceConfig(
+        endpoints=[],
+        last_updated_at=0,
+        blocked_uids=set(),
+        bypassed_ips=[],
+        received_any_stats=False,
+    )
+
+    # Test initial state
+    assert config.domains == {}
+
+    # Test updating with domains
+    domains_data = [
+        {"hostname": "example.com", "mode": "block"},
+        {"hostname": "allowed.com", "mode": "allow"},
+        {"hostname": "test.com", "mode": "block"},
+    ]
+    config.update_domains(domains_data)
+    assert config.domains == {
+        "example.com": "block",
+        "allowed.com": "allow",
+        "test.com": "block",
+    }
+
+    # Test updating with empty list
+    config.update_domains([])
+    assert config.domains == {}
+
+    # Test updating with single domain
+    config.update_domains([{"hostname": "single.com", "mode": "allow"}])
+    assert config.domains == {"single.com": "allow"}
+
+
+def test_service_config_should_block_outgoing_request():
+    """Test the should_block_outgoing_request method"""
+    config = ServiceConfig(
+        endpoints=[],
+        last_updated_at=0,
+        blocked_uids=set(),
+        bypassed_ips=[],
+        received_any_stats=False,
+    )
+
+    # Test with block_new_outgoing_requests = False (default)
+    # Only block if mode is "block"
+    config.update_domains(
+        [
+            {"hostname": "blocked.com", "mode": "block"},
+            {"hostname": "allowed.com", "mode": "allow"},
+        ]
+    )
+
+    assert config.should_block_outgoing_request("blocked.com") is True
+    assert config.should_block_outgoing_request("allowed.com") is False
+    assert (
+        config.should_block_outgoing_request("unknown.com") is False
+    )  # Unknown = allowed
+
+    # Test with block_new_outgoing_requests = True
+    config.set_block_new_outgoing_requests(True)
+    # Only allow if mode is "allow", block everything else
+    assert config.should_block_outgoing_request("blocked.com") is True  # Still blocked
+    assert (
+        config.should_block_outgoing_request("allowed.com") is False
+    )  # Explicitly allowed
+    assert (
+        config.should_block_outgoing_request("unknown.com") is True
+    )  # Unknown = blocked
+
+    # Test edge cases
+    config.set_block_new_outgoing_requests(False)
+    config.update_domains([])  # No domains configured
+    assert (
+        config.should_block_outgoing_request("any.com") is False
+    )  # No blocking when no domains
+
+    config.set_block_new_outgoing_requests(True)
+    config.update_domains([])  # No domains configured
+    assert (
+        config.should_block_outgoing_request("any.com") is True
+    )  # Block all when block_new_outgoing_requests=True
+
+
 def test_service_config_initialization():
     endpoints = [
         {
