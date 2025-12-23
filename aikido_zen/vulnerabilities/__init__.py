@@ -89,9 +89,6 @@ def run_vulnerability_scan(kind, op, args):
             dns_results, hostname, port = args
             injection_results = inspect_getaddrinfo_result(dns_results, hostname, port)
             error_type = AikidoSSRF
-
-            if thread_cache and port > 0:
-                thread_cache.hostnames.add(hostname, port)
         else:
             logger.error(
                 "Vulnerability type %s currently has no scans implemented", kind
