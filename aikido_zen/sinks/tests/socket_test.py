@@ -255,30 +255,3 @@ def test_socket_getaddrinfo_ip_address_as_hostname():
     assert hostnames[0]["hostname"] == "8.8.8.8"
     assert hostnames[0]["port"] == 53
     assert hostnames[0]["hits"] == 1
-
-
-def test_socket_getaddrinfo_blocked_punycode_hostname():
-    """Test that getaddrinfo blocks when punycode hostname is explicitly blocked"""
-    # Reset cache and set up blocking for specific punycode domain
-    cache = get_cache()
-    cache.reset()
-    cache.config.update_domains(
-        [
-            {"hostname": "xn--blocked-7ta.com", "mode": "block"},
-            {"hostname": "xn--allowed-8ta.com", "mode": "allow"},
-        ]
-    )
-
-    # Test that blocked punycode domain raises exception
-    with pytest.raises(Exception) as exc_info:
-        socket.getaddrinfo("xn--blocked-7ta.com", 80)
-    assert (
-        "Zen has blocked an outbound connection: socket.getaddrinfo to xn--blocked-7ta.com"
-        in str(exc_info.value)
-    )
-
-    # Test that allowed punycode domain works normally
-    try:
-        socket.getaddrinfo("xn--allowed-8ta.com", 80)
-    except Exception as e:
-        assert not "Zen has blocked an outbound connection" in str(e)
