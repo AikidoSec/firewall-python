@@ -27,9 +27,16 @@ def test_socket_getaddrinfo_no_blocking():
 
     # Test that allowed domain doesn't throw an error
     try:
-        socket.getaddrinfo("example.com", 80)
+        socket.getaddrinfo("localhost", 80)
     except Exception:
         pytest.fail("getaddrinfo should not throw an error for allowed domains")
+
+    # Verify hostname was tracked
+    hostnames = get_cache().hostnames.as_array()
+    assert len(hostnames) == 1
+    assert hostnames[0]["hostname"] == "localhost"
+    assert hostnames[0]["port"] == 80
+    assert hostnames[0]["hits"] == 1
 
 
 def test_socket_getaddrinfo_block_specific_domain():
@@ -48,12 +55,21 @@ def test_socket_getaddrinfo_block_specific_domain():
     with pytest.raises(Exception) as exc_info:
         socket.getaddrinfo("blocked.com", 80)
     assert (
-        "Zen has blocked an outbound connection: socket.getaddrinfo to blocked.com"
+        "Zen has blocked an outbound connection to blocked.com"
         in str(exc_info.value)
     )
 
     # Test that allowed domain works normally
     socket.getaddrinfo("allowed.com", 80)
+
+    # Verify hostnames were tracked
+    hostnames = get_cache().hostnames.as_array()
+    assert len(hostnames) == 2
+    hostname_dict = {h["hostname"]: h for h in hostnames}
+    assert "blocked.com" in hostname_dict
+    assert "allowed.com" in hostname_dict
+    assert hostname_dict["allowed.com"]["port"] == 80
+    assert hostname_dict["allowed.com"]["hits"] == 1
 
 
 def test_socket_getaddrinfo_block_all_new_requests():
@@ -68,7 +84,7 @@ def test_socket_getaddrinfo_block_all_new_requests():
     with pytest.raises(Exception) as exc_info:
         socket.getaddrinfo("unknown.com", 80)
     assert (
-        "Zen has blocked an outbound connection: socket.getaddrinfo to unknown.com"
+        "Zen has blocked an outbound connection to unknown.com"
         in str(exc_info.value)
     )
 
@@ -80,6 +96,15 @@ def test_socket_getaddrinfo_block_all_new_requests():
             "getaddrinfo should not throw an error for explicitly allowed domains"
         )
 
+    # Verify hostnames were tracked
+    hostnames = get_cache().hostnames.as_array()
+    assert len(hostnames) == 2
+    hostname_dict = {h["hostname"]: h for h in hostnames}
+    assert "unknown.com" in hostname_dict
+    assert "allowed.com" in hostname_dict
+    assert hostname_dict["allowed.com"]["port"] == 80
+    assert hostname_dict["allowed.com"]["hits"] == 1
+
 
 def test_socket_getaddrinfo_no_cache():
     """Test that getaddrinfo works normally when cache is not available"""
@@ -87,7 +112,7 @@ def test_socket_getaddrinfo_no_cache():
     with patch("aikido_zen.sinks.socket.get_cache", return_value=None):
         # Test that allowed domain doesn't throw an error when cache is unavailable
         try:
-            socket.getaddrinfo("example.com", 80)
+            socket.getaddrinfo("localhost", 80)
         except Exception:
             pytest.fail(
                 "getaddrinfo should not throw an error when cache is unavailable"
@@ -185,7 +210,7 @@ def test_socket_getaddrinfo_bypassed_ip():
     with pytest.raises(Exception) as exc_info:
         socket.getaddrinfo("unknown.com", 80)
     assert (
-        "Zen has blocked an outbound connection: socket.getaddrinfo to unknown.com"
+        "Zen has blocked an outbound connection to unknown.com"
         in str(exc_info.value)
     )
 
@@ -193,7 +218,7 @@ def test_socket_getaddrinfo_bypassed_ip():
     with pytest.raises(Exception) as exc_info:
         socket.getaddrinfo("unknown.com", 80)
     assert (
-        "Zen has blocked an outbound connection: socket.getaddrinfo to unknown.com"
+        "Zen has blocked an outbound connection to unknown.com"
         in str(exc_info.value)
     )
 
@@ -202,6 +227,13 @@ def test_socket_getaddrinfo_bypassed_ip():
         socket.getaddrinfo("unknown.com", 80)
     except Exception:
         pytest.fail("getaddrinfo should not throw an error if IP is bypassed")
+
+    # Verify hostname was tracked even when bypassed
+    hostnames = get_cache().hostnames.as_array()
+    assert len(hostnames) == 1  # All attempts to same hostname:port are tracked together
+    assert hostnames[0]["hostname"] == "unknown.com"
+    assert hostnames[0]["port"] == 80
+    assert hostnames[0]["hits"] == 3  # All 3 attempts were tracked (2 blocked, 1 bypassed)
 
 
 def test_socket_getaddrinfo_ip_address_as_hostname():
@@ -216,6 +248,13 @@ def test_socket_getaddrinfo_ip_address_as_hostname():
         pytest.fail(
             "getaddrinfo should not throw an error for IP addresses as hostnames"
         )
+
+    # Verify IP address was tracked as hostname
+    hostnames = get_cache().hostnames.as_array()
+    assert len(hostnames) == 1
+    assert hostnames[0]["hostname"] == "8.8.8.8"
+    assert hostnames[0]["port"] == 53
+    assert hostnames[0]["hits"] == 1
 
 
 def test_socket_getaddrinfo_blocked_punycode_hostname():
