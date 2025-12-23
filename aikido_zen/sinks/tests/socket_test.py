@@ -107,7 +107,7 @@ def test_socket_getaddrinfo_block_all_new_requests():
 def test_socket_getaddrinfo_no_cache():
     """Test that getaddrinfo works normally when cache is not available"""
     # Mock get_cache to return None
-    with patch("aikido_zen.sinks.socket.get_cache", return_value=None):
+    with patch("aikido_zen.sinks.socket.report_and_check_hostname.get_cache", return_value=None):
         # Test that allowed domain doesn't throw an error when cache is unavailable
         try:
             socket.getaddrinfo("localhost", 80)
