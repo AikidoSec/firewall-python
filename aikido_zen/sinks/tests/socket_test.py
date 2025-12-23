@@ -54,9 +54,8 @@ def test_socket_getaddrinfo_block_specific_domain():
     # Test that blocked domain raises exception
     with pytest.raises(Exception) as exc_info:
         socket.getaddrinfo("blocked.com", 80)
-    assert (
-        "Zen has blocked an outbound connection to blocked.com"
-        in str(exc_info.value)
+    assert "Zen has blocked an outbound connection to blocked.com" in str(
+        exc_info.value
     )
 
     # Test that allowed domain works normally
@@ -83,9 +82,8 @@ def test_socket_getaddrinfo_block_all_new_requests():
     # Test that unknown domain raises exception
     with pytest.raises(Exception) as exc_info:
         socket.getaddrinfo("unknown.com", 80)
-    assert (
-        "Zen has blocked an outbound connection to unknown.com"
-        in str(exc_info.value)
+    assert "Zen has blocked an outbound connection to unknown.com" in str(
+        exc_info.value
     )
 
     # Test that explicitly allowed domain doesn't throw an error
@@ -209,17 +207,15 @@ def test_socket_getaddrinfo_bypassed_ip():
     # Bypassed IP not enforced : no context
     with pytest.raises(Exception) as exc_info:
         socket.getaddrinfo("unknown.com", 80)
-    assert (
-        "Zen has blocked an outbound connection to unknown.com"
-        in str(exc_info.value)
+    assert "Zen has blocked an outbound connection to unknown.com" in str(
+        exc_info.value
     )
 
     generate_context(ip="1.1.1.1").set_as_current_context()
     with pytest.raises(Exception) as exc_info:
         socket.getaddrinfo("unknown.com", 80)
-    assert (
-        "Zen has blocked an outbound connection to unknown.com"
-        in str(exc_info.value)
+    assert "Zen has blocked an outbound connection to unknown.com" in str(
+        exc_info.value
     )
 
     generate_context(ip="192.168.1.80").set_as_current_context()
@@ -230,10 +226,14 @@ def test_socket_getaddrinfo_bypassed_ip():
 
     # Verify hostname was tracked even when bypassed
     hostnames = get_cache().hostnames.as_array()
-    assert len(hostnames) == 1  # All attempts to same hostname:port are tracked together
+    assert (
+        len(hostnames) == 1
+    )  # All attempts to same hostname:port are tracked together
     assert hostnames[0]["hostname"] == "unknown.com"
     assert hostnames[0]["port"] == 80
-    assert hostnames[0]["hits"] == 3  # All 3 attempts were tracked (2 blocked, 1 bypassed)
+    assert (
+        hostnames[0]["hits"] == 3
+    )  # All 3 attempts were tracked (2 blocked, 1 bypassed)
 
 
 def test_socket_getaddrinfo_ip_address_as_hostname():
