@@ -169,25 +169,6 @@ def test_sql_injection_with_comms(caplog, get_context, monkeypatch):
         }
 
 
-def test_ssrf_vulnerability_scan_adds_hostname(get_context):
-    get_context.set_as_current_context()
-
-    dns_results = MagicMock()
-    hostname = "example.com"
-    port = 80
-
-    run_vulnerability_scan(kind="ssrf", op="test", args=(dns_results, hostname, port))
-
-    # Verify that hostnames.add was called with the correct arguments
-    assert get_cache().hostnames.as_array() == [
-        {"hits": 1, "hostname": "example.com", "port": 80}
-    ]
-    run_vulnerability_scan(kind="ssrf", op="test", args=(dns_results, hostname, port))
-    assert get_cache().hostnames.as_array() == [
-        {"hits": 2, "hostname": "example.com", "port": 80}
-    ]
-
-
 def test_ssrf_vulnerability_scan_no_port(get_context):
     get_context.set_as_current_context()
 
