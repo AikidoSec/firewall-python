@@ -107,7 +107,7 @@ def test_socket_getaddrinfo_block_all_new_requests():
 def test_socket_getaddrinfo_no_cache():
     """Test that getaddrinfo works normally when cache is not available"""
     # Mock get_cache to return None
-    with patch("aikido_zen.sinks.socket.report_and_check_hostname.get_cache", return_value=None):
+    with patch("aikido_zen.thread.thread_cache.get_cache", return_value=None):
         # Test that allowed domain doesn't throw an error when cache is unavailable
         try:
             socket.getaddrinfo("localhost", 80)
@@ -255,3 +255,28 @@ def test_socket_getaddrinfo_ip_address_as_hostname():
     assert hostnames[0]["hostname"] == "8.8.8.8"
     assert hostnames[0]["port"] == 53
     assert hostnames[0]["hits"] == 1
+
+
+def test_punycode_normalization():
+    # Reset cache and set up blocking
+    cache = get_cache()
+    cache.reset()
+    cache.config.update_domains(
+        [
+            {"hostname": "ssrf-rédirects.testssandbox.com", "mode": "block"},
+        ]
+    )
+
+    with pytest.raises(Exception) as exc_info:
+        socket.getaddrinfo("xn--ssrf-rdirects-ghb.testssandbox.com", 80)
+    assert (
+        "Zen has blocked an outbound connection to ssrf-rédirects.testssandbox.com"
+        in str(exc_info.value)
+    )
+
+    with pytest.raises(Exception) as exc_info:
+        socket.getaddrinfo("ssrf-rédirects.testssandbox.com", 80)
+    assert (
+        "Zen has blocked an outbound connection to ssrf-rédirects.testssandbox.com"
+        in str(exc_info.value)
+    )
