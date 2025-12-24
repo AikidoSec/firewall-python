@@ -99,8 +99,9 @@ class Context:
 
     def set_as_current_context(self):
         """
-        Set the current context
+        Set the current context, called every time we change the context.
         """
+        self.reset_cache()
         current_context.set(self)
 
     def set_cookies(self, cookies):
@@ -111,6 +112,9 @@ class Context:
             self.set_body_internal(body)
         except Exception as e:
             logger.debug("Exception occurred whilst setting body: %s", e)
+
+    def reset_cache(self):
+        self.parsed_userinput = {}
 
     def set_body_internal(self, body):
         """Sets the body and checks if it's possibly JSON"""
