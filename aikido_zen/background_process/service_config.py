@@ -23,7 +23,7 @@ class ServiceConfig:
             endpoints, last_updated_at, blocked_uids, bypassed_ips, received_any_stats
         )
         self.block_new_outgoing_requests = False
-        self.domains = {}
+        self.outbound_domains = {}
 
     def update(
         self,
@@ -77,15 +77,15 @@ class ServiceConfig:
         """Checks if the IP is on the bypass list"""
         return self.bypassed_ips.has(ip)
 
-    def update_domains(self, domains):
-        self.domains = {domain["hostname"]: domain["mode"] for domain in domains}
+    def update_outbound_domains(self, domains):
+        self.outbound_domains = {domain["hostname"]: domain["mode"] for domain in domains}
 
     def set_block_new_outgoing_requests(self, value: bool):
         """Set whether to block new outgoing requests"""
         self.block_new_outgoing_requests = bool(value)
 
     def should_block_outgoing_request(self, hostname: str) -> bool:
-        mode = self.domains.get(hostname)
+        mode = self.outbound_domains.get(hostname)
 
         if self.block_new_outgoing_requests:
             # Only allow outgoing requests if the mode is "allow"

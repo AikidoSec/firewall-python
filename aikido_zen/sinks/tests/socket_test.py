@@ -44,7 +44,7 @@ def test_socket_getaddrinfo_block_specific_domain():
     # Reset cache and set up blocking for specific domain
     cache = get_cache()
     cache.reset()
-    cache.config.update_domains(
+    cache.config.update_outbound_domains(
         [
             {"hostname": "blocked.com", "mode": "block"},
             {"hostname": "allowed.com", "mode": "allow"},
@@ -77,7 +77,7 @@ def test_socket_getaddrinfo_block_all_new_requests():
     cache = get_cache()
     cache.reset()
     cache.config.set_block_new_outgoing_requests(True)
-    cache.config.update_domains([{"hostname": "allowed.com", "mode": "allow"}])
+    cache.config.update_outbound_domains([{"hostname": "allowed.com", "mode": "allow"}])
 
     # Test that unknown domain raises exception
     with pytest.raises(Exception) as exc_info:
@@ -131,7 +131,7 @@ def test_service_config_should_block_outgoing_request():
     assert not config.should_block_outgoing_request("example.com")
 
     # Test with specific domain blocked
-    config.update_domains([{"hostname": "blocked.com", "mode": "block"}])
+    config.update_outbound_domains([{"hostname": "blocked.com", "mode": "block"}])
     assert config.should_block_outgoing_request("blocked.com")
     assert not config.should_block_outgoing_request("allowed.com")
 
@@ -141,13 +141,13 @@ def test_service_config_should_block_outgoing_request():
     assert config.should_block_outgoing_request("blocked.com")  # Still blocked
 
     # Test with explicitly allowed domain when block_new_outgoing_requests is True
-    config.update_domains([{"hostname": "allowed.com", "mode": "allow"}])
+    config.update_outbound_domains([{"hostname": "allowed.com", "mode": "allow"}])
     assert not config.should_block_outgoing_request("allowed.com")  # Explicitly allowed
     assert config.should_block_outgoing_request("unknown.com")  # Unknown still blocked
 
 
 def test_service_config_update_domains():
-    """Test the update_domains method"""
+    """Test the update_outbound_domains method"""
     config = ServiceConfig(
         endpoints=[],
         last_updated_at=0,
@@ -160,7 +160,7 @@ def test_service_config_update_domains():
     assert config.domains == {}
 
     # Test updating domains
-    config.update_domains(
+    config.update_outbound_domains(
         [
             {"hostname": "example.com", "mode": "block"},
             {"hostname": "allowed.com", "mode": "allow"},
@@ -169,7 +169,7 @@ def test_service_config_update_domains():
     assert config.domains == {"example.com": "block", "allowed.com": "allow"}
 
     # Test updating with empty list
-    config.update_domains([])
+    config.update_outbound_domains([])
     assert config.domains == {}
 
 
@@ -202,7 +202,7 @@ def test_socket_getaddrinfo_bypassed_ip():
     cache.reset()
     cache.config.set_bypassed_ips(["192.168.1.0/24"])
     cache.config.set_block_new_outgoing_requests(True)
-    cache.config.update_domains([{"hostname": "allowed.com", "mode": "allow"}])
+    cache.config.update_outbound_domains([{"hostname": "allowed.com", "mode": "allow"}])
 
     # Bypassed IP not enforced : no context
     with pytest.raises(Exception) as exc_info:
@@ -261,7 +261,7 @@ def test_punycode_normalization():
     # Reset cache and set up blocking
     cache = get_cache()
     cache.reset()
-    cache.config.update_domains(
+    cache.config.update_outbound_domains(
         [
             {"hostname": "ssrf-rédirects.testssandbox.com", "mode": "block"},
         ]

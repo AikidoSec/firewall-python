@@ -53,7 +53,7 @@ def test_service_config_set_block_new_outgoing_requests():
 
 
 def test_service_config_update_domains():
-    """Test the update_domains method"""
+    """Test the update_outbound_domains method"""
     config = ServiceConfig(
         endpoints=[],
         last_updated_at=0,
@@ -71,7 +71,7 @@ def test_service_config_update_domains():
         {"hostname": "allowed.com", "mode": "allow"},
         {"hostname": "test.com", "mode": "block"},
     ]
-    config.update_domains(domains_data)
+    config.update_outbound_domains(domains_data)
     assert config.domains == {
         "example.com": "block",
         "allowed.com": "allow",
@@ -79,11 +79,11 @@ def test_service_config_update_domains():
     }
 
     # Test updating with empty list
-    config.update_domains([])
+    config.update_outbound_domains([])
     assert config.domains == {}
 
     # Test updating with single domain
-    config.update_domains([{"hostname": "single.com", "mode": "allow"}])
+    config.update_outbound_domains([{"hostname": "single.com", "mode": "allow"}])
     assert config.domains == {"single.com": "allow"}
 
 
@@ -99,7 +99,7 @@ def test_service_config_should_block_outgoing_request():
 
     # Test with block_new_outgoing_requests = False (default)
     # Only block if mode is "block"
-    config.update_domains(
+    config.update_outbound_domains(
         [
             {"hostname": "blocked.com", "mode": "block"},
             {"hostname": "allowed.com", "mode": "allow"},
@@ -125,13 +125,13 @@ def test_service_config_should_block_outgoing_request():
 
     # Test edge cases
     config.set_block_new_outgoing_requests(False)
-    config.update_domains([])  # No domains configured
+    config.update_outbound_domains([])  # No domains configured
     assert (
         config.should_block_outgoing_request("any.com") is False
     )  # No blocking when no domains
 
     config.set_block_new_outgoing_requests(True)
-    config.update_domains([])  # No domains configured
+    config.update_outbound_domains([])  # No domains configured
     assert (
         config.should_block_outgoing_request("any.com") is True
     )  # Block all when block_new_outgoing_requests=True
