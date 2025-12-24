@@ -20,7 +20,7 @@ def _getaddrinfo_after(func, instance, args, kwargs, return_value):
     hostname = normalize_hostname(host)
 
     # Store hostname and check if we should stop this request from happening
-    if should_block_outbound_domain(host, port):
+    if should_block_outbound_domain(hostname, port):
         raise AikidoSSRF(f"Zen has blocked an outbound connection to {hostname}")
 
     # Run vulnerability scan with the return value (DNS results)
