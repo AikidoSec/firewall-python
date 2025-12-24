@@ -15,7 +15,7 @@ def test_service_config_outbound_blocking_initialization():
 
     # Test initial values
     assert hasattr(config, "block_new_outgoing_requests")
-    assert hasattr(config, "domains")
+    assert hasattr(config, "outbound_domains")
     assert config.block_new_outgoing_requests is False
     assert config.outbound_domains == {}
 
