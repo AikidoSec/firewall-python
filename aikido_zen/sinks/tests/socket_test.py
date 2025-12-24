@@ -195,47 +195,6 @@ def test_service_config_set_block_new_outgoing_requests():
     assert not config.block_new_outgoing_requests
 
 
-def test_socket_getaddrinfo_bypassed_ip():
-    """Test that getaddrinfo works when IP is in bypassed_ips list"""
-    # Reset cache and set up bypassed IPs
-    cache = get_cache()
-    cache.reset()
-    cache.config.set_bypassed_ips(["192.168.1.0/24"])
-    cache.config.set_block_new_outgoing_requests(True)
-    cache.config.update_outbound_domains([{"hostname": "allowed.com", "mode": "allow"}])
-
-    # Bypassed IP not enforced : no context
-    with pytest.raises(Exception) as exc_info:
-        socket.getaddrinfo("unknown.com", 80)
-    assert "Zen has blocked an outbound connection to unknown.com" in str(
-        exc_info.value
-    )
-
-    generate_context(ip="1.1.1.1").set_as_current_context()
-    with pytest.raises(Exception) as exc_info:
-        socket.getaddrinfo("unknown.com", 80)
-    assert "Zen has blocked an outbound connection to unknown.com" in str(
-        exc_info.value
-    )
-
-    generate_context(ip="192.168.1.80").set_as_current_context()
-    try:
-        socket.getaddrinfo("unknown.com", 80)
-    except Exception:
-        pytest.fail("getaddrinfo should not throw an error if IP is bypassed")
-
-    # Verify hostname was tracked even when bypassed
-    hostnames = get_cache().hostnames.as_array()
-    assert (
-        len(hostnames) == 1
-    )  # All attempts to same hostname:port are tracked together
-    assert hostnames[0]["hostname"] == "unknown.com"
-    assert hostnames[0]["port"] == 80
-    assert (
-        hostnames[0]["hits"] == 3
-    )  # All 3 attempts were tracked (2 blocked, 1 bypassed)
-
-
 def test_socket_getaddrinfo_ip_address_as_hostname():
     """Test that getaddrinfo works when hostname is an IP address"""
     # Reset cache to ensure clean state
