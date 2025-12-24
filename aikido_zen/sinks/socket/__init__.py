@@ -1,11 +1,14 @@
 """
 Sink module for `socket`
 """
+
 from aikido_zen.errors import AikidoSSRF
 from aikido_zen.helpers.get_argument import get_argument
 from aikido_zen.sinks import on_import, patch_function, after
 from aikido_zen.sinks.socket.normalize_hostname import normalize_hostname
-from aikido_zen.sinks.socket.should_block_outbound_domain import should_block_outbound_domain
+from aikido_zen.sinks.socket.should_block_outbound_domain import (
+    should_block_outbound_domain,
+)
 from aikido_zen.vulnerabilities import run_vulnerability_scan
 
 

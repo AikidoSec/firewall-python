@@ -78,7 +78,9 @@ class ServiceConfig:
         return self.bypassed_ips.has(ip)
 
     def update_outbound_domains(self, domains):
-        self.outbound_domains = {domain["hostname"]: domain["mode"] for domain in domains}
+        self.outbound_domains = {
+            domain["hostname"]: domain["mode"] for domain in domains
+        }
 
     def set_block_new_outgoing_requests(self, value: bool):
         """Set whether to block new outgoing requests"""
