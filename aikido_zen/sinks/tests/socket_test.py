@@ -157,7 +157,7 @@ def test_service_config_update_domains():
     )
 
     # Test initial state
-    assert config.domains == {}
+    assert config.outbound_domains == {}
 
     # Test updating domains
     config.update_outbound_domains(
@@ -166,11 +166,11 @@ def test_service_config_update_domains():
             {"hostname": "allowed.com", "mode": "allow"},
         ]
     )
-    assert config.domains == {"example.com": "block", "allowed.com": "allow"}
+    assert config.outbound_domains == {"example.com": "block", "allowed.com": "allow"}
 
     # Test updating with empty list
     config.update_outbound_domains([])
-    assert config.domains == {}
+    assert config.outbound_domains == {}
 
 
 def test_service_config_set_block_new_outgoing_requests():
