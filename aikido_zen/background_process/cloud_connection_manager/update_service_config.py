@@ -30,4 +30,4 @@ def update_service_config(connection_manager, res):
         )
 
     if "domains" in res:
-        connection_manager.conf.update_domains(res["domains"])
+        connection_manager.conf.update_outbound_domains(res["domains"])

@@ -108,7 +108,7 @@ def test_update_service_config_failure():
 
     # Set initial values
     connection_manager.conf.set_block_new_outgoing_requests(True)
-    connection_manager.conf.update_domains([{"hostname": "test.com", "mode": "block"}])
+    connection_manager.conf.update_outbound_domains([{"hostname": "test.com", "mode": "block"}])
 
     # Test failed response
     res = {"success": False, "blockNewOutgoingRequests": False, "domains": []}
@@ -215,7 +215,7 @@ def test_update_service_config_block_new_outgoing_requests_only():
     connection_manager.block = False
 
     # Set initial domains
-    connection_manager.conf.update_domains(
+    connection_manager.conf.update_outbound_domains(
         [{"hostname": "existing.com", "mode": "allow"}]
     )
 
