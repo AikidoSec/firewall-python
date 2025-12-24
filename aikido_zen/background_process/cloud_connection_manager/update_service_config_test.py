@@ -34,7 +34,7 @@ def test_update_service_config_outbound_blocking():
 
     # Verify that the outbound blocking configuration was set
     assert connection_manager.conf.block_new_outgoing_requests is True
-    assert connection_manager.conf.domains == {
+    assert connection_manager.conf.outbound_domains == {
         "example.com": "block",
         "allowed.com": "allow",
     }
@@ -61,7 +61,7 @@ def test_update_service_config_outbound_blocking_false():
 
     # Verify that the outbound blocking configuration was set
     assert connection_manager.conf.block_new_outgoing_requests is False
-    assert connection_manager.conf.domains == {}
+    assert connection_manager.conf.outbound_domains == {}
 
 
 def test_update_service_config_outbound_blocking_missing():
@@ -89,7 +89,7 @@ def test_update_service_config_outbound_blocking_missing():
 
     # Verify that the outbound blocking configuration was not changed
     assert connection_manager.conf.block_new_outgoing_requests is False
-    assert connection_manager.conf.domains == {}
+    assert connection_manager.conf.outbound_domains == {}
 
 
 def test_update_service_config_failure():
@@ -119,7 +119,7 @@ def test_update_service_config_failure():
 
     # Verify that nothing was changed due to failure
     assert connection_manager.conf.block_new_outgoing_requests is True
-    assert connection_manager.conf.domains == {"test.com": "block"}
+    assert connection_manager.conf.outbound_domains == {"test.com": "block"}
 
 
 def test_update_service_config_complete():
@@ -162,7 +162,7 @@ def test_update_service_config_complete():
     assert connection_manager.conf.blocked_uids == {"user1", "user2"}
     assert connection_manager.conf.received_any_stats is True
     assert connection_manager.conf.block_new_outgoing_requests is True
-    assert connection_manager.conf.domains == {
+    assert connection_manager.conf.outbound_domains == {
         "blocked.com": "block",
         "allowed.com": "allow",
         "test.com": "block",
@@ -196,7 +196,7 @@ def test_update_service_config_domains_only():
 
     # Verify that only domains were updated
     assert connection_manager.conf.block_new_outgoing_requests is False  # Not changed
-    assert connection_manager.conf.domains == {
+    assert connection_manager.conf.outbound_domains == {
         "api.example.com": "block",
         "cdn.example.com": "allow",
     }
@@ -231,4 +231,6 @@ def test_update_service_config_block_new_outgoing_requests_only():
 
     # Verify that only blockNewOutgoingRequests was updated
     assert connection_manager.conf.block_new_outgoing_requests is True
-    assert connection_manager.conf.domains == {"existing.com": "allow"}  # Not changed
+    assert connection_manager.conf.outbound_domains == {
+        "existing.com": "allow"
+    }  # Not changed

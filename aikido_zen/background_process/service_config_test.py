@@ -17,7 +17,7 @@ def test_service_config_outbound_blocking_initialization():
     assert hasattr(config, "block_new_outgoing_requests")
     assert hasattr(config, "domains")
     assert config.block_new_outgoing_requests is False
-    assert config.domains == {}
+    assert config.outbound_domains == {}
 
 
 def test_service_config_set_block_new_outgoing_requests():
@@ -63,7 +63,7 @@ def test_service_config_update_domains():
     )
 
     # Test initial state
-    assert config.domains == {}
+    assert config.outbound_domains == {}
 
     # Test updating with domains
     domains_data = [
@@ -72,7 +72,7 @@ def test_service_config_update_domains():
         {"hostname": "test.com", "mode": "block"},
     ]
     config.update_outbound_domains(domains_data)
-    assert config.domains == {
+    assert config.outbound_domains == {
         "example.com": "block",
         "allowed.com": "allow",
         "test.com": "block",
@@ -80,11 +80,11 @@ def test_service_config_update_domains():
 
     # Test updating with empty list
     config.update_outbound_domains([])
-    assert config.domains == {}
+    assert config.outbound_domains == {}
 
     # Test updating with single domain
     config.update_outbound_domains([{"hostname": "single.com", "mode": "allow"}])
-    assert config.domains == {"single.com": "allow"}
+    assert config.outbound_domains == {"single.com": "allow"}
 
 
 def test_service_config_should_block_outgoing_request():
