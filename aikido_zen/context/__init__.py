@@ -111,7 +111,7 @@ class Context:
 
     @staticmethod
     def parse_body_object(body):
-        """Sets the body and checks if it's possibly JSON"""
+        """Parses the body and checks if it's possibly JSON"""
         try:
             if isinstance(body, (str, bytes)) and len(body) == 0:
                 # Make sure that empty bodies like b"" don't get sent.
