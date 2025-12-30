@@ -1,5 +1,6 @@
 from aikido_zen.context import Context
 from aikido_zen.sources.functions.request_handler import request_handler
+from aikido_zen.sources.quart import send_status_code_and_text
 from aikido_zen.thread.thread_cache import get_cache
 
 
@@ -25,9 +26,16 @@ class InternalASGIMiddleware:
 
         context.set_as_current_context()
         if process_cache:
+            # Since this SHOULD be the highest level of the apps we wrap, this is the safest place
+            # to increment total hits.
             process_cache.stats.increment_total_hits()
 
-        await self.client_app(scope, receive, send)
+        intercept_response = request_handler(stage="pre_response")
+        if not intercept_response:
+            await self.client_app(scope, receive, send)
+        else:
+            # The request has already been blocked (e.g. IP is on blocklist)
+            await send_status_code_and_text(send, intercept_response)
 
     async def send_status_code_and_text(send, pre_response):
         await send(
