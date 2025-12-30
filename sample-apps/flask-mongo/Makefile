@@ -1,6 +1,5 @@
 include ../common.mk
 
-# Override default ports for flask-mongo
 PORT = 8094
 PORT_DISABLED = 8095
 

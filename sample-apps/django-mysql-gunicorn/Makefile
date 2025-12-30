@@ -1,6 +1,5 @@
 include ../common.mk
 
-# Override default ports for django-mysql-gunicorn
 PORT = 8082
 PORT_DISABLED = 8083
 
