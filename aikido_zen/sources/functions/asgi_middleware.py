@@ -38,14 +38,14 @@ class InternalASGIMiddleware:
 
     async def run_with_intercepts(self, scope, receive, send):
         # We use a skeleton class so we can use patch_function (and the logic already defined in @before_async)
-        class InterceptorSkeletonClass:
+        class InterceptorSkeleton:
             @staticmethod
             async def send(*args, **kwargs):
                 return await send(*args, **kwargs)
 
-        patch_function(InterceptorSkeletonClass, "send", send_interceptor)
+        patch_function(InterceptorSkeleton, "send", send_interceptor)
 
-        return await self.client_app(scope, receive, InterceptorSkeletonClass.send)
+        return await self.client_app(scope, receive, InterceptorSkeleton.send)
 
 
 async def send_status_code_and_text(send, pre_response):
