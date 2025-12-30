@@ -3,7 +3,7 @@
 # Health check script for benchmark apps
 # Usage: ./health_check.sh <port> [timeout_seconds]
 
-PORT="${1:-8086}"
+PORT="${1:-8080}"
 TIMEOUT="${2:-30}"
 
 echo "Checking health on port $PORT..."

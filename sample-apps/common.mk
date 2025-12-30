@@ -34,12 +34,5 @@ AIKIDO_ENV_DISABLED = \
 install:
 	poetry install --quiet
 
-.PHONY: show-ports
-show-ports:
-	@echo "Standard ports:"
-	@echo "  PORT=$(PORT) (with firewall)"
-	@echo "  PORT_DISABLED=$(PORT_DISABLED) (without firewall)"
-
-# Export ports for health check script
 export PORT
 export PORT_DISABLED
