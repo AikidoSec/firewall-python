@@ -67,7 +67,8 @@ async def send_status_code_and_text(send, pre_response):
 
 @before_async
 async def send_interceptor(func, instance, args, kwargs):
-    event = get_argument(args, kwargs, 0, "event")
+    # There is no name for the send() comment in the standard, it really depends (quart uses message)
+    event = get_argument(args, kwargs, 0, name="message")
 
     # https://asgi.readthedocs.io/en/latest/specs/www.html#response-start-send-event
     if not event or "http.response.start" not in event.get("type", ""):
