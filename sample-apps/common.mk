@@ -34,5 +34,7 @@ AIKIDO_ENV_DISABLED = \
 install:
 	poetry install --quiet
 
-export PORT
-export PORT_DISABLED
+.PHONY: health-check
+health-check:
+	../scripts/health_check.sh $(PORT)
+	../scripts/health_check.sh $(PORT_DISABLED)
