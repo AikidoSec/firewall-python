@@ -1,5 +1,8 @@
 include ../common.mk
 
+PORT = 8080
+PORT_DISABLED = 8081
+
 .PHONY: run
 run: install
 	@echo "Running sample app django-mysql with Zen on port $(PORT)"

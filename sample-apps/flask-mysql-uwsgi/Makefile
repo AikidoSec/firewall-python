@@ -1,12 +1,7 @@
 include ../common.mk
 
-# Override default ports for flask-mysql-uwsgi
 PORT = 8088
 PORT_DISABLED = 8089
-
-.PHONY: install
-install:
-	poetry install --quiet
 
 .PHONY: run
 run: install
