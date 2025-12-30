@@ -22,7 +22,7 @@ def update_service_config(connection_manager, res):
     connection_manager.conf.set_blocked_user_ids(res.get("blockedUserIds", []))
     connection_manager.conf.set_bypassed_ips(res.get("allowedIPAddresses", []))
     if res.get("receivedAnyStats", True):
-        connection_manager.conf.enable_received_stats()
+        connection_manager.conf.enable_received_any_stats()
 
     # Handle outbound request blocking configuration
     if "blockNewOutgoingRequests" in res:
