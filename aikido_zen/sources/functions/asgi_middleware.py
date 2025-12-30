@@ -1,3 +1,4 @@
+import inspect
 from aikido_zen.context import Context
 from aikido_zen.helpers.get_argument import get_argument
 from aikido_zen.sinks import before_async, patch_function
@@ -13,7 +14,7 @@ class InternalASGIMiddleware:
     async def __call__(self, scope, receive, send):
         if not scope or scope.get("type") != "http":
             # Zen checks requests coming into HTTP(S) server, ignore other requests (like ws)
-            return await self.client_app(scope, receive, send)
+            return await self.continue_app(scope, receive, send)
 
         context = Context(req=scope, source=self.source)
 
@@ -21,7 +22,7 @@ class InternalASGIMiddleware:
         if process_cache and process_cache.is_bypassed_ip(context.remote_address):
             # IP address is bypassed, for simplicity we do not set a context,
             # and we do not do any further handling of the request.
-            return await self.client_app(scope, receive, send)
+            return await self.continue_app(scope, receive, send)
 
         context.set_as_current_context()
         if process_cache:
@@ -45,7 +46,18 @@ class InternalASGIMiddleware:
 
         patch_function(InterceptorSkeleton, "send", send_interceptor)
 
-        return await self.client_app(scope, receive, InterceptorSkeleton.send)
+        return await self.continue_app(scope, receive, InterceptorSkeleton.send)
+
+    async def continue_app(self, scope, receive, send):
+        client_app_parameters = len(inspect.signature(self.client_app).parameters)
+        if client_app_parameters == 2:
+            # This is possible if the app is still using ASGI v2.0
+            # See https://asgi.readthedocs.io/en/latest/specs/main.html#legacy-applications
+            # client_app = coroutine application_instance(receive, send)
+            await self.client_app(receive, send)
+        else:
+            # client_app = coroutine application(scope, receive, send)
+            await self.client_app(scope, receive, send)
 
 
 async def send_status_code_and_text(send, pre_response):
