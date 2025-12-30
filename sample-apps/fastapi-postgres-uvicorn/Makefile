@@ -1,7 +1,7 @@
 include ../common.mk
 
-PORT = 8106
-PORT_DISABLED = 8107
+PORT = 8112
+PORT_DISABLED = 8113
 
 .PHONY: run
 run: install

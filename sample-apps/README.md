@@ -47,3 +47,6 @@ Overview :
 - `flask-postgres-gevent/` is a Flask app with gunicorn & gevent, runs async.
   - it runs **multi-threaded & async**
   - Runs on 8110. Without Aikido runs on 8111
+- `fastapi-postgres-uvicorn/` is a Fastapi app using Postgres with uvicorn, runs async.
+  - it runs **multi-threaded & async**
+  - Runs on 8112. Without Aikido runs on 8113
