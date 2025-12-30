@@ -33,6 +33,7 @@ async def _handle_request_before(func, instance, args, kwargs):
     context.cookies = request.cookies.to_dict()
     context.set_as_current_context()
 
+
 @on_import("quart.app", "quart")
 def patch(m):
     """
