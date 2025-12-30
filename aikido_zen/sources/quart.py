@@ -1,18 +1,16 @@
 from aikido_zen.context import Context, get_current_context
+from .functions.asgi_middleware import InternalASGIMiddleware
 from .functions.request_handler import request_handler
 from ..helpers.get_argument import get_argument
 from ..sinks import on_import, patch_function, before, before_async
 
 
-@before
-def _call(func, instance, args, kwargs):
+async def _call(func, instance, args, kwargs):
     scope = get_argument(args, kwargs, 0, "scope")
-    if not scope or scope.get("type") != "http":
-        return
+    receive = get_argument(args, kwargs, 1, "receive")
+    send = get_argument(args, kwargs, 2, "send")
 
-    new_context = Context(req=scope, source="quart")
-    new_context.set_as_current_context()
-    request_handler(stage="init")
+    await InternalASGIMiddleware(instance, "quart")(scope, receive, send)
 
 
 @before_async
