@@ -1,6 +1,5 @@
 from aikido_zen.context import get_current_context
 from .functions.asgi_middleware import InternalASGIMiddleware
-from .functions.request_handler import request_handler
 from ..helpers.get_argument import get_argument
 from ..sinks import on_import, patch_function, before_async
 
@@ -34,21 +33,6 @@ async def _handle_request_before(func, instance, args, kwargs):
     context.cookies = request.cookies.to_dict()
     context.set_as_current_context()
 
-
-async def _handle_request_after(func, instance, args, kwargs):
-    # pylint:disable=import-outside-toplevel # We don't want to install this by default
-    from werkzeug.exceptions import HTTPException
-
-    try:
-        response = await func(*args, **kwargs)
-        if hasattr(response, "status_code"):
-            request_handler(stage="post_response", status_code=response.status_code)
-        return response
-    except HTTPException as e:
-        request_handler(stage="post_response", status_code=e.code)
-        raise e
-
-
 @on_import("quart.app", "quart")
 def patch(m):
     """
@@ -58,4 +42,3 @@ def patch(m):
     """
     patch_function(m, "Quart.asgi_app", _asgi_app)
     patch_function(m, "Quart.handle_request", _handle_request_before)
-    patch_function(m, "Quart.handle_request", _handle_request_after)
