@@ -3,7 +3,7 @@
 from aikido_zen.helpers.logging import logger
 
 
-def process_read_property(connection_manager, data, queue=None):
+def process_read_property(connection_manager, data):
     """
     Takes in one arg : name of property on connection_manager, tries to read it.
     Meant to get config props

@@ -8,6 +8,7 @@ import time
 import sched
 import traceback
 import sys
+import platform
 from threading import Thread
 from queue import Queue
 from aikido_zen.helpers.logging import logger
@@ -101,13 +102,7 @@ class AikidoBackgroundProcess:
             EMPTY_QUEUE_INTERVAL, 1, self.send_to_connection_manager, (event_scheduler,)
         )
         while not self.queue.empty():
-            queue_attack_item = self.queue.get()
-            self.connection_manager.on_detected_attack(
-                attack=queue_attack_item[0],
-                context=queue_attack_item[1],
-                blocked=queue_attack_item[2],
-                stack=queue_attack_item[3],
-            )
+            self.connection_manager.report_api_event(self.queue.get())
 
 
 def add_exit_handlers():
@@ -118,7 +113,11 @@ def add_exit_handlers():
     def exit_gracefully(sig, frame):
         sys.exit(0)
 
+    current_platform = platform.system()
+
     signal.signal(signal.SIGINT, exit_gracefully)
     signal.signal(signal.SIGTERM, exit_gracefully)
-    signal.signal(signal.SIGQUIT, exit_gracefully)
-    signal.signal(signal.SIGHUP, exit_gracefully)
+
+    if current_platform in ("Linux", "Darwin"):
+        signal.signal(signal.SIGQUIT, exit_gracefully)
+        signal.signal(signal.SIGHUP, exit_gracefully)

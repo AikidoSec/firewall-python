@@ -1,0 +1,27 @@
+from aikido_zen.helpers.ipc.command_types import Command, CommandContext, Payload
+
+
+class PutEventReq:
+    def __init__(self, event):
+        # Event is a dictionary containing data that is going to be reported to core
+        # "time" and "agent" fields are added by default from the CloudConnectionManager
+        self.event = event
+
+
+class PutEventCommand(Command):
+    @classmethod
+    def identifier(cls) -> str:
+        return "put_event"
+
+    @classmethod
+    def returns_data(cls) -> bool:
+        return False
+
+    @classmethod
+    def run(cls, context: CommandContext, request: PutEventReq):
+        #  Events sent here get put in the event queue so that they are processed in the background
+        context.queue.put(request.event)
+
+    @classmethod
+    def generate(cls, request) -> Payload:
+        return Payload(cls, PutEventReq(request))

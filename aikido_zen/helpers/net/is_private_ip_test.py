@@ -1,5 +1,4 @@
-import pytest
-from .is_private_ip import is_private_ip
+from aikido_zen.helpers.net.is_private_ip import is_private_ip
 
 
 # Test cases for is_private_ip

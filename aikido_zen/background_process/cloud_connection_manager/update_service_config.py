@@ -9,8 +9,8 @@ def update_service_config(connection_manager, res):
     Update configuration based on the server's response
     """
     if res.get("success", False) is False:
-        logger.debug(res)
         return
+
     if "block" in res.keys() and res["block"] != connection_manager.block:
         logger.debug("Updating blocking, setting blocking to : %s", res["block"])
         connection_manager.block = bool(res["block"])
@@ -23,3 +23,12 @@ def update_service_config(connection_manager, res):
     connection_manager.conf.set_bypassed_ips(res.get("allowedIPAddresses", []))
     if res.get("receivedAnyStats", True):
         connection_manager.conf.enable_received_stats()
+
+    # Handle outbound request blocking configuration
+    if "blockNewOutgoingRequests" in res:
+        connection_manager.conf.set_block_new_outgoing_requests(
+            res["blockNewOutgoingRequests"]
+        )
+
+    if "domains" in res:
+        connection_manager.conf.update_outbound_domains(res["domains"])

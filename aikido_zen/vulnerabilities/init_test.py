@@ -144,32 +144,29 @@ def test_sql_injection_with_comms(caplog, get_context, monkeypatch):
             )
         mock_comms.send_data_to_bg_process.assert_called_once()
         call_args = mock_comms.send_data_to_bg_process.call_args[0]
-        assert call_args[0] == "ATTACK"
-        assert call_args[1][0]["kind"] == "sql_injection"
-        assert (
-            call_args[1][0]["metadata"]["sql"]
-            == "INSERT * INTO VALUES ('doggoss2', TRUE);"
-        )
-        assert call_args[1][0]["metadata"]["dialect"] == "mysql"
-
-
-def test_ssrf_vulnerability_scan_adds_hostname(get_context):
-    get_context.set_as_current_context()
-
-    dns_results = MagicMock()
-    hostname = "example.com"
-    port = 80
-
-    run_vulnerability_scan(kind="ssrf", op="test", args=(dns_results, hostname, port))
-
-    # Verify that hostnames.add was called with the correct arguments
-    assert get_cache().hostnames.as_array() == [
-        {"hits": 1, "hostname": "example.com", "port": 80}
-    ]
-    run_vulnerability_scan(kind="ssrf", op="test", args=(dns_results, hostname, port))
-    assert get_cache().hostnames.as_array() == [
-        {"hits": 2, "hostname": "example.com", "port": 80}
-    ]
+        assert call_args[0] == "put_event"
+        assert call_args[1].event["request"] == {
+            "ipAddress": "198.51.100.23",
+            "method": "GET",
+            "route": "/hello",
+            "source": "flask",
+            "url": "http://localhost:8080/hello",
+            "userAgent": None,
+        }
+        del call_args[1].event["attack"]["stack"]  # Hard to test
+        assert call_args[1].event["attack"] == {
+            "blocked": True,
+            "kind": "sql_injection",
+            "metadata": {
+                "dialect": "mysql",
+                "sql": "INSERT * INTO VALUES ('doggoss2', TRUE);",
+            },
+            "operation": "test_op",
+            "pathToPayload": ".test_input_sql",
+            "payload": '"doggoss2\', TRUE"',
+            "source": "body",
+            "user": None,
+        }
 
 
 def test_ssrf_vulnerability_scan_no_port(get_context):

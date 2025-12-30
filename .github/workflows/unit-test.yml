@@ -27,10 +27,13 @@ jobs:
       run: |
         cd end2end/server && docker build -t mock_core .
         docker run --name mock_core -d -p 5050:5000 mock_core
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Setup safe-chain
+      run: curl -fsSL https://github.com/AikidoSec/safe-chain/releases/latest/download/install-safe-chain.sh | sh -s -- --ci
 
     - name: Install dependencies
       run: |

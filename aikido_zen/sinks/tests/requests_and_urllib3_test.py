@@ -203,6 +203,12 @@ def test_ssrf_encoded_chars(monkeypatch):
     ssrf_check(monkeypatch, "http://127%2E0%2E0%2E1:4000", requests_only=True)
 
 
+def test_ssrf_imds_ip(monkeypatch):
+    # This is not seen as stored ssrf (as there's no "store"), but a user is causing a private ip
+    # to be accessed.
+    ssrf_check(monkeypatch, "http://169.254.169.254:4000", requests_only=True)
+
+
 def test_zero_padded_ip(monkeypatch):
     monkeypatch.setenv("AIKIDO_BLOCK", "1")
     reset_comms()

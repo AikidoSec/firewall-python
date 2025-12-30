@@ -14,6 +14,9 @@ class ServiceConfig:
         self.blocked_uids = set()
         self.last_updated_at = -1
         self.received_any_stats = False
+        self.block_new_outgoing_requests = False
+        self.outbound_domains = {}
+
 
     def set_endpoints(self, endpoints):
         self.endpoints = [
@@ -59,3 +62,23 @@ class ServiceConfig:
 
     def set_last_updated_at(self, last_updated_at: int):
         self.last_updated_at = last_updated_at
+
+    def update_outbound_domains(self, domains):
+        self.outbound_domains = {
+            domain["hostname"]: domain["mode"] for domain in domains
+        }
+
+    def set_block_new_outgoing_requests(self, value: bool):
+        """Set whether to block new outgoing requests"""
+        self.block_new_outgoing_requests = bool(value)
+
+    def should_block_outgoing_request(self, hostname: str) -> bool:
+        mode = self.outbound_domains.get(hostname)
+
+        if self.block_new_outgoing_requests:
+            # Only allow outgoing requests if the mode is "allow"
+            # mode is None for unknown hostnames, so they get blocked
+            return mode != "allow"
+
+        # Only block outgoing requests if the mode is "block"
+        return mode == "block"

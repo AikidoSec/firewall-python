@@ -4,9 +4,14 @@ import aikido_zen.context as ctx
 from aikido_zen.api_discovery.update_route_info import update_route_info_from_context
 from aikido_zen.helpers.is_useful_route import is_useful_route
 from aikido_zen.helpers.logging import logger
+from aikido_zen.helpers.create_attack_wave_event import create_attack_wave_event
 from aikido_zen.thread.thread_cache import get_cache
 from .ip_allowed_to_access_route import ip_allowed_to_access_route
 import aikido_zen.background_process.comms as c
+from ...background_process.commands import PutEventCommand
+from ...helpers.ipc.send_payload import send_payload
+from ...helpers.serialize_to_json import serialize_to_json
+from ...storage.attack_wave_detector_store import attack_wave_detector_store
 
 
 def request_handler(stage, status_code=0):
@@ -79,25 +84,38 @@ def pre_response():
     if block_type == "bot-blocking":
         msg = "You are not allowed to access this resource because you have been identified as a bot."
         return msg, 403
+    return None
 
 
 def post_response(status_code):
-    """Checks if the current route is useful"""
+    """Checks if the current route is useful and performs attack wave detection"""
     context = ctx.get_current_context()
     if not context:
         return
     route_metadata = context.get_route_metadata()
 
+    cache = get_cache()
+    if not cache:
+        return
+
+    attack_wave = attack_wave_detector_store.is_attack_wave(context)
+    if attack_wave:
+        cache.stats.on_detected_attack_wave(blocked=False)
+
+        event = create_attack_wave_event(context)
+        logger.debug("Attack wave: %s", serialize_to_json(event)[:5000])
+
+        # Report in background to core (send event over IPC)
+        if c.get_comms() and event:
+            send_payload(c.get_comms(), PutEventCommand.generate(event))
+
+    # Check if the current route is useful for API discovery
     is_curr_route_useful = is_useful_route(
         status_code,
         context.route,
         context.method,
     )
-    if not is_curr_route_useful:
-        return
-
-    cache = get_cache()
-    if cache:
+    if is_curr_route_useful:
         cache.routes.increment_route(route_metadata)
 
         # api spec generation
