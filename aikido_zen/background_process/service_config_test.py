@@ -5,13 +5,7 @@ from aikido_zen.helpers.ip_matcher import IPMatcher
 
 def test_service_config_outbound_blocking_initialization():
     """Test that ServiceConfig initializes outbound blocking fields correctly"""
-    config = ServiceConfig(
-        endpoints=[],
-        last_updated_at=0,
-        blocked_uids=set(),
-        bypassed_ips=[],
-        received_any_stats=False,
-    )
+    config = ServiceConfig()
 
     # Test initial values
     assert hasattr(config, "block_new_outgoing_requests")
@@ -22,13 +16,7 @@ def test_service_config_outbound_blocking_initialization():
 
 def test_service_config_set_block_new_outgoing_requests():
     """Test the set_block_new_outgoing_requests method"""
-    config = ServiceConfig(
-        endpoints=[],
-        last_updated_at=0,
-        blocked_uids=set(),
-        bypassed_ips=[],
-        received_any_stats=False,
-    )
+    config = ServiceConfig()
 
     # Test setting to True
     config.set_block_new_outgoing_requests(True)
@@ -54,13 +42,7 @@ def test_service_config_set_block_new_outgoing_requests():
 
 def test_service_config_update_domains():
     """Test the update_outbound_domains method"""
-    config = ServiceConfig(
-        endpoints=[],
-        last_updated_at=0,
-        blocked_uids=set(),
-        bypassed_ips=[],
-        received_any_stats=False,
-    )
+    config = ServiceConfig()
 
     # Test initial state
     assert config.outbound_domains == {}
@@ -89,13 +71,7 @@ def test_service_config_update_domains():
 
 def test_service_config_should_block_outgoing_request():
     """Test the should_block_outgoing_request method"""
-    config = ServiceConfig(
-        endpoints=[],
-        last_updated_at=0,
-        blocked_uids=set(),
-        bypassed_ips=[],
-        received_any_stats=False,
-    )
+    config = ServiceConfig()
 
     # Test with block_new_outgoing_requests = False (default)
     # Only block if mode is "block"
@@ -138,6 +114,7 @@ def test_service_config_should_block_outgoing_request():
 
 
 def test_service_config_initialization():
+    service_config = ServiceConfig()
     endpoints = [
         {
             "graphql": False,
@@ -185,26 +162,33 @@ def test_service_config_initialization():
             "force_protection_off": False,
         },
     ]
-    last_updated_at = "2023-10-01"
-    service_config = ServiceConfig(
-        endpoints,
-        last_updated_at,
-        ["0", "0", "1", "5"],
-        ["127.0.0.1", "123.1.2.0/24", "132.1.0.0/16"],
-        True,
-    )
 
-    # Check that non-GraphQL endpoints are correctly filtered
-    assert len(service_config.endpoints) == 3
+    assert len(service_config.endpoints) == 0
+    service_config.set_endpoints(endpoints)
+    assert (
+        len(service_config.endpoints) == 3
+    )  # Check that non-GraphQL endpoints are correctly filtered
     assert service_config.endpoints[0]["route"] == "/v1"
     assert service_config.endpoints[1]["route"] == "/v3"
     assert service_config.endpoints[2]["route"] == "/admin"
-    assert service_config.last_updated_at == last_updated_at
+
+    service_config.set_last_updated_at(37982562953)
+    assert service_config.last_updated_at == 37982562953
+
+    assert isinstance(service_config.bypassed_ips, IPMatcher)
+    service_config.set_bypassed_ips(["127.0.0.1", "123.1.2.0/24", "132.1.0.0/16"])
     assert isinstance(service_config.bypassed_ips, IPMatcher)
     assert service_config.bypassed_ips.has("127.0.0.1")
     assert service_config.bypassed_ips.has("123.1.2.2")
     assert not service_config.bypassed_ips.has("1.1.1.1")
-    assert service_config.blocked_uids == set(["1", "0", "5"])
+
+    assert len(service_config.blocked_uids) == 0
+    service_config.set_blocked_user_ids({"0", "0", "1", "5"})
+    assert service_config.blocked_uids == {"1", "0", "5"}
+
+    assert not service_config.received_any_stats
+    service_config.enable_received_any_stats()
+    assert service_config.received_any_stats == True
 
     v1_endpoint = service_config.get_endpoints(
         {
@@ -230,41 +214,9 @@ def test_service_config_initialization():
     assert not admin_endpoint["allowedIPAddresses"].has("192.168.0.1")
 
 
-# Sample data for testing
-sample_endpoints = [
-    {"url": "http://example.com/api/v1", "graphql": False, "context": "user"},
-    {"url": "http://example.com/api/v2", "graphql": True, "context": "admin"},
-    {"url": "http://example.com/api/v3", "graphql": False, "context": "guest"},
-]
-
-
-@pytest.fixture
-def service_config():
-    return ServiceConfig(
-        endpoints=sample_endpoints,
-        last_updated_at="2023-10-01T00:00:00Z",
-        blocked_uids=["user1", "user2"],
-        bypassed_ips=["192.168.1.1", "10.0.0.1"],
-        received_any_stats=True,
-    )
-
-
-def test_initialization(service_config):
-    assert len(service_config.endpoints) == 2  # Only non-graphql endpoints
-    assert service_config.last_updated_at == "2023-10-01T00:00:00Z"
-    assert isinstance(service_config.bypassed_ips, IPMatcher)
-    assert service_config.blocked_uids == {"user1", "user2"}
-
-
 def test_ip_blocking():
-    config = ServiceConfig(
-        endpoints=sample_endpoints,
-        last_updated_at="2023-10-01T00:00:00Z",
-        blocked_uids=["user1", "user2"],
-        bypassed_ips=["192.168.1.1", "10.0.0.0/16", "::1/128"],
-        received_any_stats=True,
-    )
-
+    config = ServiceConfig()
+    config.set_bypassed_ips(["192.168.1.1", "10.0.0.0/16", "::1/128"])
     assert config.is_bypassed_ip("192.168.1.1")
     assert config.is_bypassed_ip("10.0.0.1")
     assert config.is_bypassed_ip("10.0.1.2")
@@ -276,38 +228,39 @@ def test_ip_blocking():
 
 
 def test_service_config_with_empty_allowlist():
-    endpoints = [
-        {
-            "graphql": False,
-            "method": "GET",
-            "route": "/admin",
-            "rate_limiting": {
-                "enabled": False,
-                "max_requests": 10,
-                "window_size_in_ms": 1000,
-            },
-            "allowedIPAddresses": [],
-            "force_protection_off": False,
-        },
-    ]
-    last_updated_at = "2023-10-01"
-    service_config = ServiceConfig(
-        endpoints,
-        last_updated_at,
-        ["0", "0", "1", "5"],
-        ["127.0.0.1", "123.1.2.0/24", "132.1.0.0/16"],
-        True,
-    )
+    service_config = ServiceConfig()
 
     # Check that non-GraphQL endpoints are correctly filtered
+    service_config.set_endpoints(
+        [
+            {
+                "graphql": False,
+                "method": "GET",
+                "route": "/admin",
+                "rate_limiting": {
+                    "enabled": False,
+                    "max_requests": 10,
+                    "window_size_in_ms": 1000,
+                },
+                "allowedIPAddresses": [],
+                "force_protection_off": False,
+            },
+        ]
+    )
     assert len(service_config.endpoints) == 1
     assert service_config.endpoints[0]["route"] == "/admin"
-    assert service_config.last_updated_at == last_updated_at
+
+    service_config.set_last_updated_at(29839537)
+    assert service_config.last_updated_at == 29839537
+
+    service_config.set_blocked_user_ids({"0", "0", "1", "5"})
+    assert service_config.blocked_uids == {"1", "0", "5"}
+
+    service_config.set_bypassed_ips(["127.0.0.1", "123.1.2.0/24", "132.1.0.0/16"])
     assert isinstance(service_config.bypassed_ips, IPMatcher)
-    assert service_config.bypassed_ips.has("127.0.0.1")
-    assert service_config.bypassed_ips.has("123.1.2.2")
-    assert not service_config.bypassed_ips.has("1.1.1.1")
-    assert service_config.blocked_uids == set(["1", "0", "5"])
+    assert service_config.is_bypassed_ip("127.0.0.1")
+    assert service_config.is_bypassed_ip("123.1.2.2")
+    assert not service_config.is_bypassed_ip("1.1.1.1")
 
     admin_endpoint = service_config.get_endpoints(
         {

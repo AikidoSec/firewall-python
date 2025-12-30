@@ -119,13 +119,7 @@ def test_socket_getaddrinfo_no_cache():
 
 def test_service_config_should_block_outgoing_request():
     """Test the should_block_outgoing_request method"""
-    config = ServiceConfig(
-        endpoints=[],
-        last_updated_at=0,
-        blocked_uids=set(),
-        bypassed_ips=[],
-        received_any_stats=False,
-    )
+    config = ServiceConfig()
 
     # Test with no blocking configured
     assert not config.should_block_outgoing_request("example.com")
@@ -148,13 +142,7 @@ def test_service_config_should_block_outgoing_request():
 
 def test_service_config_update_domains():
     """Test the update_outbound_domains method"""
-    config = ServiceConfig(
-        endpoints=[],
-        last_updated_at=0,
-        blocked_uids=set(),
-        bypassed_ips=[],
-        received_any_stats=False,
-    )
+    config = ServiceConfig()
 
     # Test initial state
     assert config.outbound_domains == {}
@@ -175,13 +163,7 @@ def test_service_config_update_domains():
 
 def test_service_config_set_block_new_outgoing_requests():
     """Test the set_block_new_outgoing_requests method"""
-    config = ServiceConfig(
-        endpoints=[],
-        last_updated_at=0,
-        blocked_uids=set(),
-        bypassed_ips=[],
-        received_any_stats=False,
-    )
+    config = ServiceConfig()
 
     # Test initial state
     assert not config.block_new_outgoing_requests

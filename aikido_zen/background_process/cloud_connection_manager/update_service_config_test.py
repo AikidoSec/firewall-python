@@ -11,13 +11,7 @@ def test_update_service_config_outbound_blocking():
 
     # Create a mock connection manager with a real ServiceConfig
     connection_manager = MagicMock()
-    connection_manager.conf = ServiceConfig(
-        endpoints=[],
-        last_updated_at=0,
-        blocked_uids=set(),
-        bypassed_ips=[],
-        received_any_stats=False,
-    )
+    connection_manager.conf = ServiceConfig()
     connection_manager.block = False
 
     # Test response with blockNewOutgoingRequests
@@ -45,13 +39,7 @@ def test_update_service_config_outbound_blocking_false():
 
     # Create a mock connection manager with a real ServiceConfig
     connection_manager = MagicMock()
-    connection_manager.conf = ServiceConfig(
-        endpoints=[],
-        last_updated_at=0,
-        blocked_uids=set(),
-        bypassed_ips=[],
-        received_any_stats=False,
-    )
+    connection_manager.conf = ServiceConfig()
     connection_manager.block = True
 
     # Test response with blockNewOutgoingRequests=False
@@ -69,13 +57,7 @@ def test_update_service_config_outbound_blocking_missing():
 
     # Create a mock connection manager with a real ServiceConfig
     connection_manager = MagicMock()
-    connection_manager.conf = ServiceConfig(
-        endpoints=[],
-        last_updated_at=0,
-        blocked_uids=set(),
-        bypassed_ips=[],
-        received_any_stats=False,
-    )
+    connection_manager.conf = ServiceConfig()
     connection_manager.block = False
 
     # Test response without outbound blocking fields
@@ -97,13 +79,7 @@ def test_update_service_config_failure():
 
     # Create a mock connection manager with a real ServiceConfig
     connection_manager = MagicMock()
-    connection_manager.conf = ServiceConfig(
-        endpoints=[],
-        last_updated_at=0,
-        blocked_uids=set(),
-        bypassed_ips=[],
-        received_any_stats=False,
-    )
+    connection_manager.conf = ServiceConfig()
     connection_manager.block = False
 
     # Set initial values
@@ -127,13 +103,7 @@ def test_update_service_config_complete():
 
     # Create a mock connection manager with a real ServiceConfig
     connection_manager = MagicMock()
-    connection_manager.conf = ServiceConfig(
-        endpoints=[],
-        last_updated_at=0,
-        blocked_uids=set(),
-        bypassed_ips=[],
-        received_any_stats=False,
-    )
+    connection_manager.conf = ServiceConfig()
     connection_manager.block = False
 
     # Test complete response
@@ -174,13 +144,7 @@ def test_update_service_config_domains_only():
 
     # Create a mock connection manager with a real ServiceConfig
     connection_manager = MagicMock()
-    connection_manager.conf = ServiceConfig(
-        endpoints=[],
-        last_updated_at=0,
-        blocked_uids=set(),
-        bypassed_ips=[],
-        received_any_stats=False,
-    )
+    connection_manager.conf = ServiceConfig()
     connection_manager.block = False
 
     # Test response with only domains
@@ -207,13 +171,7 @@ def test_update_service_config_block_new_outgoing_requests_only():
 
     # Create a mock connection manager with a real ServiceConfig
     connection_manager = MagicMock()
-    connection_manager.conf = ServiceConfig(
-        endpoints=[],
-        last_updated_at=0,
-        blocked_uids=set(),
-        bypassed_ips=[],
-        received_any_stats=False,
-    )
+    connection_manager.conf = ServiceConfig()
     connection_manager.block = False
 
     # Set initial domains
