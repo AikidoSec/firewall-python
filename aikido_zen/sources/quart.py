@@ -39,7 +39,7 @@ def patch(m):
     """
     patching module quart.app
     - patches Quart.asgi_app (handles internal asgi middleware)
-    - patches Quart.handle_request (Stores body/cookies, checks status code)
+    - patches Quart.handle_request (Stores body/cookies)
     """
     patch_function(m, "Quart.asgi_app", _asgi_app)
     patch_function(m, "Quart.handle_request", _handle_request_before)
