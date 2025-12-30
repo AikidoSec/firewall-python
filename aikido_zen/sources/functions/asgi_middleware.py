@@ -1,5 +1,7 @@
 from aikido_zen.context import Context
-from aikido_zen.sources.functions.request_handler import request_handler
+from aikido_zen.helpers.get_argument import get_argument
+from aikido_zen.sinks import before_async, patch_function
+from aikido_zen.sources.functions.request_handler import request_handler, post_response
 from aikido_zen.thread.thread_cache import get_cache
 
 
@@ -29,10 +31,21 @@ class InternalASGIMiddleware:
 
         intercept_response = request_handler(stage="pre_response")
         if not intercept_response:
-            return await self.client_app(scope, receive, send)
+            return await self.run_with_intercepts(scope, receive, send)
         else:
             # The request has already been blocked (e.g. IP is on blocklist)
             return await send_status_code_and_text(send, intercept_response)
+
+    async def run_with_intercepts(self, scope, receive, send):
+        # We use a skeleton class so we can use patch_function (and the logic already defined in @before_async)
+        class InterceptorSkeletonClass:
+            @staticmethod
+            async def send(*args, **kwargs):
+                return await send(*args, **kwargs)
+
+        patch_function(InterceptorSkeletonClass, "send", send_interceptor)
+
+        return await self.client_app(scope, receive, InterceptorSkeletonClass.send)
 
 
 async def send_status_code_and_text(send, pre_response):
@@ -50,3 +63,14 @@ async def send_status_code_and_text(send, pre_response):
             "more_body": False,
         }
     )
+
+
+@before_async
+async def send_interceptor(*args, **kwargs):
+    event = get_argument(args, kwargs, 0, "event")
+    if not event or "http.response" not in event.get("type", ""):
+        return
+
+    if "status" in event:
+        # Handle post response logic (attack waves, route reporting, ...)
+        post_response(status_code=int(event.get("status")))
