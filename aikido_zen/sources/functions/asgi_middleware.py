@@ -1,6 +1,5 @@
 from aikido_zen.context import Context
 from aikido_zen.sources.functions.request_handler import request_handler
-from aikido_zen.sources.quart import send_status_code_and_text
 from aikido_zen.thread.thread_cache import get_cache
 
 
@@ -12,8 +11,7 @@ class InternalASGIMiddleware:
     async def __call__(self, scope, receive, send):
         if not scope or scope.get("type") != "http":
             # Zen checks requests coming into HTTP(S) server, ignore other requests (like ws)
-            await self.client_app(scope, receive, send)
-            return
+            return await self.client_app(scope, receive, send)
 
         context = Context(req=scope, source=self.source)
 
@@ -21,8 +19,7 @@ class InternalASGIMiddleware:
         if process_cache and process_cache.is_bypassed_ip(context.remote_address):
             # IP address is bypassed, for simplicity we do not set a context,
             # and we do not do any further handling of the request.
-            await self.client_app(scope, receive, send)
-            return
+            return await self.client_app(scope, receive, send)
 
         context.set_as_current_context()
         if process_cache:
@@ -32,23 +29,24 @@ class InternalASGIMiddleware:
 
         intercept_response = request_handler(stage="pre_response")
         if not intercept_response:
-            await self.client_app(scope, receive, send)
+            return await self.client_app(scope, receive, send)
         else:
             # The request has already been blocked (e.g. IP is on blocklist)
-            await send_status_code_and_text(send, intercept_response)
+            return await send_status_code_and_text(send, intercept_response)
 
-    async def send_status_code_and_text(send, pre_response):
-        await send(
-            {
-                "type": "http.response.start",
-                "status": pre_response[1],
-                "headers": [(b"content-type", b"text/plain")],
-            }
-        )
-        await send(
-            {
-                "type": "http.response.body",
-                "body": pre_response[0].encode("utf-8"),
-                "more_body": False,
-            }
-        )
+
+async def send_status_code_and_text(send, pre_response):
+    await send(
+        {
+            "type": "http.response.start",
+            "status": pre_response[1],
+            "headers": [(b"content-type", b"text/plain")],
+        }
+    )
+    await send(
+        {
+            "type": "http.response.body",
+            "body": pre_response[0].encode("utf-8"),
+            "more_body": False,
+        }
+    )
