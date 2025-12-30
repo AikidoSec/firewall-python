@@ -61,6 +61,23 @@ jobs:
       - name: Start flask-mysql
         working-directory: ./sample-apps/flask-mysql
         run: nohup make runBenchmark & nohup make runZenDisabled &
+      - name: Get app ports
+        id: get-ports
+        run: |
+          chmod +x ./sample-apps/scripts/get_ports.sh
+          read PORT PORT_DISABLED < <(./sample-apps/scripts/get_ports.sh ./sample-apps/flask-mysql)
+          echo "PORT=$PORT" >> $GITHUB_OUTPUT
+          echo "PORT_DISABLED=$PORT_DISABLED" >> $GITHUB_OUTPUT
+          echo "Using ports: $PORT (with firewall), $PORT_DISABLED (without firewall)"
+      - name: Check app health (max 3 attempts)
+        uses: nick-fields/retry@14672906e672a08bd6eeb15720e9ed3ce869cdd4 # v2.9.0
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          command: |
+            chmod +x ./sample-apps/scripts/health_check.sh
+            ./sample-apps/scripts/health_check.sh ${{ steps.get-ports.outputs.PORT }}
+            ./sample-apps/scripts/health_check.sh ${{ steps.get-ports.outputs.PORT_DISABLED }}
       - name: Install K6
         uses: grafana/setup-k6-action@ffe7d7290dfa715e48c2ccc924d068444c94bde2 # v1
       - name: Run flask-mysql k6 Benchmark (max 3 attempts)
@@ -96,6 +113,23 @@ jobs:
       - name: Start app
         working-directory: ./sample-apps/${{ matrix.app }}
         run: nohup make runBenchmark & nohup make runZenDisabled &
+      - name: Get app ports
+        id: get-ports
+        run: |
+          chmod +x ./sample-apps/scripts/get_ports.sh
+          read PORT PORT_DISABLED < <(./sample-apps/scripts/get_ports.sh ./sample-apps/${{ matrix.app }})
+          echo "PORT=$PORT" >> $GITHUB_OUTPUT
+          echo "PORT_DISABLED=$PORT_DISABLED" >> $GITHUB_OUTPUT
+          echo "Using ports: $PORT (with firewall), $PORT_DISABLED (without firewall)"
+      - name: Check app health (max 3 attempts)
+        uses: nick-fields/retry@14672906e672a08bd6eeb15720e9ed3ce869cdd4 # v2.9.0
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          command: |
+            chmod +x ./sample-apps/scripts/health_check.sh
+            ./sample-apps/scripts/health_check.sh ${{ steps.get-ports.outputs.PORT }}
+            ./sample-apps/scripts/health_check.sh ${{ steps.get-ports.outputs.PORT_DISABLED }}
       - name: Install wrk
         run: |
           sudo apt-get update
