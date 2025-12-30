@@ -5,12 +5,12 @@ from ..helpers.get_argument import get_argument
 from ..sinks import on_import, patch_function, before_async
 
 
-async def _call(func, instance, args, kwargs):
+async def _asgi_app(func, instance, args, kwargs):
     scope = get_argument(args, kwargs, 0, "scope")
     receive = get_argument(args, kwargs, 1, "receive")
     send = get_argument(args, kwargs, 2, "send")
 
-    await InternalASGIMiddleware(instance, "quart")(scope, receive, send)
+    await InternalASGIMiddleware(func, "quart")(scope, receive, send)
 
 
 @before_async
@@ -49,14 +49,13 @@ async def _handle_request_after(func, instance, args, kwargs):
         raise e
 
 
-
 @on_import("quart.app", "quart")
 def patch(m):
     """
     patching module quart.app
-    - patches Quart.__call__ (creates Context)
+    - patches Quart.asgi_app (handles internal asgi middleware)
     - patches Quart.handle_request (Stores body/cookies, checks status code)
     """
-    patch_function(m, "Quart.__call__", _call)
+    patch_function(m, "Quart.asgi_app", _asgi_app)
     patch_function(m, "Quart.handle_request", _handle_request_before)
     patch_function(m, "Quart.handle_request", _handle_request_after)
