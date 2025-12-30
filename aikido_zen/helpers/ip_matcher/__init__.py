@@ -1,49 +1,43 @@
-"""
-Based on https://github.com/demskie/netparser
-MIT License - Copyright (c) 2019 alex
-"""
+import ipaddress
 
-from .shared import parse_base_network, sort_networks, summarize_sorted_networks
-from .sort import binary_search_for_insertion_index
+import pytricia
+
+
+def preparse(network: str) -> str:
+    # Remove the brackets around IPv6 addresses if they are there.
+    network = network.strip("[]")
+    try:
+        ip = ipaddress.IPv6Address(network)
+        if ip.ipv4_mapped:
+            return str(ip.ipv4_mapped)
+    except ValueError:
+        pass
+    return network
 
 
 class IPMatcher:
     def __init__(self, networks=None):
-        self.sorted = []
+        self.trie = pytricia.PyTricia(128)
         if networks is not None:
-            subnets = []
             for s in networks:
-                net = parse_base_network(s, False)
-                if net and net.is_valid():
-                    subnets.append(net)
-            sort_networks(subnets)
-            self.sorted = summarize_sorted_networks(subnets)
+                self._add(s)
+        # We freeze in constructor ensuring that after initialization the IPMatcher is always frozen.
+        self.trie.freeze()
 
     def has(self, network):
-        """
-        Checks if the given IP address is in the list of networks.
-        """
-        net = parse_base_network(network, False)
-        if not net or not net.is_valid():
+        try:
+            return self.trie.get(preparse(network)) is not None
+        except ValueError:
             return False
-        idx = binary_search_for_insertion_index(net, self.sorted)
-        if idx < 0:
-            return False
-        if idx < len(self.sorted) and self.sorted[idx].contains(net):
-            return True
-        if idx - 1 >= 0 and self.sorted[idx - 1].contains(net):
-            return True
-        return False
 
-    def add(self, network):
-        net = parse_base_network(network, False)
-        if not net or not net.is_valid():
-            return self
-        idx = binary_search_for_insertion_index(net, self.sorted)
-        if idx < len(self.sorted) and self.sorted[idx].compare(net) == 0:
-            return self
-        self.sorted.insert(idx, net)
+    def _add(self, network):
+        try:
+            self.trie[preparse(network)] = True
+        except ValueError:
+            pass
+        except SystemError:
+            pass
         return self
 
     def is_empty(self):
-        return len(self.sorted) == 0
+        return len(self.trie) == 0
