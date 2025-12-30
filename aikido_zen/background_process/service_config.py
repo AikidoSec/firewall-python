@@ -44,7 +44,6 @@ class ServiceConfig:
         return match_endpoints(route_metadata, self.endpoints)
 
     def set_bypassed_ips(self, bypassed_ips):
-        """Creates a new IPMatcher from the given bypassed ip set"""
         self.bypassed_ips = IPMatcher()
         for ip in bypassed_ips:
             self.bypassed_ips.add(ip)
