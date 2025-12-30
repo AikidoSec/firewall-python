@@ -17,7 +17,6 @@ class ServiceConfig:
         self.block_new_outgoing_requests = False
         self.outbound_domains = {}
 
-
     def set_endpoints(self, endpoints):
         self.endpoints = [
             endpoint for endpoint in endpoints if not endpoint.get("graphql")
