@@ -30,11 +30,11 @@ class InternalASGIMiddleware:
             process_cache.stats.increment_total_hits()
 
         intercept_response = request_handler(stage="pre_response")
-        if not intercept_response:
-            return await self.run_with_intercepts(scope, receive, send)
-        else:
+        if intercept_response:
             # The request has already been blocked (e.g. IP is on blocklist)
             return await send_status_code_and_text(send, intercept_response)
+
+        return await self.run_with_intercepts(scope, receive, send)
 
     async def run_with_intercepts(self, scope, receive, send):
         # We use a skeleton class so we can use patch_function (and the logic already defined in @before_async)
@@ -66,9 +66,13 @@ async def send_status_code_and_text(send, pre_response):
 
 
 @before_async
-async def send_interceptor(*args, **kwargs):
+async def send_interceptor(func, instance, args, kwargs):
     event = get_argument(args, kwargs, 0, "event")
-    if not event or "http.response" not in event.get("type", ""):
+
+    # https://asgi.readthedocs.io/en/latest/specs/www.html#response-start-send-event
+    if not event or "http.response.start" not in event.get("type", ""):
+        # If the event is not of type http.response.start it won't contain the status code.
+        # And this event is required before sending over a body (so even 200 status codes are intercepted).
         return
 
     if "status" in event:
