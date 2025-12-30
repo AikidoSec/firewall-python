@@ -5,13 +5,7 @@ from aikido_zen.helpers.ip_matcher import IPMatcher
 
 def test_service_config_outbound_blocking_initialization():
     """Test that ServiceConfig initializes outbound blocking fields correctly"""
-    config = ServiceConfig(
-        endpoints=[],
-        last_updated_at=0,
-        blocked_uids=set(),
-        bypassed_ips=[],
-        received_any_stats=False,
-    )
+    config = ServiceConfig()
 
     # Test initial values
     assert hasattr(config, "block_new_outgoing_requests")
@@ -22,13 +16,7 @@ def test_service_config_outbound_blocking_initialization():
 
 def test_service_config_set_block_new_outgoing_requests():
     """Test the set_block_new_outgoing_requests method"""
-    config = ServiceConfig(
-        endpoints=[],
-        last_updated_at=0,
-        blocked_uids=set(),
-        bypassed_ips=[],
-        received_any_stats=False,
-    )
+    config = ServiceConfig()
 
     # Test setting to True
     config.set_block_new_outgoing_requests(True)
@@ -54,13 +42,7 @@ def test_service_config_set_block_new_outgoing_requests():
 
 def test_service_config_update_domains():
     """Test the update_outbound_domains method"""
-    config = ServiceConfig(
-        endpoints=[],
-        last_updated_at=0,
-        blocked_uids=set(),
-        bypassed_ips=[],
-        received_any_stats=False,
-    )
+    config = ServiceConfig()
 
     # Test initial state
     assert config.outbound_domains == {}
@@ -89,13 +71,7 @@ def test_service_config_update_domains():
 
 def test_service_config_should_block_outgoing_request():
     """Test the should_block_outgoing_request method"""
-    config = ServiceConfig(
-        endpoints=[],
-        last_updated_at=0,
-        blocked_uids=set(),
-        bypassed_ips=[],
-        received_any_stats=False,
-    )
+    config = ServiceConfig()
 
     # Test with block_new_outgoing_requests = False (default)
     # Only block if mode is "block"
