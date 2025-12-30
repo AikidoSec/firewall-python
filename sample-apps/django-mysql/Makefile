@@ -1,20 +1,13 @@
-.PHONY: install
-install:
-	poetry install --quiet
+include ../common.mk
 
-.PHONY: run
+# App-specific configuration
+PORT = 8080
+RUN_COMMAND = python manage.py migrate || true; python manage.py runserver 0.0.0.0:$(PORT)
+
 run: install
-	@echo "Running sample app django-mysql with Zen on port 8080"
-	poetry run python manage.py migrate || true
+	@echo "Running sample app django-mysql with Zen on port $(PORT)"
+	$(AIKIDO_ENV_VARS) poetry run $(RUN_COMMAND)
 
-	AIKIDO_DEBUG=true AIKIDO_BLOCK=true AIKIDO_TOKEN="AIK_secret_token" \
-	AIKIDO_REALTIME_ENDPOINT="http://localhost:5000/" \
-	AIKIDO_ENDPOINT="http://localhost:5000/" AIKIDO_DISABLE=0 \
-	poetry run python manage.py runserver 0.0.0.0:8080
-
-.PHONY: runZenDisabled
 runZenDisabled: install
-	@echo "Running sample app django-mysql without Zen on port 8081"
-	poetry run python manage.py migrate || true
-	AIKIDO_DISABLE=1 \
-	poetry run python manage.py runserver 0.0.0.0:8081
+	@echo "Running sample app django-mysql without Zen on port $(PORT)"
+	$(AIKIDO_DISABLED_VARS) poetry run $(RUN_COMMAND)

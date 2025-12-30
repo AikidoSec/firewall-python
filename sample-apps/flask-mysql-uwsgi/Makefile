@@ -1,25 +1,13 @@
-.PHONY: install
-install:
-	poetry install --quiet
+include ../common.mk
 
-.PHONY: run
-run: install
-	@echo "Running sample app flask-mysql-uwsgi with Zen on port 8088"
-	AIKIDO_DEBUG=true AIKIDO_BLOCK=true AIKIDO_TOKEN="AIK_secret_token" \
-	AIKIDO_REALTIME_ENDPOINT="http://localhost:5000/" \
-	AIKIDO_ENDPOINT="http://localhost:5000/" AIKIDO_DISABLE=0 \
-	poetry run uwsgi --ini uwsgi.ini
+# App-specific configuration
+PORT = 8088
+RUN_COMMAND = uwsgi --ini uwsgi.ini
 
-.PHONY: runBenchmark
 runBenchmark: install
-	@echo "Running sample app flask-mysql-uwsgi with Zen on port 8088"
-	AIKIDO_DEBUG=false AIKIDO_BLOCK=true AIKIDO_TOKEN="AIK_secret_token" \
-	AIKIDO_REALTIME_ENDPOINT="http://localhost:5000/" \
-	AIKIDO_ENDPOINT="http://localhost:5000/" AIKIDO_DISABLE=0 \
-	poetry run uwsgi --single-interpreter --ini uwsgi.ini
+	@echo "Running sample app flask-mysql-uwsgi with Zen (benchmark mode) on port $(PORT)"
+	$(AIKIDO_ENV_VARS_BENCHMARK) poetry run uwsgi --single-interpreter --ini uwsgi.ini
 
-.PHONY: runZenDisabled
 runZenDisabled: install
 	@echo "Running sample app flask-mysql-uwsgi without Zen on port 8089"
-	AIKIDO_DISABLE=1 \
-	poetry run uwsgi --single-interpreter --ini uwsgi2.ini
+	$(AIKIDO_DISABLED_VARS) poetry run uwsgi --single-interpreter --ini uwsgi2.ini

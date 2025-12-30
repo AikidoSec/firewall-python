@@ -1,20 +1,13 @@
-.PHONY: install
-install:
-	poetry install --quiet
+include ../common.mk
 
-.PHONY: run
+# App-specific configuration
+PORT = 8100
+RUN_COMMAND = python manage.py migrate || true; ddtrace-run gunicorn -c gunicorn_config.py --workers 4 --threads 2 --log-level debug --access-logfile '-' --error-logfile '-' --bind 0.0.0.0:$(PORT) sample-django-postgres-gunicorn-app.wsgi
+
 run: install
-	@echo "Running sample app django-postgres-gunicorn with Zen on port 8100"
-	poetry run python manage.py migrate || true
+	@echo "Running sample app django-postgres-gunicorn with Zen on port $(PORT)"
+	$(AIKIDO_ENV_VARS) poetry run $(RUN_COMMAND)
 
-	AIKIDO_DEBUG=true AIKIDO_BLOCK=true AIKIDO_TOKEN="AIK_secret_token" \
-	AIKIDO_REALTIME_ENDPOINT="http://localhost:5000/" \
-	AIKIDO_ENDPOINT="http://localhost:5000/" AIKIDO_DISABLE=0 \
-	poetry run ddtrace-run gunicorn -c gunicorn_config.py --workers 4 --threads 2 --log-level debug --access-logfile '-' --error-logfile '-' --bind 0.0.0.0:8100 sample-django-postgres-gunicorn-app.wsgi
-
-.PHONY: runZenDisabled
 runZenDisabled: install
 	@echo "Running sample app django-postgres-gunicorn without Zen on port 8101"
-	poetry run python manage.py migrate || true
-	AIKIDO_DISABLE=1 \
-	poetry run gunicorn -c gunicorn_config.py --workers 4 --threads 2 --log-level debug --access-logfile '-' --error-logfile '-' --bind 0.0.0.0:8101 sample-django-postgres-gunicorn-app.wsgi
+	$(AIKIDO_DISABLED_VARS) poetry run python manage.py migrate || true; gunicorn -c gunicorn_config.py --workers 4 --threads 2 --log-level debug --access-logfile '-' --error-logfile '-' --bind 0.0.0.0:8101 sample-django-postgres-gunicorn-app.wsgi
