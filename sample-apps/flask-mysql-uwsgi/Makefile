@@ -6,13 +6,13 @@ PORT_DISABLED = 8089
 .PHONY: run
 run: install
 	@echo "Running sample app flask-mysql-uwsgi with Zen on port $(PORT)"
-	$(AIKIDO_ENV_COMMON) AIKIDO_DISABLE=0 \
+	$(AIKIDO_ENV_COMMON) \
 	poetry run uwsgi --ini uwsgi.ini
 
 .PHONY: runBenchmark
 runBenchmark: install
 	@echo "Running sample app flask-mysql-uwsgi with Zen on port $(PORT)"
-	$(AIKIDO_ENV_BENCHMARK) AIKIDO_DISABLE=0 \
+	$(AIKIDO_ENV_BENCHMARK) \
 	poetry run uwsgi --single-interpreter --ini uwsgi.ini
 
 .PHONY: runZenDisabled
