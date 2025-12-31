@@ -7,7 +7,7 @@ PORT_DISABLED = 8097
 run: install
 	@echo "Running sample app quart-postgres-uvicorn with Zen on port $(PORT)"
 	$(AIKIDO_ENV_COMMON) \
-	poetry run hypercorn app:app -b 0.0.0.0:$(PORT) --workers 2
+	poetry run aikido_zen hypercorn app:app -b 0.0.0.0:$(PORT) --workers 2
 
 .PHONY: runZenDisabled
 runZenDisabled: install
