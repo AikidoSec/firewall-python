@@ -32,7 +32,7 @@ AIKIDO_ENV_DISABLED = \
 # Common target definitions
 .PHONY: install
 install:
-	poetry install --quiet
+	poetry install
 
 .PHONY: health-check
 health-check:
