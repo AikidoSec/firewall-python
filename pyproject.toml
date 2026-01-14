@@ -58,9 +58,6 @@ homepage = "https://www.aikido.dev/runtime/firewall/"
 "Homepage" = "https://www.aikido.dev/runtime/firewall"
 "Bug Bounty" = "https://app.intigriti.com/programs/aikido"
 
-[tool.poetry.scripts]
-aikido_zen = "aikido_zen.__main__:main"
-
 [tool.poetry.dependencies]
 python = "^3.8"
 regex = "^2024.5.15"

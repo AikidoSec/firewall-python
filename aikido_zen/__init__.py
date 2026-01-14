@@ -67,7 +67,6 @@ def protect(mode="daemon", token=""):
     ## 1c. Import xml sources
     import aikido_zen.sources.xml_sources.xml
     import aikido_zen.sources.xml_sources.lxml
-    import aikido_zen.sources.hypercorn_asgi
 
 
     # 2. Import database sinks
