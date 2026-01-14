@@ -1,34 +1,42 @@
-from django.shortcuts import render, get_object_or_404
+import psycopg
+from django.conf import settings
 from django.http import HttpResponse
 from django.template import loader
-from .models import Dogs
-from django.db import connection
+from django.shortcuts import aget_object_or_404
 from django.views.decorators.csrf import csrf_exempt
+from .models import Dogs
 
-def index(request):
-    dogs = Dogs.objects.all()
-    print(dogs)
+
+async def index(request):
+    dogs = [dog async for dog in Dogs.objects.all()]
     template = loader.get_template("app/index.html")
-    context = {
-        "dogs": dogs,
-    }
+    context = {"dogs": dogs}
     return HttpResponse(template.render(context, request))
 
 
-def dog_page(request, dog_id):
-    dog = get_object_or_404(Dogs, pk=dog_id)
+async def dog_page(request, dog_id):
+    dog = await aget_object_or_404(Dogs, pk=dog_id)
     return HttpResponse("Your dog, %s, is lovely. Is admin? %s" % (dog.dog_name, dog.is_admin))
 
+
+def _get_db_conninfo():
+    """Build psycopg connection string from Django settings."""
+    db = settings.DATABASES['default']
+    return f"host={db['HOST']} port={db['PORT']} dbname={db['NAME']} user={db['USER']} password={db['PASSWORD']}"
+
+
 @csrf_exempt
-def create_dogpage(request):
+async def create_dogpage(request):
     if request.method == 'GET':
-        return render(request, 'app/create_dog.html')
+        template = loader.get_template("app/create_dog.html")
+        return HttpResponse(template.render({}, request))
     elif request.method == 'POST':
         dog_name = request.POST.get('dog_name')
         # Use vulnerable SQL to insert the dog name, so we can test that aikido_zen is working.
-        with connection.cursor() as cursor:
-            query = f"INSERT INTO sample_app_Dogs (dog_name, is_admin) VALUES ('%s', FALSE)" % (dog_name)
-            print("QUERY : ", query)
-            cursor.execute(query)
+        query = f"INSERT INTO sample_app_dogs (dog_name, is_admin) VALUES ('%s', FALSE)" % dog_name
+
+        async with await psycopg.AsyncConnection.connect(_get_db_conninfo()) as conn:
+            async with conn.cursor() as cursor:
+                await cursor.execute(query)
 
         return HttpResponse("Dog page created")
