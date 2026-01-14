@@ -2595,6 +2595,7 @@ description = "An efficient IP address storage and lookup module for Python."
 optional = false
 python-versions = "*"
 groups = ["main"]
+markers = "sys_platform != \"win32\""
 files = [
     {file = "pytricia-1.3.0.tar.gz", hash = "sha256:1c3a3d6909e10d4c9c2f0fe4542a2481e109d29aab99cc027ca7fe93f8c8853f"},
 ]
@@ -3475,4 +3476,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.8"
-content-hash = "9790f7aed0a0889931d0e56537ecb557fca5bbc427041e046550b10921c14f86"
+content-hash = "e41b73e770301ca241f71a20714147d3ff0811b8fe6ed9465719a02dc66f0ea1"
