@@ -43,7 +43,7 @@ Zen for Python 3 is compatible with:
 * ✅ [Quart](docs/quart.md)
 * ✅ [Starlette](docs/starlette.md)
 * ✅ [FastAPI](docs/fastapi.md)
-* 🚧 [Django](docs/django_asgi.md)
+* 🚧 [Django](docs/django_asgi.md) (*limited support*)
 
 ### Database drivers
 * ✅ [`mysqlclient`](https://pypi.org/project/mysqlclient/) ^1.5
