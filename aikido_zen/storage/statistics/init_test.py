@@ -15,6 +15,8 @@ def test_initialization(monkeypatch):
     assert stats.attacks_detected == 0
     assert stats.attacks_blocked == 0
     assert stats.started_at == 1234567890000
+    assert stats.attack_waves_detected == 0
+    assert stats.attack_waves_blocked == 0
     assert isinstance(stats.operations, Operations)
 
 
@@ -23,6 +25,7 @@ def test_clear(monkeypatch):
     stats.total_hits = 10
     stats.attacks_detected = 5
     stats.attacks_blocked = 3
+    stats.on_detected_attack_wave(blocked=True)
     stats.operations.register_call("test", "sql_op")
     with test_utils.patch_time(time_s=1234567890):
         stats.clear()
@@ -31,6 +34,8 @@ def test_clear(monkeypatch):
     assert stats.attacks_detected == 0
     assert stats.attacks_blocked == 0
     assert stats.started_at == 1234567890000
+    assert stats.attack_waves_blocked == 0
+    assert stats.attack_waves_detected == 0
     assert stats.operations == {}
 
 
@@ -50,6 +55,16 @@ def test_on_detected_attack(stats):
     assert stats.attacks_blocked == 1
 
 
+def test_on_detected_attack_wave(stats):
+    stats.on_detected_attack_wave(blocked=True)
+    assert stats.get_record()["requests"]["attackWaves"]["total"] == 1
+    assert stats.get_record()["requests"]["attackWaves"]["blocked"] == 1
+
+    stats.on_detected_attack_wave(blocked=False)
+    assert stats.get_record()["requests"]["attackWaves"]["total"] == 2
+    assert stats.get_record()["requests"]["attackWaves"]["blocked"] == 1
+
+
 def test_get_record(monkeypatch):
     with test_utils.patch_time(time_s=1234567890):
         stats = Statistics()
@@ -60,6 +75,8 @@ def test_get_record(monkeypatch):
     stats.on_detected_attack(blocked=True, operation="test.test")
     stats.attacks_detected = 5
     stats.attacks_blocked = 3
+    stats.on_detected_attack_wave(False)
+    stats.on_detected_attack_wave(False)
 
     with test_utils.patch_time(time_s=9999999999):
         record = stats.get_record()
@@ -70,6 +87,8 @@ def test_get_record(monkeypatch):
     assert record["requests"]["aborted"] == 0
     assert record["requests"]["attacksDetected"]["total"] == 5
     assert record["requests"]["attacksDetected"]["blocked"] == 3
+    assert record["requests"]["attackWaves"]["total"] == 2
+    assert record["requests"]["attackWaves"]["blocked"] == 0
     assert record["operations"] == {
         "test.test": {
             "attacksDetected": {"blocked": 1, "total": 1},
@@ -138,6 +157,12 @@ def test_empty(stats):
     stats.attacks_detected = 0
     stats.operations = {"test_op": {"total": 1}}
     assert stats.empty() == False
+
+
+def test_empty_with_attack_waves(stats):
+    assert stats.empty()
+    stats.on_detected_attack_wave(blocked=False)
+    assert not stats.empty()
 
 
 def test_multiple_imports(stats):

@@ -22,6 +22,7 @@ Zen will autonomously protect your Python applications from the inside against:
 * 🛡️ [Command injection attacks](https://www.aikido.dev/blog/command-injection-in-2024-unpacked)
 * 🛡️ [Path traversal attacks](https://www.aikido.dev/blog/path-traversal-in-2024-the-year-unpacked)
 * 🛡️ [Server-side request forgery (SSRF)](./docs/ssrf.md)
+* 🛡️ [Attack wave detection](https://help.aikido.dev/zen-firewall/zen-features/attack-wave-protection)
 
 Zen operates autonomously on the same server as your Python app to:
 
@@ -31,18 +32,17 @@ Zen operates autonomously on the same server as your Python app to:
 
 Zen for Python 3 is compatible with:
 
-### Web frameworks
-
+### WSGI
 * ✅ [Django](docs/django.md)
 * ✅ [Flask](docs/flask.md) ^2.2.4
+#### WSGI Servers
+* ✅ [Gunicorn](docs/gunicorn.md)
+* ✅ [uWSGI](docs/uwsgi.md)
+
+### ASGI
 * ✅ [Quart](docs/quart.md)
 * ✅ [Starlette](docs/starlette.md)
 * ✅ [FastAPI](docs/fastapi.md)
-
-
-### WSGI servers
-* ✅ [Gunicorn](docs/gunicorn.md)
-* ✅ [uWSGI](docs/uwsgi.md)
 
 ### Database drivers
 * ✅ [`mysqlclient`](https://pypi.org/project/mysqlclient/) ^1.5

@@ -65,3 +65,23 @@ def test_mixed_imds_and_normal_ips():
         )
         == "169.254.169.254"
     )
+
+
+def test_doesnt_flag_ip_address():
+    """Test that an AWS IMDS IPv4 address is returned if present."""
+    assert (
+        resolves_to_imds_ip(["169.254.169.254", "8.8.8.8"], " 169.254.169.254") is None
+    )
+    assert (
+        resolves_to_imds_ip(["169.254.169.254", "8.8.8.8"], " 169.254.169.255")
+        is not None
+    )
+    assert (
+        resolves_to_imds_ip(["169.254.169.254", "8.8.8.8"], "169.254.169.253")
+        is not None
+    )
+
+    assert (
+        resolves_to_imds_ip(["169.254.169.254", "8.8.8.8"], "169.254.169.254") is None
+    )
+    assert resolves_to_imds_ip(["fd00:ec2::254", "8.8.8.8"], "fd00:ec2::254") is None

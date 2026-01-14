@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title }}</title>
+    <style>
+        body {
+            font-family: sans-serif;
+        }
+        h1 {
+            font-family: monospace;
+            text-align: center;
+            border: 1px solid black;
+            border-left: none;
+            border-right: none;
+            margin: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>{{ title }}</h1>
+    <p><em>Name :</em> {{dog.dog_name }}</p>
+    <p><em>Password (You normally don't know this) : </em>{{ dog.pswd }}</p>
+    <p><em>Id :</em> {{dog._id}}</p>
+</body>
+</html>
