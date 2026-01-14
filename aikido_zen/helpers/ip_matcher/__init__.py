@@ -1,6 +1,18 @@
 import ipaddress
 
-import pytricia
+try:
+    import pytricia
+
+    PYTRICIA_AVAILABLE = True
+except ImportError:
+    PYTRICIA_AVAILABLE = False
+    from aikido_zen.helpers.logging import logger
+
+    logger.warning(
+        "pytricia is not available, falling back to pure Python IP matcher. "
+        "This may result in slower performance. "
+        "Install pytricia for better performance: pip install pytricia"
+    )
 
 
 def preparse(network: str) -> str:
@@ -15,29 +27,35 @@ def preparse(network: str) -> str:
     return network
 
 
-class IPMatcher:
-    def __init__(self, networks=None):
-        self.trie = pytricia.PyTricia(128)
-        if networks is not None:
-            for s in networks:
-                self._add(s)
-        # We freeze in constructor ensuring that after initialization the IPMatcher is always frozen.
-        self.trie.freeze()
+if PYTRICIA_AVAILABLE:
 
-    def has(self, network):
-        try:
-            return self.trie.get(preparse(network)) is not None
-        except ValueError:
-            return False
+    class IPMatcher:
+        def __init__(self, networks=None):
+            self.trie = pytricia.PyTricia(128)
+            if networks is not None:
+                for s in networks:
+                    self._add(s)
+            # We freeze in constructor ensuring that after initialization the IPMatcher is always frozen.
+            self.trie.freeze()
 
-    def _add(self, network):
-        try:
-            self.trie[preparse(network)] = True
-        except ValueError:
-            pass
-        except SystemError:
-            pass
-        return self
+        def has(self, network):
+            try:
+                return self.trie.get(preparse(network)) is not None
+            except ValueError:
+                return False
 
-    def is_empty(self):
-        return len(self.trie) == 0
+        def _add(self, network):
+            try:
+                self.trie[preparse(network)] = True
+            except ValueError:
+                pass
+            except SystemError:
+                pass
+            return self
+
+        def is_empty(self):
+            return len(self.trie) == 0
+
+else:
+    # Fallback to pure Python implementation
+    from aikido_zen.helpers.ip_matcher_fallback import IPMatcher  # noqa: F401
