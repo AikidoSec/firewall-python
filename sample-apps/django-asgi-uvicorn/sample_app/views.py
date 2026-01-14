@@ -4,8 +4,6 @@ from django.template import loader
 from .models import Dogs
 from django.db import connection
 from django.views.decorators.csrf import csrf_exempt
-# Create your views here.
-
 
 def index(request):
     dogs = Dogs.objects.all()
@@ -27,21 +25,10 @@ def create_dogpage(request):
         return render(request, 'app/create_dog.html')
     elif request.method == 'POST':
         dog_name = request.POST.get('dog_name')
-        # Using custom sql to create a dog :
+        # Use vulnerable SQL to insert the dog name, so we can test that aikido_zen is working.
         with connection.cursor() as cursor:
             query = f"INSERT INTO sample_app_Dogs (dog_name, is_admin) VALUES ('%s', FALSE)" % (dog_name)
             print("QUERY : ", query)
             cursor.execute(query)
 
         return HttpResponse("Dog page created")
-
-@csrf_exempt
-def create_dogpage_cookies(request):
-    dog_name = request.COOKIES.get('dog_name')
-    # Using custom sql to create a dog :
-    with connection.cursor() as cursor:
-        query = f"INSERT INTO sample_app_Dogs (dog_name, is_admin) VALUES ('%s', FALSE)" % (dog_name)
-        print("QUERY : ", query)
-        cursor.execute(query)
-
-    return HttpResponse("Dog page created")
