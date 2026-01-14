@@ -57,5 +57,6 @@ if PYTRICIA_AVAILABLE:
             return len(self.trie) == 0
 
 else:
-    # Fallback to pure Python implementation
+    # Fallback to pure Python implementation - this happens on windows machines since pytricia is not
+    # fully supported there.
     from aikido_zen.helpers.ip_matcher_fallback import IPMatcher  # noqa: F401
