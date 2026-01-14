@@ -50,3 +50,7 @@ Overview :
 - `fastapi-postgres-uvicorn/` is a Fastapi app using Postgres with uvicorn, runs async.
   - it runs **multi-threaded & async**
   - Runs on 8112. Without Aikido runs on 8113
+- `django-asgi-uvicorn/` is a Django ASGI app using Postgres with Gunicorn + Uvicorn workers.
+  - it runs 4 processes, called workers, (**multi-process**) which handles requests using ASGI protocol
+  - This application uses **ASGI** (Asynchronous Server Gateway Interface)
+  - Runs on 8114. Without Aikido runs on 8115
