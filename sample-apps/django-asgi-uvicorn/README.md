@@ -18,8 +18,12 @@ This sample app demonstrates:
 - Django 5.x running in ASGI mode
 - Gunicorn as the application server
 - Uvicorn workers (via `uvicorn.workers.UvicornWorker`) for ASGI support
-- PostgreSQL database integration
+- PostgreSQL database integration with **async support** (psycopg3)
 - Aikido Zen security integration
+
+### Async Database Support
+
+This app uses `psycopg` (version 3) which provides native async support for PostgreSQL connections in ASGI applications, unlike the older `psycopg2` which is synchronous only.
 
 ## URLS
 
