@@ -12,6 +12,7 @@ def _init(func, instance, args, kwargs):
     logger.debug("Server detected as: Uvicorn, Wrapping ASGI app with Zen.")
     config.app = InternalASGIMiddleware(config.app, "uvicorn")
 
+
 @on_import("uvicorn.server", "uvicorn")
 def patch(m):
     """

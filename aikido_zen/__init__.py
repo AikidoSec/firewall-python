@@ -62,12 +62,13 @@ def protect(mode="daemon", token=""):
     import aikido_zen.sources.flask
     import aikido_zen.sources.quart
     import aikido_zen.sources.starlette
+
     ## 1b. Import servers
     import aikido_zen.sources.servers.uvicorn
+
     ## 1c. Import xml sources
     import aikido_zen.sources.xml_sources.xml
     import aikido_zen.sources.xml_sources.lxml
-
 
     # 2. Import database sinks
     import aikido_zen.sinks.pymysql
