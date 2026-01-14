@@ -58,16 +58,14 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           make install && make build
-      - name: Start flask-mysql
-        working-directory: ./sample-apps/flask-mysql
-        run: nohup make runBenchmark & nohup make runZenDisabled &
 
-      - name: Check app health (max 3 attempts)
+      - name: Start app & Check health (max 3 attempts)
         uses: nick-fields/retry@14672906e672a08bd6eeb15720e9ed3ce869cdd4 # v2.9.0
         with:
           timeout_minutes: 5
           max_attempts: 3
           command: |
+            cd ./sample-apps/flask-mysql && nohup make runBenchmark & nohup make runZenDisabled &
             chmod +x ./sample-apps/scripts/health_check.sh
             cd ./sample-apps/flask-mysql && make health-check
 
@@ -103,16 +101,14 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           make install && make build
-      - name: Start app
-        working-directory: ./sample-apps/${{ matrix.app }}
-        run: nohup make runBenchmark & nohup make runZenDisabled &
 
-      - name: Check app health (max 3 attempts)
+      - name: Start app & Check health (max 3 attempts)
         uses: nick-fields/retry@14672906e672a08bd6eeb15720e9ed3ce869cdd4 # v2.9.0
         with:
           timeout_minutes: 5
           max_attempts: 3
           command: |
+            cd ./sample-apps/${{ matrix.app }} && nohup make runBenchmark & nohup make runZenDisabled &
             chmod +x ./sample-apps/scripts/health_check.sh
             cd ./sample-apps/${{ matrix.app }}/ && make health-check
 
