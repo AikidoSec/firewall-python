@@ -56,15 +56,21 @@ def protect(mode="daemon", token=""):
     # pylint: disable=unused-import
     import aikido_zen.sinks.builtins_import
 
-    # Import sources
+    # 1. Import sources
+    ## 1a. Import frameworks
     import aikido_zen.sources.django
     import aikido_zen.sources.flask
     import aikido_zen.sources.quart
     import aikido_zen.sources.starlette
+
+    ## 1b. Import servers
+    import aikido_zen.sources.servers.uvicorn
+
+    ## 1c. Import xml sources
     import aikido_zen.sources.xml_sources.xml
     import aikido_zen.sources.xml_sources.lxml
 
-    # Import DB Sinks
+    # 2. Import database sinks
     import aikido_zen.sinks.pymysql
     import aikido_zen.sinks.mysqlclient
     import aikido_zen.sinks.pymongo
@@ -73,19 +79,22 @@ def protect(mode="daemon", token=""):
     import aikido_zen.sinks.asyncpg
     import aikido_zen.sinks.clickhouse_driver
 
+    # 3. Import fs sinks
     import aikido_zen.sinks.builtins
     import aikido_zen.sinks.os
     import aikido_zen.sinks.pathlib
     import aikido_zen.sinks.shutil
     import aikido_zen.sinks.io
+
+    # 4. Import sinks related to http requests
     import aikido_zen.sinks.http_client
     import aikido_zen.sinks.socket
 
-    # Import shell sinks
+    # 5. Import shell sinks
     import aikido_zen.sinks.os_system
     import aikido_zen.sinks.subprocess
 
-    # Import AI sinks
+    # 6. Import AI sinks
     import aikido_zen.sinks.openai
     import aikido_zen.sinks.anthropic
     import aikido_zen.sinks.mistralai

@@ -19,21 +19,6 @@ wsgi_request = {
     "CONTENT_TYPE": "application/json",
     "REMOTE_ADDR": "198.51.100.23",
 }
-asgi_scope = {
-    "method": "PUT",
-    "headers": [
-        (b"COOKIE", b"a=b; c=d"),
-        (b"header1_test-2", b"testValue2198&"),
-        (b"USER-AGENT", b"testUserAgent"),
-        (b"USER-AGENT", b"testUserAgent2"),
-    ],
-    "query_string": b"a=b&b=d",
-    "client": ["1.1.1.1"],
-    "server": ["192.168.0.1", 443],
-    "scheme": "https",
-    "root_path": "192.168.0.1",
-    "path": "192.168.0.1/a/b/c/d",
-}
 
 
 @pytest.fixture
@@ -195,11 +180,3 @@ def test_uses_wsgi(mock_request):
     context: Context = get_current_context()
     assert "/hello" == context.route
 
-
-def test_uses_asgi_prio(mock_request):
-    mock_request.scope = asgi_scope
-    run_init_stage(mock_request)
-    # Assertions
-    context: Context = get_current_context()
-    assert "/a/b/c/d" == context.route
-    assert "testUserAgent2" == context.get_user_agent()

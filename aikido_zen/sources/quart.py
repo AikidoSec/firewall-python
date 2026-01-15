@@ -1,4 +1,5 @@
 from aikido_zen.context import Context, get_current_context
+from .functions.asgi_middleware import send_status_code_and_text
 from .functions.request_handler import request_handler
 from ..helpers.get_argument import get_argument
 from ..sinks import on_import, patch_function, before, before_async
@@ -63,23 +64,6 @@ async def _asgi_app(func, instance, args, kwargs):
     if pre_response:
         return await send_status_code_and_text(send, pre_response)
     return await func(*args, **kwargs)
-
-
-async def send_status_code_and_text(send, pre_response):
-    await send(
-        {
-            "type": "http.response.start",
-            "status": pre_response[1],
-            "headers": [(b"content-type", b"text/plain")],
-        }
-    )
-    await send(
-        {
-            "type": "http.response.body",
-            "body": pre_response[0].encode("utf-8"),
-            "more_body": False,
-        }
-    )
 
 
 @on_import("quart.app", "quart")
