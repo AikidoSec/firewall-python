@@ -9,9 +9,9 @@ except ImportError:
     from aikido_zen.helpers.logging import logger
 
     logger.warning(
-        "pytricia is not available (expected on windows), falling back to pure Python IP matcher. "
-        "This may result in slower performance. "
-        "Install pytricia for better performance: pip install pytricia"
+        "pytricia is not available. This happens on windows devices where pytricia is not supported yet."
+        "Using fallback, this may result in slower performance."
+        "You can try to install pytricia for better performance: pip install pytricia"
     )
 
 
