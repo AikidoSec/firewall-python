@@ -15,11 +15,7 @@ def run_init_stage(request):
     # In a separate try-catch we set the context :
     try:
         context = None
-        if (
-            hasattr(request, "scope") and request.scope is not None
-        ):  # This request is an ASGI request
-            context = Context(req=request.scope, body=body, source="django_async")
-        elif hasattr(request, "META") and request.META is not None:  # WSGI request
+        if hasattr(request, "META") and request.META is not None:
             context = Context(req=request.META, body=body, source="django")
         else:
             return
