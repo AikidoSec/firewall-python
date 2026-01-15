@@ -109,13 +109,13 @@ async def test_async_cursor_execute():
     import psycopg
 
     reset_comms()
-    with patch(
-        "aikido_zen.vulnerabilities.run_vulnerability_scan"
-    ) as mock_run_vulnerability_scan:
-        async with await psycopg.AsyncConnection.connect(
-            host="127.0.0.1", user="user", password="password", dbname="db"
-        ) as conn:
-            async with conn.cursor() as cursor:
+    async with await psycopg.AsyncConnection.connect(
+        host="127.0.0.1", user="user", password="password", dbname="db"
+    ) as conn:
+        async with conn.cursor() as cursor:
+            with patch(
+                "aikido_zen.vulnerabilities.run_vulnerability_scan"
+            ) as mock_run_vulnerability_scan:
                 query = "SELECT * FROM dogs"
                 await cursor.execute(query)
 
@@ -138,13 +138,13 @@ async def test_async_cursor_execute_parameterized():
     query = "SELECT * FROM dogs WHERE dog_name = %s"
     params = ("Fido",)
 
-    with patch(
-        "aikido_zen.vulnerabilities.run_vulnerability_scan"
-    ) as mock_run_vulnerability_scan:
-        async with await psycopg.AsyncConnection.connect(
-            host="127.0.0.1", user="user", password="password", dbname="db"
-        ) as conn:
-            async with conn.cursor() as cursor:
+    async with await psycopg.AsyncConnection.connect(
+        host="127.0.0.1", user="user", password="password", dbname="db"
+    ) as conn:
+        async with conn.cursor() as cursor:
+            with patch(
+                "aikido_zen.vulnerabilities.run_vulnerability_scan"
+            ) as mock_run_vulnerability_scan:
                 await cursor.execute(query, params)
 
                 called_with = mock_run_vulnerability_scan.call_args[1]
@@ -167,13 +167,13 @@ async def test_async_cursor_executemany():
     query = "INSERT INTO dogs (dog_name, isadmin) VALUES (%s, %s)"
     params = [("doggo1", False), ("Rex", False), ("Buddy", True)]
 
-    with patch(
-        "aikido_zen.vulnerabilities.run_vulnerability_scan"
-    ) as mock_run_vulnerability_scan:
-        async with await psycopg.AsyncConnection.connect(
-            host="127.0.0.1", user="user", password="password", dbname="db"
-        ) as conn:
-            async with conn.cursor() as cursor:
+    async with await psycopg.AsyncConnection.connect(
+        host="127.0.0.1", user="user", password="password", dbname="db"
+    ) as conn:
+        async with conn.cursor() as cursor:
+            with patch(
+                "aikido_zen.vulnerabilities.run_vulnerability_scan"
+            ) as mock_run_vulnerability_scan:
                 await cursor.executemany(query, params)
 
                 # Check the last call to run_vulnerability_scan
@@ -197,13 +197,13 @@ async def test_async_cursor_copy():
     reset_comms()
     query = "COPY dogs FROM STDIN"
 
-    with patch(
-        "aikido_zen.vulnerabilities.run_vulnerability_scan"
-    ) as mock_run_vulnerability_scan:
-        async with await psycopg.AsyncConnection.connect(
-            host="127.0.0.1", user="user", password="password", dbname="db"
-        ) as conn:
-            async with conn.cursor() as cursor:
+    async with await psycopg.AsyncConnection.connect(
+        host="127.0.0.1", user="user", password="password", dbname="db"
+    ) as conn:
+        async with conn.cursor() as cursor:
+            with patch(
+                "aikido_zen.vulnerabilities.run_vulnerability_scan"
+            ) as mock_run_vulnerability_scan:
                 cursor.copy(query)
 
                 called_with = mock_run_vulnerability_scan.call_args[1]
