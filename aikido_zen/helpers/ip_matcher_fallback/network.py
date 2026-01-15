@@ -4,7 +4,7 @@ MIT License - Copyright (c) 2019 alex
 """
 
 import math
-import aikido_zen.helpers.ip_matcher.parse as parse
+import aikido_zen.helpers.ip_matcher_fallback.parse as parse
 from .address import Address
 
 BEFORE = -1
