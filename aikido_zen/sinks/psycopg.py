@@ -11,8 +11,7 @@ from aikido_zen.sinks import patch_function, on_import, before
 @before
 def _copy(func, instance, args, kwargs):
     statement = get_argument(args, kwargs, 0, "statement")
-
-    op = "psycopg.Cursor.copy"
+    op = f"psycopg.{instance.__class__.__name__}.copy"
     register_call(op, "sql_op")
 
     vulns.run_vulnerability_scan(
@@ -23,7 +22,7 @@ def _copy(func, instance, args, kwargs):
 @before
 def _execute(func, instance, args, kwargs):
     query = get_argument(args, kwargs, 0, "query")
-    op = f"psycopg.Cursor.{func.__name__}"
+    op = f"psycopg.{instance.__class__.__name__}.{func.__name__}"
     vulns.run_vulnerability_scan(kind="sql_injection", op=op, args=(query, "postgres"))
 
 
@@ -38,3 +37,13 @@ def patch(m):
     patch_function(m, "Cursor.copy", _copy)
     patch_function(m, "Cursor.execute", _execute)
     patch_function(m, "Cursor.executemany", _execute)
+
+
+@on_import("psycopg.cursor_async", "psycopg", version_requirement="3.1.0")
+def patch_async(m):
+    """
+    patching module psycopg.cursor_async (similar to normal patch)
+    """
+    patch_function(m, "AsyncCursor.copy", _copy)
+    patch_function(m, "AsyncCursor.execute", _execute)
+    patch_function(m, "AsyncCursor.executemany", _execute)
