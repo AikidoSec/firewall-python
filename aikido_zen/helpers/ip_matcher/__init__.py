@@ -50,6 +50,8 @@ if PYTRICIA_AVAILABLE:
             except ValueError:
                 pass
             except SystemError:
+                # SystemError's have been known to occur in the PyTricia library (see issue #34 e.g.),
+                # best to play it safe and catch these errors.
                 pass
             return self
 
