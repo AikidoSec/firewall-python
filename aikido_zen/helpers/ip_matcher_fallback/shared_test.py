@@ -1,5 +1,5 @@
-from aikido_zen.helpers.ip_matcher.network import Network
-from aikido_zen.helpers.ip_matcher.shared import summarize_sorted_networks
+from aikido_zen.helpers.ip_matcher_fallback.network import Network
+from aikido_zen.helpers.ip_matcher_fallback.shared import summarize_sorted_networks
 
 
 def test_summarize_sorted_networks_empty():

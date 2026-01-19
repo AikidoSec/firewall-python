@@ -3,7 +3,7 @@ Based on https://github.com/demskie/netparser
 MIT License - Copyright (c) 2019 alex
 """
 
-from aikido_zen.helpers.ip_matcher import parse
+from aikido_zen.helpers.ip_matcher_fallback import parse
 
 # Constants
 BEFORE = -1
