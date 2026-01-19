@@ -6,42 +6,18 @@ from aikido_zen.helpers.ip_matcher import IPMatcher
 from aikido_zen.helpers.match_endpoints import match_endpoints
 
 
-# noinspection PyAttributeOutsideInit
 class ServiceConfig:
-    """Class holding the config of the connection_manager"""
 
-    def __init__(
-        self,
-        endpoints,
-        last_updated_at: int,
-        blocked_uids,
-        bypassed_ips,
-        received_any_stats: bool,
-    ):
-        # Init the class using update function :
-        self.update(
-            endpoints, last_updated_at, blocked_uids, bypassed_ips, received_any_stats
-        )
+    def __init__(self):
+        self.endpoints = []
+        self.bypassed_ips = IPMatcher()
+        self.blocked_uids = set()
+        self.last_updated_at = -1
+        self.received_any_stats = False
         self.block_new_outgoing_requests = False
         self.outbound_domains = {}
 
-    def update(
-        self,
-        endpoints,
-        last_updated_at: int,
-        blocked_uids,
-        bypassed_ips,
-        received_any_stats: bool,
-    ):
-        self.last_updated_at = last_updated_at
-        self.received_any_stats = bool(received_any_stats)
-        self.blocked_uids = set(blocked_uids)
-        self.set_endpoints(endpoints)
-        self.set_bypassed_ips(bypassed_ips)
-
     def set_endpoints(self, endpoints):
-        """Sets non-graphql endpoints"""
-
         self.endpoints = [
             endpoint for endpoint in endpoints if not endpoint.get("graphql")
         ]
@@ -68,7 +44,6 @@ class ServiceConfig:
         return match_endpoints(route_metadata, self.endpoints)
 
     def set_bypassed_ips(self, bypassed_ips):
-        """Creates an IPMatcher from the given bypassed ip set"""
         self.bypassed_ips = IPMatcher()
         for ip in bypassed_ips:
             self.bypassed_ips.add(ip)
@@ -76,6 +51,15 @@ class ServiceConfig:
     def is_bypassed_ip(self, ip):
         """Checks if the IP is on the bypass list"""
         return self.bypassed_ips.has(ip)
+
+    def set_blocked_user_ids(self, blocked_user_ids):
+        self.blocked_uids = set(blocked_user_ids)
+
+    def enable_received_any_stats(self):
+        self.received_any_stats = True
+
+    def set_last_updated_at(self, last_updated_at: int):
+        self.last_updated_at = last_updated_at
 
     def update_outbound_domains(self, domains):
         self.outbound_domains = {

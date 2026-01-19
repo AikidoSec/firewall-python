@@ -35,13 +35,7 @@ class CloudConnectionManager:
         self.token = token  # Should be instance of the Token class!
         self.routes = Routes(200)
         self.hostnames = Hostnames(200)
-        self.conf = ServiceConfig(
-            endpoints=[],
-            last_updated_at=-1,  # Has not been updated yet
-            blocked_uids=[],
-            bypassed_ips=[],
-            received_any_stats=True,
-        )
+        self.conf = ServiceConfig()
         self.firewall_lists = FirewallLists()
         self.rate_limiter = RateLimiter(
             max_items=5000, time_to_live_in_ms=120 * 60 * 1000  # 120 minutes
