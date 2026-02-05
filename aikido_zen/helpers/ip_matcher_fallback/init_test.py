@@ -196,3 +196,9 @@ def test_allow_all_ips():
     assert matcher.has("10.0.0.1") == True
     assert matcher.has("10.0.0.255") == True
     assert matcher.has("192.168.1.1") == True
+
+
+def test_edge_cases():
+    matcher1 = IPMatcher(["224.0.0.0/4"])
+    assert matcher1.has("224.0.0.1") == True
+    assert matcher1.has("240.0.0.0") == False
