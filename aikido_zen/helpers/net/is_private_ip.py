@@ -1,5 +1,4 @@
 from aikido_zen.helpers.ip_matcher import IPMatcher
-from aikido_zen.helpers.ip_matcher.map_ipv4_to_ipv6 import map_ipv4_to_ipv6
 
 # Define private IP ranges
 PRIVATE_IP_RANGES = [
