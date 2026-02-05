@@ -4,7 +4,6 @@ is_imds_ip_address, is_trusted_hostname, resolves_to_imds_ip
 """
 
 from aikido_zen.helpers.ip_matcher import IPMatcher
-from aikido_zen.helpers.ip_matcher.map_ipv4_to_ipv6 import map_ipv4_to_ipv6
 
 imds_addresses = IPMatcher(
     [
