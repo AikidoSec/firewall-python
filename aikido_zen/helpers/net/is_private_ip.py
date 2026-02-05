@@ -49,7 +49,6 @@ def init_private_ip_list():
 
 private_ip_list = init_private_ip_list()
 
-private_ip_list = init_private_ip_list()
 
 def is_private_ip(ip):
     return private_ip_list.has(ip)
