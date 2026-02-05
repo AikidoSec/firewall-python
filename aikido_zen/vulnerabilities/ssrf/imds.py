@@ -11,10 +11,8 @@ imds_addresses = IPMatcher(
         # Block the IP addresses used by AWS EC2 instances for IMDS
         "169.254.169.254",
         "fd00:ec2::254",
-        map_ipv4_to_ipv6("169.254.169.254"),
         # Block the IP address used by Alibaba Cloud
         "100.100.100.200",
-        map_ipv4_to_ipv6("100.100.100.200"),
     ]
 )
 
