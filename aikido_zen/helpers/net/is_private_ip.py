@@ -39,7 +39,6 @@ def init_private_ip_list():
     ip_list = []
     for ip_range in PRIVATE_IP_RANGES:
         ip_list.append(ip_range)
-        ip_list.append(map_ipv4_to_ipv6(ip_range))
 
     for ip_range in PRIVATE_IPV6_RANGES:
         ip_list.append(ip_range)
