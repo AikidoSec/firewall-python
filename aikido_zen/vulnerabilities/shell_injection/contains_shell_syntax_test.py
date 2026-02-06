@@ -137,3 +137,27 @@ def test_command_with_dangerous_chars():
 def test_command_with_path_and_arguments():
     assert contains_shell_syntax("/usr/bin/ls -l", "/usr/bin/ls") is True
     assert contains_shell_syntax("/bin/cp file1 file2", "/bin/cp") is True
+
+
+def test_newline_as_separator():
+    assert contains_shell_syntax("ls\nrm", "rm") is True
+    assert contains_shell_syntax("echo test\nrm -rf /", "rm") is True
+    assert contains_shell_syntax("rm\nls", "rm") is True
+
+
+def test_tab_as_separator():
+    assert contains_shell_syntax("ls\trm", "rm") is True
+    assert contains_shell_syntax("echo test\trm -rf /", "rm") is True
+    assert contains_shell_syntax("rm\tls", "rm") is True
+
+
+def test_carriage_return_as_separator():
+    assert contains_shell_syntax("ls\rrm", "rm") is True
+    assert contains_shell_syntax("echo test\rrm -rf /", "rm") is True
+    assert contains_shell_syntax("rm\rls", "rm") is True
+
+
+def test_form_feed_as_separator():
+    assert contains_shell_syntax("ls\frm", "rm") is True
+    assert contains_shell_syntax("echo test\frm -rf /", "rm") is True
+    assert contains_shell_syntax("rm\fls", "rm") is True
