@@ -104,3 +104,29 @@ def test_does_not_absolute_path_inside_another_folder():
 
 def test_disable_checkPathStart():
     assert detect_path_traversal("/etc/passwd", "/etc/passwd", False) is False
+
+
+def test_current_directory_references():
+    """/./ should be normalized to /"""
+    assert detect_path_traversal("/./etc/passwd", "/./etc") is True
+    assert detect_path_traversal("/etc/./passwd", "/etc") is True
+    assert detect_path_traversal("/etc/./passwd", "/etc/./") is True
+    assert detect_path_traversal("/./etc/passwd", "/./etc/passwd") is True
+    assert detect_path_traversal("/etc/./passwd", "/etc/./passwd") is True
+    assert detect_path_traversal("/./etc/./passwd", "/./etc/./passwd") is True
+    # Multiple /./ sequences
+    assert detect_path_traversal("/././etc/passwd", "/././etc") is True
+    assert detect_path_traversal("/etc/././passwd", "/etc/././passwd") is True
+
+
+def test_path_normalization():
+    """Paths with multiple slashes and /./ should be normalized and detected"""
+    assert detect_path_traversal("//etc//passwd", "/etc") is True
+    assert detect_path_traversal("/./etc/./passwd", "/etc") is True
+    assert detect_path_traversal("/././etc/passwd", "/etc") is True
+    # Paths without leading slash are not unsafe
+    assert detect_path_traversal("etc/passwd", "etc") is False
+    assert detect_path_traversal("", "") is False
+    # Combined slashes and dot: ///.///etc/passwd should normalize to /etc/passwd
+    assert detect_path_traversal("///.///etc/passwd", "///.///etc") is True
+    assert detect_path_traversal("///.///etc/passwd", "///.///etc/passwd") is True
