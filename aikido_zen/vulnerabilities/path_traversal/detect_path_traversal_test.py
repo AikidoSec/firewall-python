@@ -68,6 +68,8 @@ def test_user_input_is_longer_than_file_path():
 
 def test_absolute_linux_path():
     assert detect_path_traversal("/etc/passwd", "/etc/passwd") is True
+    assert detect_path_traversal("/home/binaries/test", "/home/binaries") is True
+    assert detect_path_traversal("/app/.env", "/app/.env") is True
 
 
 def test_linux_user_directory():

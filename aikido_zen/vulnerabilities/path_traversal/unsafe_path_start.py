@@ -20,6 +20,9 @@ linux_root_folders = [
     "/tmp/",
     "/usr/",
     "/var/",
+    # More common in docker apps :
+    "/app/",
+    "/code/",
 ]
 
 # List of dangerous path starts, including Windows paths
