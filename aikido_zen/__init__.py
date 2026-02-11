@@ -72,6 +72,7 @@ def protect(mode="daemon", token=""):
     import aikido_zen.sinks.psycopg
     import aikido_zen.sinks.asyncpg
     import aikido_zen.sinks.clickhouse_driver
+    import aikido_zen.sinks.sqlite3
 
     import aikido_zen.sinks.builtins
     import aikido_zen.sinks.os
