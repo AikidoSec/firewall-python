@@ -30,6 +30,8 @@ dangerous_chars = [
     "\n",
     "\t",
     "~",
+    "\r",
+    "\f",
 ]
 
 commands = [

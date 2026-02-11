@@ -394,3 +394,35 @@ def test_it_flags_comma_in_loop():
     done""",
         "for (( i=0, j=10; i<j; i++, j-- ))",
     )
+
+
+def test_carriage_return_in_user_input_is_flagged():
+    is_shell_injection("ls \rrm", "\rrm")
+    is_shell_injection("ls \rrm -rf", "\rrm -rf")
+
+
+def test_form_feed_in_user_input_is_flagged():
+    is_shell_injection("ls \frm", "\frm")
+    is_shell_injection("ls \frm -rf", "\frm -rf")
+
+
+def test_carriage_return_in_user_input_is_flagged_when_userinput_is_command():
+    is_shell_injection("sleep\r10", "sleep\r10")
+    is_shell_injection("shutdown\r-h\rnow", "shutdown\r-h\rnow")
+
+
+def test_form_feed_in_user_input_is_flagged_when_userinput_is_command():
+    is_shell_injection("sleep\f10", "sleep\f10")
+    is_shell_injection("shutdown\f-h\fnow", "shutdown\f-h\fnow")
+
+
+def test_carriage_return_as_separator_between_commands():
+    is_shell_injection("ls\rrm", "rm")
+    is_shell_injection("echo test\rrm -rf /", "rm")
+    is_shell_injection("rm\rls", "rm")
+
+
+def test_form_feed_as_separator_between_commands():
+    is_shell_injection("ls\frm", "rm")
+    is_shell_injection("echo test\frm -rf /", "rm")
+    is_shell_injection("rm\fls", "rm")
