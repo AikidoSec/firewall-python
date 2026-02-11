@@ -2,7 +2,7 @@
 Helper function file, see function docstring
 """
 
-from urllib.parse import urlparse
+from urllib3.util import parse_url
 
 
 def get_port_from_url(url, parsed=False):
@@ -10,7 +10,7 @@ def get_port_from_url(url, parsed=False):
     Tries to retrieve a port number from the given url
     """
     if not parsed:
-        parsed_url = urlparse(url)
+        parsed_url = parse_url(url)
     else:
         parsed_url = url
 

@@ -1,8 +1,7 @@
 """
 Helper function file, see function docstring
 """
-
-from urllib.parse import urlparse
+from urllib3.util import parse_url
 
 
 def get_subdomains_from_url(url):
@@ -11,7 +10,7 @@ def get_subdomains_from_url(url):
     """
     if not isinstance(url, str):
         return []
-    host = urlparse(url).hostname
+    host = parse_url(url).hostname
     if not host:
         return []
     parts = host.split(".")

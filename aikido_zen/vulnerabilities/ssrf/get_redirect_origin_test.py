@@ -1,11 +1,11 @@
 import pytest
-from urllib.parse import urlparse, urlunparse
+from urllib3.util import parse_url
 from .get_redirect_origin import get_redirect_origin
 
 
 # Helper function to create URL objects
 def create_url(href):
-    return urlparse(href)
+    return parse_url(href)
 
 
 # Test cases

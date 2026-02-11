@@ -4,15 +4,16 @@ a url using urlparse.
 Includes try_parse_url_path
 """
 
-from urllib.parse import urlparse
+from urllib3.util import parse_url
 import regex as re
 
 
 def try_parse_url(url):
     """try to parse Url with urlparse"""
     try:
-        return urlparse(url)
+        return parse_url(url)
     except ValueError:
+        print("value error! can't parse this shit!")
         return None
 
 
