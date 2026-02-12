@@ -6,7 +6,7 @@ from typing import List
 from urllib.parse import unquote
 
 from aikido_zen.helpers.get_port_from_url import get_port_from_url
-from aikido_zen.helpers.try_parse_url import try_parse_url
+from aikido_zen.helpers.try_parse_url import try_lenient_parse_url
 
 
 def find_hostname_in_userinput(user_input, hostname_options: List[str], port=None):
@@ -28,7 +28,7 @@ def find_hostname_in_userinput(user_input, hostname_options: List[str], port=Non
         ]
 
     for variant in variants:
-        user_input_url = try_parse_url(variant)
+        user_input_url = try_lenient_parse_url(variant)
         if user_input_url and user_input_url.hostname in hostname_options:
             user_port = get_port_from_url(user_input_url.url)
 
