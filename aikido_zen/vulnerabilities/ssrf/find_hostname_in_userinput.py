@@ -30,7 +30,7 @@ def find_hostname_in_userinput(user_input, hostname_options: List[str], port=Non
     for variant in variants:
         user_input_url = try_parse_url(variant)
         if user_input_url and user_input_url.hostname in hostname_options:
-            user_port = get_port_from_url(user_input_url.geturl())
+            user_port = get_port_from_url(user_input_url.url)
 
             # We were unable to retrieve the port from the URL, likely because it contains an invalid port.
             # Let's assume we have found the hostname in the user input, even though it doesn't match on port.
