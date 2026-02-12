@@ -1,13 +1,12 @@
 """Helper function file, exports normalize_url"""
 
-from urllib3.util import parse_url
-from urllib.parse import urlunparse
+from urllib.parse import urlparse, urlunparse
 
 
 def normalize_url(url):
     """Normalizes the url"""
     # Parse the URL
-    parsed_url = parse_url(url)
+    parsed_url = urlparse(url)
 
     # Normalize components
     scheme = parsed_url.scheme.lower()  # Lowercase scheme

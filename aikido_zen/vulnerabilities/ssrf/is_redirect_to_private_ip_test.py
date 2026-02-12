@@ -1,12 +1,12 @@
 import pytest
 from unittest.mock import MagicMock, patch
 from .is_redirect_to_private_ip import is_redirect_to_private_ip
-from urllib3.util import parse_url
+from urllib.parse import urlparse, urlunparse
 
 
 # Helper function to create URL objects
 def create_url(href):
-    return parse_url(href)
+    return urlparse(href)
 
 
 def test_is_redirect_to_private_ip_success():
