@@ -3,11 +3,8 @@ SQL Injection algorithm
 """
 
 import re
-import ctypes
 from aikido_zen.helpers.logging import logger
-from .map_dialect_to_rust_int import map_dialect_to_rust_int
-from .get_lib_path import get_binary_path
-from ...helpers.encode_safely import encode_safely
+from .zen_internal_ffi import ZenInternal
 
 
 def detect_sql_injection(query, user_input, dialect):
@@ -20,32 +17,7 @@ def detect_sql_injection(query, user_input, dialect):
         if should_return_early(query_l, userinput_l):
             return False
 
-        internals_lib = ctypes.CDLL(get_binary_path())
-        internals_lib.detect_sql_injection.argtypes = [
-            ctypes.POINTER(ctypes.c_uint8),
-            ctypes.c_size_t,
-            ctypes.POINTER(ctypes.c_uint8),
-            ctypes.c_size_t,
-            ctypes.c_int,
-        ]
-        internals_lib.detect_sql_injection.restype = ctypes.c_int
-
-        # Parse input variables for rust function
-        query_bytes = encode_safely(query_l)
-        userinput_bytes = encode_safely(userinput_l)
-        query_buffer = (ctypes.c_uint8 * len(query_bytes)).from_buffer_copy(query_bytes)
-        userinput_buffer = (ctypes.c_uint8 * len(userinput_bytes)).from_buffer_copy(
-            userinput_bytes
-        )
-        dialect_int = map_dialect_to_rust_int(dialect)
-
-        c_int_res = internals_lib.detect_sql_injection(
-            query_buffer,
-            len(query_bytes),
-            userinput_buffer,
-            len(userinput_bytes),
-            dialect_int,
-        )
+        c_int_res = ZenInternal().detect_sql_injection(query_l, userinput_l, dialect)
 
         # This means that an error occurred in the library
         if c_int_res == 2:
