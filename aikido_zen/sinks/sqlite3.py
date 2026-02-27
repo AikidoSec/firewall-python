@@ -98,16 +98,13 @@ def _build_aikido_connection(base_conn_cls):
 _AikidoConnection = _build_aikido_connection(_sqlite3.Connection)
 
 
-@before_modify_return
 def _connect(func, instance, args, kwargs):
     """
     Intercept sqlite3.connect to inject our Connection factory.
     The factory parameter is the 6th positional arg (index 5) or a keyword arg.
     """
     # Determine the user-specified factory, if any
-    factory = kwargs.get("factory")
-    if factory is None and len(args) > 5:
-        factory = args[5]
+    factory = get_argument(args, kwargs, 5, "factory")
     if factory is None:
         factory = _sqlite3.Connection
 
