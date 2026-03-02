@@ -23,27 +23,19 @@ def _cursor_execute(func, instance, args, kwargs):
 
 
 @before
-def _cursor_executemany(func, instance, args, kwargs):
+def _execute(func, instance, args, kwargs):
+    op = f"sqlite3.{type(instance).__name__}.{func.__name__}"
     query = get_argument(args, kwargs, 0, "sql")
-
-    register_call("sqlite3.Cursor.executemany", "sql_op")
-    vulns.run_vulnerability_scan(
-        kind="sql_injection",
-        op="sqlite3.Cursor.executemany",
-        args=(query, "sqlite"),
-    )
+    register_call(op, "sql_op")
+    vulns.run_vulnerability_scan(kind="sql_injection", op=op, args=(query, "sqlite"))
 
 
 @before
-def _cursor_executescript(func, instance, args, kwargs):
+def _executescript(func, instance, args, kwargs):
+    op = f"sqlite3.{type(instance).__name__}.{func.__name__}"
     query = get_argument(args, kwargs, 0, "sql_script")
-
-    register_call("sqlite3.Cursor.executescript", "sql_op")
-    vulns.run_vulnerability_scan(
-        kind="sql_injection",
-        op="sqlite3.Cursor.executescript",
-        args=(query, "sqlite"),
-    )
+    register_call(op, "sql_op")
+    vulns.run_vulnerability_scan(kind="sql_injection", op=op, args=(query, "sqlite"))
 
 
 def _cursor_patch(func, instance, args, kwargs):
@@ -51,9 +43,9 @@ def _cursor_patch(func, instance, args, kwargs):
     patched_factory = patch_immutable_class(
         factory,
         {
-            "execute": _cursor_execute,
-            "executemany": _cursor_executemany,
-            "executescript": _cursor_executescript,
+            "execute": _execute,
+            "executemany": _execute,
+            "executescript": _executescript,
         },
     )
 
@@ -63,8 +55,21 @@ def _cursor_patch(func, instance, args, kwargs):
 
 def _connect(func, instance, args, kwargs):
     factory = get_argument(args, kwargs, 5, "factory") or _sqlite3.Connection
-    patched_factory = patch_immutable_class(factory, {"cursor": _cursor_patch})
+    connection_patches = {
+        "cursor": _cursor_patch
+    }
 
+    if _PATCH_CONNECTION_EXECUTE:
+        # Since py 3.11 there are more ways than using the cursor to execute (e.g. using the connection)
+        connection_patches.update(
+            {
+                "execute": _execute,
+                "executemany": _execute,
+                "executescript": _executescript,
+            }
+        )
+
+    patched_factory = patch_immutable_class(factory, connection_patches)
     new_args, new_kwargs = modify_arguments(args, kwargs, 5, "factory", patched_factory)
     return func(*new_args, **new_kwargs)
 
