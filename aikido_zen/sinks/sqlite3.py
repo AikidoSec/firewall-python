@@ -1,22 +1,15 @@
-"""
-Sink module for `sqlite3`
-
-sqlite3 uses C-level types for Connection and Cursor, so we cannot directly
-patch their methods with wrapt. Instead we:
-1. Intercept `sqlite3.connect` and inject a custom `factory` parameter.
-2. The custom factory is a dynamic Python Connection subclass whose `cursor()`
-   returns a wrapped Cursor subclass.
-3. All SQL interception happens at the Cursor level. Connection shortcut methods
-   (execute, executemany, executescript) internally call cursor methods, so
-   wrapping only the Cursor avoids double-counting.
-"""
-
 import sqlite3 as _sqlite3
 
 from aikido_zen.helpers.get_argument import get_argument
+from aikido_zen.helpers.modify_arguments import modify_arguments
 import aikido_zen.vulnerabilities as vulns
 from aikido_zen.helpers.register_call import register_call
-from aikido_zen.sinks import patch_function, on_import, before, before_modify_return
+from aikido_zen.sinks import (
+    patch_function,
+    on_import,
+    before,
+    patch_immutable_class,
+)
 
 
 @before
@@ -53,81 +46,34 @@ def _cursor_executescript(func, instance, args, kwargs):
     )
 
 
-def _build_aikido_cursor(base_cursor_cls):
-    """
-    Creates a Python-level subclass of the given Cursor class with mutable
-    method slots so that wrapt can patch them.
-    """
-    cls = type(
-        "AikidoSQLite3Cursor",
-        (base_cursor_cls,),
+def _cursor_patch(func, instance, args, kwargs):
+    patched_cursor_class = patch_immutable_class(
+        _sqlite3.Cursor,
         {
-            "execute": base_cursor_cls.execute,
-            "executemany": base_cursor_cls.executemany,
-            "executescript": base_cursor_cls.executescript,
+            "execute": _cursor_execute,
+            "executemany": _cursor_executemany,
+            "executescript": _cursor_executescript,
         },
     )
-    patch_function(cls, "execute", _cursor_execute)
-    patch_function(cls, "executemany", _cursor_executemany)
-    patch_function(cls, "executescript", _cursor_executescript)
-    return cls
-
-
-_AikidoCursor = _build_aikido_cursor(_sqlite3.Cursor)
-
-
-def _aikido_cursor(self, *args, **kwargs):
-    """Replacement cursor() that returns an AikidoSQLite3Cursor instance."""
-    return _AikidoCursor(self)
-
-
-def _build_aikido_connection(base_conn_cls):
-    """
-    Creates a Python-level Connection subclass whose cursor() returns
-    wrapped cursors.
-    """
-    return type(
-        "AikidoSQLite3Connection",
-        (base_conn_cls,),
-        {
-            "cursor": _aikido_cursor,
-        },
-    )
-
-
-_AikidoConnection = _build_aikido_connection(_sqlite3.Connection)
+    return patched_cursor_class(instance)
 
 
 def _connect(func, instance, args, kwargs):
-    """
-    Intercept sqlite3.connect to inject our Connection factory.
-    The factory parameter is the 6th positional arg (index 5) or a keyword arg.
-    """
-    # Determine the user-specified factory, if any
     factory = get_argument(args, kwargs, 5, "factory")
     if factory is None:
+        # Use a default factory if the user does not provide one for us
         factory = _sqlite3.Connection
 
-    # If the user passed a custom factory, build a new wrapped subclass for it
-    if factory is _sqlite3.Connection:
-        aikido_factory = _AikidoConnection
-    else:
-        aikido_factory = _build_aikido_connection(factory)
+    patched_factory = patch_immutable_class(factory, {"cursor": _cursor_patch})
 
-    # Build new args with our factory injected as a keyword
-    new_args = args[:5] if len(args) > 5 else args
-    new_kwargs = dict(kwargs)
-    new_kwargs["factory"] = aikido_factory
-
+    new_args, new_kwargs = modify_arguments(args, kwargs, 5, "factory", patched_factory)
     return func(*new_args, **new_kwargs)
 
 
 @on_import("sqlite3")
 def patch(m):
     """
-    patching sqlite3
-    - patches sqlite3.connect to inject a wrapped Connection factory
-    - wrapped connections produce wrapped cursors
-    - Cursor.execute, Cursor.executemany, Cursor.executescript are intercepted
+    patches sqlite3, a c library; the "connect" function is not c, after that we use patch_immutable_class to
+    patch the factory parameter of the connect function. In this factory we patch the cursor function.
     """
     patch_function(m, "connect", _connect)
