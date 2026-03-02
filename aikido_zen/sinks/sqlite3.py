@@ -1,5 +1,5 @@
 import sqlite3 as _sqlite3
-
+import sys
 from aikido_zen.helpers.get_argument import get_argument
 from aikido_zen.helpers.modify_arguments import modify_arguments
 import aikido_zen.vulnerabilities as vulns
@@ -11,15 +11,6 @@ from aikido_zen.sinks import (
     patch_immutable_class,
 )
 
-
-@before
-def _cursor_execute(func, instance, args, kwargs):
-    query = get_argument(args, kwargs, 0, "sql")
-
-    register_call("sqlite3.Cursor.execute", "sql_op")
-    vulns.run_vulnerability_scan(
-        kind="sql_injection", op="sqlite3.Cursor.execute", args=(query, "sqlite")
-    )
 
 
 @before
@@ -59,8 +50,8 @@ def _connect(func, instance, args, kwargs):
         "cursor": _cursor_patch
     }
 
-    if _PATCH_CONNECTION_EXECUTE:
-        # Since py 3.11 there are more ways than using the cursor to execute (e.g. using the connection)
+    # In Python 3.11, the sqlite3 module was fully moved to C. Hence the extra patches
+    if sys.version_info >= (3, 11):
         connection_patches.update(
             {
                 "execute": _execute,
