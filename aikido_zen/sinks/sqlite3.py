@@ -12,7 +12,6 @@ from aikido_zen.sinks import (
 )
 
 
-
 @before
 def _execute(func, instance, args, kwargs):
     op = f"sqlite3.{type(instance).__name__}.{func.__name__}"
@@ -46,9 +45,7 @@ def _cursor_patch(func, instance, args, kwargs):
 
 def _connect(func, instance, args, kwargs):
     factory = get_argument(args, kwargs, 5, "factory") or _sqlite3.Connection
-    connection_patches = {
-        "cursor": _cursor_patch
-    }
+    connection_patches = {"cursor": _cursor_patch}
 
     # In Python 3.11, the sqlite3 module was fully moved to C. Hence the extra patches
     if sys.version_info >= (3, 11):
