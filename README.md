@@ -53,6 +53,7 @@ Zen for Python 3 is compatible with:
 * ✅ [`asyncpg`](https://pypi.org/project/asyncpg) ^0.27
 * ✅ [`motor`](https://pypi.org/project/motor/) (See `pymongo` version)
 * ✅ [`clickhouse-driver`](https://pypi.org/project/clickhouse-driver)
+* ✅ [`sqlite3`](https://docs.python.org/3/library/sqlite3.html)
 
 ### AI SDKs
 Zen instruments the following AI SDKs to track which models are used and how many tokens are consumed, allowing you to monitor your AI usage and costs:
