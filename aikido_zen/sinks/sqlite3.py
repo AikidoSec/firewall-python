@@ -47,23 +47,22 @@ def _cursor_executescript(func, instance, args, kwargs):
 
 
 def _cursor_patch(func, instance, args, kwargs):
-    patched_cursor_class = patch_immutable_class(
-        _sqlite3.Cursor,
+    factory = get_argument(args, kwargs, 0, "factory") or _sqlite3.Cursor
+    patched_factory = patch_immutable_class(
+        factory,
         {
             "execute": _cursor_execute,
             "executemany": _cursor_executemany,
             "executescript": _cursor_executescript,
         },
     )
-    return patched_cursor_class(instance)
+
+    new_args, new_kwargs = modify_arguments(args, kwargs, 0, "factory", patched_factory)
+    return func(*new_args, **new_kwargs)
 
 
 def _connect(func, instance, args, kwargs):
-    factory = get_argument(args, kwargs, 5, "factory")
-    if factory is None:
-        # Use a default factory if the user does not provide one for us
-        factory = _sqlite3.Connection
-
+    factory = get_argument(args, kwargs, 5, "factory") or _sqlite3.Connection
     patched_factory = patch_immutable_class(factory, {"cursor": _cursor_patch})
 
     new_args, new_kwargs = modify_arguments(args, kwargs, 5, "factory", patched_factory)

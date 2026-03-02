@@ -138,7 +138,7 @@ def after_async(wrapper):
 
 
 def patch_immutable_class(base_cls, method_patches):
-    class_name = f"AikidoPatched{base_cls.__name__}"
+    class_name = f"{base_cls.__name__}"
 
     modifiable_attributes = {}
     for name in method_patches:
