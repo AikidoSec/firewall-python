@@ -138,14 +138,12 @@ def after_async(wrapper):
 
 
 def patch_immutable_class(base_cls, method_patches):
-    class_name = f"{base_cls.__name__}"
-
     modifiable_attributes = {}
     for name in method_patches:
         modifiable_attributes[name] = getattr(base_cls, name)
 
     cls = type(
-        class_name,
+        base_cls.__name__,
         (base_cls,),
         # this modifiable_attributes object contains a python (not c) map of functions, so we can apply the
         # patch_function to these attributes of our new class.
