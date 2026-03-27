@@ -8,6 +8,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from aikido_zen.middleware import AikidoFastAPIMiddleware
+from routers import dogs, admin, health
 
 templates = Jinja2Templates(directory="templates")
 
@@ -22,6 +23,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.add_middleware(AikidoFastAPIMiddleware)
+
+app.include_router(dogs.router)
+app.include_router(admin.router)
+app.include_router(health.router)
 
 async def get_db_connection():
     return await asyncpg.connect(
