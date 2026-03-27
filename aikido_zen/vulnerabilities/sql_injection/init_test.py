@@ -171,9 +171,6 @@ to is_not_sql_injection. Reason : Invalid SQL.
 
 
 def test_allow_escape_sequences():
-    # Invalid queries :
-    is_not_sql_injection("SELECT * FROM users WHERE id = 'users\\'", "users\\")
-
     is_not_sql_injection("SELECT * FROM users WHERE id = 'users\\\\'", "users\\\\")
     is_not_sql_injection("SELECT * FROM users WHERE id = '\nusers'", "\nusers")
     is_not_sql_injection("SELECT * FROM users WHERE id = '\rusers'", "\rusers")
@@ -211,10 +208,6 @@ def test_check_string_safely_escaped():
     )
     is_not_sql_injection(
         'SELECT * FROM comments WHERE comment = "I`m writting you"', "I`m writting you"
-    )
-    # Invalid query (strings don't terminate)
-    is_not_sql_injection(
-        "SELECT * FROM comments WHERE comment = 'I'm writting you'", "I'm writting you"
     )
     # Positive example of same query :
     is_sql_injection(
@@ -391,6 +384,14 @@ is_not_sql_injection("foobar)", "foobar)")
 is_not_sql_injection("foobar      )", "foobar      )")
 is_not_sql_injection("€foobar()", "€foobar()")
 """
+
+
+def test_block_invalid_sql_queries():
+    # These are invalid queries (e.g. unterminated strings) that fail tokenization
+    is_sql_injection("SELECT * FROM users WHERE id = 'users\\'", "users\\")
+    is_sql_injection(
+        "SELECT * FROM comments WHERE comment = 'I'm writting you'", "I'm writting you"
+    )
 
 
 def test_function_calls_as_sql_injections():
