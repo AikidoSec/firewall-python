@@ -73,8 +73,17 @@ def is_sql_injection(sql, input, dialect="all"):
         if dialect == "all" or dialect == current:
             result = detect_sql_injection(sql, input, current)
             assert (
-                result == True
+                result == 1
             ), f"Expected SQL injection for SQL: {sql} and input: {input} in {current} dialect"
+
+
+def is_invalid_sql(sql, input, dialect="all"):
+    for current in DIALECTS:
+        if dialect == "all" or dialect == current:
+            result = detect_sql_injection(sql, input, current)
+            assert (
+                result == 3
+            ), f"Expected failed tokenization for SQL: {sql} and input: {input} in {current} dialect"
 
 
 def is_not_sql_injection(sql, input, dialect="all"):
@@ -82,7 +91,7 @@ def is_not_sql_injection(sql, input, dialect="all"):
         if dialect == "all" or dialect == current:
             result = detect_sql_injection(sql, input, current)
             assert (
-                result == False
+                result == 0
             ), f"Expected no SQL injection for SQL: {sql} and input: {input} in {current} dialect"
 
 
@@ -388,8 +397,8 @@ is_not_sql_injection("€foobar()", "€foobar()")
 
 def test_block_invalid_sql_queries():
     # These are invalid queries (e.g. unterminated strings) that fail tokenization
-    is_sql_injection("SELECT * FROM users WHERE id = 'users\\'", "users\\", "mysql")
-    is_sql_injection(
+    is_invalid_sql("SELECT * FROM users WHERE id = 'users\\'", "users\\", "mysql")
+    is_invalid_sql(
         "SELECT * FROM comments WHERE comment = 'I'm writting you'", "I'm writting you"
     )
 
