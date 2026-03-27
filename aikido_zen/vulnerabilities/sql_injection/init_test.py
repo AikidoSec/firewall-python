@@ -388,7 +388,7 @@ is_not_sql_injection("€foobar()", "€foobar()")
 
 def test_block_invalid_sql_queries():
     # These are invalid queries (e.g. unterminated strings) that fail tokenization
-    is_sql_injection("SELECT * FROM users WHERE id = 'users\\'", "users\\")
+    is_sql_injection("SELECT * FROM users WHERE id = 'users\\'", "users\\", "mysql")
     is_sql_injection(
         "SELECT * FROM comments WHERE comment = 'I'm writting you'", "I'm writting you"
     )
