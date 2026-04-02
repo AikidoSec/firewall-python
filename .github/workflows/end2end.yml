@@ -9,7 +9,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install poetry
-        run: pip install poetry
+        run: pip install -r requirements-dev.txt
       - name: Build
         run: make build
       - name: Upload artifacts
