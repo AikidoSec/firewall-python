@@ -19,11 +19,7 @@ lint:
 	poetry run black aikido_zen/
 	poetry run pylint aikido_zen/
 install: check_binaries
-	if python -c "import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)"; then \
-		pip install -r requirements-dev.txt; \
-	else \
-		pip install -r requirements-dev-py39.txt; \
-	fi
+	pip install -c pip-constraints.txt poetry
 	poetry install
 .PHONY: dev_install
 dev_install: install
