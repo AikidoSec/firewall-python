@@ -83,6 +83,9 @@ cleanup() {
   [[ -n "$APP_DISABLED_PID" ]] && kill_tree "$APP_DISABLED_PID"
   if [[ $exit_code -ne 0 ]]; then
     echo ""
+    echo "=== mock-server.log ==="
+    cat "$LOG_DIR/mock-server.log" 2>/dev/null || true
+    echo ""
     echo "=== app.log ==="
     cat "$LOG_DIR/app.log" 2>/dev/null || true
     echo ""
@@ -138,24 +141,13 @@ wait_for_tcp() {
   exit 1
 }
 
-# 1. Databases
-echo "Starting databases..."
-docker compose -f "$SCRIPT_DIR/sample-apps/databases/docker-compose.yml" up -d
-wait_for_tcp localhost 5432 "postgres"
-
-# 2. Mock server
-echo "Starting mock Aikido server..."
-poetry run python3 "$SCRIPT_DIR/end2end/server/mock_aikido_core.py" 5000 > "$LOG_DIR/mock-server.log" 2>&1 &
-MOCK_PID=$!
-wait_for_port 5000 "mock-server" "$LOG_DIR/mock-server.log" "$MOCK_PID"
-
 # Extract ports from the app's Makefile
 APP_PORT=$(grep -m1 "^PORT\s*=" "$APP_DIR/Makefile" | awk '{print $3}')
 APP_PORT_DISABLED=$(grep -m1 "^PORT_DISABLED\s*=" "$APP_DIR/Makefile" | awk '{print $3}')
 APP_PORT="${APP_PORT:-8080}"
 APP_PORT_DISABLED="${APP_PORT_DISABLED:-8081}"
 
-# 3. Kill any lingering processes from previous runs
+# 1. Kill any lingering processes from previous runs
 AIKIDO_SOCK=$(AIKIDO_TOKEN="AIK_secret_token" poetry run python3 -c "
 import os; os.environ['AIKIDO_TOKEN']='AIK_secret_token'
 from aikido_zen.helpers.hash_aikido_token import hash_aikido_token
@@ -165,9 +157,20 @@ print(f'{get_temp_dir()}/aikido_python_{hash_aikido_token()}.sock')
 if [[ -n "$AIKIDO_SOCK" ]]; then
   rm -f "$AIKIDO_SOCK"
 fi
-for port in "$APP_PORT" "$APP_PORT_DISABLED"; do
+for port in 5000 "$APP_PORT" "$APP_PORT_DISABLED"; do
   lsof -ti :"$port" 2>/dev/null | xargs kill -9 2>/dev/null || true
 done
+
+# 2. Databases
+echo "Starting databases..."
+docker compose -f "$SCRIPT_DIR/sample-apps/databases/docker-compose.yml" up -d
+wait_for_tcp localhost 5432 "postgres"
+
+# 3. Mock server
+echo "Starting mock Aikido server..."
+poetry run python3 "$SCRIPT_DIR/end2end/server/mock_aikido_core.py" 5000 > "$LOG_DIR/mock-server.log" 2>&1 &
+MOCK_PID=$!
+wait_for_port 5000 "mock-server" "$LOG_DIR/mock-server.log" "$MOCK_PID"
 
 # 4. Install sample app deps
 echo "Installing $APP dependencies..."
