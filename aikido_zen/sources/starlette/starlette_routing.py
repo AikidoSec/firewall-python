@@ -45,10 +45,16 @@ def aik_route_func_wrapper(func):
         try:
             import functools
             from starlette.concurrency import run_in_threadpool
+        except ImportError:
+            logger.info("Make sure starlette install OK : .concurrency")
+            return await func(*args, **kwargs)
+        try:
             from starlette._utils import is_async_callable
         except ImportError:
-            logger.info("Make sure starlette install OK : .concurrency, ._utils")
-            return await func(*args, **kwargs)
+            # starlette < 0.20.1 doesn't have _utils.is_async_callable
+            import inspect
+
+            is_async_callable = inspect.iscoroutinefunction
         res = None
         if is_async_callable(func):
             res = await func(*args, **kwargs)
