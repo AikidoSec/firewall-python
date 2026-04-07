@@ -17,7 +17,7 @@ def _call(func, instance, args, kwargs):
     request_handler(stage="init")
 
 
-@on_import("starlette.applications", "starlette")
+@on_import("starlette.applications", "starlette", version_requirement="0.16.0")
 def patch(m):
     """
     patching module starlette.applications
