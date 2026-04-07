@@ -33,6 +33,10 @@ test: build
 .PHONY: end2end
 end2end:
 	poetry run pytest end2end/
+.PHONY: e2e
+e2e:
+	@if [ -z "$(app)" ]; then echo "Usage: make e2e app=<app-name>  (e.g. make e2e app=flask-postgres)"; exit 1; fi
+	./end2end/e2e.sh $(app)
 .PHONY: cov
 cov: build
 	poetry run pytest aikido_zen/ --cov=aikido_zen --cov-report=xml
