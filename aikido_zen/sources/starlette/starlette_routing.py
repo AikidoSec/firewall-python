@@ -14,7 +14,7 @@ def _request_response(func, instance, args, kwargs):
     return func(*args, **kwargs)  # Call the original function
 
 
-@on_import("starlette.routing", "starlette")
+@on_import("starlette.routing", "starlette", version_requirement="0.16.0")
 def patch(m):
     """
     patching module starlette.routing (for initial request_handler)

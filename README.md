@@ -41,8 +41,8 @@ Zen for Python 3 is compatible with:
 
 ### ASGI
 * ✅ [Quart](docs/quart.md)
-* ✅ [Starlette](docs/starlette.md)
-* ✅ [FastAPI](docs/fastapi.md)
+* ✅ [Starlette](docs/starlette.md) ^0.16
+* ✅ [FastAPI](docs/fastapi.md) ^0.70
 
 ### Database drivers
 * ✅ [`mysqlclient`](https://pypi.org/project/mysqlclient/) ^1.5
