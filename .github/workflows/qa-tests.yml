@@ -30,7 +30,7 @@ jobs:
       - name: Setup safe-chain
         run: curl -fsSL https://github.com/AikidoSec/safe-chain/releases/latest/download/install-safe-chain.sh | sh -s -- --ci
       - name: Install poetry
-        run: pip install poetry
+        run: pip install -c firewall-python/pip-constraints.txt poetry
 
       - name: Build firewall-python dev package
         run: |
