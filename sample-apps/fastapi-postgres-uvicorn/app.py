@@ -21,6 +21,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+@app.middleware("http")
+async def set_user_middleware(request: Request, call_next):
+    aikido_zen.set_user({"id": "user123", "name": "John Doe"})
+    return await call_next(request)
+
 app.add_middleware(AikidoFastAPIMiddleware)
 
 async def get_db_connection():
@@ -61,7 +66,7 @@ async def create_dog(request: Request):
 
     conn = await get_db_connection()
     try:
-        await conn.execute("INSERT INTO dogs (dog_name, isAdmin) VALUES ($1, FALSE)", dog_name)
+        await conn.execute(f"INSERT INTO dogs (dog_name, isAdmin) VALUES ('%s', FALSE)" % (dog_name))
     finally:
         await conn.close()
 

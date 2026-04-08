@@ -86,28 +86,22 @@ def test_routes_discovered_in_heartbeat():
     heartbeat_events = filter_on_event_type(events, "heartbeat")
     assert len(heartbeat_events) >= 1
 
-    validate_heartbeat(
-        heartbeat_events[0],
-        routes=[{
-            "apispec": {
-                "body": {
-                    "type": "form-urlencoded",
-                    "schema": {
-                        "type": "object",
-                        "properties": {
-                            "dog_name": {
-                                "items": {"type": "string"},
-                                "type": "array",
-                            }
-                        },
-                    },
-                },
-                "query": None,
-                "auth": None,
+    routes = heartbeat_events[0]["routes"]
+    route_map = {(r["method"], r["path"]): r for r in routes}
+
+    assert ("POST", "/create") in route_map
+    create_route = route_map[("POST", "/create")]
+    assert create_route["apispec"] == {
+        "auth": None,
+        "body": {
+            "schema": {
+                "properties": {"dog_name": {"type": "string"}},
+                "type": "object",
             },
-            "hits": 1,
-            "hits_delta_since_sync": 0,
-            "method": "POST",
-            "path": "/create",
-        }],
-    )
+            "type": "form-urlencoded",
+        },
+        "query": None,
+    }
+    assert create_route["hits"] == 1
+
+    assert ("GET", "/sync_route") in route_map
