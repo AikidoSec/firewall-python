@@ -39,7 +39,7 @@ jobs:
           - { name: starlette-postgres-uvicorn, testfile: end2end/starlette_postgres_uvicorn_test.py }
           - { name: fastapi-postgres-uvicorn, testfile: end2end/fastapi_postgres_uvicorn_test.py }
           - { name: fastapi-postgres-uvicorn-latest, testfile: end2end/fastapi_postgres_uvicorn_latest_test.py }
-          - { name: fastapi-old, testfile: end2end/fastapi_old_test.py }
+          - { name: fastapi-postgres-uvicorn-old, testfile: end2end/fastapi_postgres_uvicorn_old_test.py }
         python-version: ["3.10", "3.11", "3.12", "3.13"]
     steps:
       - name: Install packages

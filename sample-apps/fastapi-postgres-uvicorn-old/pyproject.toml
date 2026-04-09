@@ -1,12 +1,16 @@
 [project]
-name = "fastapi-old"
+name = "fastapi-postgres-uvicorn-old"
 version = "0.1.0"
-description = "Test app with FastAPI 0.70.0 (starlette 0.16.0) to verify route discovery"
+description = "Sample FastAPI app with Postgres (FastAPI 0.70.0, Starlette 0.16.0)"
 requires-python = ">3.9.1,<4.0"
 dependencies = [
     "aikido_zen",
     "fastapi (>=0.70.0,<0.71.0)",
+    "jinja2 (>=3.1.5,<4.0.0)",
+    "asyncpg (>=0.30.0,<0.31.0)",
+    "cryptography (>=44.0.0,<45.0.0)",
     "uvicorn (>=0.34.0,<0.35.0)",
+    "python-multipart (>=0.0.20,<0.0.21)",
 ]
 
 [build-system]
