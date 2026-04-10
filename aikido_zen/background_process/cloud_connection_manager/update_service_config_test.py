@@ -234,3 +234,52 @@ def test_update_service_config_block_new_outgoing_requests_only():
     assert connection_manager.conf.outbound_domains == {
         "existing.com": "allow"
     }  # Not changed
+
+
+def test_update_service_config_excluded_user_ids_from_rate_limiting():
+    """Test that update_service_config handles excludedUserIdsFromRateLimiting"""
+    connection_manager = MagicMock()
+    connection_manager.conf = ServiceConfig(
+        endpoints=[],
+        last_updated_at=0,
+        blocked_uids=set(),
+        bypassed_ips=[],
+        received_any_stats=False,
+    )
+    connection_manager.block = False
+
+    res = {
+        "success": True,
+        "excludedUserIdsFromRateLimiting": ["user1", "user2"],
+    }
+
+    update_service_config(connection_manager, res)
+
+    assert connection_manager.conf.is_user_excluded_from_rate_limiting("user1") is True
+    assert connection_manager.conf.is_user_excluded_from_rate_limiting("user2") is True
+    assert connection_manager.conf.is_user_excluded_from_rate_limiting("user3") is False
+
+
+def test_update_service_config_excluded_user_ids_not_array():
+    """Test that update_service_config ignores non-array excludedUserIdsFromRateLimiting"""
+    connection_manager = MagicMock()
+    connection_manager.conf = ServiceConfig(
+        endpoints=[],
+        last_updated_at=0,
+        blocked_uids=set(),
+        bypassed_ips=[],
+        received_any_stats=False,
+    )
+    connection_manager.block = False
+
+    res = {
+        "success": True,
+        "excludedUserIdsFromRateLimiting": "not-an-array",
+    }
+
+    update_service_config(connection_manager, res)
+
+    assert (
+        connection_manager.conf.is_user_excluded_from_rate_limiting("not-an-array")
+        is False
+    )

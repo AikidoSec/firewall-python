@@ -319,3 +319,31 @@ def test_service_config_with_empty_allowlist():
     assert admin_endpoint["route"] == "/admin"
     assert isinstance(admin_endpoint["allowedIPAddresses"], list)
     assert len(admin_endpoint["allowedIPAddresses"]) == 0
+
+
+def test_excluded_user_ids_from_rate_limiting():
+    config = ServiceConfig(
+        endpoints=[],
+        last_updated_at=0,
+        blocked_uids=set(),
+        bypassed_ips=[],
+        received_any_stats=False,
+    )
+
+    # Initially empty
+    assert config.is_user_excluded_from_rate_limiting("user1") is False
+
+    # Update with user IDs
+    config.update_excluded_user_ids_from_rate_limiting(["user1", "user2"])
+    assert config.is_user_excluded_from_rate_limiting("user1") is True
+    assert config.is_user_excluded_from_rate_limiting("user2") is True
+    assert config.is_user_excluded_from_rate_limiting("user3") is False
+
+    # Update replaces the set
+    config.update_excluded_user_ids_from_rate_limiting(["user3"])
+    assert config.is_user_excluded_from_rate_limiting("user1") is False
+    assert config.is_user_excluded_from_rate_limiting("user3") is True
+
+    # Empty list clears all
+    config.update_excluded_user_ids_from_rate_limiting([])
+    assert config.is_user_excluded_from_rate_limiting("user3") is False

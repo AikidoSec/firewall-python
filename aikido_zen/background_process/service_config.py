@@ -24,6 +24,7 @@ class ServiceConfig:
         )
         self.block_new_outgoing_requests = False
         self.outbound_domains = {}
+        self.excluded_user_ids_from_rate_limiting = set()
 
     def update(
         self,
@@ -74,6 +75,14 @@ class ServiceConfig:
     def is_bypassed_ip(self, ip):
         """Checks if the IP is on the bypass list"""
         return self.bypassed_ips.has(ip)
+
+    def update_excluded_user_ids_from_rate_limiting(self, user_ids):
+        """Replaces the set of user IDs excluded from rate limiting"""
+        self.excluded_user_ids_from_rate_limiting = set(user_ids)
+
+    def is_user_excluded_from_rate_limiting(self, user_id):
+        """Checks if the user ID is excluded from rate limiting"""
+        return str(user_id) in self.excluded_user_ids_from_rate_limiting
 
     def update_outbound_domains(self, domains):
         self.outbound_domains = {
