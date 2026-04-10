@@ -531,7 +531,7 @@ def test_non_excluded_user_still_rate_limited():
     }
 
 
-def test_excluded_user_still_blocked_by_group_rate_limit():
+def test_excluded_user_bypasses_group_rate_limit():
     endpoint = {
         "method": "POST",
         "route": "/login",
@@ -545,22 +545,11 @@ def test_excluded_user_still_blocked_by_group_rate_limit():
     cm = create_connection_manager([endpoint], excluded_uids=["user123"])
     route_metadata = create_route_metadata()
 
-    assert should_ratelimit_request(
-        route_metadata, "1.2.3.4", {"id": "user123"}, cm, "group1"
-    ) == {"block": False}
-    assert should_ratelimit_request(
-        route_metadata, "1.2.3.4", {"id": "user123"}, cm, "group1"
-    ) == {"block": False}
-    assert should_ratelimit_request(
-        route_metadata, "1.2.3.4", {"id": "user123"}, cm, "group1"
-    ) == {"block": False}
-    # Group rate limit still applies even for excluded users
-    assert should_ratelimit_request(
-        route_metadata, "1.2.3.4", {"id": "user123"}, cm, "group1"
-    ) == {
-        "block": True,
-        "trigger": "group",
-    }
+    # Excluded user should never be blocked, even past maxRequests, even with a group set
+    for _ in range(5):
+        assert should_ratelimit_request(
+            route_metadata, "1.2.3.4", {"id": "user123"}, cm, "group1"
+        ) == {"block": False}
 
 
 def test_rate_limits_by_group_if_user_is_not_set():
