@@ -255,7 +255,10 @@ def test_update_service_config_excluded_user_ids_from_rate_limiting():
 
     update_service_config(connection_manager, res)
 
-    assert connection_manager.conf.excluded_uids_from_rate_limiting == {"user1", "user2"}
+    assert connection_manager.conf.excluded_uids_from_rate_limiting == {
+        "user1",
+        "user2",
+    }
 
 
 def test_update_service_config_excluded_user_ids_defaults_to_empty():

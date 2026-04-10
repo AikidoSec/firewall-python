@@ -495,9 +495,9 @@ def test_excluded_user_bypasses_user_rate_limit():
 
     # Excluded user should never be blocked, even past maxRequests
     for _ in range(5):
-        assert should_ratelimit_request(route_metadata, "1.2.3.4", {"id": "user123"}, cm) == {
-            "block": False
-        }
+        assert should_ratelimit_request(
+            route_metadata, "1.2.3.4", {"id": "user123"}, cm
+        ) == {"block": False}
 
 
 def test_non_excluded_user_still_rate_limited():
@@ -514,10 +514,18 @@ def test_non_excluded_user_still_rate_limited():
     cm = create_connection_manager([endpoint], excluded_uids=["other_user"])
     route_metadata = create_route_metadata()
 
-    assert should_ratelimit_request(route_metadata, "1.2.3.4", {"id": "user123"}, cm) == {"block": False}
-    assert should_ratelimit_request(route_metadata, "1.2.3.4", {"id": "user123"}, cm) == {"block": False}
-    assert should_ratelimit_request(route_metadata, "1.2.3.4", {"id": "user123"}, cm) == {"block": False}
-    assert should_ratelimit_request(route_metadata, "1.2.3.4", {"id": "user123"}, cm) == {
+    assert should_ratelimit_request(
+        route_metadata, "1.2.3.4", {"id": "user123"}, cm
+    ) == {"block": False}
+    assert should_ratelimit_request(
+        route_metadata, "1.2.3.4", {"id": "user123"}, cm
+    ) == {"block": False}
+    assert should_ratelimit_request(
+        route_metadata, "1.2.3.4", {"id": "user123"}, cm
+    ) == {"block": False}
+    assert should_ratelimit_request(
+        route_metadata, "1.2.3.4", {"id": "user123"}, cm
+    ) == {
         "block": True,
         "trigger": "user",
     }
@@ -537,11 +545,19 @@ def test_excluded_user_still_blocked_by_group_rate_limit():
     cm = create_connection_manager([endpoint], excluded_uids=["user123"])
     route_metadata = create_route_metadata()
 
-    assert should_ratelimit_request(route_metadata, "1.2.3.4", {"id": "user123"}, cm, "group1") == {"block": False}
-    assert should_ratelimit_request(route_metadata, "1.2.3.4", {"id": "user123"}, cm, "group1") == {"block": False}
-    assert should_ratelimit_request(route_metadata, "1.2.3.4", {"id": "user123"}, cm, "group1") == {"block": False}
+    assert should_ratelimit_request(
+        route_metadata, "1.2.3.4", {"id": "user123"}, cm, "group1"
+    ) == {"block": False}
+    assert should_ratelimit_request(
+        route_metadata, "1.2.3.4", {"id": "user123"}, cm, "group1"
+    ) == {"block": False}
+    assert should_ratelimit_request(
+        route_metadata, "1.2.3.4", {"id": "user123"}, cm, "group1"
+    ) == {"block": False}
     # Group rate limit still applies even for excluded users
-    assert should_ratelimit_request(route_metadata, "1.2.3.4", {"id": "user123"}, cm, "group1") == {
+    assert should_ratelimit_request(
+        route_metadata, "1.2.3.4", {"id": "user123"}, cm, "group1"
+    ) == {
         "block": True,
         "trigger": "group",
     }
