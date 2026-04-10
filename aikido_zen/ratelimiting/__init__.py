@@ -36,6 +36,8 @@ def should_ratelimit_request(
         # Do not check IP or user rate limit if group is set
         return {"block": False}
     if user:
+        if user.get("id") in connection_manager.conf.excluded_uids_from_rate_limiting:
+            return {"block": False}
         allowed = connection_manager.rate_limiter.is_allowed(
             get_key_for_user(endpoint, user),
             windows_size_in_ms,

@@ -21,6 +21,7 @@ def update_service_config(connection_manager, res):
         blocked_uids=res.get("blockedUserIds", []),
         bypassed_ips=res.get("allowedIPAddresses", []),
         received_any_stats=res.get("receivedAnyStats", True),
+        excluded_uids_from_rate_limiting=res.get("excludedUserIdsFromRateLimiting", []),
     )
 
     # Handle outbound request blocking configuration

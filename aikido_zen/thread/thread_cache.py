@@ -43,6 +43,7 @@ class ThreadCache:
             bypassed_ips=[],
             last_updated_at=-1,
             received_any_stats=False,
+            excluded_uids_from_rate_limiting=set(),
         )
         self.middleware_installed = False
         self.hostnames.clear()

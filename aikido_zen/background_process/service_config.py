@@ -17,10 +17,16 @@ class ServiceConfig:
         blocked_uids,
         bypassed_ips,
         received_any_stats: bool,
+        excluded_uids_from_rate_limiting=None,
     ):
         # Init the class using update function :
         self.update(
-            endpoints, last_updated_at, blocked_uids, bypassed_ips, received_any_stats
+            endpoints,
+            last_updated_at,
+            blocked_uids,
+            bypassed_ips,
+            received_any_stats,
+            excluded_uids_from_rate_limiting,
         )
         self.block_new_outgoing_requests = False
         self.outbound_domains = {}
@@ -32,10 +38,14 @@ class ServiceConfig:
         blocked_uids,
         bypassed_ips,
         received_any_stats: bool,
+        excluded_uids_from_rate_limiting=None,
     ):
         self.last_updated_at = last_updated_at
         self.received_any_stats = bool(received_any_stats)
         self.blocked_uids = set(blocked_uids)
+        self.excluded_uids_from_rate_limiting = set(
+            excluded_uids_from_rate_limiting or []
+        )
         self.set_endpoints(endpoints)
         self.set_bypassed_ips(bypassed_ips)
 

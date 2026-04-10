@@ -234,3 +234,45 @@ def test_update_service_config_block_new_outgoing_requests_only():
     assert connection_manager.conf.outbound_domains == {
         "existing.com": "allow"
     }  # Not changed
+
+
+def test_update_service_config_excluded_user_ids_from_rate_limiting():
+    """Test that excludedUserIdsFromRateLimiting is correctly applied to config"""
+    connection_manager = MagicMock()
+    connection_manager.conf = ServiceConfig(
+        endpoints=[],
+        last_updated_at=0,
+        blocked_uids=set(),
+        bypassed_ips=[],
+        received_any_stats=False,
+    )
+    connection_manager.block = False
+
+    res = {
+        "success": True,
+        "excludedUserIdsFromRateLimiting": ["user1", "user2"],
+    }
+
+    update_service_config(connection_manager, res)
+
+    assert connection_manager.conf.excluded_uids_from_rate_limiting == {"user1", "user2"}
+
+
+def test_update_service_config_excluded_user_ids_defaults_to_empty():
+    """Test that excluded_uids_from_rate_limiting defaults to empty set when field is absent"""
+    connection_manager = MagicMock()
+    connection_manager.conf = ServiceConfig(
+        endpoints=[],
+        last_updated_at=0,
+        blocked_uids=set(),
+        bypassed_ips=[],
+        received_any_stats=False,
+        excluded_uids_from_rate_limiting=["user1"],
+    )
+    connection_manager.block = False
+
+    res = {"success": True}
+
+    update_service_config(connection_manager, res)
+
+    assert connection_manager.conf.excluded_uids_from_rate_limiting == set()

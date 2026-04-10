@@ -319,3 +319,49 @@ def test_service_config_with_empty_allowlist():
     assert admin_endpoint["route"] == "/admin"
     assert isinstance(admin_endpoint["allowedIPAddresses"], list)
     assert len(admin_endpoint["allowedIPAddresses"]) == 0
+
+
+def test_excluded_uids_from_rate_limiting_defaults_to_empty():
+    config = ServiceConfig(
+        endpoints=[],
+        last_updated_at=0,
+        blocked_uids=set(),
+        bypassed_ips=[],
+        received_any_stats=False,
+    )
+    assert config.excluded_uids_from_rate_limiting == set()
+
+
+def test_excluded_uids_from_rate_limiting_stored_as_set():
+    config = ServiceConfig(
+        endpoints=[],
+        last_updated_at=0,
+        blocked_uids=set(),
+        bypassed_ips=[],
+        received_any_stats=False,
+        excluded_uids_from_rate_limiting=["user1", "user2"],
+    )
+    assert config.excluded_uids_from_rate_limiting == {"user1", "user2"}
+
+
+def test_excluded_uids_from_rate_limiting_updated_via_update():
+    config = ServiceConfig(
+        endpoints=[],
+        last_updated_at=0,
+        blocked_uids=set(),
+        bypassed_ips=[],
+        received_any_stats=False,
+        excluded_uids_from_rate_limiting=["user1"],
+    )
+    assert "user1" in config.excluded_uids_from_rate_limiting
+
+    config.update(
+        endpoints=[],
+        last_updated_at=0,
+        blocked_uids=set(),
+        bypassed_ips=[],
+        received_any_stats=False,
+        excluded_uids_from_rate_limiting=["user2", "user3"],
+    )
+    assert config.excluded_uids_from_rate_limiting == {"user2", "user3"}
+    assert "user1" not in config.excluded_uids_from_rate_limiting
