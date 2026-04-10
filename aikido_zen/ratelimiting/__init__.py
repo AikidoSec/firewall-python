@@ -21,6 +21,9 @@ def should_ratelimit_request(
     if is_bypassed_ip:
         return {"block": False}
 
+    if user and connection_manager.conf.is_user_excluded_from_rate_limiting(user["id"]):
+        return {"block": False}
+
     max_requests = int(endpoint["rateLimiting"]["maxRequests"])
     windows_size_in_ms = int(endpoint["rateLimiting"]["windowSizeInMS"])
 

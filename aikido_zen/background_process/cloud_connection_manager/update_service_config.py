@@ -23,6 +23,13 @@ def update_service_config(connection_manager, res):
         received_any_stats=res.get("receivedAnyStats", True),
     )
 
+    # Handle excluded user IDs from rate limiting
+    excluded_user_ids = res.get("excludedUserIdsFromRateLimiting")
+    if isinstance(excluded_user_ids, list):
+        connection_manager.conf.update_excluded_user_ids_from_rate_limiting(
+            excluded_user_ids
+        )
+
     # Handle outbound request blocking configuration
     if "blockNewOutgoingRequests" in res:
         connection_manager.conf.set_block_new_outgoing_requests(

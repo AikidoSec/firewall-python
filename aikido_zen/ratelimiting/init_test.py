@@ -15,7 +15,9 @@ def user():
     return {"id": "user123"}
 
 
-def create_connection_manager(endpoints=[], bypassed_ips=[]):
+def create_connection_manager(
+    endpoints=[], bypassed_ips=[], excluded_user_ids_from_rate_limiting=[]
+):
     cm = MagicMock()
     cm.conf = ServiceConfig(
         endpoints=endpoints,
@@ -23,6 +25,9 @@ def create_connection_manager(endpoints=[], bypassed_ips=[]):
         blocked_uids=[],
         bypassed_ips=bypassed_ips,
         received_any_stats=True,
+    )
+    cm.conf.update_excluded_user_ids_from_rate_limiting(
+        excluded_user_ids_from_rate_limiting
     )
     cm.rate_limiter = RateLimiter(
         max_items=5000, time_to_live_in_ms=120 * 60 * 1000  # 120 minutes
@@ -511,3 +516,51 @@ def test_rate_limits_by_group_if_user_is_not_set():
         "block": True,
         "trigger": "group",
     }
+
+
+def test_does_not_rate_limit_excluded_users():
+    cm = create_connection_manager(
+        [
+            {
+                "method": "POST",
+                "route": "/login",
+                "forceProtectionOff": False,
+                "rateLimiting": {
+                    "enabled": True,
+                    "maxRequests": 3,
+                    "windowSizeInMS": 1000,
+                },
+            },
+        ],
+        excluded_user_ids_from_rate_limiting=["excluded-user-id"],
+    )
+    route_metadata = create_route_metadata()
+    excluded_user = {"id": "excluded-user-id"}
+    for _ in range(5):
+        assert should_ratelimit_request(
+            route_metadata, "1.2.3.4", excluded_user, cm
+        ) == {"block": False}
+
+
+def test_does_not_rate_limit_excluded_users_in_group():
+    cm = create_connection_manager(
+        [
+            {
+                "method": "POST",
+                "route": "/login",
+                "forceProtectionOff": False,
+                "rateLimiting": {
+                    "enabled": True,
+                    "maxRequests": 3,
+                    "windowSizeInMS": 1000,
+                },
+            },
+        ],
+        excluded_user_ids_from_rate_limiting=["excluded-user-id"],
+    )
+    route_metadata = create_route_metadata()
+    excluded_user = {"id": "excluded-user-id"}
+    for _ in range(5):
+        assert should_ratelimit_request(
+            route_metadata, "1.2.3.4", excluded_user, cm, "group1"
+        ) == {"block": False}
