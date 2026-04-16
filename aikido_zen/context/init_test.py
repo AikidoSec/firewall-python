@@ -59,7 +59,7 @@ def test_wsgi_context_1():
             "CONTENT_TYPE": ["application/x-www-form-urlencoded"],
         },
         "cookies": {"sessionId": "abc123xyz456"},
-        "url": "https://example.com/hello",
+        "url": "https://example.com/hello?user=JohnDoe&age=30&age=35",
         "query": {"user": ["JohnDoe"], "age": ["30", "35"]},
         "body": 123,
         "route": "/hello",
@@ -91,7 +91,7 @@ def test_wsgi_context_2():
             "USER_AGENT": ["Mozilla/5.0"],
         },
         "cookies": {"sessionId": "abc123xyz456"},
-        "url": "http://localhost:8080/hello",
+        "url": "http://localhost:8080/hello?user=JohnDoe&age=30&age=35",
         "query": {"user": ["JohnDoe"], "age": ["30", "35"]},
         "body": {"test": True},
         "route": "/hello",
@@ -130,7 +130,7 @@ def test_context_is_picklable(mocker):
     assert unpickled_obj.source == "flask"
     assert unpickled_obj.method == "GET"
     assert unpickled_obj.remote_address == "198.51.100.23"
-    assert unpickled_obj.url == "http://localhost:8080/hello"
+    assert unpickled_obj.url == "http://localhost:8080/hello?user=JohnDoe&age=30&age=35"
     assert unpickled_obj.body == 123
     assert unpickled_obj.headers == {
         "HEADER_1": ["header 1 value"],

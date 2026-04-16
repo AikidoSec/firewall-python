@@ -52,8 +52,29 @@ def test_build_url_from_wsgi_with_query_string():
         "PATH_INFO": "/search",
         "QUERY_STRING": "q=test",
     }
-    # Note: The function does not currently handle query strings, so we won't include it in the expected output
+    expected = "http://example.com/search?q=test"
+    assert build_url_from_wsgi(request) == expected
+
+
+def test_build_url_from_wsgi_with_empty_query_string():
+    request = {
+        "wsgi.url_scheme": "http",
+        "HTTP_HOST": "example.com",
+        "PATH_INFO": "/search",
+        "QUERY_STRING": "",
+    }
     expected = "http://example.com/search"
+    assert build_url_from_wsgi(request) == expected
+
+
+def test_build_url_from_wsgi_path_traversal_query():
+    request = {
+        "wsgi.url_scheme": "http",
+        "HTTP_HOST": "localhost:3018",
+        "PATH_INFO": "/api/read",
+        "QUERY_STRING": "path=../secrets/key.txt",
+    }
+    expected = "http://localhost:3018/api/read?path=../secrets/key.txt"
     assert build_url_from_wsgi(request) == expected
 
 
