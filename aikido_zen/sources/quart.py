@@ -1,4 +1,5 @@
 from aikido_zen.context import Context, get_current_context
+from aikido_zen.context.apply_or_bypass import apply_context_or_bypass
 from .functions.request_handler import request_handler
 from ..helpers.get_argument import get_argument
 from ..sinks import on_import, patch_function, before, before_async
@@ -11,7 +12,7 @@ def _call(func, instance, args, kwargs):
         return
 
     new_context = Context(req=scope, source="quart")
-    new_context.set_as_current_context()
+    apply_context_or_bypass(new_context)
     request_handler(stage="init")
 
 
