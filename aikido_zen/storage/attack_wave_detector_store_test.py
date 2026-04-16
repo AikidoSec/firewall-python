@@ -10,7 +10,15 @@ from .attack_wave_detector_store import (
     AttackWaveDetectorStore,
     attack_wave_detector_store,
 )
+from . import bypassed_context_store
 import aikido_zen.test_utils as test_utils
+
+
+@pytest.fixture(autouse=True)
+def _clear_bypass_flag():
+    bypassed_context_store.clear()
+    yield
+    bypassed_context_store.clear()
 
 
 def test_attack_wave_detector_store_initialization():
@@ -434,6 +442,49 @@ def test_samples_limit_enforcement():
             # Verify structure
             for sample in samples:
                 assert set(sample.keys()) == {"method", "url"}
+
+
+def test_samples_collect_one_per_unique_url():
+    """16 requests with distinct query strings should produce 16 unique samples."""
+    store = AttackWaveDetectorStore()
+    ip = "2.16.53.8"
+
+    with patch(
+        "aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector.is_web_scanner",
+        return_value=True,
+    ):
+        for i in range(16):
+            ctx = test_utils.generate_context(
+                ip=ip,
+                method="GET",
+                url=f"http://localhost:3018/api/pets/?path=q{i}",
+            )
+            store.is_attack_wave(ctx)
+
+    samples = store.get_samples_for_ip(ip)
+    assert len(samples) == 15, f"expected 15 samples, got {len(samples)}"
+
+
+def test_bypassed_request_skips_wave_detection():
+    """When the bypass flag is set, is_attack_wave never reports a wave."""
+    store = AttackWaveDetectorStore()
+    ip = "2.16.53.10"
+
+    with patch(
+        "aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector.is_web_scanner",
+        return_value=True,
+    ):
+        bypassed_context_store.set_bypassed(True)
+        for i in range(16):
+            ctx = test_utils.generate_context(
+                ip=ip,
+                method="GET",
+                url=f"http://localhost:3018/api/execute/.env{i}",
+            )
+            assert store.is_attack_wave(ctx) is False
+
+    # Bypassed requests should not collect samples either.
+    assert store.get_samples_for_ip(ip) == []
 
 
 @patch("aikido_zen.storage.attack_wave_detector_store.AttackWaveDetector")

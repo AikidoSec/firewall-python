@@ -1,6 +1,7 @@
 import aikido_zen.helpers.get_current_unixtime_ms as internal_time
 from aikido_zen.ratelimiting.lru_cache import LRUCache
 from aikido_zen.context import Context
+from aikido_zen.storage import bypassed_context_store
 from aikido_zen.vulnerabilities.attack_wave_detection.is_web_scanner import (
     is_web_scanner,
 )
@@ -39,6 +40,11 @@ class AttackWaveDetector:
         Function gets called with context to check if there is an attack wave request.
         """
         if not context or not context.remote_address:
+            return False
+        if bypassed_context_store.is_bypassed():
+            # Defensive: callers should normally never reach here for bypassed
+            # IPs (the framework entry point clears the context), but keep wave
+            # detection consistent with all other per-request blocking sites.
             return False
         ip = context.remote_address
 
