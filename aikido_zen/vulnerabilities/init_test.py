@@ -150,7 +150,7 @@ def test_sql_injection_with_comms(caplog, get_context, monkeypatch):
             "method": "GET",
             "route": "/hello",
             "source": "flask",
-            "url": "http://localhost:8080/hello",
+            "url": "http://localhost:8080/hello?user=JohnDoe&age=30&age=35",
             "userAgent": None,
         }
         del call_args[1].event["attack"]["stack"]  # Hard to test

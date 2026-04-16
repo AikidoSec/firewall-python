@@ -14,4 +14,9 @@ def build_url_from_asgi(scope):
     root_path = scope.get("root_path", "")
     path = scope.get("path", "")
     uri = path.replace(root_path, "", 1)
+
+    query_string = scope.get("query_string") or b""
+    if query_string:
+        uri = f"{uri}?{query_string.decode('utf-8', errors='replace')}"
+
     return f"{scheme}://{host}{uri}"

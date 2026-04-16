@@ -36,7 +36,7 @@ def test_asgi_scope_1():
         "HEADER1_TEST_2": ["testValue2198&"],
     }
     assert context1.cookies == {"a": "b", "c": "d"}
-    assert context1.url == "https://192.168.0.1:443/a/b/c/d"
+    assert context1.url == "https://192.168.0.1:443/a/b/c/d?a=b&b=d"
 
 
 # Scope 2 :
@@ -63,7 +63,7 @@ def test_asgi_scope_2():
         "HEADER2_TEST_1": ["anotherValue"],
     }
     assert context2.cookies == {"x": "y", "z": "w"}
-    assert context2.url == "http://192.168.0.2:80/path/to/resource"
+    assert context2.url == "http://192.168.0.2:80/path/to/resource?x=y&z=w"
 
 
 # Scope 3 :
@@ -90,7 +90,7 @@ def test_asgi_scope_3():
         "HEADER3_TEST_3": ["postValue"],
     }
     assert context3.cookies == {"session": "abc123"}
-    assert context3.url == "http://192.168.0.3:8080/v1/resource"
+    assert context3.url == "http://192.168.0.3:8080/v1/resource?key1=value1&key2=value2"
 
 
 # Scope 4 :
