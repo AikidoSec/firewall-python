@@ -1,6 +1,7 @@
 """Exports run_init_stage function"""
 
 from aikido_zen.context import Context
+from aikido_zen.context.apply_or_bypass import apply_context_or_bypass
 from aikido_zen.helpers.logging import logger
 from .extract_body import extract_body_from_django_request
 from .extract_cookies import extract_cookies_from_django_request
@@ -24,7 +25,7 @@ def run_init_stage(request):
         else:
             return
         context.set_cookies(cookies)
-        context.set_as_current_context()
+        apply_context_or_bypass(context)
 
         # Init stage needs to be run with context already set :
         request_handler(stage="init")
