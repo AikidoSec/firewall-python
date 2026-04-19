@@ -64,6 +64,7 @@ def protect(mode="daemon", token=""):
     import aikido_zen.sources.fastapi
     import aikido_zen.sources.xml_sources.xml
     import aikido_zen.sources.xml_sources.lxml
+    import aikido_zen.sources.hypercorn_asgi
 
     # Import DB Sinks
     import aikido_zen.sinks.pymysql
