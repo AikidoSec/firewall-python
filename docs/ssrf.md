@@ -22,6 +22,18 @@ In this example, the attacker sends a request to `localtest.me:3000/private`, wh
 
 We don't protect against stored SSRF attacks, where an attacker injects a malicious URL into your app's database. To prevent stored SSRF attacks, validate and sanitize user input before storing it in your database.
 
+## Allowlisting your own hostnames (`AIKIDO_TRUSTED_HOSTNAMES`)
+
+To safely allow outgoing requests to your own services, set the `AIKIDO_TRUSTED_HOSTNAMES` environment variable to a comma-separated list of your hostnames:
+
+```
+AIKIDO_TRUSTED_HOSTNAMES=myapp.com,api.myapp.com,backend.internal
+```
+Any outgoing request whose destination hostname exactly matches one of these values will not be flagged as SSRF
+
+**When should you set this?**
+Set `AIKIDO_TRUSTED_HOSTNAMES` when your application makes outgoing requests to its own domain, and those hostnames appear in user-supplied input (e.g. `Host`, `Referer`, `Origin`, etc.)
+
 ## Which built-in modules are protected?
 
 Firewall protects against SSRF attacks in the following built-in modules:
