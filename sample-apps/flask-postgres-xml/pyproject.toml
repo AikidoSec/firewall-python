@@ -9,7 +9,7 @@ dependencies = [
     "psycopg2-binary (>=2.9.10,<3.0.0)",
     "cryptography (>=44.0.0,<45.0.0)",
     "aikido_zen",
-    "lxml (>=5.3.0,<6.0.0)"
+    "lxml (>=6.1.0,<7.0.0)"
 ]
 
 [build-system]
