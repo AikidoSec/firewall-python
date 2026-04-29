@@ -26,6 +26,7 @@ jobs:
     strategy:
       matrix:
         app:
+          - { name: django-asgi-uvicorn, testfile: end2end/django_asgi_uvicorn_test.py }
           - { name: django-mysql, testfile: end2end/django_mysql_test.py }
           - { name: django-mysql-gunicorn, testfile: end2end/django_mysql_gunicorn_test.py }
           - { name: django-postgres-gunicorn, testfile: end2end/django_postgres_gunicorn_test.py }
