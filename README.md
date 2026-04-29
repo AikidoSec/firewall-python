@@ -40,6 +40,7 @@ Zen for Python 3 is compatible with:
 * ✅ [uWSGI](docs/uwsgi.md)
 
 ### ASGI
+* ✅ [Django](docs/django.md)
 * ✅ [Quart](docs/quart.md)
 * ✅ [Starlette](docs/starlette.md) ^0.16
 * ✅ [FastAPI](docs/fastapi.md) ^0.70
