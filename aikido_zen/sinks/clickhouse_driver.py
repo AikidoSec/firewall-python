@@ -2,6 +2,7 @@ from aikido_zen.helpers.get_argument import get_argument
 from aikido_zen.helpers.register_call import register_call
 from aikido_zen.sinks import before, on_import, patch_function
 from aikido_zen.vulnerabilities import run_vulnerability_scan
+from aikido_zen.vulnerabilities.idor.check_idor import run_idor_check
 
 
 @before
@@ -12,6 +13,9 @@ def _execute(func, instance, args, kwargs):
     register_call(op, "sql_op")
 
     run_vulnerability_scan("sql_injection", op, args=(query, "clickhouse"))
+
+    query_params = get_argument(args, kwargs, 1, "params")
+    run_idor_check(query, "clickhouse", query_params)
 
 
 @on_import("clickhouse_driver", package="clickhouse_driver")

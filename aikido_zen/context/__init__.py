@@ -55,6 +55,7 @@ class Context:
         self.cookies = {}
         self.query = {}
         self.protection_forced_off = None
+        self.tenant_id = None
 
         # Parse WSGI/ASGI/... request :
         self.method = self.remote_address = self.url = None
