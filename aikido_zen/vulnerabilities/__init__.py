@@ -19,6 +19,7 @@ from aikido_zen.helpers.blocking_enabled import is_blocking_enabled
 from aikido_zen.helpers.is_protection_forced_off_cached import (
     is_protection_forced_off_cached,
 )
+from aikido_zen.storage import bypassed_context_store
 from aikido_zen.thread.thread_cache import get_cache
 from .sql_injection.context_contains_sql_injection import context_contains_sql_injection
 from .nosql_injection.check_context import check_context_for_nosql_injection
@@ -44,6 +45,11 @@ def run_vulnerability_scan(kind, op, args):
     if is_protection_forced_off_cached(context):
         return
 
+    if bypassed_context_store.is_bypassed():
+        # Bypassed IPs are trusted across all vulnerability kinds, including
+        # the context-less SSRF path (e.g. stored SSRF).
+        return
+
     comms = comm.get_comms()
     thread_cache = get_cache()
     if not context and kind != "ssrf":
@@ -55,10 +61,6 @@ def run_vulnerability_scan(kind, op, args):
         # Make a special exception for SSRF, which checks itself if thread cache is set.
         # This is because some scans/tests for SSRF do not require a thread cache to be set.
         return
-    if thread_cache and context:
-        if thread_cache.is_bypassed_ip(context.remote_address):
-            #  This IP is on the bypass list, not scanning
-            return
 
     error_type = AikidoException  # Default error
     error_args = tuple()

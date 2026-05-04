@@ -4,7 +4,7 @@ Mainly exports inspect_getaddrinfo_result function
 
 from aikido_zen.context import get_current_context
 from aikido_zen.helpers.logging import logger
-from aikido_zen.thread.thread_cache import get_cache
+from aikido_zen.storage import bypassed_context_store
 from .imds import resolves_to_imds_ip
 from aikido_zen.helpers.net.is_private_ip import is_private_ip
 from .find_hostname_in_context import find_hostname_in_context
@@ -17,6 +17,10 @@ def inspect_getaddrinfo_result(dns_results, hostname, port):
     """Inspect the results of a getaddrinfo() call"""
     if not hostname or not dns_results:
         return  # Ensure that the data we get isnt empty
+
+    if bypassed_context_store.is_bypassed():
+        # Bypassed IPs are trusted: skip both stored-SSRF and request-SSRF checks.
+        return
 
     ip_addresses = extract_ip_array_from_results(dns_results)
     imds_ip = resolves_to_imds_ip(ip_addresses, hostname)
@@ -37,10 +41,6 @@ def inspect_getaddrinfo_result(dns_results, hostname, port):
     context = get_current_context()
     if not context:
         return  # Context should be set to check user input.
-    if get_cache() and get_cache().is_bypassed_ip(context.remote_address):
-        # We check for bypassed ip's here since it is not checked for us
-        # in run_vulnerability_scan due to the exception for SSRF (see above code)
-        return
 
     # attack_findings is an object containing source, pathToPayload and payload.
     attack_findings = find_hostname_in_context(hostname, context, port)
