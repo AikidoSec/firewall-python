@@ -117,7 +117,32 @@ def test_build_url_from_asgi_with_query_string():
         "scheme": "http",
         "server": ("localhost", 8000),
         "root_path": "",
-        "path": "/api/v1/resource?query=1",
+        "path": "/api/v1/resource",
+        "query_string": b"query=1",
     }
     expected = "http://localhost:8000/api/v1/resource?query=1"
+    assert build_url_from_asgi(scope) == expected
+
+
+def test_build_url_from_asgi_with_empty_query_string():
+    scope = {
+        "scheme": "http",
+        "server": ("localhost", 8000),
+        "root_path": "",
+        "path": "/api/v1/resource",
+        "query_string": b"",
+    }
+    expected = "http://localhost:8000/api/v1/resource"
+    assert build_url_from_asgi(scope) == expected
+
+
+def test_build_url_from_asgi_path_traversal_query():
+    scope = {
+        "scheme": "http",
+        "server": ("localhost", 3018),
+        "root_path": "",
+        "path": "/api/read",
+        "query_string": b"path=../secrets/key.txt",
+    }
+    expected = "http://localhost:3018/api/read?path=../secrets/key.txt"
     assert build_url_from_asgi(scope) == expected
