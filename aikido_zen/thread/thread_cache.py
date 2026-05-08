@@ -55,6 +55,22 @@ class ThreadCache:
         self.ai_stats.clear()
         PackagesStore.clear()
 
+    def _restore_synced_deltas(self, payload):
+        """Merges a previously-cleared payload back, used when an IPC sync fails."""
+        self.middleware_installed = (
+            self.middleware_installed or payload["middleware_installed"]
+        )
+        for entry in payload["hostnames"]:
+            self.hostnames.add(entry["hostname"], entry["port"], entry["hits"])
+        for entry in payload["users"]:
+            self.users.add_user_from_entry(entry)
+        self.stats.import_from_record(payload["stats"])
+        self.ai_stats.import_list(payload["ai_stats"])
+        for pkg in payload["packages"]:
+            existing = PackagesStore.get_package(pkg["name"])
+            if existing:
+                existing["cleared"] = False
+
     def renew(self):
         if not comms.get_comms():
             return
@@ -79,6 +95,7 @@ class ThreadCache:
             receive=True,
         )
         if not res["success"] or not res["data"]:
+            self._restore_synced_deltas(payload)
             return
 
         # update config

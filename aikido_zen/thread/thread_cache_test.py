@@ -430,6 +430,61 @@ def test_renew_called_with_empty_routes(mock_get_comms, thread_cache: ThreadCach
 
 
 @patch("aikido_zen.background_process.comms.get_comms")
+def test_renew_preserves_increments_during_ipc(
+    mock_get_comms, thread_cache: ThreadCache
+):
+    """Increments arriving during the IPC call survive on the response path -
+    the snapshot is sent, but the live counter keeps the concurrent increment."""
+    mock_comms = MagicMock()
+    mock_get_comms.return_value = mock_comms
+
+    thread_cache.stats.increment_total_hits()
+    thread_cache.stats.increment_total_hits()
+
+    def simulate_concurrent_increment(*args, **kwargs):
+        thread_cache.stats.increment_total_hits()
+        return {"success": True, "data": {"routes": {}}}
+
+    mock_comms.send_data_to_bg_process.side_effect = simulate_concurrent_increment
+
+    thread_cache.renew()
+
+    sent_total = mock_comms.send_data_to_bg_process.call_args.kwargs["obj"]["stats"][
+        "requests"
+    ]["total"]
+    assert sent_total == 2
+    assert thread_cache.stats.get_record()["requests"]["total"] == 1
+
+
+@patch("aikido_zen.background_process.comms.get_comms")
+def test_renew_restores_deltas_on_ipc_failure(
+    mock_get_comms, thread_cache: ThreadCache
+):
+    """If the IPC fails, the cleared deltas must be merged back on top of any
+    concurrent increments - nothing lost, nothing double-counted."""
+    mock_comms = MagicMock()
+    mock_get_comms.return_value = mock_comms
+
+    thread_cache.stats.increment_total_hits()
+    thread_cache.stats.increment_total_hits()
+    thread_cache.ai_stats.on_ai_call("openai", "gpt-4o", 100, 50)
+    thread_cache.middleware_installed = True
+
+    def fail_after_concurrent_increment(*args, **kwargs):
+        thread_cache.stats.increment_total_hits()
+        return {"success": False}
+
+    mock_comms.send_data_to_bg_process.side_effect = fail_after_concurrent_increment
+
+    thread_cache.renew()
+
+    # 2 from the snapshot + 1 from the concurrent increment
+    assert thread_cache.stats.get_record()["requests"]["total"] == 3
+    assert thread_cache.middleware_installed is True
+    assert thread_cache.ai_stats.get_stats()[0]["calls"] == 1
+
+
+@patch("aikido_zen.background_process.comms.get_comms")
 def test_renew_called_with_no_requests(mock_get_comms, thread_cache: ThreadCache):
     """Test that renew calls send_data_to_bg_process with zero requests."""
     mock_comms = MagicMock()
