@@ -190,6 +190,49 @@ def patch_firewall_lists(func):
 
 
 @patch_firewall_lists
+def test_bypassed_ip_skips_all_checks(firewall_lists):
+    set_context("192.168.1.1")
+    config = ServiceConfig(
+        endpoints=[
+            {
+                "method": "POST",
+                "route": "/posts/:number",
+                "graphql": False,
+                "allowedIPAddresses": ["1.1.1.1"],  # 192.168.1.1 not in this list
+            }
+        ],
+        last_updated_at=None,
+        blocked_uids=set(),
+        bypassed_ips=["192.168.1.1"],
+        received_any_stats=False,
+    )
+    get_cache().config = config
+    firewall_lists.set_blocked_ips(
+        [
+            {
+                "source": "test",
+                "description": "Blocked for testing",
+                "ips": ["192.168.1.1"],
+            }
+        ]
+    )
+    firewall_lists.set_allowed_ips(
+        [
+            {
+                "source": "test",
+                "description": "Allowed ranges",
+                "ips": ["4.4.4.0/24"],
+            }
+        ]
+    )
+
+    # Act
+    result = request_handler("pre_response")
+
+    assert result is None
+
+
+@patch_firewall_lists
 def test_blocked_ip(firewall_lists):
     # Arrange
     firewall_lists.set_blocked_ips(
