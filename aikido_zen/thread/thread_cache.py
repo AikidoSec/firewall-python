@@ -44,6 +44,10 @@ class ThreadCache:
             last_updated_at=-1,
             received_any_stats=False,
         )
+        self._clear_synced_deltas()
+
+    def _clear_synced_deltas(self):
+        """Clears delta counters synced to the background process."""
         self.middleware_installed = False
         self.hostnames.clear()
         self.users.clear()
@@ -55,24 +59,28 @@ class ThreadCache:
         if not comms.get_comms():
             return
 
-        # send stored data and receive new config and routes
+        # Clear deltas before the IPC, not after. Clearing post-response would
+        # wipe any increments that arrived in the window where the IPC released
+        # the GIL.
+        payload = {
+            "current_routes": self.routes.get_routes_with_hits(),
+            "middleware_installed": self.middleware_installed,
+            "hostnames": self.hostnames.as_array(),
+            "users": self.users.as_array(),
+            "stats": self.stats.get_record(),
+            "ai_stats": self.ai_stats.get_stats(),
+            "packages": PackagesStore.export(),
+        }
+        self._clear_synced_deltas()
+
         res = comms.get_comms().send_data_to_bg_process(
             action="SYNC_DATA",
-            obj={
-                "current_routes": self.routes.get_routes_with_hits(),
-                "middleware_installed": self.middleware_installed,
-                "hostnames": self.hostnames.as_array(),
-                "users": self.users.as_array(),
-                "stats": self.stats.get_record(),
-                "ai_stats": self.ai_stats.get_stats(),
-                "packages": PackagesStore.export(),
-            },
+            obj=payload,
             receive=True,
         )
         if not res["success"] or not res["data"]:
             return
 
-        self.reset()
         # update config
         if isinstance(res["data"].get("config"), ServiceConfig):
             self.config = res["data"]["config"]
