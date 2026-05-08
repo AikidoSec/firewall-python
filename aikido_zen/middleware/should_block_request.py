@@ -32,6 +32,10 @@ def should_block_request():
         context.executed_middleware = True
         context.set_as_current_context()
 
+        # Bypassed IPs skip user blocking and rate limiting
+        if cache.is_bypassed_ip(context.remote_address):
+            return {"block": False}
+
         # User blocking allows customers to easily take action when attacks are coming from specific accounts
         if context.user and cache.is_user_blocked(context.user["id"]):
             return {"block": True, "type": "blocked", "trigger": "user"}
