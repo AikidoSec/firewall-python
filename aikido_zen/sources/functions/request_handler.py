@@ -44,6 +44,10 @@ def pre_response():
         logger.debug("Request was not complete, not running any pre_response code")
         return
 
+    # Bypassed IPs skip all allowlist and blocklist checks
+    if cache.is_bypassed_ip(context.remote_address):
+        return None
+
     # Per endpoint IP Allowlist
     matched_endpoints = cache.config.get_endpoints(context.get_route_metadata())
     if not ip_allowed_to_access_route(
