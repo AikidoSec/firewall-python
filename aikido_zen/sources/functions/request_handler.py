@@ -19,7 +19,8 @@ def request_handler(stage, status_code=0):
     try:
         if stage == "init":
             cache = get_cache()
-            if ctx.get_current_context() and cache:
+            context = ctx.get_current_context()
+            if context and cache and not cache.is_bypassed_ip(context.remote_address):
                 cache.stats.increment_total_hits()
         if stage == "pre_response":
             return pre_response()
@@ -100,6 +101,9 @@ def post_response(status_code):
 
     cache = get_cache()
     if not cache:
+        return
+
+    if cache.is_bypassed_ip(context.remote_address):
         return
 
     attack_wave = attack_wave_detector_store.is_attack_wave(context)
