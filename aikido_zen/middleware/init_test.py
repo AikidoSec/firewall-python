@@ -55,6 +55,15 @@ def test_with_context_with_cache():
     assert thread_cache.stats.rate_limited_hits == 0
 
 
+def test_bypassed_ip_skips_user_blocking():
+    test_utils.generate_and_set_context(user={"id": "123"}, ip="1.2.3.4")
+    thread_cache = get_cache()
+    thread_cache.config.blocked_uids = ["123"]
+    thread_cache.config.set_bypassed_ips(["1.2.3.4"])
+
+    assert should_block_request() == {"block": False}
+
+
 def test_cache_comms_with_endpoints():
     test_utils.generate_and_set_context(user={"id": "456"}, route="/posts/:id")
     set_rate_limit_group("my_group")
