@@ -131,6 +131,43 @@ def test_post_response_no_context(mock_get_comms):
     comms.send_data_to_bg_process.assert_not_called()
 
 
+def test_bypassed_ip_no_stats_in_init():
+    cache = get_cache()
+    cache.config.set_bypassed_ips(["1.2.3.4"])
+    cache.stats.clear()
+
+    context = MagicMock()
+    context.remote_address = "1.2.3.4"
+    with patch("aikido_zen.context.get_current_context", return_value=context):
+        request_handler("init")
+
+    assert cache.stats.get_record()["requests"]["total"] == 0
+
+
+def test_non_bypassed_ip_increments_stats_in_init():
+    cache = get_cache()
+    cache.config.set_bypassed_ips([])
+    cache.stats.clear()
+
+    context = MagicMock()
+    context.remote_address = "1.2.3.4"
+    with patch("aikido_zen.context.get_current_context", return_value=context):
+        request_handler("init")
+
+    assert cache.stats.get_record()["requests"]["total"] == 1
+
+
+def test_bypassed_ip_no_route_tracking_in_post_response(mock_context):
+    cache = get_cache()
+    cache.config.set_bypassed_ips(["5.6.7.8"])
+    mock_context.remote_address = "5.6.7.8"
+
+    with patch("aikido_zen.context.get_current_context", return_value=mock_context):
+        request_handler("post_response", status_code=200)
+
+    assert cache.routes.routes == {}
+
+
 # Test firewall lists
 def set_context(remote_address, user_agent="", route="/posts/:number"):
     headers = Headers()
