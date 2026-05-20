@@ -16,7 +16,11 @@ def test_path_to_string_with_valid_url():
 def test_path_to_string_with_bytes():
     assert path_to_string(b"test.txt") == "test.txt"
     assert path_to_string(b"/home/user/file.txt") == "/home/user/file.txt"
-    assert path_to_string(b"\xff") is None  # Invalid UTF-8 byte sequence
+    # Invalid bytes are replaced with � so traversal components are preserved.
+    assert path_to_string(b"\xff") == "�"
+    assert path_to_string(b"\xff/../../../etc/passwd") == "�/../../../etc/passwd"
+    # Surrogate bytes (AIKIDO-B3YABOSP pattern) also survive as replacement chars.
+    assert path_to_string(b"\xed\xa0\x80/../etc/passwd") == "���/../etc/passwd"
 
 
 def test_path_to_string_with_empty_string():

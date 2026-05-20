@@ -4,7 +4,7 @@ from django.template import loader
 from .models import Dogs
 from django.db import connection
 from django.views.decorators.csrf import csrf_exempt
-# Create your views here.
+import json
 import subprocess
 
 def index(request):
@@ -37,3 +37,32 @@ def create_dogpage(request):
             print("QUERY : ", query)
             cursor.execute(query)
         return HttpResponse("Dog page created")
+
+
+# --- bypass regression endpoints ---
+
+@csrf_exempt
+def read_file(request):
+    # Passes raw bytes body directly to open() — path traversal sink.
+    # Used by AIKIDO-5RDTZW1V regression test: a leading \xff byte must not
+    # prevent the firewall from detecting the traversal in the rest of the path.
+    if request.method == 'POST':
+        with open(request.body) as f:
+            return HttpResponse(f.read())
+    return HttpResponse("Use POST")
+
+
+@csrf_exempt
+def json_sql(request):
+    # Parses body via json.loads(bytes) without relying on Content-Type.
+    # Used by AIKIDO-B3YABOSP regression test: surrogate bytes (\xed\xa0\x80)
+    # embedded in the JSON body must not prevent the firewall from parsing the
+    # body and detecting the SQL injection payload.
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        dog_name = data.get('dog_name', '')
+        with connection.cursor() as cursor:
+            query = 'INSERT INTO sample_app_dogs (dog_name, dog_boss) VALUES ("%s", "N/A")' % dog_name
+            cursor.execute(query)
+        return HttpResponse("OK")
+    return HttpResponse("Use POST")

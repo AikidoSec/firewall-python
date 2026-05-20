@@ -132,3 +132,16 @@ def test_path_normalization():
     # Combined slashes and dot: ///.///etc/passwd should normalize to /etc/passwd
     assert detect_path_traversal("///.///etc/passwd", "///.///etc") is True
     assert detect_path_traversal("///.///etc/passwd", "///.///etc/passwd") is True
+
+
+def test_replacement_char_prefix_does_not_hide_traversal():
+    # Regression: AIKIDO-5RDTZW1V / AIKIDO-B3YABOSP — an attacker prepends
+    # invalid UTF-8 bytes (\xff or surrogate sequences) to a traversal payload.
+    # After decode("utf-8", errors="replace") both the stored body string and the
+    # path_to_string() output start with the replacement character �, so the
+    # user-input substring is still found in the file path and traversal is detected.
+    replacement = "�"
+    traversal = "/../../../../../etc/passwd"
+    assert detect_path_traversal(replacement + traversal, replacement + traversal) is True
+    # Three replacement chars (from \xed\xa0\x80, three separate bad bytes)
+    assert detect_path_traversal(replacement * 3 + traversal, replacement * 3 + traversal) is True

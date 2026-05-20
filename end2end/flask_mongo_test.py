@@ -126,3 +126,45 @@ def test_dangerous_auth_fw_force():
         'source': "body",
         'user': None
     }
+
+
+# --- AIKIDO-5RDTZW1V regression: invalid UTF-8 bytes must not bypass detection ---
+
+def test_bypass_invalid_utf8_bytes_path_traversal():
+    # An attacker prepends \xff (invalid UTF-8) to a path traversal payload.
+    # Before the fix, decode("utf-8") raised UnicodeDecodeError and the body was
+    # never stored, so the firewall saw nothing.  After the fix the body is decoded
+    # with errors="replace" and the traversal is still detected.
+    body = b"\xff/../../../../../etc/passwd"
+    res = requests.post("http://localhost:8094/read", data=body)
+    assert res.status_code == 500
+
+    time.sleep(5)
+    events = fetch_events_from_mock("http://localhost:5000")
+    attacks = filter_on_event_type(events, "detected_attack")
+
+    assert len(attacks) == 3
+    assert attacks[2]["attack"]["kind"] == "path_traversal"
+    assert attacks[2]["attack"]["blocked"] is True
+    assert attacks[2]["attack"]["source"] == "body"
+
+
+# --- AIKIDO-B3YABOSP regression: surrogate bytes in JSON must not bypass detection ---
+
+def test_bypass_surrogate_bytes_nosql_injection():
+    # Surrogate bytes (\xed\xa0\x80) make decode("utf-8") raise, so the old code
+    # never parsed the JSON and the NoSQL injection payload {"$ne":""} was invisible.
+    # After the fix, json.loads(bytes) is tried first (it uses surrogatepass internally)
+    # so the dict body is fully parsed and the injection is caught.
+    body = b'{"dog_name": "bobby_tables", "pswd": {"$ne": ""}, "bypass": "\xed\xa0\x80"}'
+    res = requests.post("http://localhost:8094/auth-raw", data=body)
+    assert res.status_code == 500
+
+    time.sleep(5)
+    events = fetch_events_from_mock("http://localhost:5000")
+    attacks = filter_on_event_type(events, "detected_attack")
+
+    assert len(attacks) == 4
+    assert attacks[3]["attack"]["kind"] == "nosql_injection"
+    assert attacks[3]["attack"]["blocked"] is True
+    assert attacks[3]["attack"]["source"] == "body"

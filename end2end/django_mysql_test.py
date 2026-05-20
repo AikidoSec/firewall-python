@@ -111,3 +111,45 @@ def test_initial_heartbeat():
     assert req_stats["rateLimited"] == 0
     assert req_stats["attacksDetected"] == {"blocked": 2, "total": 2}
     assert req_stats["attackWaves"] == {"total": 0, "blocked": 0}
+
+
+# --- AIKIDO-5RDTZW1V regression: invalid UTF-8 bytes must not bypass detection ---
+
+def test_bypass_invalid_utf8_bytes_path_traversal():
+    # An attacker prepends \xff (invalid UTF-8) to a path traversal payload.
+    # Before the fix, decode("utf-8") raised UnicodeDecodeError and the body was
+    # never stored, so the firewall saw nothing.  After the fix the body is decoded
+    # with errors="replace" and the traversal is still detected.
+    body = b"\xff/../../../../../etc/passwd"
+    res = requests.post(base_url_fw + "/read", data=body)
+    assert res.status_code == 500
+
+    time.sleep(5)
+    events = fetch_events_from_mock("http://localhost:5000")
+    attacks = filter_on_event_type(events, "detected_attack")
+
+    assert len(attacks) == 3
+    assert attacks[2]["attack"]["kind"] == "path_traversal"
+    assert attacks[2]["attack"]["blocked"] is True
+    assert attacks[2]["attack"]["source"] == "body"
+
+
+# --- AIKIDO-B3YABOSP regression: surrogate bytes in JSON must not bypass detection ---
+
+def test_bypass_surrogate_bytes_sql_injection():
+    # Surrogate bytes (\xed\xa0\x80) make decode("utf-8") raise, so the old code
+    # never parsed the body as JSON and the SQL injection payload was invisible.
+    # After the fix, json.loads(bytes) is tried first (it uses surrogatepass internally)
+    # so the dict is extracted and the injection is caught when the cursor executes.
+    body = b'{"dog_name": "Dangerous bobby\\", 1); -- ", "bypass": "\xed\xa0\x80"}'
+    res = requests.post(base_url_fw + "/json-sql", data=body)
+    assert res.status_code == 500
+
+    time.sleep(5)
+    events = fetch_events_from_mock("http://localhost:5000")
+    attacks = filter_on_event_type(events, "detected_attack")
+
+    assert len(attacks) == 4
+    assert attacks[3]["attack"]["kind"] == "sql_injection"
+    assert attacks[3]["attack"]["blocked"] is True
+    assert attacks[3]["attack"]["source"] == "body"

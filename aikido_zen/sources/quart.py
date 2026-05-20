@@ -32,7 +32,7 @@ async def _handle_request_before(func, instance, args, kwargs):
         context.set_body(form)
     else:
         data = await request.data
-        context.set_body(data.decode("utf-8"))
+        context.set_body(data)
     context.cookies = request.cookies.to_dict()
     context.set_as_current_context()
 

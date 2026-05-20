@@ -67,3 +67,31 @@ def post_auth2():
         return f'Dog with name {dog_name} authenticated successfully'
     else:
         return f'Auth failed'
+
+
+# --- bypass regression endpoints ---
+
+@app.route("/read", methods=['POST'])
+def read_file():
+    # Passes the raw bytes body directly to open() — path traversal sink.
+    # Used by AIKIDO-5RDTZW1V regression test: a leading \xff byte must not
+    # prevent the firewall from detecting the traversal in the rest of the path.
+    with open(request.data) as f:
+        return f.read()
+
+
+@app.route("/auth-raw", methods=['POST'])
+def post_auth_raw():
+    # Parses the body via json.loads(bytes) without relying on Content-Type.
+    # Used by AIKIDO-B3YABOSP regression test: surrogate bytes (\xed\xa0\x80)
+    # embedded in the JSON body must not prevent the firewall from parsing the
+    # body and detecting the NoSQL injection payload.
+    data = json.loads(request.data)
+    dog_info = {
+        'dog_name': data.get('dog_name'),
+        'pswd': data.get('pswd'),
+    }
+    dog = mongo.db.dogs.find_one(dog_info)
+    if dog:
+        return f'Dog with name {dog["dog_name"]} authenticated successfully'
+    return 'Auth failed'

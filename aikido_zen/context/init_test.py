@@ -175,9 +175,10 @@ def test_set_normal_byte_string():
 
 
 def test_set_byte_string_wrong_encoding():
-    body = "hello world! 😊".encode("utf-16")  # UTF-16 unique character
+    body = "hello world! 😊".encode("utf-16")  # UTF-16 bytes are not valid UTF-8
     context = Context(req=basic_wsgi_req, body=body, source="flask")
-    assert context.body == body  # Body remains unchanged because utf-8 failed.
+    # Invalid bytes are replaced with � so the body is still scannable.
+    assert context.body == body.decode("utf-8", errors="replace")
 
 
 def test_set_none():
@@ -296,3 +297,23 @@ def test_set_protection_forced_off():
     assert context.protection_forced_off is False
     context.set_force_protection_off(None)
     assert context.protection_forced_off is None
+
+
+def test_set_bytes_with_invalid_utf8_prefix():
+    # Regression: AIKIDO-5RDTZW1V — a single invalid UTF-8 byte (e.g. \xff) prepended
+    # to a path traversal payload must not bypass detection.  The body must be decoded
+    # with errors="replace" so the traversal string remains visible to sinks.
+    body = b"\xff/../../../../../etc/passwd"
+    context = Context(req=basic_wsgi_req, body=body, source="flask")
+    assert isinstance(context.body, str)
+    assert "/../../../../../etc/passwd" in context.body
+
+
+def test_set_bytes_json_with_surrogate_bytes():
+    # Regression: AIKIDO-B3YABOSP — surrogate bytes embedded in a JSON body must not
+    # bypass detection.  json.loads(bytes) uses surrogatepass internally, so the dict
+    # is parsed and the attack payload (e.g. {"$regex": ".*"}) is visible.
+    body = b'{"username": {"$regex": ".*"}, "bypass": "\xed\xa0\x80"}'
+    context = Context(req=basic_wsgi_req, body=body, source="flask")
+    assert isinstance(context.body, dict)
+    assert context.body.get("username") == {"$regex": ".*"}
