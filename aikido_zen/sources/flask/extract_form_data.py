@@ -10,7 +10,7 @@ def extract_form_data_from_flask_request_and_save_data(req):
             if req.form:
                 context.set_body(req.form)
             else:
-                context.set_body(req.data.decode("utf-8"))
+                context.set_body(req.data)
             context.set_as_current_context()
     except Exception as e:
         logger.debug("Exception occurred whilst extracting flask body data: %s", e)

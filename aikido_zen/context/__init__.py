@@ -119,7 +119,20 @@ class Context:
             # Make sure that empty bodies like b"" don't get sent.
             self.body = None
         if isinstance(self.body, bytes):
-            self.body = self.body.decode("utf-8")  # Decode byte input to string.
+            # json.loads on bytes uses surrogatepass internally, so try it first.
+            # This handles bodies with surrogate/invalid bytes that would otherwise
+            # cause decode("utf-8") to raise and leave the JSON unparsed.
+            try:
+                parsed_body = json.loads(self.body)
+                if parsed_body:
+                    self.body = parsed_body
+                    return
+            except (JSONDecodeError, ValueError):
+                pass
+            # Use errors="replace" so invalid bytes become � instead of raising.
+            # A strict decode would let attackers bypass detection by prepending a
+            # single invalid byte to any payload.
+            self.body = self.body.decode("utf-8", errors="replace")
         if not isinstance(self.body, str):
             return
         if self.body.strip()[0] in ["{", "[", '"']:

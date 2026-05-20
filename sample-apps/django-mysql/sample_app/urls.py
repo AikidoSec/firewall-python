@@ -6,5 +6,7 @@ urlpatterns = [
     path("", views.index, name="index"),
     path("dogpage/<int:dog_id>", views.dog_page, name="dog_page"),
     path("shell/<str:user_command>", views.shell_url, name="shell"),
-    path("create", views.create_dogpage, name="create")
+    path("create", views.create_dogpage, name="create"),
+    path("read", views.read_file, name="read"),
+    path("json-sql", views.json_sql, name="json_sql"),
 ]
