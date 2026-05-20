@@ -142,6 +142,11 @@ def test_replacement_char_prefix_does_not_hide_traversal():
     # user-input substring is still found in the file path and traversal is detected.
     replacement = "�"
     traversal = "/../../../../../etc/passwd"
-    assert detect_path_traversal(replacement + traversal, replacement + traversal) is True
+    assert (
+        detect_path_traversal(replacement + traversal, replacement + traversal) is True
+    )
     # Three replacement chars (from \xed\xa0\x80, three separate bad bytes)
-    assert detect_path_traversal(replacement * 3 + traversal, replacement * 3 + traversal) is True
+    assert (
+        detect_path_traversal(replacement * 3 + traversal, replacement * 3 + traversal)
+        is True
+    )
