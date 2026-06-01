@@ -34,7 +34,7 @@ class AttackWaveDetector:
             time_to_live_in_ms=self.attack_wave_time_frame,
         )
 
-    def is_attack_wave(self, context: Context) -> bool:
+    def is_attack_wave(self, context: Context, status_code: int = 404) -> bool:
         """
         Function gets called with context to check if there is an attack wave request.
         """
@@ -45,7 +45,7 @@ class AttackWaveDetector:
         if self.sent_events_map.get(ip) is not None:
             return False
 
-        if not is_web_scanner(context):
+        if not is_web_scanner(context, status_code):
             return False
 
         # Increment suspicious requests count -> there is a new or first suspicious request
