@@ -16,7 +16,7 @@ def detect_sql_injection(query, user_input, dialect):
     """
     try:
         query_l = query.lower()
-        userinput_l = user_input.lower()
+        userinput_l = user_input.lower().strip()
         if should_return_early(query_l, userinput_l):
             return False
 

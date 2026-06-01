@@ -413,6 +413,13 @@ def test_function_calls_as_sql_injections():
     is_sql_injection("€foobar()", "€foobar()")
 
 
+def test_trimmed_user_input_bypass():
+    is_sql_injection(
+        "INSERT INTO pets (name, owner) VALUES ('x', 'dummy'), ('injected', 'hacker'); --', 'owner')",
+        "x', 'dummy'), ('injected', 'hacker'); --    ",
+    )
+
+
 def file_paths():
     script_dir = os.path.dirname(__file__)
     return [
