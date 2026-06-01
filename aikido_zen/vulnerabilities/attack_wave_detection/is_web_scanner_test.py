@@ -29,7 +29,9 @@ def test_is_web_scanner():
     assert is_web_scanner(get_test_context("/.aws/config", "GET"), 404)
     assert is_web_scanner(get_test_context("/../secret", "GET"), 404)
     assert is_web_scanner(get_test_context("/", "BADMETHOD"), 404)
-    assert is_web_scanner(get_test_context("/", "GET", {"test": "SELECT * FROM admin"}), 404)
+    assert is_web_scanner(
+        get_test_context("/", "GET", {"test": "SELECT * FROM admin"}), 404
+    )
     assert is_web_scanner(get_test_context("/", "GET", {"test": "../etc/passwd"}), 404)
 
 
