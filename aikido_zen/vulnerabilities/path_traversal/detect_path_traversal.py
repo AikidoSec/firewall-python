@@ -28,7 +28,7 @@ def detect_path_traversal(file_path, user_input, check_path_start=True, is_url=F
         # Because the user input can't be part of the file path.
         return False
 
-    if user_input not in file_path:
+    if user_input.lower() not in file_path.lower():
         # We ignore cases where the user input is not part of the file path.
         return False
 
