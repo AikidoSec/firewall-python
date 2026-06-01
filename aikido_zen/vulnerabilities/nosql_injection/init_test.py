@@ -540,3 +540,105 @@ def test_ignores_safe_pipeline_aggregations(create_context):
         )
         == {}
     )
+
+
+def test_detects_injection_when_app_merges_user_operators_with_own_dollar_keys(
+    create_context,
+):
+    assert detect_nosql_injection(
+        create_context(body={"username": {"$ne": None}}),
+        {"title": {"$ne": None, "$exists": True}},
+    ) == {
+        "injection": True,
+        "source": "body",
+        "pathToPayload": ".username",
+        "payload": {"$ne": None, "$exists": True},
+    }
+
+
+def test_detects_injection_when_app_prepends_own_dollar_key_before_user_operators(
+    create_context,
+):
+    assert detect_nosql_injection(
+        create_context(body={"username": {"$gt": ""}}),
+        {"title": {"$exists": True, "$gt": ""}},
+    ) == {
+        "injection": True,
+        "source": "body",
+        "pathToPayload": ".username",
+        "payload": {"$exists": True, "$gt": ""},
+    }
+
+
+def test_does_not_flag_when_user_operator_value_differs(create_context):
+    assert (
+        detect_nosql_injection(
+            create_context(body={"username": {"$ne": "different"}}),
+            {"title": {"$ne": None, "$exists": True}},
+        )
+        == {}
+    )
+
+
+def test_detects_injection_when_app_adds_non_dollar_key_to_subobject(create_context):
+    assert detect_nosql_injection(
+        create_context(body={"field": {"$elemMatch": {"$gt": 5}}}),
+        {"items": {"$elemMatch": {"$gt": 5, "verified": True}}},
+    ) == {
+        "injection": True,
+        "source": "body",
+        "pathToPayload": ".field.$elemMatch",
+        "payload": {"$gt": 5},
+    }
+
+
+def test_does_not_flag_when_user_sends_empty_object(create_context):
+    assert (
+        detect_nosql_injection(
+            create_context(body={"username": {}}),
+            {"title": {"$exists": True}},
+        )
+        == {}
+    )
+
+
+def test_does_not_flag_when_user_object_has_only_non_dollar_keys(create_context):
+    assert (
+        detect_nosql_injection(
+            create_context(body={"username": {"name": "alice"}}),
+            {"title": {"$exists": True}},
+        )
+        == {}
+    )
+
+
+def test_does_not_flag_when_user_dollar_key_absent_from_filter(create_context):
+    assert (
+        detect_nosql_injection(
+            create_context(body={"username": {"$ne": None}}),
+            {"title": {"$exists": True}},
+        )
+        == {}
+    )
+
+
+def test_does_not_flag_when_filter_uses_subset_of_user_operators(create_context):
+    assert (
+        detect_nosql_injection(
+            create_context(body={"username": {"$ne": None, "$gt": 0}}),
+            {"title": {"$ne": None}},
+        )
+        == {}
+    )
+
+
+def test_does_not_flag_when_app_ignores_user_operators_and_uses_hardcoded_filter(
+    create_context,
+):
+    assert (
+        detect_nosql_injection(
+            create_context(body={"username": {"$ne": None}}),
+            {"username": "hardcoded"},
+        )
+        == {}
+    )
