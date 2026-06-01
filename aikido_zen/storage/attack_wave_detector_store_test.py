@@ -446,7 +446,7 @@ def test_mock_detector_integration(mock_detector_class):
     store = AttackWaveDetectorStore()
     context = test_utils.generate_context()
 
-    # Should use the mocked detector
+    # Should use the mocked detector (default status_code=404)
     result = store.is_attack_wave(context)
     assert result is True
-    mock_detector.is_attack_wave.assert_called_once_with(context)
+    mock_detector.is_attack_wave.assert_called_once_with(context, 404)
