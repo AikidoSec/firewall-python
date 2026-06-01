@@ -10,9 +10,9 @@ class AttackWaveDetectorStore:
         self._detector = AttackWaveDetector()
         self._lock = threading.RLock()  # Reentrant lock for thread safety
 
-    def is_attack_wave(self, context: Context) -> bool:
+    def is_attack_wave(self, context: Context, status_code: int = 404) -> bool:
         with self._lock:
-            return self._detector.is_attack_wave(context)
+            return self._detector.is_attack_wave(context, status_code)
 
     def get_samples_for_ip(self, ip: str):
         with self._lock:
