@@ -2,13 +2,13 @@ def normalize_hostname(hostname):
     if not hostname or not isinstance(hostname, str):
         return hostname
 
-    result = hostname
-    try:
-        # Check if hostname contains punycode (starts with xn--)
-        if hostname.startswith("xn--"):
-            result = hostname.encode("ascii").decode("idna")
+    # Lowercase and strip trailing dot (DNS resolvers may return FQDNs like "example.com.")
+    result = hostname.lower().rstrip(".")
 
+    try:
+        # Decode Punycode if the hostname starts with xn--
+        if result.startswith("xn--"):
+            result = result.encode("ascii").decode("idna")
         return result
     except (UnicodeError, LookupError):
-        # If decoding fails, return original hostname
-        return hostname
+        return result

@@ -4,6 +4,7 @@ is_imds_ip_address, is_trusted_hostname, resolves_to_imds_ip
 """
 
 from aikido_zen.helpers.ip_matcher import IPMatcher
+from aikido_zen.sinks.socket.normalize_hostname import normalize_hostname
 
 imds_addresses = IPMatcher(
     [
@@ -29,7 +30,7 @@ def is_trusted_hostname(hostname):
     """
     If the hostname is a trusted host (like metadata.goog), there was no spoofing of hostnames, so it's not an attack
     """
-    return hostname.lower().rstrip(".") in trusted_hosts
+    return normalize_hostname(hostname) in trusted_hosts
 
 
 def resolves_to_imds_ip(resolved_ip_addresses, hostname):
