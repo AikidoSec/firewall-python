@@ -29,7 +29,7 @@ def is_trusted_hostname(hostname):
     """
     If the hostname is a trusted host (like metadata.goog), there was no spoofing of hostnames, so it's not an attack
     """
-    return hostname in trusted_hosts
+    return hostname.lower().rstrip(".") in trusted_hosts
 
 
 def resolves_to_imds_ip(resolved_ip_addresses, hostname):
