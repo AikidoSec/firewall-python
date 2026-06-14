@@ -34,7 +34,7 @@ class AttackWaveDetector:
             time_to_live_in_ms=self.attack_wave_time_frame,
         )
 
-    def is_attack_wave(self, context: Context, status_code: int = 404) -> bool:
+    def is_attack_wave(self, context: Context, status_code: int) -> bool:
         """
         Function gets called with context to check if there is an attack wave request.
         """
