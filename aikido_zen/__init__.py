@@ -24,6 +24,9 @@ from aikido_zen.config import PKG_VERSION
 from aikido_zen.helpers.aikido_disabled_flag_active import aikido_disabled_flag_active
 
 
+VALID_MODES = ("daemon", "daemon_only", "daemon_disabled")
+
+
 def protect(mode="daemon", token=""):
     """
     Mode can be set to :
@@ -32,6 +35,10 @@ def protect(mode="daemon", token=""):
     - daemon_disabled : This will import sinks/sources but won't start a background process
     Protect user's application
     """
+    if mode not in VALID_MODES:
+        raise ValueError(
+            f"Invalid mode {mode!r}, expected one of {VALID_MODES}. To pass a token, use protect(token=...)"
+        )
     if aikido_disabled_flag_active():
         # Do not run any aikido code when the disabled flag is on
         return

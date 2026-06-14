@@ -5,7 +5,7 @@ import pytest
 import aikido_zen
 from aikido_zen.thread.thread_cache import get_cache
 
-aikido_zen.protect(mode="daemon-disabled")
+aikido_zen.protect(mode="daemon_disabled")
 
 skip_no_openai_key = pytest.mark.skipif(
     "OPENAI_API_KEY" not in os.environ,
