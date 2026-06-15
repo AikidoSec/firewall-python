@@ -62,6 +62,52 @@ def _func_pipeline(func, instance, args, kwargs):
 
 
 @before
+def _func_filter_first_update_second(func, instance, args, kwargs):
+    """Collection.func(filter, update, ...) — scans both filter and update"""
+    operation = f"pymongo.collection.Collection.{func.__name__}"
+    register_call(operation, "nosql_op")
+
+    nosql_filter = get_argument(args, kwargs, 0, "filter")
+    if nosql_filter:
+        vulns.run_vulnerability_scan(
+            kind="nosql_injection",
+            op=operation,
+            args=(nosql_filter,),
+        )
+
+    nosql_update = get_argument(args, kwargs, 1, "update")
+    if nosql_update:
+        vulns.run_vulnerability_scan(
+            kind="nosql_injection",
+            op=operation,
+            args=(nosql_update,),
+        )
+
+
+@before
+def _func_filter_first_replacement_second(func, instance, args, kwargs):
+    """Collection.func(filter, replacement, ...) — scans both filter and replacement"""
+    operation = f"pymongo.collection.Collection.{func.__name__}"
+    register_call(operation, "nosql_op")
+
+    nosql_filter = get_argument(args, kwargs, 0, "filter")
+    if nosql_filter:
+        vulns.run_vulnerability_scan(
+            kind="nosql_injection",
+            op=operation,
+            args=(nosql_filter,),
+        )
+
+    nosql_replacement = get_argument(args, kwargs, 1, "replacement")
+    if nosql_replacement:
+        vulns.run_vulnerability_scan(
+            kind="nosql_injection",
+            op=operation,
+            args=(nosql_replacement,),
+        )
+
+
+@before
 def _bulk_write(func, instance, args, kwargs):
     requests = get_argument(args, kwargs, 0, "requests")
 
@@ -77,12 +123,22 @@ def _bulk_write(func, instance, args, kwargs):
             op=operation,
             args=(nosql_filter,),
         )
+        # Also scan the update/replacement doc for UpdateOne, UpdateMany, ReplaceOne
+        nosql_doc = getattr(request, "_doc", None)
+        if nosql_doc:
+            vulns.run_vulnerability_scan(
+                kind="nosql_injection",
+                op=operation,
+                args=(nosql_doc,),
+            )
 
 
 def patch_collection(m):
     """
     patching pymongo.collection
     - patches Collection.*(filter, ...)
+    - patches Collection.*(filter, update, ...)
+    - patches Collection.*(filter, replacement, ...)
     - patches Collection.*(..., filter, ...)
     - patches Collection.*(pipeline, ...)
     - patches Collection.bulk_write
@@ -96,18 +152,23 @@ def patch_collection(m):
         if original_collection_class.__module__ != "pymongo.collection":
             return
 
-    # func(filter, ...)
-    patch_function(m, "Collection.replace_one", _func_filter_first)
-    patch_function(m, "Collection.update_one", _func_filter_first)
-    patch_function(m, "Collection.update_many", _func_filter_first)
+    # func(filter, ...) — only filter, no second payload arg
     patch_function(m, "Collection.delete_one", _func_filter_first)
     patch_function(m, "Collection.delete_many", _func_filter_first)
     patch_function(m, "Collection.count_documents", _func_filter_first)
     patch_function(m, "Collection.find_one_and_delete", _func_filter_first)
-    patch_function(m, "Collection.find_one_and_replace", _func_filter_first)
-    patch_function(m, "Collection.find_one_and_update", _func_filter_first)
     patch_function(m, "Collection.find", _func_filter_first)
     patch_function(m, "Collection.find_raw_batches", _func_filter_first)
+    # find_one not present in list since find_one calls find function.
+
+    # func(filter, update, ...) — scans filter + update
+    patch_function(m, "Collection.update_one", _func_filter_first_update_second)
+    patch_function(m, "Collection.update_many", _func_filter_first_update_second)
+    patch_function(m, "Collection.find_one_and_update", _func_filter_first_update_second)
+
+    # func(filter, replacement, ...) — scans filter + replacement
+    patch_function(m, "Collection.replace_one", _func_filter_first_replacement_second)
+    patch_function(m, "Collection.find_one_and_replace", _func_filter_first_replacement_second)
     # find_one not present in list since find_one calls find function.
 
     # func(..., filter, ...)
