@@ -164,11 +164,15 @@ def patch_collection(m):
     # func(filter, update, ...) — scans filter + update
     patch_function(m, "Collection.update_one", _func_filter_first_update_second)
     patch_function(m, "Collection.update_many", _func_filter_first_update_second)
-    patch_function(m, "Collection.find_one_and_update", _func_filter_first_update_second)
+    patch_function(
+        m, "Collection.find_one_and_update", _func_filter_first_update_second
+    )
 
     # func(filter, replacement, ...) — scans filter + replacement
     patch_function(m, "Collection.replace_one", _func_filter_first_replacement_second)
-    patch_function(m, "Collection.find_one_and_replace", _func_filter_first_replacement_second)
+    patch_function(
+        m, "Collection.find_one_and_replace", _func_filter_first_replacement_second
+    )
     # find_one not present in list since find_one calls find function.
 
     # func(..., filter, ...)
