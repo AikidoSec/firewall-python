@@ -5,7 +5,7 @@ description = "Sample app Flask & Clickhouse"
 requires-python = ">3.9.1,<4.0"
 dependencies = [
     "flask (>=3.1.0,<4.0.0)",
-    "cryptography (>=44.0.0,<45.0.0)",
+    "cryptography (>=48.0.1,<49.0.0)",
     "aikido_zen",
     "uwsgi (>=2.0.28,<3.0.0)",
     "clickhouse-driver (>=0.2.0,<1.0.0)"
