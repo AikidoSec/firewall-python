@@ -36,15 +36,18 @@ class SSEParser:
         event into multiple HTTP chunks in the response. It is thus necessary
         to correctly stitch together consecutive response chunks and find the
         SSE delimiter (empty new line) to yield full, correct event chunks."""
-        data = b""
+        buffer = []
+        tail = b""
         for chunk in self._event_source:
             for line in chunk.splitlines(True):
-                data += line
-                if data.endswith((b"\r\r", b"\n\n", b"\r\n\r\n")):
-                    yield data
-                    data = b""
-        if data:
-            yield data
+                buffer.append(line)
+                tail = (tail + line)[-4:]
+                if tail.endswith((b"\r\r", b"\n\n", b"\r\n\r\n")):
+                    yield b"".join(buffer)
+                    buffer = []
+                    tail = b""
+        if buffer:
+            yield b"".join(buffer)
 
     def events(self):
         for chunk in self._read():
@@ -54,8 +57,7 @@ class SSEParser:
                 # Decode the line.
                 line = line.decode(self._char_enc)
 
-                # Lines starting with a separator are comments and are to be
-                # ignored.
+                # SSE spec: skip empty lines and colon-prefixed comment lines.
                 if not line.strip() or line.startswith(_FIELD_SEPARATOR):
                     continue
 
@@ -119,7 +121,7 @@ class Event:
         if self.id:
             s += f" #{self.id}"
         if self.data:
-            s += f", {len(self.data)} byte{'s' if len(self.data) else ''}"
+            s += f", {len(self.data)} byte{'s' if len(self.data) != 1 else ''}"
         else:
             s += ", no data"
         if self.retry:
