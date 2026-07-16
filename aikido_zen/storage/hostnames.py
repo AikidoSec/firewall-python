@@ -1,5 +1,7 @@
 """Export Hostnames class"""
 
+import socket
+
 
 class Hostnames:
     """Stores hostnames"""
@@ -10,6 +12,7 @@ class Hostnames:
 
     def add(self, hostname, port, hits=1):
         """Add a hostname and port to the map"""
+        port = normalize_port(port)
         key = get_key(hostname, port)
         if not self.map.get(key):
             self.map[key] = {"hostname": hostname, "port": port, "hits": 0}
@@ -31,3 +34,21 @@ class Hostnames:
 def get_key(hostname, port):
     """Returns a string key"""
     return f"{hostname}:{port}"
+
+
+def normalize_port(port):
+    """
+    Ensures port is an int (or None), never a str.
+    `socket.getaddrinfo` accepts a service name (e.g. "http") or a numeric
+    string as the port, so it needs to be resolved/parsed to a number here.
+    """
+    if port is None or isinstance(port, int):
+        return port
+    try:
+        return int(port)
+    except (TypeError, ValueError):
+        pass
+    try:
+        return socket.getservbyname(port)
+    except OSError:
+        return None
