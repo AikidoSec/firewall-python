@@ -12,10 +12,10 @@ class Hostnames:
 
     def add(self, hostname, port, hits=1):
         """Add a hostname and port to the map"""
-        port = normalize_port(port)
-        key = get_key(hostname, port)
+        normalized_port = normalize_port(port)
+        key = get_key(hostname, normalized_port)
         if not self.map.get(key):
-            self.map[key] = {"hostname": hostname, "port": port, "hits": 0}
+            self.map[key] = {"hostname": hostname, "port": normalized_port, "hits": 0}
         if len(self.map) > self.max_entries:
             # Remove the first added hostname
             first_added = next(iter(self.map))
