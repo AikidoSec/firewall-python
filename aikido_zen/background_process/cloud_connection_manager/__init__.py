@@ -1,4 +1,4 @@
-""" This file simply exports the CloudConnectionManager class"""
+"""This file simply exports the CloudConnectionManager class"""
 
 from aikido_zen.background_process.heartbeats import send_heartbeats_every_x_secs
 from aikido_zen.background_process.routes import Routes
@@ -10,10 +10,12 @@ from ..service_config import ServiceConfig
 from aikido_zen.storage.users import Users
 from aikido_zen.storage.hostnames import Hostnames
 from ..realtime.start_polling_for_changes import start_polling_for_changes
+from ..realtime.listen_for_config_updates import listen_for_config_updates
 from ...helpers.get_current_unixtime_ms import get_unixtime_ms
 from ...storage.ai_statistics import AIStatistics
 from ...storage.firewall_lists import FirewallLists
 from ...storage.statistics import Statistics
+from aikido_zen.helpers.env_vars.feature_flags import is_feature_enabled
 
 # Import functions :
 from .get_manager_info import get_manager_info
@@ -66,6 +68,9 @@ class CloudConnectionManager:
         event_scheduler.enter(self.initial_stats_timeout, 1, self.report_initial_stats)
         send_heartbeats_every_x_secs(self, self.heartbeat_secs, event_scheduler)
         start_polling_for_changes(self, event_scheduler)
+
+        if is_feature_enabled("sse"):
+            listen_for_config_updates(self, event_scheduler)
 
     def report_initial_stats(self):
         """

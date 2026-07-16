@@ -15,7 +15,7 @@ def get_realtime_url():
         if not realtime_url.endswith("/"):
             realtime_url += "/"
         return realtime_url
-    return "https://runtime.aikido.dev/"
+    return get_api_url()
 
 
 def get_config(token):
