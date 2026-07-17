@@ -120,6 +120,47 @@ def test_connect_generic_stream_error_returns_disconnected_with_status():
     assert status_code == 200
 
 
+def test_connect_malformed_utf8_payload_returns_retryable_error_outcome():
+    # 0xFF is never a valid UTF-8 byte, so decoding this line raises
+    # UnicodeDecodeError inside the parser.
+    response = make_response(200, [b"data: \xff\xfe\n\n"])
+
+    with REALTIME_URL_PATCH, patch("urllib.request.urlopen", return_value=response):
+        outcome, status_code = _connect(Token("123"), MagicMock(), 5)
+
+    assert outcome == "error"
+    assert status_code is None
+    response.close.assert_called_once()
+
+
+def test_connect_on_event_callback_error_returns_retryable_error_outcome():
+    response = make_response(200, [b"data: hello\n\n"])
+
+    def failing_on_event(event):
+        raise ValueError("callback exploded")
+
+    with REALTIME_URL_PATCH, patch("urllib.request.urlopen", return_value=response):
+        outcome, status_code = _connect(Token("123"), failing_on_event, 5)
+
+    assert outcome == "error"
+    assert status_code is None
+
+
+def test_reconnect_loop_reconnects_after_malformed_payload_instead_of_stopping():
+    outcomes = iter([("error", None), ("error", None), ("disconnected", 401)])
+
+    with patch(
+        "aikido_zen.background_process.realtime.sse_client._connect",
+        side_effect=lambda *a: next(outcomes),
+    ), patch(
+        "aikido_zen.background_process.realtime.sse_client.time.sleep"
+    ) as mock_sleep:
+        _reconnect_loop(Token("123"), MagicMock(), INITIAL_RECONNECT_SECS, 5)
+
+    assert mock_sleep.call_count == 2
+    assert next(outcomes, "exhausted") == "exhausted"
+
+
 def test_reconnect_loop_stops_immediately_on_401_or_403():
     for status_code in (401, 403):
         connect_calls = []
@@ -196,14 +237,27 @@ def test_reconnect_loop_resets_backoff_after_stable_connection():
     assert sleep_calls == [5, 10, 5]
 
 
-def test_reconnect_loop_logs_unexpected_exception(caplog):
+def test_reconnect_loop_logs_unexpected_exception_and_keeps_retrying(caplog):
+    outcomes = iter([RuntimeError("boom"), ("disconnected", 401)])
+
+    def fake_connect(*args):
+        outcome = next(outcomes)
+        if isinstance(outcome, Exception):
+            raise outcome
+        return outcome
+
     with patch(
         "aikido_zen.background_process.realtime.sse_client._connect",
-        side_effect=RuntimeError("boom"),
-    ):
+        side_effect=fake_connect,
+    ), patch(
+        "aikido_zen.background_process.realtime.sse_client.time.sleep"
+    ) as mock_sleep:
         _reconnect_loop(Token("123"), MagicMock(), 5, 5)
 
     assert "SSE loop error : boom" in caplog.text
+
+    mock_sleep.assert_called_once()
+    assert next(outcomes, "exhausted") == "exhausted"
 
 
 def test_connect_to_sse_starts_a_daemon_thread_running_the_reconnect_loop():

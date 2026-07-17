@@ -51,9 +51,16 @@ def listen_for_config_updates(connection_manager, event_scheduler):
                 "SSE config fetched, configUpdatedAt: %s", config.get("configUpdatedAt")
             )
             last_updated_at = config.get("configUpdatedAt", config_updated_at)
-            connection_manager.update_service_config({**config, "success": True})
-            connection_manager.update_firewall_lists()
         except Exception as e:
             logger.error("Failed to fetch config after SSE event : %s", e)
+            return
+
+        def apply_config():
+            # Runs on the scheduler/reporting thread, so config updates stay
+            # on a single writer thread
+            connection_manager.update_service_config({**config, "success": True})
+            connection_manager.update_firewall_lists()
+
+        event_scheduler.enter(0, 1, apply_config)
 
     connect_to_sse(token=token, on_event=on_event)

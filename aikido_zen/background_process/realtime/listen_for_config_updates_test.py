@@ -66,14 +66,24 @@ def test_connects_to_sse_with_token(connection_manager):
     assert callable(mock_connect.call_args.kwargs["on_event"])
 
 
-def get_on_event(connection_manager):
+def get_on_event(connection_manager, event_scheduler=None):
+    if event_scheduler is None:
+        event_scheduler = MagicMock()
     with patch(
         "aikido_zen.background_process.realtime.listen_for_config_updates.connect_to_sse"
     ) as mock_connect:
         listen_for_config_updates(
-            connection_manager=connection_manager, event_scheduler=MagicMock()
+            connection_manager=connection_manager, event_scheduler=event_scheduler
         )
     return mock_connect.call_args.kwargs["on_event"]
+
+
+def make_inline_scheduler():
+    scheduler = MagicMock()
+    scheduler.enter.side_effect = lambda delay, priority, action, argument=(): action(
+        *argument
+    )
+    return scheduler
 
 
 def test_ignores_events_that_are_not_config_updated(connection_manager):
@@ -121,7 +131,8 @@ def test_ignores_config_updated_event_that_is_not_newer(connection_manager):
 
 def test_fetches_and_applies_new_config_on_newer_event(connection_manager):
     connection_manager.conf.last_updated_at = 100
-    on_event = get_on_event(connection_manager)
+    event_scheduler = make_inline_scheduler()
+    on_event = get_on_event(connection_manager, event_scheduler)
 
     new_config = {"endpoints": [], "configUpdatedAt": 200}
     with patch(
@@ -136,11 +147,33 @@ def test_fetches_and_applies_new_config_on_newer_event(connection_manager):
     connection_manager.update_firewall_lists.assert_called_once()
 
 
+def test_applying_the_new_config_is_scheduled_on_the_event_scheduler(
+    connection_manager,
+):
+    connection_manager.conf.last_updated_at = 100
+    event_scheduler = MagicMock()
+    on_event = get_on_event(connection_manager, event_scheduler)
+
+    new_config = {"endpoints": [], "configUpdatedAt": 200}
+    with patch(
+        "aikido_zen.background_process.realtime.get_config", return_value=new_config
+    ):
+        on_event(make_event(data={"configUpdatedAt": 200}))
+
+    connection_manager.update_service_config.assert_not_called()
+    connection_manager.update_firewall_lists.assert_not_called()
+    event_scheduler.enter.assert_called_once()
+    args, _kwargs = event_scheduler.enter.call_args
+    assert args[0] == 0  # run as soon as possible
+    assert callable(args[2])
+
+
 def test_updates_last_updated_at_so_a_second_stale_event_is_ignored(
     connection_manager,
 ):
     connection_manager.conf.last_updated_at = 100
-    on_event = get_on_event(connection_manager)
+    event_scheduler = make_inline_scheduler()
+    on_event = get_on_event(connection_manager, event_scheduler)
 
     new_config = {"endpoints": [], "configUpdatedAt": 200}
     with patch(
