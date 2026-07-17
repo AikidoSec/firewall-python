@@ -50,8 +50,8 @@ def connect_to_sse(
 
 def _reconnect_loop(token, on_event, initial_reconnect_secs, read_timeout_secs):
     reconnect_secs = initial_reconnect_secs
-    try:
-        while True:
+    while True:
+        try:
             start = time.monotonic()
             outcome, status_code = _connect(token, on_event, read_timeout_secs)
 
@@ -63,17 +63,17 @@ def _reconnect_loop(token, on_event, initial_reconnect_secs, read_timeout_secs):
 
             if time.monotonic() - start >= STABLE_CONNECTION_SECS:
                 reconnect_secs = initial_reconnect_secs
+        except Exception as e:
+            logger.error("SSE loop error : %s", e)
 
-            jitter = random.random() * (reconnect_secs / 2)
-            delay_secs = reconnect_secs + jitter
+        jitter = random.random() * (reconnect_secs / 2)
+        delay_secs = reconnect_secs + jitter
 
-            logger.debug("SSE scheduling reconnect in %sms", round(delay_secs * 1000))
+        logger.debug("SSE scheduling reconnect in %sms", round(delay_secs * 1000))
 
-            reconnect_secs = min(reconnect_secs * 2, MAX_RECONNECT_SECS)
+        reconnect_secs = min(reconnect_secs * 2, MAX_RECONNECT_SECS)
 
-            time.sleep(delay_secs)
-    except Exception as e:
-        logger.error("SSE loop error : %s", e)
+        time.sleep(delay_secs)
 
 
 def _connect(token, on_event, read_timeout_secs):
@@ -119,6 +119,9 @@ def _connect(token, on_event, read_timeout_secs):
             except _CONNECTION_ERRORS as e:
                 logger.debug("SSE stream error : %s", e)
                 return "disconnected", status_code
+            except Exception as e:
+                logger.debug("SSE parser or callback error : %s", e)
+                return "error", None
     except urllib.error.HTTPError as e:
         logger.debug("SSE connection rejected with status %s", e.code)
         return "disconnected", e.code
