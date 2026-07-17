@@ -61,6 +61,10 @@ def test_happy_path_receives_events_with_auth_header():
 
     def do_get(handler):
         captured["auth"] = handler.headers.get("Authorization")
+        captured["accept"] = handler.headers.get("Accept")
+        captured["cache"] = handler.headers.get("Cache-Control")
+        captured["x-agent-platform"] = handler.headers.get("X-Agent-Platform")
+        captured["x-agent-version"] = handler.headers.get("X-Agent-Version")
         handler.send_response(200)
         handler.send_header("Content-Type", "text/event-stream")
         handler.send_header("Cache-Control", "no-cache")
@@ -88,6 +92,10 @@ def test_happy_path_receives_events_with_auth_header():
     assert outcome == "disconnected"
     assert status_code == 200
     assert captured["auth"] == "my-secret-token"
+    assert captured["accept"] == "text/event-stream"
+    assert captured["cache"] == "no-cache"
+    assert captured["x-agent-platform"] == "python"
+    assert captured["x-agent-version"] == "1.0-REPLACE-VERSION"
     assert len(events) == 2
     assert events[0].event == "config-updated"
     assert json.loads(events[0].data) == {"configUpdatedAt": 100}
