@@ -15,6 +15,7 @@ import urllib.request
 import aikido_zen.background_process.realtime as realtime
 from aikido_zen.helpers.logging import logger
 from .parser import SSEParser
+import aikido_zen.config as config
 
 INITIAL_RECONNECT_SECS = 5
 MAX_RECONNECT_SECS = 60
@@ -94,6 +95,8 @@ def _connect(token, on_event, read_timeout_secs):
             "Authorization": str(token),
             "Accept": "text/event-stream",
             "Cache-Control": "no-cache",
+            "X-Agent-Platform": "python",
+            "X-Agent-Version": config.PKG_VERSION,
         },
     )
 
