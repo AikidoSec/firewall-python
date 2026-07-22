@@ -43,7 +43,11 @@ def start_background_process():
     if isinstance(address, str) and os.path.exists(address):
         if background_process_already_active(comms):
             return  # Don't start if the background process is already active
-        os.remove(address)
+        try:
+            os.remove(address)
+        except FileNotFoundError:
+            # Another application worker removed the stale socket first.
+            pass
 
     #  Daemon is set to True so that the process kills itself when the main process dies
     background_process = Process(
