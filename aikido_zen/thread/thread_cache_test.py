@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 import aikido_zen.test_utils as test_utils
 
 from aikido_zen.background_process.routes import Routes
+from . import process_worker_loader
 from .thread_cache import ThreadCache, get_cache
 from .. import set_user
 from ..background_process.packages import PackagesStore
@@ -103,6 +104,108 @@ def test_renew_with_no_comms(thread_cache: ThreadCache):
             "attacksDetected": {"total": 0, "blocked": 0},
             "attackWaves": {"total": 0, "blocked": 0},
         }
+
+
+@patch.object(process_worker_loader.thread_cache, "renew")
+@patch.object(
+    process_worker_loader.thread_cache, "is_config_loaded", return_value=False
+)
+@patch.object(process_worker_loader.threading, "Thread")
+@patch.object(process_worker_loader.threading, "enumerate", return_value=[])
+@patch.object(process_worker_loader, "get_current_context", return_value=object())
+def test_load_worker_renews_cache_before_starting_thread(
+    _mock_context,
+    _mock_enumerate,
+    mock_thread_type,
+    _mock_is_config_loaded,
+    mock_renew,
+):
+    call_order = []
+    thread = mock_thread_type.return_value
+    thread.start.side_effect = lambda: call_order.append("start")
+    mock_renew.side_effect = lambda: call_order.append("renew")
+
+    process_worker_loader.load_worker()
+
+    assert call_order == ["renew", "start"]
+    assert thread.daemon is True
+
+
+@patch.object(process_worker_loader.thread_cache, "renew")
+@patch.object(process_worker_loader.thread_cache, "is_config_loaded", return_value=True)
+@patch.object(process_worker_loader.threading, "Thread")
+@patch.object(process_worker_loader.threading, "enumerate")
+@patch.object(process_worker_loader, "get_current_context", return_value=object())
+def test_load_worker_does_not_initialize_when_worker_is_running(
+    _mock_context,
+    mock_enumerate,
+    mock_thread_type,
+    _mock_is_config_loaded,
+    mock_renew,
+):
+    worker = MagicMock()
+    worker.name = "aikido-process-worker-" + str(
+        process_worker_loader.multiprocessing.current_process().pid
+    )
+    mock_enumerate.return_value = [worker]
+
+    process_worker_loader.load_worker()
+
+    mock_renew.assert_not_called()
+    mock_thread_type.assert_not_called()
+
+
+@patch.object(process_worker_loader.thread_cache, "renew")
+@patch.object(
+    process_worker_loader.thread_cache, "is_config_loaded", return_value=False
+)
+@patch.object(process_worker_loader.threading, "Thread")
+@patch.object(process_worker_loader.threading, "enumerate")
+@patch.object(process_worker_loader, "get_current_context", return_value=object())
+def test_load_worker_retries_cache_initialization_when_worker_is_running(
+    _mock_context,
+    mock_enumerate,
+    mock_thread_type,
+    _mock_is_config_loaded,
+    mock_renew,
+):
+    worker = MagicMock()
+    worker.name = "aikido-process-worker-" + str(
+        process_worker_loader.multiprocessing.current_process().pid
+    )
+    mock_enumerate.return_value = [worker]
+
+    process_worker_loader.load_worker()
+
+    mock_renew.assert_called_once_with()
+    mock_thread_type.assert_not_called()
+
+
+@patch.object(process_worker_loader.logger, "warning")
+@patch.object(process_worker_loader.thread_cache, "renew")
+@patch.object(
+    process_worker_loader.thread_cache, "is_config_loaded", return_value=False
+)
+@patch.object(process_worker_loader.threading, "Thread")
+@patch.object(process_worker_loader.threading, "enumerate", return_value=[])
+@patch.object(process_worker_loader, "get_current_context", return_value=object())
+def test_load_worker_starts_thread_when_cache_renewal_fails(
+    _mock_context,
+    _mock_enumerate,
+    mock_thread_type,
+    _mock_is_config_loaded,
+    mock_renew,
+    mock_warning,
+):
+    error = RuntimeError("sync failed")
+    mock_renew.side_effect = error
+
+    process_worker_loader.load_worker()
+
+    mock_thread_type.return_value.start.assert_called_once_with()
+    mock_warning.assert_called_once_with(
+        "An error occurred during data synchronization: %s", error
+    )
 
 
 @patch("aikido_zen.background_process.comms.get_comms")

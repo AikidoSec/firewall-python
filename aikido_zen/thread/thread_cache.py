@@ -123,5 +123,9 @@ def get_cache():
     return global_thread_cache
 
 
+def is_config_loaded():
+    return global_thread_cache.config.last_updated_at > 0
+
+
 def renew():
     global_thread_cache.renew()
