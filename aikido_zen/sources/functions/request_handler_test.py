@@ -200,7 +200,7 @@ def create_service_config():
                 "allowedIPAddresses": ["1.1.1.1", "2.2.2.2", "3.3.3.3"],
             }
         ],
-        last_updated_at=None,
+        last_updated_at=1,
         blocked_uids=set(),
         bypassed_ips=[],
         received_any_stats=False,
@@ -238,7 +238,7 @@ def test_bypassed_ip_skips_all_checks(firewall_lists):
                 "allowedIPAddresses": ["1.1.1.1"],  # 192.168.1.1 not in this list
             }
         ],
-        last_updated_at=None,
+        last_updated_at=1,
         blocked_uids=set(),
         bypassed_ips=["192.168.1.1"],
         received_any_stats=False,
