@@ -28,12 +28,17 @@ def get_process_factory():
     Python 3.14 changed the default POSIX start method from fork to forkserver.
     Forkserver re-imports the application's main module, but Zen starts its
     background process while that module is still importing.
+
+    Inspect the configured start method without setting multiprocessing's
+    process-wide default. If it is unset, get_all_start_methods() reports the
+    platform default as its first entry.
     """
-    if (
-        sys.version_info >= (3, 14)
-        and multiprocessing.get_start_method() == "forkserver"
-    ):
-        return multiprocessing.get_context("fork").Process
+    if sys.version_info >= (3, 14):
+        start_method = multiprocessing.get_start_method(allow_none=True)
+        if start_method is None:
+            start_method = multiprocessing.get_all_start_methods()[0]
+        if start_method == "forkserver":
+            return multiprocessing.get_context("fork").Process
     return multiprocessing.Process
 
 
