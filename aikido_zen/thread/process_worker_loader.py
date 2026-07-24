@@ -33,7 +33,7 @@ def load_worker():
         if any(thread.name == thread_name for thread in threading.enumerate()):
             return
 
-        # Create a new daemon thread tht will handle communication to and from background agent
+        # Create a new daemon thread that will handle communication to and from background agent
         thread = threading.Thread(target=aikido_process_worker_thread, name=thread_name)
         thread.daemon = True
         thread.start()
