@@ -47,6 +47,8 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: 3 :: Only",
     "Topic :: Security",
 ]
@@ -59,7 +61,7 @@ homepage = "https://www.aikido.dev/runtime/firewall/"
 "Bug Bounty" = "https://app.intigriti.com/programs/aikido"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = ">=3.8,<3.15"
 regex = "^2024.5.15"
 packaging = "^24.1"
 wrapt = "^1.17.2"
