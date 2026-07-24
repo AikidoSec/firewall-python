@@ -8,7 +8,8 @@ dependencies = [
     "flask-mysql (>=1.6.0,<2.0.0)",
     "cryptography (>=44.0.0,<45.0.0)",
     "aikido_zen",
-    "uwsgi (>=2.0.31,<3.0.0)"
+    "uwsgi (==2.0.28) ; python_version < '3.14'",
+    "uwsgi (>=2.0.31,<3.0.0) ; python_version >= '3.14'"
 ]
 
 [build-system]

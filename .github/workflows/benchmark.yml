@@ -89,6 +89,9 @@ jobs:
       matrix:
         app: [starlette-postgres-uvicorn, flask-mysql-uwsgi, flask-mysql]
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        exclude:
+          - app: flask-mysql-uwsgi
+            python-version: "3.14"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
