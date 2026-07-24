@@ -3,9 +3,10 @@ Aikido background process, this will create a new process
 and listen for data sent by our sources and sinks
 """
 
+import multiprocessing
 import os
-from multiprocessing import Process
 import platform
+import sys
 
 from aikido_zen.helpers.token import get_token_from_env
 from aikido_zen.helpers.get_temp_dir import get_temp_dir
@@ -18,6 +19,22 @@ from aikido_zen.background_process.comms import (
     reset_comms,
 )
 from .aikido_background_process import AikidoBackgroundProcess
+
+
+def get_process_factory():
+    """
+    Return a process factory that is safe to start while an app is importing.
+
+    Python 3.14 changed the default POSIX start method from fork to forkserver.
+    Forkserver re-imports the application's main module, but Zen starts its
+    background process while that module is still importing.
+    """
+    if (
+        sys.version_info >= (3, 14)
+        and multiprocessing.get_start_method() == "forkserver"
+    ):
+        return multiprocessing.get_context("fork").Process
+    return multiprocessing.Process
 
 
 def start_background_process():
@@ -50,7 +67,7 @@ def start_background_process():
             pass
 
     #  Daemon is set to True so that the process kills itself when the main process dies
-    background_process = Process(
+    background_process = get_process_factory()(
         target=AikidoBackgroundProcess,
         args=(comms.address, comms.key),
         name="zen-agent-process",
