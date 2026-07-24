@@ -23,7 +23,7 @@ What actually happened (include logs or error messages if possible).
 
 **Environment**
 - OS: [e.g. Ubuntu 22.04, macOS 15.0, Windows 11]
-- Language version: [e.g. 3.11, 3.12, 3.13, 3.14]
+- Language version: [e.g. 3.8, 3.9, 3.10, 3.11, 3.12, 3.13, 3.14]
 - Framework: [e.g. Django, Flask, FastAPI]
 - Environment: [local, Docker, cloud, etc.]
 - Aikido Package version: [e.g. 1.2.3]
