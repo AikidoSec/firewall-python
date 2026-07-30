@@ -61,3 +61,15 @@ class AikidoSSRF(AikidoException):
     """Exception because of SSRF"""
 
     kind = "ssrf"
+
+
+class AikidoAIToolCallBlocked(AikidoException):
+    """Exception when an AI provider response requests a blocked tool call"""
+
+    kind = "ai_tool_call"
+
+    def __init__(self, tool_name="unknown", pattern=None):
+        message = generate_default_message(self.kind) + f", tool: {tool_name}"
+        if pattern:
+            message += f", pattern: {pattern}"
+        super().__init__(message)
