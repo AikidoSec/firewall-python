@@ -99,4 +99,59 @@ def test_start_does_not_enable_sse_without_flag(
     mock_listen_for_config_updates.assert_not_called()
 
 
+@patch("aikido_zen.background_process.cloud_connection_manager.on_start")
+@patch(
+    "aikido_zen.background_process.cloud_connection_manager.start_polling_for_changes"
+)
+@patch(
+    "aikido_zen.background_process.cloud_connection_manager.send_heartbeats_every_x_secs"
+)
+@patch(
+    "aikido_zen.background_process.cloud_connection_manager.listen_for_config_updates"
+)
+def test_start_enables_sse_via_env_var(
+    mock_listen_for_config_updates,
+    mock_send_heartbeats,
+    mock_start_polling,
+    mock_on_start,
+    setup_cloud_connection_manager,
+    monkeypatch,
+):
+    """SSE listening should still start via the AIKIDO_FEATURE_SSE env var, without the server flag"""
+    monkeypatch.setenv("AIKIDO_FEATURE_SSE", "true")
+    manager = setup_cloud_connection_manager
+    mock_on_start.return_value = {"success": True}
+
+    manager.start(event_scheduler=MagicMock())
+
+    mock_listen_for_config_updates.assert_called_once()
+
+
+@patch("aikido_zen.background_process.cloud_connection_manager.on_start")
+@patch(
+    "aikido_zen.background_process.cloud_connection_manager.start_polling_for_changes"
+)
+@patch(
+    "aikido_zen.background_process.cloud_connection_manager.send_heartbeats_every_x_secs"
+)
+@patch(
+    "aikido_zen.background_process.cloud_connection_manager.listen_for_config_updates"
+)
+def test_start_does_not_enable_sse_for_unrelated_flag(
+    mock_listen_for_config_updates,
+    mock_send_heartbeats,
+    mock_start_polling,
+    mock_on_start,
+    setup_cloud_connection_manager,
+):
+    """A server feature flag other than realtime_updates should not enable SSE"""
+    manager = setup_cloud_connection_manager
+    mock_on_start.return_value = {"success": True}
+    manager.conf.update_enabled_features(["some_other_feature"])
+
+    manager.start(event_scheduler=MagicMock())
+
+    mock_listen_for_config_updates.assert_not_called()
+
+
 # Additional tests can be added here for other edge cases or scenarios

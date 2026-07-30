@@ -305,6 +305,52 @@ def test_update_service_config_enabled_features_not_array():
     assert connection_manager.conf.is_feature_enabled("not-an-array") is False
 
 
+def test_update_service_config_enabled_features_empty_list():
+    """Test that update_service_config clears enabled features with an empty list"""
+    connection_manager = MagicMock()
+    connection_manager.conf = ServiceConfig(
+        endpoints=[],
+        last_updated_at=0,
+        blocked_uids=set(),
+        bypassed_ips=[],
+        received_any_stats=False,
+    )
+    connection_manager.block = False
+    connection_manager.conf.update_enabled_features(["realtime_updates"])
+
+    res = {
+        "success": True,
+        "enabledFeatures": [],
+    }
+
+    update_service_config(connection_manager, res)
+
+    assert connection_manager.conf.is_feature_enabled("realtime_updates") is False
+
+
+def test_update_service_config_enabled_features_not_updated_on_failure():
+    """Test that enabledFeatures is left untouched when the response indicates failure"""
+    connection_manager = MagicMock()
+    connection_manager.conf = ServiceConfig(
+        endpoints=[],
+        last_updated_at=0,
+        blocked_uids=set(),
+        bypassed_ips=[],
+        received_any_stats=False,
+    )
+    connection_manager.block = False
+    connection_manager.conf.update_enabled_features(["realtime_updates"])
+
+    res = {
+        "success": False,
+        "enabledFeatures": [],
+    }
+
+    update_service_config(connection_manager, res)
+
+    assert connection_manager.conf.is_feature_enabled("realtime_updates") is True
+
+
 def test_update_service_config_excluded_user_ids_not_array():
     """Test that update_service_config ignores non-array excludedUserIdsFromRateLimiting"""
     connection_manager = MagicMock()
