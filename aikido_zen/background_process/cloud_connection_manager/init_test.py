@@ -1,4 +1,5 @@
 import pytest
+from unittest.mock import patch, MagicMock
 from aikido_zen.helpers.token import Token
 from aikido_zen.background_process.api.http_api import ReportingApiHTTP
 from aikido_zen.background_process.service_config import ServiceConfig
@@ -43,6 +44,59 @@ def test_cloud_connection_manager_empty_serverless():
 
     with pytest.raises(ValueError, match="Serverless cannot be an empty string"):
         CloudConnectionManager(block, api, token, serverless)
+
+
+@patch("aikido_zen.background_process.cloud_connection_manager.on_start")
+@patch(
+    "aikido_zen.background_process.cloud_connection_manager.start_polling_for_changes"
+)
+@patch(
+    "aikido_zen.background_process.cloud_connection_manager.send_heartbeats_every_x_secs"
+)
+@patch(
+    "aikido_zen.background_process.cloud_connection_manager.listen_for_config_updates"
+)
+def test_start_enables_sse_when_server_flag_set(
+    mock_listen_for_config_updates,
+    mock_send_heartbeats,
+    mock_start_polling,
+    mock_on_start,
+    setup_cloud_connection_manager,
+):
+    """SSE listening should start when the server enables the realtime_updates feature flag"""
+    manager = setup_cloud_connection_manager
+    mock_on_start.return_value = {"success": True}
+    manager.conf.update_enabled_features(["realtime_updates"])
+
+    manager.start(event_scheduler=MagicMock())
+
+    mock_listen_for_config_updates.assert_called_once()
+
+
+@patch("aikido_zen.background_process.cloud_connection_manager.on_start")
+@patch(
+    "aikido_zen.background_process.cloud_connection_manager.start_polling_for_changes"
+)
+@patch(
+    "aikido_zen.background_process.cloud_connection_manager.send_heartbeats_every_x_secs"
+)
+@patch(
+    "aikido_zen.background_process.cloud_connection_manager.listen_for_config_updates"
+)
+def test_start_does_not_enable_sse_without_flag(
+    mock_listen_for_config_updates,
+    mock_send_heartbeats,
+    mock_start_polling,
+    mock_on_start,
+    setup_cloud_connection_manager,
+):
+    """SSE listening should not start when neither the env var nor the server flag is set"""
+    manager = setup_cloud_connection_manager
+    mock_on_start.return_value = {"success": True}
+
+    manager.start(event_scheduler=MagicMock())
+
+    mock_listen_for_config_updates.assert_not_called()
 
 
 # Additional tests can be added here for other edge cases or scenarios

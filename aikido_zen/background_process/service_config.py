@@ -25,6 +25,7 @@ class ServiceConfig:
         self.block_new_outgoing_requests = False
         self.outbound_domains = {}
         self.excluded_user_ids_from_rate_limiting = set()
+        self.enabled_features = set()
 
     def update(
         self,
@@ -83,6 +84,14 @@ class ServiceConfig:
     def is_user_excluded_from_rate_limiting(self, user_id):
         """Checks if the user ID is excluded from rate limiting"""
         return str(user_id) in self.excluded_user_ids_from_rate_limiting
+
+    def update_enabled_features(self, features):
+        """Sets the server-provided feature flags"""
+        self.enabled_features = set(features)
+
+    def is_feature_enabled(self, feature) -> bool:
+        """Checks if `feature` is enabled via server-provided config"""
+        return feature in self.enabled_features
 
     def update_outbound_domains(self, domains):
         self.outbound_domains = {

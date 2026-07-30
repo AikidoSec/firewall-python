@@ -321,6 +321,28 @@ def test_service_config_with_empty_allowlist():
     assert len(admin_endpoint["allowedIPAddresses"]) == 0
 
 
+def test_service_config_enabled_features():
+    """Test the update_enabled_features and is_feature_enabled methods"""
+    config = ServiceConfig(
+        endpoints=[],
+        last_updated_at=0,
+        blocked_uids=set(),
+        bypassed_ips=[],
+        received_any_stats=False,
+    )
+
+    # Initially empty
+    assert config.is_feature_enabled("realtime_updates") is False
+
+    config.update_enabled_features(["realtime_updates"])
+    assert config.is_feature_enabled("realtime_updates") is True
+    assert config.is_feature_enabled("some_other_feature") is False
+
+    # Update replaces the set
+    config.update_enabled_features([])
+    assert config.is_feature_enabled("realtime_updates") is False
+
+
 def test_excluded_user_ids_from_rate_limiting():
     config = ServiceConfig(
         endpoints=[],

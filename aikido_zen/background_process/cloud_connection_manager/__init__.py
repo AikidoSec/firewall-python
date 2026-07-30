@@ -69,7 +69,9 @@ class CloudConnectionManager:
         send_heartbeats_every_x_secs(self, self.heartbeat_secs, event_scheduler)
         start_polling_for_changes(self, event_scheduler)
 
-        if is_feature_enabled("sse"):
+        if is_feature_enabled("sse") or self.conf.is_feature_enabled(
+            "realtime_updates"
+        ):
             listen_for_config_updates(self, event_scheduler)
 
     def report_initial_stats(self):

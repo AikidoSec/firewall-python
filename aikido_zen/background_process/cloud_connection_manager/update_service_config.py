@@ -38,3 +38,6 @@ def update_service_config(connection_manager, res):
 
     if "domains" in res:
         connection_manager.conf.update_outbound_domains(res["domains"])
+
+    if isinstance(res.get("enabledFeatures"), list):
+        connection_manager.conf.update_enabled_features(res["enabledFeatures"])
