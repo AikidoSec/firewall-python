@@ -106,7 +106,7 @@ def post_response(status_code):
     if cache.is_bypassed_ip(context.remote_address):
         return
 
-    attack_wave = attack_wave_detector_store.is_attack_wave(context)
+    attack_wave = attack_wave_detector_store.is_attack_wave(context, status_code)
     if attack_wave:
         cache.stats.on_detected_attack_wave(blocked=False)
 
