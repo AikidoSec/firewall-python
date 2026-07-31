@@ -2,6 +2,7 @@
 Mostly exports the class RateLimiter
 """
 
+import math
 from aikido_zen.helpers.get_current_unixtime_ms import get_unixtime_ms
 from .lru_cache import LRUCache
 
@@ -18,7 +19,8 @@ class RateLimiter:
 
     def is_allowed(self, key, window_size_in_ms, max_requests):
         """
-        Checks if the request is allowed given the history
+        Checks if the request is allowed given the history.
+        Returns {"allowed": True} or {"allowed": False, "retry_after_seconds": int}.
         """
         current_time = get_unixtime_ms()
         request_timestamps = self.rate_limited_items.get(key) or []
@@ -39,5 +41,13 @@ class RateLimiter:
         request_timestamps.append(current_time)
         self.rate_limited_items.set(key, request_timestamps)
 
-        # if the total amount of requests in the current window exceeds max requests, we rate-limit
-        return len(request_timestamps) <= max_requests
+        if len(request_timestamps) <= max_requests:
+            return {"allowed": True}
+
+        retry_after_ms = max(
+            0, request_timestamps[0] + window_size_in_ms - current_time
+        )
+        return {
+            "allowed": False,
+            "retry_after_seconds": math.ceil(retry_after_ms / 1000),
+        }

@@ -153,7 +153,7 @@ def test_cache_comms_with_endpoints():
 
         mock_comms.send_data_to_bg_process.return_value = {
             "success": True,
-            "data": {"block": True, "trigger": "my_trigger"},
+            "data": {"block": True, "trigger": "my_trigger", "retry_after_seconds": 10},
         }
         assert thread_cache.stats.rate_limited_hits == 0
         assert should_block_request() == {
@@ -161,5 +161,6 @@ def test_cache_comms_with_endpoints():
             "ip": "1.1.1.1",
             "type": "ratelimited",
             "trigger": "my_trigger",
+            "retry_after_seconds": 10,
         }
         assert thread_cache.stats.rate_limited_hits == 1
