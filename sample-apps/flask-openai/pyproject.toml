@@ -7,7 +7,7 @@ requires-python = ">3.9.1,<4.0"
 dependencies = [
     "flask (>=3.1.0,<4.0.0)",
     "psycopg2-binary (>=2.9.10,<3.0.0)",
-    "cryptography (>=44.0.0,<45.0.0)",
+    "cryptography (>=50.0.0,<51.0.0)",
     "aikido_zen",
     "openai (>=1.85.0,<2.0.0)"
 ]
