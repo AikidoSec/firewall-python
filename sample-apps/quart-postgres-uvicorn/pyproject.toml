@@ -7,7 +7,7 @@ dependencies = [
     "aikido_zen",
     "quart (>=0.20.0,<0.21.0)",
     "asyncpg (>=0.31.0,<0.32.0)",
-    "cryptography (>=44.0.0,<45.0.0)",
+    "cryptography (>=50.0.0,<51.0.0)",
     "uvicorn (>=0.34.0,<0.35.0)",
 ]
 
