@@ -59,13 +59,17 @@ def extract_strings_from_user_input(obj, path_to_payload=None):
         results[obj] = build_path_to_payload(path_to_payload)
         jwt = try_decode_as_jwt(obj)
         if jwt[0]:
+            decoded = jwt[1]
+            #  Do not add the issuer of the JWT as a string because it can contain a
+            #  domain / url and produce false positives.
+            if is_mapping(decoded) and "iss" in decoded:
+                #  Copy so we don't mutate the caller's object / cached parse result.
+                decoded = {
+                    key: value for key, value in decoded.items() if key != "iss"
+                }
             for k, v in extract_strings_from_user_input(
-                jwt[1], path_to_payload + [{"type": "jwt"}]
+                decoded, path_to_payload + [{"type": "jwt"}]
             ).items():
-                if k == "iss" or v.endswith("<jwt>.iss"):
-                    # Do not add the issuer of the JWT as a string because it can contain a
-                    # domain / url and produce false positives
-                    continue
                 results[k] = v
 
     return results
