@@ -289,3 +289,56 @@ def test_extract_strings_from_user_input_cached_multiple_sources(mock_context):
 
 
 # To run the tests, use the command: pytest <filename>.py
+
+
+def test_jwt_payload_spoofing_does_not_hide_malicious_value():
+    """
+    Regression test for AIKIDO-9E72UAVT (Detection Bypass via JWT Payload Spoofing).
+
+    A JWT whose decoded body contains a "<jwt>.iss" key with the same value as a
+    real malicious payload must NOT cause the malicious payload to be dropped from
+    the extracted strings. Previously the `v.endswith("<jwt>.iss")` heuristic +
+    dict-key overwriting caused the path-traversal payload to be silently skipped.
+
+    Decoded body:
+    {"filename": "../../../../etc/passwd", "<jwt>.iss": "../../../../etc/passwd"}
+    """
+    # base64url(json.dumps({"filename": "../../../../etc/passwd",
+    #                       "<jwt>.iss": "../../../../etc/passwd"}))
+    jwt = (
+        "header."
+        "eyJmaWxlbmFtZSI6ICIuLi8uLi8uLi8uLi9ldGMvcGFzc3dkIiwgIjxqd3Q-"
+        "LmlzcyI6ICIuLi8uLi8uLi8uLi9ldGMvcGFzc3dkIn0="
+        ".signature"
+    )
+    result = extract_strings_from_user_input({"cookie": jwt})
+    assert "../../../../etc/passwd" in result
+
+
+def test_jwt_iss_claim_is_still_ignored():
+    """The legitimate top-level `iss` claim must still be ignored (no false positives)."""
+    # base64url(json.dumps({"iss": "https://example.com/../secret"}))
+    jwt = (
+        "header."
+        "eyJpc3MiOiAiaHR0cHM6Ly9leGFtcGxlLmNvbS8uLi9zZWNyZXQifQ=="
+        ".signature"
+    )
+    result = extract_strings_from_user_input({"cookie": jwt})
+    assert "https://example.com/../secret" not in result
+
+
+def test_jwt_iss_spoof_key_does_not_hide_malicious_value():
+    """
+    A value placed under a real "iss" claim is ignored, but a *different*
+    malicious value elsewhere must still be extracted.
+    """
+    # base64url(json.dumps({"iss": "https://example.com",
+    #                       "cmd": "; cat /etc/passwd"}))
+    jwt = (
+        "header."
+        "eyJpc3MiOiAiaHR0cHM6Ly9leGFtcGxlLmNvbSIsICJjbWQiOiAiOyBjYXQgL2V0Yy9wYXNzd2QifQ=="
+        ".signature"
+    )
+    result = extract_strings_from_user_input({"cookie": jwt})
+    assert "; cat /etc/passwd" in result
+    assert "https://example.com" not in result

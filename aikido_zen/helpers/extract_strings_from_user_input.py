@@ -59,13 +59,27 @@ def extract_strings_from_user_input(obj, path_to_payload=None):
         results[obj] = build_path_to_payload(path_to_payload)
         jwt = try_decode_as_jwt(obj)
         if jwt[0]:
+            decoded = jwt[1]
+            #  Do not add the issuer of the JWT as a string because it can contain a
+            #  domain / url and produce false positives.
+            #
+            #  We drop the "iss" claim directly from the decoded JWT payload *before*
+            #  recursing into it, using the real JWT key. The previous implementation
+            #  filtered on the constructed path string (`v.endswith("<jwt>.iss")`),
+            #  which an attacker could spoof by adding a key literally named
+            #  "<jwt>.iss" holding the same value as a malicious payload. Because two
+            #  identical string values collapse to a single dict key, the malicious
+            #  payload inherited the "<jwt>.iss" path and was silently skipped
+            #  (detection bypass -- AIKIDO-9E72UAVT). Filtering on the real key avoids
+            #  this while still ignoring the legitimate issuer claim.
+            if is_mapping(decoded) and "iss" in decoded:
+                #  Copy so we don't mutate the caller's object / cached parse result.
+                decoded = {
+                    key: value for key, value in decoded.items() if key != "iss"
+                }
             for k, v in extract_strings_from_user_input(
-                jwt[1], path_to_payload + [{"type": "jwt"}]
+                decoded, path_to_payload + [{"type": "jwt"}]
             ).items():
-                if k == "iss" or v.endswith("<jwt>.iss"):
-                    # Do not add the issuer of the JWT as a string because it can contain a
-                    # domain / url and produce false positives
-                    continue
                 results[k] = v
 
     return results
