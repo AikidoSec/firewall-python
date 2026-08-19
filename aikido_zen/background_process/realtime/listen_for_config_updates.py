@@ -3,6 +3,7 @@ Mainly exports `listen_for_config_updates`
 """
 
 import json
+import time
 
 from aikido_zen.helpers.token import Token
 from aikido_zen.helpers.logging import logger
@@ -26,6 +27,21 @@ def listen_for_config_updates(connection_manager, event_scheduler):
 
     token = connection_manager.token
     last_updated_at = connection_manager.conf.last_updated_at
+    last_config_refresh_started_at = None
+
+    def config_update_arrived_too_fast():
+        nonlocal last_config_refresh_started_at
+
+        now = time.monotonic()
+        if (
+            last_config_refresh_started_at is not None
+            and now - last_config_refresh_started_at
+            < 9
+        ):
+            return True
+
+        last_config_refresh_started_at = now
+        return False
 
     def on_event(event):
         nonlocal last_updated_at
@@ -41,6 +57,10 @@ def listen_for_config_updates(connection_manager, event_scheduler):
                 return
         except (ValueError, KeyError, TypeError):
             logger.debug("SSE config-updated event has invalid payload: %s", event.data)
+            return
+
+        if config_update_arrived_too_fast():
+            logger.debug("SSE config-updated event ignored by refresh throttle")
             return
 
         logger.debug("SSE config-updated event, fetching new config")
