@@ -188,6 +188,22 @@ def test_updates_last_updated_at_so_a_second_stale_event_is_ignored(
     mock_get_config.assert_called_once()
 
 
+def test_throttles_newer_events(connection_manager):
+    connection_manager.conf.last_updated_at = 100
+    event_scheduler = make_inline_scheduler()
+    on_event = get_on_event(connection_manager, event_scheduler)
+
+    new_config = {"endpoints": [], "configUpdatedAt": 200}
+    with patch(
+        "aikido_zen.background_process.realtime.get_config", return_value=new_config
+    ) as mock_get_config:
+        on_event(make_event(data={"configUpdatedAt": 200}))
+        on_event(make_event(data={"configUpdatedAt": 300}))
+
+    mock_get_config.assert_called_once_with(connection_manager.token)
+    connection_manager.update_firewall_lists.assert_called_once()
+
+
 def test_handles_get_config_failure_gracefully(connection_manager, caplog):
     connection_manager.conf.last_updated_at = 100
     on_event = get_on_event(connection_manager)
