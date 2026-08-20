@@ -10,6 +10,9 @@ from aikido_zen.helpers.logging import logger
 import aikido_zen.background_process.realtime as realtime
 from .sse_client import connect_to_sse
 
+# Zen Realtime API should not send config-updated events more than once every 10 seconds
+CONFIG_REFRESH_THROTTLE_SECONDS = 9
+
 
 def listen_for_config_updates(connection_manager, event_scheduler):
     """
@@ -35,8 +38,7 @@ def listen_for_config_updates(connection_manager, event_scheduler):
         now = time.monotonic()
         if (
             last_config_refresh_started_at is not None
-            and now - last_config_refresh_started_at
-            < 9
+            and now - last_config_refresh_started_at < CONFIG_REFRESH_THROTTLE_SECONDS
         ):
             return True
 
