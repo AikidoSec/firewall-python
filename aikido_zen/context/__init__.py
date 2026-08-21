@@ -21,7 +21,7 @@ UINPUT_SOURCES = ["body", "cookies", "query", "headers", "xml", "route_params"]
 current_context = contextvars.ContextVar("current_context", default=None)
 
 WSGI_SOURCES = ["django", "flask"]
-ASGI_SOURCES = ["quart", "django_async", "starlette"]
+ASGI_SOURCES = ["quart", "django_async", "starlette", "hypercorn_asgi"]
 
 
 def get_current_context():
