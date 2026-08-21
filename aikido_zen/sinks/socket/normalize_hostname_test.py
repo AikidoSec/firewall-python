@@ -55,10 +55,10 @@ def test_normalize_hostname_punycode_subdomain():
     assert result == "müller.example.com"
 
 
-def test_normalize_hostname_mixed_case():
-    """Test that case is preserved in non-punycode hostnames"""
-    assert normalize_hostname("Example.COM") == "Example.COM"
-    assert normalize_hostname("MixedCase.Example.com") == "MixedCase.Example.com"
+def test_normalize_hostname_lowercases():
+    """Test that hostnames are lowercased"""
+    assert normalize_hostname("Example.COM") == "example.com"
+    assert normalize_hostname("MixedCase.Example.com") == "mixedcase.example.com"
 
 
 def test_normalize_hostname_non_string_input():
@@ -94,7 +94,12 @@ def test_normalize_hostname_punycode_not_starting_with_xn():
 
 def test_normalize_hostname_punycode_error_handling():
     """Test error handling for malformed punycode"""
-    # This should return the original string if decoding fails
     result = normalize_hostname("xn--invalid-punycode")
-    # Should either return the original or a decoded version if valid
     assert isinstance(result, str)
+
+
+def test_normalize_hostname_trailing_dot():
+    """Test that trailing dots (FQDN form from DNS resolvers) are stripped"""
+    assert normalize_hostname("example.com.") == "example.com"
+    assert normalize_hostname("metadata.google.internal.") == "metadata.google.internal"
+    assert normalize_hostname("metadata.goog.") == "metadata.goog"
