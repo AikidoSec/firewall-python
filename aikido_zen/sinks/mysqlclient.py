@@ -6,6 +6,7 @@ from aikido_zen.helpers.get_argument import get_argument
 import aikido_zen.vulnerabilities as vulns
 from aikido_zen.helpers.register_call import register_call
 from aikido_zen.sinks import patch_function, on_import, before
+from aikido_zen.vulnerabilities.idor.check_idor import run_idor_check
 
 
 @before
@@ -20,6 +21,9 @@ def _execute(func, instance, args, kwargs):
         kind="sql_injection", op="MySQLdb.Cursor.execute", args=(query, "mysql")
     )
 
+    query_params = get_argument(args, kwargs, 1, "args")
+    run_idor_check(query, "mysql", query_params)
+
 
 @before
 def _executemany(func, instance, args, kwargs):
@@ -29,6 +33,9 @@ def _executemany(func, instance, args, kwargs):
     vulns.run_vulnerability_scan(
         kind="sql_injection", op="MySQLdb.Cursor.executemany", args=(query, "mysql")
     )
+
+    query_params = get_argument(args, kwargs, 1, "args")
+    run_idor_check(query, "mysql", query_params)
 
 
 @on_import("MySQLdb.cursors", "mysqlclient", version_requirement="1.5.0")
