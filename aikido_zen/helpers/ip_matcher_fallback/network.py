@@ -84,6 +84,9 @@ class Network:
         other_next = network.duplicate().next()
         if not next_network.is_valid():
             return True
+        # Handle edge case where the other network's next address overflows
+        if not other_next.is_valid():
+            return False
         if next_network.addr.compare(other_next.addr) == BEFORE:
             return False
         return True

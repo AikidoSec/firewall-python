@@ -1,64 +1,67 @@
 import ipaddress
 
 try:
-    import pytricia
+    from ipset_c import IPSet
 
-    PYTRICIA_AVAILABLE = True
+    IPSET_C_AVAILABLE = True
 except ImportError:
-    PYTRICIA_AVAILABLE = False
+    IPSET_C_AVAILABLE = False
     from aikido_zen.helpers.logging import logger
 
     logger.warning(
-        "pytricia is not available. This happens on windows devices where pytricia is not supported yet."
+        "ipset_c is not available on this platform/architecture."
         "Using fallback, this may result in slower performance."
-        "You can try to install pytricia for better performance: pip install pytricia"
+        "You can try to install ipset_c for better performance: pip install ipset_c"
     )
 
 
-def preparse(network: str) -> str:
-    # Remove the brackets around IPv6 addresses if they are there.
+IPV4_MAPPED_IPV6_BASE = ipaddress.ip_network("::ffff:0:0/96")
+
+
+def preparse(network: str):
+    """
+    Strips the brackets around IPv6 addresses if they are there and parses the
+    network into an ipaddress network object. IPv4-mapped IPv6 networks (e.g.
+    ::ffff:127.0.0.1) are converted to their plain IPv4 equivalent.
+    Returns None if the network is invalid.
+    """
     network = network.strip("[]")
     try:
-        ip = ipaddress.IPv6Address(network)
-        if ip.ipv4_mapped:
-            return str(ip.ipv4_mapped)
+        net = ipaddress.ip_network(network, strict=False)
     except ValueError:
-        pass
-    return network
+        return None
+    if net.version == 6 and net.subnet_of(IPV4_MAPPED_IPV6_BASE):
+        ipv4_addr = net.network_address.ipv4_mapped
+        return ipaddress.ip_network(f"{ipv4_addr}/{net.prefixlen - 96}", strict=False)
+    return net
 
 
-if PYTRICIA_AVAILABLE:
+if IPSET_C_AVAILABLE:
 
     class IPMatcher:
         def __init__(self, networks=None):
-            self.trie = pytricia.PyTricia(128)
+            v4_cidrs = []
+            v6_cidrs = []
             if networks is not None:
                 for s in networks:
-                    self._add(s)
-            # We freeze in constructor ensuring that after initialization the IPMatcher is always frozen.
-            self.trie.freeze()
+                    net = preparse(s)
+                    if net is None:
+                        continue
+                    (v4_cidrs if net.version == 4 else v6_cidrs).append(str(net))
+            self.v4 = IPSet(v4_cidrs)
+            self.v6 = IPSet(v6_cidrs)
 
         def has(self, network):
-            try:
-                return self.trie.get(preparse(network)) is not None
-            except ValueError:
+            net = preparse(network)
+            if net is None:
                 return False
-
-        def _add(self, network):
-            try:
-                self.trie[preparse(network)] = True
-            except ValueError:
-                pass
-            except SystemError:
-                # SystemError's have been known to occur in the PyTricia library (see issue #34 e.g.),
-                # best to play it safe and catch these errors.
-                pass
-            return self
+            ipset = self.v4 if net.version == 4 else self.v6
+            return ipset.isContainsCidr(str(net))
 
         def is_empty(self):
-            return len(self.trie) == 0
+            return self.v4.size == 0 and self.v6.size == 0
 
 else:
-    # Fallback to pure Python implementation - this happens on windows machines since pytricia is not
-    # fully supported there.
+    # Fallback to pure Python implementation - this happens when ipset_c is not
+    # available for the current platform/architecture.
     from aikido_zen.helpers.ip_matcher_fallback import IPMatcher  # noqa: F401

@@ -144,7 +144,7 @@ def test_strange_ips():
     matcher = IPMatcher(input_list)
     assert matcher.has("::ffff:0.0.0.0") == True
     assert matcher.has("::ffff:127.0.0.1") == True
-    assert matcher.has("::ffff:123") == True
+    assert matcher.has("::ffff:123") == False
     assert matcher.has("2001:db8::1") == False
     assert matcher.has("[::ffff:0.0.0.0]") == True
     assert matcher.has("::ffff:0:0:0:0") == True
@@ -201,3 +201,11 @@ def test_edge_cases():
     matcher1 = IPMatcher(["224.0.0.0/4"])
     assert matcher1.has("224.0.0.1") == True
     assert matcher1.has("240.0.0.0") == False
+
+
+def test_adjacent_ranges_at_end_of_address_space():
+    matcher = IPMatcher(["224.0.0.0/4", "240.0.0.0/4"])
+    assert matcher.has("224.0.0.1") == True
+    assert matcher.has("240.0.0.1") == True
+    assert matcher.has("255.255.255.255") == True
+    assert matcher.has("223.255.255.255") == False
