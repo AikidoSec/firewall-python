@@ -1,0 +1,12 @@
+.git
+.venv
+.cache
+.pytest_cache
+.devcontainer
+.claude
+dist
+sample-apps
+benchmarks
+end2end
+**/__pycache__
+**/*.pyc
