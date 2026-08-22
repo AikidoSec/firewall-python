@@ -20,9 +20,10 @@ def get_hostname_options(raw_hostname: str) -> List[str]:
         if hostname_decoded:
             options_urls.append(try_parse_url(f"http://{hostname_decoded}"))
 
-    # Map to url.hostname
+    # Map to url.hostname, deduplicating (bracketed and unbracketed
+    # variants can resolve to the same hostname depending on Python version)
     options = []
     for options_url in options_urls:
-        if options_url and options_url.hostname:
+        if options_url and options_url.hostname and options_url.hostname not in options:
             options.append(options_url.hostname)
     return options
