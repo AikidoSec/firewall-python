@@ -51,8 +51,9 @@ def patch(m):
     cannot set 'execute' attribute of immutable type 'psycopg2.extensions.cursor',
     so we create our own cursor factory to bypass this limitation.
     """
+    # Don't drop support for 2.8.6, Odoo v16 uses that version
     compatible = is_package_compatible(
-        required_version="2.9.2", packages=["psycopg2", "psycopg2-binary"]
+        required_version="2.8.6", packages=["psycopg2", "psycopg2-binary"]
     )
     if not compatible:
         # Users can install either psycopg2 or psycopg2-binary, we need to check if at least
