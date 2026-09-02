@@ -39,7 +39,7 @@ e2e:
 	./end2end/e2e.sh $(app)
 .PHONY: cov
 cov: build
-	poetry run pytest aikido_zen/ --cov=aikido_zen --cov-report=xml
+	poetry run pytest aikido_zen/ --cov=aikido_zen --cov-report=xml --cov-report=lcov:lcov.info
 .PHONY: benchmark
 benchmark:
 	k6 run -q ./benchmarks/flask-mysql-benchmarks.js
