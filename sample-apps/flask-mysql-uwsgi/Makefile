@@ -9,14 +9,16 @@ run: install
 	$(AIKIDO_ENV_COMMON) \
 	poetry run uwsgi --ini uwsgi.ini
 
-.PHONY: runBenchmark
-runBenchmark: install
+.PHONY: runBenchmark startBenchmark
+runBenchmark: install startBenchmark
+startBenchmark:
 	@echo "Running sample app flask-mysql-uwsgi with Zen on port $(PORT)"
 	$(AIKIDO_ENV_BENCHMARK) \
 	poetry run uwsgi --single-interpreter --ini uwsgi.ini
 
-.PHONY: runZenDisabled
-runZenDisabled: install
+.PHONY: runZenDisabled startZenDisabled
+runZenDisabled: install startZenDisabled
+startZenDisabled:
 	@echo "Running sample app flask-mysql-uwsgi without Zen on port $(PORT_DISABLED)"
 	$(AIKIDO_ENV_DISABLED) \
 	poetry run uwsgi --single-interpreter --ini uwsgi2.ini
