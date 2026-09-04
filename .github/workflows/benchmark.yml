@@ -63,9 +63,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           make install && make build
+      - name: Install flask-mysql
+        working-directory: ./sample-apps/flask-mysql
+        run: make install
       - name: Start flask-mysql
         working-directory: ./sample-apps/flask-mysql
-        run: nohup make runBenchmark & nohup make runZenDisabled &
+        run: nohup make startBenchmark & nohup make startZenDisabled &
 
       - name: Check app health (max 3 attempts)
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
@@ -113,9 +116,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           make install && make build
+      - name: Install app
+        working-directory: ./sample-apps/${{ matrix.app }}
+        run: make install
       - name: Start app
         working-directory: ./sample-apps/${{ matrix.app }}
-        run: nohup make runBenchmark & nohup make runZenDisabled &
+        run: nohup make startBenchmark & nohup make startZenDisabled &
 
       - name: Check app health (max 3 attempts)
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
