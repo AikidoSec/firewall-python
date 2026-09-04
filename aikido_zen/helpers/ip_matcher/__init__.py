@@ -1,64 +1,75 @@
 import ipaddress
 
-try:
-    import pytricia
-
-    PYTRICIA_AVAILABLE = True
-except ImportError:
-    PYTRICIA_AVAILABLE = False
-    from aikido_zen.helpers.logging import logger
-
-    logger.warning(
-        "pytricia is not available. This happens on windows devices where pytricia is not supported yet."
-        "Using fallback, this may result in slower performance."
-        "You can try to install pytricia for better performance: pip install pytricia"
-    )
+from aikido_zen.helpers.ip_matcher.native import create_ip_matcher
+from aikido_zen.helpers.ip_matcher_fallback import IPMatcher as FallbackIPMatcher
 
 
-def preparse(network: str) -> str:
-    # Remove the brackets around IPv6 addresses if they are there.
-    network = network.strip("[]")
+def preparse(network: str):
+    candidate = network.strip()
+    if candidate.startswith("["):
+        closing_bracket = candidate.rfind("]")
+        if closing_bracket < 0:
+            return network
+        candidate = candidate[1:closing_bracket]
+    if ":" not in candidate or "%" in candidate or "ffff" not in candidate.lower():
+        return network
+
     try:
-        ip = ipaddress.IPv6Address(network)
-        if ip.ipv4_mapped:
-            return str(ip.ipv4_mapped)
+        mapped = ipaddress.IPv6Address(candidate).ipv4_mapped
     except ValueError:
+        return network
+    return str(mapped) if mapped else network
+
+
+def _collect_networks(networks):
+    if networks is None:
+        return ()
+
+    collected = []
+    try:
+        for network in networks:
+            if isinstance(network, str):
+                collected.append(network)
+    except Exception:
         pass
-    return network
+    return tuple(collected)
 
 
-if PYTRICIA_AVAILABLE:
+def _create_fallback(networks):
+    try:
+        return FallbackIPMatcher(networks)
+    except Exception:
+        return FallbackIPMatcher()
 
-    class IPMatcher:
-        def __init__(self, networks=None):
-            self.trie = pytricia.PyTricia(128)
-            if networks is not None:
-                for s in networks:
-                    self._add(s)
-            # We freeze in constructor ensuring that after initialization the IPMatcher is always frozen.
-            self.trie.freeze()
 
-        def has(self, network):
-            try:
-                return self.trie.get(preparse(network)) is not None
-            except ValueError:
-                return False
+class IPMatcher:
+    def __init__(self, networks=None):
+        self._networks = _collect_networks(networks)
+        self._native = create_ip_matcher(self._networks)
+        self._fallback = (
+            _create_fallback(self._networks) if self._native is None else None
+        )
 
-        def _add(self, network):
-            try:
-                self.trie[preparse(network)] = True
-            except ValueError:
-                pass
-            except SystemError:
-                # SystemError's have been known to occur in the PyTricia library (see issue #34 e.g.),
-                # best to play it safe and catch these errors.
-                pass
-            return self
+    def has(self, network):
+        if not isinstance(network, str):
+            return False
 
-        def is_empty(self):
-            return len(self.trie) == 0
+        try:
+            if self._has(network):
+                return True
+            mapped_ipv4 = preparse(network)
+            return mapped_ipv4 != network and self._has(mapped_ipv4)
+        except Exception:
+            return False
 
-else:
-    # Fallback to pure Python implementation - this happens on windows machines since pytricia is not
-    # fully supported there.
-    from aikido_zen.helpers.ip_matcher_fallback import IPMatcher  # noqa: F401
+    def _has(self, network):
+        matcher = self._native or self._fallback
+        return matcher is not None and matcher.has(network)
+
+    def is_empty(self):
+        if self._fallback is None:
+            self._fallback = _create_fallback(self._networks)
+        return self._fallback.is_empty()
+
+    def __reduce__(self):
+        return self.__class__, (self._networks,)

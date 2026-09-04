@@ -1,4 +1,8 @@
+import pickle
+
 import pytest
+
+import aikido_zen.helpers.ip_matcher.native as native_ip_matcher
 from . import IPMatcher
 
 
@@ -56,6 +60,8 @@ def test_with_invalid_ranges():
         "123.123.123.123/1999",
         "",
         ",,,",
+        None,
+        "\ud800",
         "192.168.0.124/32",
         "192.168.0.125/32",
         "192.168.0.170/32",
@@ -72,8 +78,11 @@ def test_with_invalid_ranges():
     assert matcher.has("10.0.0.1") == False
     assert matcher.has("192.168.0.255") == True
     assert matcher.has("") == False
+    assert matcher.has(None) == False
+    assert matcher.has("\ud800") == False
     assert matcher.has("1") == False
     assert matcher.has("192.168.0.1/32") == True
+    assert matcher.is_empty() is False
 
 
 def test_with_empty_ranges():
@@ -81,6 +90,8 @@ def test_with_empty_ranges():
     matcher = IPMatcher(input_list)
     assert matcher.has("192.168.2.1") == False
     assert matcher.has("foobar") == False
+    assert matcher.is_empty() is True
+    assert IPMatcher(["not-an-address", None, "\ud800"]).is_empty() is True
 
 
 def test_with_ipv6_ranges():
@@ -144,10 +155,11 @@ def test_strange_ips():
     matcher = IPMatcher(input_list)
     assert matcher.has("::ffff:0.0.0.0") == True
     assert matcher.has("::ffff:127.0.0.1") == True
-    assert matcher.has("::ffff:123") == True
+    assert matcher.has("::ffff:123") == False
     assert matcher.has("2001:db8::1") == False
     assert matcher.has("[::ffff:0.0.0.0]") == True
     assert matcher.has("::ffff:0:0:0:0") == True
+    assert IPMatcher(["127.0.0.0/8"]).has("::ffff:127.0.0.1") is True
 
 
 def test_different_cidr_ranges():
@@ -195,9 +207,42 @@ def test_allow_all_ips():
     assert matcher.has("10.0.0.1") == True
     assert matcher.has("10.0.0.255") == True
     assert matcher.has("192.168.1.1") == True
+    assert IPMatcher(["::/0"]).has("::ffff:192.0.2.1") is True
 
 
 def test_edge_cases():
     matcher1 = IPMatcher(["224.0.0.0/4"])
     assert matcher1.has("224.0.0.1") == True
     assert matcher1.has("240.0.0.0") == False
+
+
+def test_pickle_round_trip():
+    matcher = pickle.loads(pickle.dumps(IPMatcher(["192.0.2.0/24"])))
+
+    assert matcher.has("::ffff:192.0.2.42") is True
+
+
+def test_uses_fallback_when_native_symbols_are_unavailable(monkeypatch):
+    class LibraryWithoutIPMatcher:
+        pass
+
+    native_ip_matcher._load_library.cache_clear()
+    monkeypatch.setattr(
+        native_ip_matcher.ctypes,
+        "CDLL",
+        lambda _path: LibraryWithoutIPMatcher(),
+    )
+    matcher = IPMatcher(["192.0.2.0/24", "not-an-address"])
+    assert matcher.has("192.0.2.42") is True
+    assert matcher.has("198.51.100.1") is False
+
+
+def test_uses_native_matcher_when_symbols_are_available():
+    native_ip_matcher._load_library.cache_clear()
+    try:
+        native_ip_matcher._load_library()
+    except Exception:
+        pytest.skip("native IP matcher symbols are unavailable")
+
+    matcher = IPMatcher(["192.0.2.1"])
+    assert matcher.has("192.0.2.1:80") is True
