@@ -41,3 +41,9 @@ def update_service_config(connection_manager, res):
 
     if isinstance(res.get("enabledFeatures"), list):
         connection_manager.conf.update_enabled_features(res["enabledFeatures"])
+
+    if "blockedAiTools" in res or "aiRules" in res:
+        connection_manager.conf.update_ai_proxy_config(
+            blocked_ai_tools=res.get("blockedAiTools", []),
+            ai_rules=res.get("aiRules", []),
+        )

@@ -2,6 +2,7 @@
 Simply exports the aikido background process
 """
 
+import atexit
 import multiprocessing.connection as con
 import signal
 import time
@@ -12,6 +13,7 @@ import platform
 from threading import Thread
 from queue import Queue
 from aikido_zen.helpers.logging import logger
+import aikido_zen.ai_proxy as ai_proxy
 from aikido_zen.background_process.cloud_connection_manager import (
     CloudConnectionManager,
 )
@@ -44,11 +46,20 @@ class AikidoBackgroundProcess:
         # Start reporting thread :
         Thread(target=self.reporting_thread, daemon=True).start()
 
+        # AI proxy: no-op unless AIKIDO_FEATURE_AI_PROXY is set and a proxy
+        # binary can be found (AIKIDO_AI_PROXY_BIN).
+        self.ai_proxy_manager = ai_proxy.maybe_start(
+            token=get_token_from_env(),
+            get_connection_manager=lambda: self.connection_manager,
+            event_sink=self.queue.put,
+        )
+        atexit.register(self._stop_ai_proxy)
+
         logger.debug(
             "Background process started successfully, with UDS File : %s", address
         )
 
-        add_exit_handlers()
+        add_exit_handlers(self._stop_ai_proxy)
 
         while True:
             conn = listener.accept()
@@ -104,13 +115,19 @@ class AikidoBackgroundProcess:
         while not self.queue.empty():
             self.connection_manager.report_api_event(self.queue.get())
 
+    def _stop_ai_proxy(self):
+        if self.ai_proxy_manager:
+            self.ai_proxy_manager.stop()
+            self.ai_proxy_manager = None
 
-def add_exit_handlers():
+
+def add_exit_handlers(cleanup=lambda: None):
     """
     We add graceful exit handlers here since the process keeps hanging otherwise.
     """
 
     def exit_gracefully(sig, frame):
+        cleanup()
         sys.exit(0)
 
     current_platform = platform.system()

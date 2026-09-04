@@ -26,6 +26,8 @@ class ServiceConfig:
         self.outbound_domains = {}
         self.excluded_user_ids_from_rate_limiting = set()
         self.enabled_features = set()
+        self.blocked_ai_tools = []
+        self.ai_rules = []
 
     def update(
         self,
@@ -101,6 +103,11 @@ class ServiceConfig:
     def set_block_new_outgoing_requests(self, value: bool):
         """Set whether to block new outgoing requests"""
         self.block_new_outgoing_requests = bool(value)
+
+    def update_ai_proxy_config(self, blocked_ai_tools, ai_rules):
+        """Sets the cloud-provided AI tool blocklist and CEL rules."""
+        self.blocked_ai_tools = list(blocked_ai_tools or [])
+        self.ai_rules = list(ai_rules or [])
 
     def should_block_outgoing_request(self, hostname: str) -> bool:
         mode = self.outbound_domains.get(hostname)
