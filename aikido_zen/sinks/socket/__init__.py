@@ -18,6 +18,12 @@ def _getaddrinfo_after(func, instance, args, kwargs, return_value):
     host = get_argument(args, kwargs, 0, "host")
     port = get_argument(args, kwargs, 1, "port")
 
+    if isinstance(host, bytes):
+        try:
+            host = host.decode("ascii")
+        except UnicodeDecodeError:
+            return
+
     # We want a normalized hostname for reporting & blocking outbound domains
     # This function decodes the hostname if its written in punycode
     hostname = normalize_hostname(host)
