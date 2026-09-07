@@ -35,6 +35,7 @@ Zen for Python 3 is compatible with:
 ### WSGI
 * ✅ [Django](docs/django.md)
 * ✅ [Flask](docs/flask.md) ^2.2.4
+
 #### WSGI Servers
 * ✅ [Gunicorn](docs/gunicorn.md)
 * ✅ [uWSGI](docs/uwsgi.md)
@@ -63,6 +64,9 @@ Zen instruments the following AI SDKs to track which models are used and how man
 * ✅ [`mistralai`](https://pypi.org/project/mistralai) ^1.0.0
 * ✅ [`boto3`](https://pypi.org/project/boto3) (AWS Bedrock)
 * ✅ [`groq`](https://pypi.org/project/groq)
+
+### Applications
+* ✅ [Odoo](docs/odoo.md) 16–19
 
 Zen is compatible with Python 3.8-3.14 and can run on Windows, Linux, and Mac OS X.
 
