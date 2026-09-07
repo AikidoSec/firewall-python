@@ -2,8 +2,10 @@
 Test module for socket sink
 """
 
+import asyncio
 import socket
 import pytest
+import httpx
 from unittest.mock import patch, MagicMock
 import aikido_zen.sinks.socket  # Import to ensure patching
 from aikido_zen.context import current_context
@@ -38,6 +40,34 @@ def test_socket_getaddrinfo_no_blocking(host):
     assert hostnames[0]["hostname"] == "localhost"
     assert hostnames[0]["port"] == 80
     assert hostnames[0]["hits"] == 1
+
+
+@pytest.mark.asyncio
+async def test_httpx_async_client_tracks_hostname_as_string():
+    async def handle_request(reader, writer):
+        await reader.readuntil(b"\r\n\r\n")
+        writer.write(
+            b"HTTP/1.1 204 No Content\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+        )
+        await writer.drain()
+        writer.close()
+        await writer.wait_closed()
+
+    server = await asyncio.start_server(handle_request, "127.0.0.1", 0)
+    port = server.sockets[0].getsockname()[1]
+    get_cache().reset()
+
+    try:
+        async with httpx.AsyncClient(trust_env=False) as client:
+            response = await client.get(f"http://localhost:{port}")
+        assert response.status_code == 204
+    finally:
+        server.close()
+        await server.wait_closed()
+
+    assert get_cache().hostnames.as_array() == [
+        {"hostname": "localhost", "port": port, "hits": 1}
+    ]
 
 
 def test_socket_getaddrinfo_block_specific_domain():
