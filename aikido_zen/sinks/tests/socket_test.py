@@ -20,14 +20,15 @@ def run_around_tests():
     current_context.set(None)
 
 
-def test_socket_getaddrinfo_no_blocking():
+@pytest.mark.parametrize("host", ["localhost", b"localhost"], ids=["str", "bytes"])
+def test_socket_getaddrinfo_no_blocking(host):
     """Test that getaddrinfo works normally when no blocking is configured"""
     # Reset cache to ensure clean state
     get_cache().reset()
 
     # Test that allowed domain doesn't throw an error
     try:
-        socket.getaddrinfo("localhost", 80)
+        socket.getaddrinfo(host, 80)
     except Exception:
         pytest.fail("getaddrinfo should not throw an error for allowed domains")
 
