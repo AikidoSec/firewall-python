@@ -22,8 +22,19 @@ def run_around_tests():
     current_context.set(None)
 
 
-@pytest.mark.parametrize("host", ["localhost", b"localhost"], ids=["str", "bytes"])
-def test_socket_getaddrinfo_no_blocking(host):
+@pytest.mark.parametrize(
+    ("host", "expected_hostname"),
+    [
+        pytest.param("localhost", "localhost", id="str"),
+        pytest.param(b"localhost", "localhost", id="bytes"),
+        pytest.param(
+            b"xn--ssrf-rdirects-ghb.testssandbox.com",
+            "ssrf-rédirects.testssandbox.com",
+            id="idn-bytes",
+        ),
+    ],
+)
+def test_socket_getaddrinfo_no_blocking(host, expected_hostname):
     """Test that getaddrinfo works normally when no blocking is configured"""
     # Reset cache to ensure clean state
     get_cache().reset()
@@ -37,7 +48,7 @@ def test_socket_getaddrinfo_no_blocking(host):
     # Verify hostname was tracked
     hostnames = get_cache().hostnames.as_array()
     assert len(hostnames) == 1
-    assert hostnames[0]["hostname"] == "localhost"
+    assert hostnames[0]["hostname"] == expected_hostname
     assert hostnames[0]["port"] == 80
     assert hostnames[0]["hits"] == 1
 
