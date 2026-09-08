@@ -21,6 +21,9 @@ def test_is_imds_ip_address_ipv6_mapped():
 def test_trusted_hostname_returns_none():
     """Test that trusted hostnames always return None."""
     assert resolves_to_imds_ip(["1.1.1.1"], "metadata.google.internal") is None
+    assert resolves_to_imds_ip(["169.254.169.254"], "metadata.google.internal.") is None
+    assert resolves_to_imds_ip(["169.254.169.254"], "metadata.goog.") is None
+    assert resolves_to_imds_ip(["169.254.169.254"], "METADATA.GOOGLE.INTERNAL") is None
 
 
 def test_aws_imds_ipv4_present_returns_ip():
