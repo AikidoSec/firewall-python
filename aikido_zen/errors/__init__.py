@@ -61,3 +61,11 @@ class AikidoSSRF(AikidoException):
     """Exception because of SSRF"""
 
     kind = "ssrf"
+
+
+class AikidoIDOR(AikidoException):
+    """Exception because of an IDOR vulnerability (missing or wrong tenant filter)"""
+
+    def __init__(self, message):
+        super().__init__(message)
+        self.message = message
