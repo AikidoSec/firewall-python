@@ -75,8 +75,6 @@ def test_parse_xml_with_set_context():
 
 
 def test_parse_xml_bytes_with_set_context():
-    # Apps often pass the raw request body (bytes) to the parser. It must be
-    # extracted like a str body, otherwise injections inside the XML bypass detection.
     body = XML_STRING.encode("utf-8")
     set_context(body=body)
     root = parse_xml(body)
