@@ -11,9 +11,9 @@ def extract_data_from_xml_body(user_input, root_element):
         if not context or not isinstance(context.body, str):
             return
 
-        # Apps often pass the raw request body (bytes) to the parser, but context.body
-        # is always a str: bytes would never match and injections inside the XML would
-        # bypass detection. Decode exactly like set_body_internal so both sides match.
+        # XML input may be bytes, while Zen stores the request body as text.
+        # Normalize the input so the type mismatch does not skip extracting
+        # attributes needed for attack detection.
         if isinstance(user_input, (bytes, bytearray, memoryview)):
             user_input = bytes(user_input).decode("utf-8", errors="replace")
         if user_input != context.body:
