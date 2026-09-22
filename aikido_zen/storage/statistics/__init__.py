@@ -74,10 +74,13 @@ class Statistics:
 
     def import_from_record(self, record):
         attacks_detected = record.get("requests", {}).get("attacksDetected", {})
+        attack_waves = record.get("requests", {}).get("attackWaves", {})
         self.total_hits += record.get("requests", {}).get("total", 0)
         self.rate_limited_hits += record.get("requests", {}).get("rateLimited", 0)
         self.attacks_detected += attacks_detected.get("total", 0)
         self.attacks_blocked += attacks_detected.get("blocked", 0)
+        self.attack_waves_detected += attack_waves.get("total", 0)
+        self.attack_waves_blocked += attack_waves.get("blocked", 0)
         self.operations.update(record.get("operations", {}))
 
     def empty(self):
