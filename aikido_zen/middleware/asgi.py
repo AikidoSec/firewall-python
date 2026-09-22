@@ -19,7 +19,10 @@ class AikidoASGIMiddleware:
             message = "You are rate limited by Zen."
             if result["trigger"] == "ip" and result["ip"]:
                 message += " (Your IP: " + result["ip"] + ")"
-            return await send_status_code_and_text(send, (message, 429))
+            extra_headers = [
+                (b"retry-after", str(result["retry_after_seconds"]).encode())
+            ]
+            return await send_status_code_and_text(send, (message, 429), extra_headers)
 
         if result["type"] == "blocked":
             return await send_status_code_and_text(
@@ -30,13 +33,16 @@ class AikidoASGIMiddleware:
         return await self.app(scope, receive, send)
 
 
-async def send_status_code_and_text(send, pre_response):
+async def send_status_code_and_text(send, pre_response, extra_headers=None):
     """Sends a status code and text"""
+    headers = [(b"content-type", b"text/plain")]
+    if extra_headers:
+        headers = headers + extra_headers
     await send(
         {
             "type": "http.response.start",
             "status": pre_response[1],
-            "headers": [(b"content-type", b"text/plain")],
+            "headers": headers,
         }
     )
     await send(

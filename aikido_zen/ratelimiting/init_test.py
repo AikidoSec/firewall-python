@@ -60,10 +60,10 @@ def test_rate_limits_by_ip():
     assert should_ratelimit_request(route_metadata, "1.2.3.4", None, cm) == {
         "block": False
     }
-    assert should_ratelimit_request(route_metadata, "1.2.3.4", None, cm) == {
-        "block": True,
-        "trigger": "ip",
-    }
+    result = should_ratelimit_request(route_metadata, "1.2.3.4", None, cm)
+    assert result["block"] is True
+    assert result["trigger"] == "ip"
+    assert result["retry_after_seconds"] >= 0
 
 
 def test_rate_limiting_ip_allowed():
@@ -126,10 +126,10 @@ def test_rate_limiting_by_user(user):
     assert should_ratelimit_request(route_metadata, "1.2.3.6", user, cm) == {
         "block": False
     }
-    assert should_ratelimit_request(route_metadata, "1.2.3.7", user, cm) == {
-        "block": True,
-        "trigger": "user",
-    }
+    result = should_ratelimit_request(route_metadata, "1.2.3.7", user, cm)
+    assert result["block"] is True
+    assert result["trigger"] == "user"
+    assert result["retry_after_seconds"] >= 0
 
 
 def test_rate_limiting_with_wildcard():
@@ -160,9 +160,12 @@ def test_rate_limiting_with_wildcard():
     ) == {"block": False}
 
     # This request should trigger the rate limit
-    assert should_ratelimit_request(
+    result = should_ratelimit_request(
         create_route_metadata(route="/api/login"), "1.2.3.4", None, cm
-    ) == {"block": True, "trigger": "ip"}
+    )
+    assert result["block"] is True
+    assert result["trigger"] == "ip"
+    assert result["retry_after_seconds"] >= 0
 
 
 def test_rate_limiting_with_wildcard2():
@@ -193,10 +196,10 @@ def test_rate_limiting_with_wildcard2():
 
     # This request should trigger the rate limit
     metadata = create_route_metadata(route="/api/login", method="GET")
-    assert should_ratelimit_request(metadata, "1.2.3.4", None, cm) == {
-        "block": True,
-        "trigger": "ip",
-    }
+    result = should_ratelimit_request(metadata, "1.2.3.4", None, cm)
+    assert result["block"] is True
+    assert result["trigger"] == "ip"
+    assert result["retry_after_seconds"] >= 0
 
 
 def test_rate_limiting_by_user_with_same_ip():
@@ -228,10 +231,10 @@ def test_rate_limiting_by_user_with_same_ip():
     }
 
     # This request should trigger the rate limit
-    assert should_ratelimit_request(metadata, "1.2.3.4", {"id": "123"}, cm) == {
-        "block": True,
-        "trigger": "user",
-    }
+    result = should_ratelimit_request(metadata, "1.2.3.4", {"id": "123"}, cm)
+    assert result["block"] is True
+    assert result["trigger"] == "user"
+    assert result["retry_after_seconds"] >= 0
 
 
 def test_rate_limiting_by_user_with_different_ips():
@@ -267,10 +270,10 @@ def test_rate_limiting_by_user_with_different_ips():
     }
 
     # This request from second IP should trigger the rate limit
-    assert should_ratelimit_request(metadata, "4.3.2.1", {"id": "123"}, cm) == {
-        "block": True,
-        "trigger": "user",
-    }
+    result = should_ratelimit_request(metadata, "4.3.2.1", {"id": "123"}, cm)
+    assert result["block"] is True
+    assert result["trigger"] == "user"
+    assert result["retry_after_seconds"] >= 0
 
 
 def test_rate_limiting_same_ip_different_users():
@@ -385,10 +388,10 @@ def test_rate_limits_by_user_with_different_ips():
         "block": False
     }
     # This request should trigger the rate limit by group
-    assert should_ratelimit_request(route_metadata, "4.3.2.1", user, cm, "group1") == {
-        "block": True,
-        "trigger": "group",
-    }
+    result = should_ratelimit_request(route_metadata, "4.3.2.1", user, cm, "group1")
+    assert result["block"] is True
+    assert result["trigger"] == "group"
+    assert result["retry_after_seconds"] >= 0
 
 
 def test_rate_limits_different_users_in_same_group():
@@ -420,12 +423,12 @@ def test_rate_limits_different_users_in_same_group():
         route_metadata, "1.2.3.4", {"id": "789"}, cm, "group1"
     ) == {"block": False}
     # This request should trigger the rate limit by group
-    assert should_ratelimit_request(
+    result = should_ratelimit_request(
         route_metadata, "4.3.2.1", {"id": "101112"}, cm, "group1"
-    ) == {
-        "block": True,
-        "trigger": "group",
-    }
+    )
+    assert result["block"] is True
+    assert result["trigger"] == "group"
+    assert result["retry_after_seconds"] >= 0
 
 
 def test_works_with_multiple_rate_limit_groups_and_different_users():
@@ -457,30 +460,30 @@ def test_works_with_multiple_rate_limit_groups_and_different_users():
         route_metadata, "4.3.2.1", {"id": "101112"}, cm, "group2"
     ) == {"block": False}
     # This request should trigger the rate limit for group1
-    assert should_ratelimit_request(
+    result = should_ratelimit_request(
         route_metadata, "1.2.3.4", {"id": "789"}, cm, "group1"
-    ) == {
-        "block": True,
-        "trigger": "group",
-    }
+    )
+    assert result["block"] is True
+    assert result["trigger"] == "group"
+    assert result["retry_after_seconds"] >= 0
     # This request should also trigger the rate limit for group1
-    assert should_ratelimit_request(
+    result = should_ratelimit_request(
         route_metadata, "1.2.3.4", {"id": "4321"}, cm, "group1"
-    ) == {
-        "block": True,
-        "trigger": "group",
-    }
+    )
+    assert result["block"] is True
+    assert result["trigger"] == "group"
+    assert result["retry_after_seconds"] >= 0
     # First request from user 953, group2
     assert should_ratelimit_request(
         route_metadata, "4.3.2.1", {"id": "953"}, cm, "group2"
     ) == {"block": False}
     # This request should trigger the rate limit for group2
-    assert should_ratelimit_request(
+    result = should_ratelimit_request(
         route_metadata, "4.3.2.1", {"id": "1563"}, cm, "group2"
-    ) == {
-        "block": True,
-        "trigger": "group",
-    }
+    )
+    assert result["block"] is True
+    assert result["trigger"] == "group"
+    assert result["retry_after_seconds"] >= 0
 
 
 def test_rate_limits_by_group_if_user_is_not_set():
@@ -512,10 +515,10 @@ def test_rate_limits_by_group_if_user_is_not_set():
         "block": False
     }
     # This request should trigger the rate limit by group
-    assert should_ratelimit_request(route_metadata, "4.3.2.1", None, cm, "group1") == {
-        "block": True,
-        "trigger": "group",
-    }
+    result = should_ratelimit_request(route_metadata, "4.3.2.1", None, cm, "group1")
+    assert result["block"] is True
+    assert result["trigger"] == "group"
+    assert result["retry_after_seconds"] >= 0
 
 
 def test_does_not_rate_limit_excluded_users():
