@@ -120,9 +120,9 @@ def test_extract_data_from_xml_body_context_set_as_current(mock_context):
 
 
 def test_extract_data_from_xml_body_bytes_user_input(mock_context):
-    # Regression: AIKIDO-JBCJHHER — XML passed to the parser as bytes must still be
-    # matched against the str body and extracted, otherwise attributes never reach
-    # context.xml and injections inside the XML bypass detection.
+    # XML passed to the parser as bytes must still be matched against the str body
+    # and extracted, otherwise attributes never reach context.xml and injections
+    # inside the XML bypass detection.
     with patch("aikido_zen.context.get_current_context", return_value=mock_context):
         user_input = b"valid_input"
         root_element = [{"attr1": "value1"}, {"attr2": "value2"}]
