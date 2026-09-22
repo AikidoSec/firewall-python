@@ -74,3 +74,22 @@ def test_parse_xml_with_set_context():
         "smthelse": {"2"},
         "test": {"test1"},
     }
+
+
+def test_parse_xml_bytes_with_set_context():
+    # Regression: AIKIDO-JBCJHHER — apps often pass the raw request body (bytes) to
+    # the parser. It must be extracted like a str body, otherwise injections inside
+    # the XML bypass detection.
+    body = XML_STRING.encode("utf-8")
+    set_context(body=body)
+    root = parse_xml(body)
+
+    assert root[0].find("name").text == "Test Name"
+
+    context = get_current_context()
+    assert context.xml == {
+        "attr": {"chill"},
+        "smth": {"2"},
+        "smthelse": {"2"},
+        "test": {"test1"},
+    }

@@ -8,11 +8,15 @@ def extract_data_from_xml_body(user_input, root_element):
     """Extracts all attributes from the xml and adds them to context"""
     try:
         context = ctx.get_current_context()
-        if (
-            not context
-            or not isinstance(context.body, str)
-            or user_input != context.body
-        ):
+        if not context or not isinstance(context.body, str):
+            return
+
+        # Apps often pass the raw request body (bytes) to the parser, but context.body
+        # is always a str: bytes would never match and injections inside the XML would
+        # bypass detection. Decode exactly like set_body_internal so both sides match.
+        if isinstance(user_input, (bytes, bytearray, memoryview)):
+            user_input = bytes(user_input).decode("utf-8", errors="replace")
+        if user_input != context.body:
             return
 
         extracted_xml_attrs = context.xml
