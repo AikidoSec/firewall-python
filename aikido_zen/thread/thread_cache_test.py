@@ -570,11 +570,13 @@ def test_renew_restores_deltas_on_ipc_failure(
 
     thread_cache.stats.increment_total_hits()
     thread_cache.stats.increment_total_hits()
+    thread_cache.stats.on_detected_attack_wave(blocked=True)
     thread_cache.ai_stats.on_ai_call("openai", "gpt-4o", 100, 50)
     thread_cache.middleware_installed = True
 
     def fail_after_concurrent_increment(*args, **kwargs):
         thread_cache.stats.increment_total_hits()
+        thread_cache.stats.on_detected_attack_wave(blocked=False)
         return {"success": False}
 
     mock_comms.send_data_to_bg_process.side_effect = fail_after_concurrent_increment
@@ -583,6 +585,10 @@ def test_renew_restores_deltas_on_ipc_failure(
 
     # 2 from the snapshot + 1 from the concurrent increment
     assert thread_cache.stats.get_record()["requests"]["total"] == 3
+    assert thread_cache.stats.get_record()["requests"]["attackWaves"] == {
+        "total": 2,
+        "blocked": 1,
+    }
     assert thread_cache.middleware_installed is True
     assert thread_cache.ai_stats.get_stats()[0]["calls"] == 1
 
