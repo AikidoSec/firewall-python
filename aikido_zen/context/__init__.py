@@ -17,7 +17,7 @@ from .asgi import set_asgi_attributes_on_context
 from .extract_route_params import extract_route_params
 from ..helpers.headers import Headers
 
-UINPUT_SOURCES = ["body", "cookies", "query", "headers", "xml", "route_params"]
+UINPUT_SOURCES = ["body", "body_raw", "cookies", "query", "headers", "xml", "route_params"]
 current_context = contextvars.ContextVar("current_context", default=None)
 
 WSGI_SOURCES = ["django", "flask"]
@@ -79,6 +79,7 @@ class Context:
                     "remote_address": self.remote_address,
                     "url": self.url,
                     "body": self.body,
+                    "body_raw": self.body_raw,
                     "headers": self.headers,
                     "query": self.query,
                     "cookies": self.cookies,
@@ -115,6 +116,7 @@ class Context:
     def set_body_internal(self, body):
         """Sets the body and checks if it's possibly JSON"""
         self.body = body
+        self.body_raw = None
         if isinstance(self.body, (str, bytes)) and len(body) == 0:
             # Make sure that empty bodies like b"" don't get sent.
             self.body = None
@@ -125,6 +127,12 @@ class Context:
             try:
                 parsed_body = json.loads(self.body)
                 if parsed_body:
+                    # Save the raw decoded string so injection detection still works
+                    # against code that reads the body as raw bytes/string.  json.loads
+                    # decodes unicode escapes (e.g. # -> #), creating a mismatch
+                    # between self.body and what reaches the sink if the application
+                    # reads request.data directly instead of request.json.
+                    self.body_raw = self.body.decode("utf-8", errors="replace")
                     self.body = parsed_body
                     return
             except (JSONDecodeError, ValueError):
@@ -139,6 +147,7 @@ class Context:
             # Might be JSON, but might not have been parsed correctly by server because of wrong headers
             parsed_body = json.loads(self.body)
             if parsed_body:
+                self.body_raw = self.body
                 self.body = parsed_body
 
     def get_route_metadata(self):
