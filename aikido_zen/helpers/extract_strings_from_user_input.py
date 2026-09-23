@@ -7,7 +7,7 @@ from aikido_zen.helpers.is_mapping import is_mapping
 from aikido_zen.helpers.build_path_to_payload import build_path_to_payload
 import aikido_zen.context as ctx
 
-# Past this depth a RecursionError would abort the scan and let the request through.
+# Deeper input would overflow the stack and let the request through unchecked.
 MAX_TRAVERSAL_DEPTH = 30
 
 
@@ -43,8 +43,7 @@ def extract_strings_and_nesting(obj, path_to_payload):
     """Extracts strings from an object and returns how deep its containers nest"""
     results = {}
 
-    # path_to_payload has one entry per level, so its length tells how deep we are.
-    # Nothing past the limit is walked, so report it as too deep.
+    # Length tells how deep we are, nothing past the limit is walked
     if len(path_to_payload) >= MAX_TRAVERSAL_DEPTH:
         return results, MAX_TRAVERSAL_DEPTH + 1
 
@@ -83,7 +82,6 @@ def extract_strings_and_nesting(obj, path_to_payload):
         results[obj] = build_path_to_payload(path_to_payload)
         jwt = try_decode_as_jwt(obj)
         if jwt[0]:
-            # A JWT payload does not add nesting: str() never decodes a string.
             child_results, _ = extract_strings_and_nesting(
                 jwt[1], path_to_payload + [{"type": "jwt"}]
             )
