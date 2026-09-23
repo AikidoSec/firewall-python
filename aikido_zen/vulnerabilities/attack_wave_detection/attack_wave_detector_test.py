@@ -20,13 +20,13 @@ def mock_get_unixtime_ms(monotonic=True, mock_time=0):
 
 def test_no_context():
     detector = new_attack_wave_detector()
-    assert not detector.is_attack_wave(None)
+    assert not detector.is_attack_wave(None, 404)
 
 
 def test_no_ip_address_in_context():
     detector = new_attack_wave_detector()
     context = test_utils.generate_context(ip=None)
-    assert not detector.is_attack_wave(context)
+    assert not detector.is_attack_wave(context, 404)
 
 
 def test_a_web_scanner():
@@ -38,15 +38,15 @@ def test_a_web_scanner():
         "aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector.is_web_scanner",
         return_value=True,
     ):
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
         # Is true because the threshold is 6
-        assert detector.is_attack_wave(context)
+        assert detector.is_attack_wave(context, 404)
         # False again because event should have been sent last time
-        assert not detector.is_attack_wave(context)
+        assert not detector.is_attack_wave(context, 404)
 
 
 def test_non_web_scanner():
@@ -60,7 +60,7 @@ def test_non_web_scanner():
     ):
         # Should return False even after multiple calls because it's not a web scanner
         for _ in range(10):
-            assert not detector.is_attack_wave(context)
+            assert not detector.is_attack_wave(context, 404)
 
 
 def test_a_web_scanner_with_delays():
@@ -74,10 +74,10 @@ def test_a_web_scanner_with_delays():
         return_value=True,
     ):
         detector = new_attack_wave_detector()
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
 
     with patch(
         "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms",
@@ -86,11 +86,11 @@ def test_a_web_scanner_with_delays():
         "aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector.is_web_scanner",
         return_value=True,
     ):
-        assert not detector.is_attack_wave(context)
+        assert not detector.is_attack_wave(context, 404)
         # Is true because the threshold is 6
-        assert detector.is_attack_wave(context)
+        assert detector.is_attack_wave(context, 404)
         # False again because event should have been sent last time
-        assert not detector.is_attack_wave(context)
+        assert not detector.is_attack_wave(context, 404)
 
     with patch(
         "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms",
@@ -100,12 +100,12 @@ def test_a_web_scanner_with_delays():
         return_value=True,
     ):
         # Still false because minimum time between events is 1 hour
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
 
     with patch(
         "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms",
@@ -115,12 +115,12 @@ def test_a_web_scanner_with_delays():
         return_value=True,
     ):
         # Should resend event after 1 hour
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
-        assert detector.is_attack_wave(context)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
+        assert detector.is_attack_wave(context, 404)
 
 
 def test_unique_samples_only():
@@ -138,12 +138,12 @@ def test_unique_samples_only():
     ):
         # Make enough requests to trigger attack wave (threshold is 6)
         for i in range(6):
-            detector.is_attack_wave(context1)
+            detector.is_attack_wave(context1, 404)
 
         # Make a few more identical requests with different context objects
         for i in range(3):
-            detector.is_attack_wave(context2)
-            detector.is_attack_wave(context3)
+            detector.is_attack_wave(context2, 404)
+            detector.is_attack_wave(context3, 404)
 
         # Should have only 1 unique sample despite 9 identical requests
         samples = detector.get_samples_for_ip(context1.remote_address)
@@ -167,9 +167,9 @@ def test_unique_samples_with_different_methods():
     ):
         # Make enough requests to trigger attack wave for each method
         for i in range(2):  # 2 requests per method = 6 total
-            detector.is_attack_wave(context_get)
-            detector.is_attack_wave(context_post)
-            detector.is_attack_wave(context_put)
+            detector.is_attack_wave(context_get, 404)
+            detector.is_attack_wave(context_post, 404)
+            detector.is_attack_wave(context_put, 404)
 
         # Should have 3 unique samples (one for each method)
         samples = detector.get_samples_for_ip(context_get.remote_address)
@@ -230,7 +230,7 @@ def test_samples_max_length():
         for context in unique_contexts:
             # Need to make 6 requests per context to trigger attack wave
             for i in range(6):
-                detector.is_attack_wave(context)
+                detector.is_attack_wave(context, 404)
 
         # Check samples for the first IP - should have 1 sample
         samples = detector.get_samples_for_ip(unique_contexts[0].remote_address)
@@ -256,7 +256,7 @@ def test_samples_structure():
     ):
         # Make enough requests to trigger attack wave
         for i in range(6):
-            detector.is_attack_wave(context)
+            detector.is_attack_wave(context, 404)
 
         # Get the samples
         samples = detector.get_samples_for_ip(context.remote_address)
@@ -316,17 +316,17 @@ def test_mixed_unique_and_duplicate_samples():
         context_htaccess.remote_address = "1.1.1.3"
 
         for i in range(6):
-            detector.is_attack_wave(context_env)
+            detector.is_attack_wave(context_env, 404)
 
         for i in range(6):
-            detector.is_attack_wave(context_git)
+            detector.is_attack_wave(context_git, 404)
 
         for i in range(6):
-            detector.is_attack_wave(context_htaccess)
+            detector.is_attack_wave(context_htaccess, 404)
 
         # Add many duplicate requests for the first context (same IP)
         for i in range(10):
-            detector.is_attack_wave(context_env)
+            detector.is_attack_wave(context_env, 404)
 
         # Should have 1 unique sample for the first IP
         samples = detector.get_samples_for_ip(context_env.remote_address)
@@ -352,7 +352,7 @@ def test_samples_tracking():
     ):
         # Make a few requests
         for i in range(3):
-            detector.is_attack_wave(context)
+            detector.is_attack_wave(context, 404)
 
         # Check that samples are being tracked (should have only 1 unique sample)
         samples = detector.get_samples_for_ip(context.remote_address)
@@ -362,7 +362,7 @@ def test_samples_tracking():
 
         # Make more requests to exceed the sample limit
         for i in range(10):
-            detector.is_attack_wave(context)
+            detector.is_attack_wave(context, 404)
 
         # Should still have only the most recent samples (limited to 10)
         samples = detector.get_samples_for_ip(context.remote_address)
@@ -380,7 +380,7 @@ def test_clear_samples():
     ):
         # Make some requests
         for i in range(5):
-            detector.is_attack_wave(context)
+            detector.is_attack_wave(context, 404)
 
         # Verify samples exist (should have only 1 unique sample)
         samples = detector.get_samples_for_ip(context.remote_address)
@@ -405,10 +405,10 @@ def test_a_slow_web_scanner_that_triggers_in_the_second_interval():
         return_value=True,
     ):
         detector = new_attack_wave_detector()
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
 
     with patch(
         "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms",
@@ -417,12 +417,12 @@ def test_a_slow_web_scanner_that_triggers_in_the_second_interval():
         "aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector.is_web_scanner",
         return_value=True,
     ):
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
-        assert detector.is_attack_wave(context)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
+        assert detector.is_attack_wave(context, 404)
 
 
 def test_a_slow_web_scanner_that_triggers_in_the_third_interval():
@@ -436,10 +436,10 @@ def test_a_slow_web_scanner_that_triggers_in_the_third_interval():
         return_value=True,
     ):
         detector = new_attack_wave_detector()
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
 
     with patch(
         "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms",
@@ -449,10 +449,10 @@ def test_a_slow_web_scanner_that_triggers_in_the_third_interval():
         return_value=True,
     ):
         # Still false because minimum time between events is 1 hour
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
 
     with patch(
         "aikido_zen.helpers.get_current_unixtime_ms.get_unixtime_ms",
@@ -462,9 +462,9 @@ def test_a_slow_web_scanner_that_triggers_in_the_third_interval():
         return_value=True,
     ):
         # Should resend event after 1 hour
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
-        assert not detector.is_attack_wave(context)
-        assert detector.is_attack_wave(context)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
+        assert not detector.is_attack_wave(context, 404)
+        assert detector.is_attack_wave(context, 404)
