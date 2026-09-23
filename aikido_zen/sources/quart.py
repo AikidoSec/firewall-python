@@ -1,18 +1,32 @@
-from aikido_zen.context import Context, get_current_context
-from .functions.request_handler import request_handler
+import inspect
+from aikido_zen.context import get_current_context
+from .functions.asgi_middleware import InternalASGIMiddleware
 from ..helpers.get_argument import get_argument
-from ..sinks import on_import, patch_function, before, before_async
+from ..sinks import on_import, patch_function, before_async, after
 
 
-@before
-def _call(func, instance, args, kwargs):
+async def _call_coroutine(func, instance, args, kwargs):
     scope = get_argument(args, kwargs, 0, "scope")
-    if not scope or scope.get("type") != "http":
-        return
+    receive = get_argument(args, kwargs, 1, "receive")
+    send = get_argument(args, kwargs, 2, "send")
 
-    new_context = Context(req=scope, source="quart")
-    new_context.set_as_current_context()
-    request_handler(stage="init")
+    await InternalASGIMiddleware(func, "quart")(scope, receive, send)
+
+
+@after
+def _call(func, instance, args, kwargs, return_value):
+    """
+    Legacy ASGI v2.0
+    func: application(scope)
+    return_value: coroutine application_instance(receive, send)
+    """
+    scope = get_argument(args, kwargs, 0, "scope")
+
+    async def application_instance(receive, send):
+        await InternalASGIMiddleware(return_value, "quart")(scope, receive, send)
+
+    # Modify return_value
+    return_value = application_instance
 
 
 @before_async
@@ -37,60 +51,22 @@ async def _handle_request_before(func, instance, args, kwargs):
     context.set_as_current_context()
 
 
-async def _handle_request_after(func, instance, args, kwargs):
-    # pylint:disable=import-outside-toplevel # We don't want to install this by default
-    from werkzeug.exceptions import HTTPException
-
-    try:
-        response = await func(*args, **kwargs)
-        if hasattr(response, "status_code"):
-            request_handler(stage="post_response", status_code=response.status_code)
-        return response
-    except HTTPException as e:
-        request_handler(stage="post_response", status_code=e.code)
-        raise e
-
-
-async def _asgi_app(func, instance, args, kwargs):
-    scope = get_argument(args, kwargs, 0, "scope")
-    if not scope or scope.get("type") != "http":
-        return await func(*args, **kwargs)
-    send = get_argument(args, kwargs, 2, "send")
-    if not send:
-        return await func(*args, **kwargs)
-
-    pre_response = request_handler(stage="pre_response")
-    if pre_response:
-        return await send_status_code_and_text(send, pre_response)
-    return await func(*args, **kwargs)
-
-
-async def send_status_code_and_text(send, pre_response):
-    await send(
-        {
-            "type": "http.response.start",
-            "status": pre_response[1],
-            "headers": [(b"content-type", b"text/plain")],
-        }
-    )
-    await send(
-        {
-            "type": "http.response.body",
-            "body": pre_response[0].encode("utf-8"),
-            "more_body": False,
-        }
-    )
-
-
 @on_import("quart.app", "quart")
 def patch(m):
     """
-    patching module quart.app
-    - patches Quart.__call__ (creates Context)
-    - patches Quart.handle_request (Stores body/cookies, checks status code)
-    - patches Quart.asgi_app (Pre-response: puts in messages when request is blocked)
+    We patch Quart.__call__ instead of asgi_app, because asgi_app itself can be wrapped multiple times
+    And we want to be the first middleware to run.
+    - patches Quart.__call__ (handles internal asgi middleware)
+    - patches Quart.handle_request (Stores body/cookies)
     """
-    patch_function(m, "Quart.__call__", _call)
+
+    if inspect.iscoroutine(m.Quart.__call__):
+        # coroutine application(scope, receive, send)
+        patch_function(m, "Quart.__call__", _call_coroutine)
+    else:
+        # Legacy ASGI v2.0
+        # https://asgi.readthedocs.io/en/latest/specs/main.html#legacy-applications
+        # application(scope): coroutine application_instance(receive, send)
+        patch_function(m, "Quart.__call__", _call)
+
     patch_function(m, "Quart.handle_request", _handle_request_before)
-    patch_function(m, "Quart.handle_request", _handle_request_after)
-    patch_function(m, "Quart.asgi_app", _asgi_app)
