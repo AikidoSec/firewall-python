@@ -7,6 +7,7 @@ import aikido_zen.vulnerabilities as vulns
 from aikido_zen.helpers.get_argument import get_argument
 from aikido_zen.helpers.register_call import register_call
 from aikido_zen.sinks import on_import, before, patch_function, after
+from aikido_zen.vulnerabilities.idor.check_idor import run_idor_check
 
 
 @after
@@ -41,6 +42,9 @@ def psycopg2_patch(func, instance, args, kwargs):
     register_call(op, "sql_op")
 
     vulns.run_vulnerability_scan(kind="sql_injection", op=op, args=(query, "postgres"))
+
+    query_params = get_argument(args, kwargs, 1, "vars")
+    run_idor_check(query, "postgres", query_params)
 
 
 @on_import("psycopg2")
