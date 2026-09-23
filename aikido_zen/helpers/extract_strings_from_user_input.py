@@ -7,9 +7,7 @@ from aikido_zen.helpers.is_mapping import is_mapping
 from aikido_zen.helpers.build_path_to_payload import build_path_to_payload
 import aikido_zen.context as ctx
 
-# A RecursionError during extraction aborts the whole scan and the request goes
-# through unchecked. Each nesting level costs one stack frame; Python allows 1000 by
-# default and the web framework already uses part of them, so stop well below that.
+# Past this depth a RecursionError would abort the scan and let the request through.
 MAX_TRAVERSAL_DEPTH = 30
 
 
@@ -42,13 +40,11 @@ def extract_strings_from_user_input(obj, path_to_payload=None):
 
 
 def extract_strings_and_nesting(obj, path_to_payload):
-    """
-    Extracts strings from an object and returns how deep its containers nest,
-    so str(obj) can be skipped where it would recurse too far
-    """
+    """Extracts strings from an object and returns how deep its containers nest"""
     results = {}
 
-    # Path length is the depth; nothing past the limit is walked, so it is too deep.
+    # path_to_payload has one entry per level, so its length tells how deep we are.
+    # Nothing past the limit is walked, so report it as too deep.
     if len(path_to_payload) >= MAX_TRAVERSAL_DEPTH:
         return results, MAX_TRAVERSAL_DEPTH + 1
 
@@ -67,6 +63,9 @@ def extract_strings_and_nesting(obj, path_to_payload):
             nesting = max(nesting, child_nesting + 1)
 
     if isinstance(obj, (set, list, tuple)):
+        #  Add the stringified array as well to the results, there might
+        #  be accidental concatenation if the client expects a string but gets the array
+        #  E.g. HTTP Parameter pollution
         for i, value in enumerate(obj):
             child_results, child_nesting = extract_strings_and_nesting(
                 value, path_to_payload + [{"type": "array", "index": i}]
@@ -75,11 +74,8 @@ def extract_strings_and_nesting(obj, path_to_payload):
                 results[k] = v
             nesting = max(nesting, child_nesting + 1)
 
-        #  Add the stringified array as well to the results, there might
-        #  be accidental concatenation if the client expects a string but gets the array
-        #  E.g. HTTP Parameter pollution
-        #  str() recurses through the whole array and ignores the traversal limit, so
-        #  arrays nested deeper than the limit are skipped to avoid a RecursionError.
+        #  We track how deep the children nest because str() walks the whole array by
+        #  itself, ignoring our limit; too deep an array would raise a RecursionError.
         if nesting <= MAX_TRAVERSAL_DEPTH:
             results[str(obj)] = build_path_to_payload(path_to_payload)
 
