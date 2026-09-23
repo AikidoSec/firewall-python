@@ -1,6 +1,8 @@
+import base64
 import pytest
 from unittest.mock import MagicMock, patch
 from aikido_zen.helpers.extract_strings_from_user_input import (
+    MAX_TRAVERSAL_DEPTH,
     extract_strings_from_user_input,
     extract_strings_from_user_input_cached,
 )
@@ -286,6 +288,92 @@ def test_extract_strings_from_user_input_cached_multiple_sources(mock_context):
             assert result2 == {"input1": "value1", "input2": "value2"}
             assert mock_context.parsed_userinput["source1"] == result1
             assert mock_context.parsed_userinput["source2"] == result2
+
+
+def nested_list(depth, leaf="asd"):
+    current = [leaf]
+    for _ in range(depth):
+        current = [current]
+    return current
+
+
+def nested_dict(depth, leaf="asd"):
+    current = leaf
+    for _ in range(depth):
+        current = {"a": current}
+    return current
+
+
+def fake_jwt(payload_json):
+    payload = base64.urlsafe_b64encode(payload_json.encode()).rstrip(b"=").decode()
+    return f".{payload}."
+
+
+def test_extracts_strings_up_to_max_depth_only():
+    assert extract_strings_from_user_input(
+        nested_dict(MAX_TRAVERSAL_DEPTH - 1, "leaf")
+    ) == from_obj(
+        {
+            "a": ".a" * (MAX_TRAVERSAL_DEPTH - 2),
+            "leaf": ".a" * (MAX_TRAVERSAL_DEPTH - 1),
+        }
+    )
+    assert extract_strings_from_user_input(
+        nested_dict(MAX_TRAVERSAL_DEPTH, "leaf")
+    ) == from_obj({"a": ".a" * (MAX_TRAVERSAL_DEPTH - 1)})
+
+
+def test_stringifies_arrays_unless_nested_deeper_than_max_depth():
+    assert extract_strings_from_user_input({"arr": [["p"], {"k": ["q"]}]}) == from_obj(
+        {
+            "arr": ".",
+            "[['p'], {'k': ['q']}]": ".arr",
+            "['p']": ".arr.[0]",
+            "p": ".arr.[0].[0]",
+            "k": ".arr.[1]",
+            "['q']": ".arr.[1].k",
+            "q": ".arr.[1].k.[0]",
+        }
+    )
+    assert extract_strings_from_user_input(
+        {"arr": nested_list(MAX_TRAVERSAL_DEPTH + 1)}
+    ) == from_obj({"arr": "."})
+
+
+def test_deeply_nested_list_keeps_other_strings():
+    # deep enough that any recursion through the value overflows the stack
+    assert extract_strings_from_user_input(
+        {"deep": nested_list(100_000), "user_input": "/etc/passwd"}
+    ) == from_obj({"deep": ".", "user_input": ".", "/etc/passwd": ".user_input"})
+
+
+def test_deeply_nested_mapping_keeps_other_strings():
+    assert extract_strings_from_user_input(
+        {"deep": nested_dict(5000), "user_input": "/etc/passwd"}
+    ) == from_obj(
+        {
+            "deep": ".",
+            "a": ".deep" + ".a" * (MAX_TRAVERSAL_DEPTH - 2),
+            "user_input": ".",
+            "/etc/passwd": ".user_input",
+        }
+    )
+
+
+def test_deeply_nested_jwt_payload_keeps_other_strings():
+    depth = 100_000
+    jwt = fake_jwt("[" * depth + '"asd"' + "]" * depth)
+
+    assert extract_strings_from_user_input(
+        {"user_input": "/etc/passwd", "not_used": jwt}
+    ) == from_obj(
+        {
+            "user_input": ".",
+            "/etc/passwd": ".user_input",
+            "not_used": ".",
+            jwt: ".not_used",
+        }
+    )
 
 
 # To run the tests, use the command: pytest <filename>.py
