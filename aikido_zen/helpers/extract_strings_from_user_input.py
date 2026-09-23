@@ -43,7 +43,6 @@ def extract_strings_and_nesting(obj, path_to_payload):
     """Extracts strings from an object and returns how deep its containers nest"""
     results = {}
 
-    # Length tells how deep we are, nothing past the limit is walked
     if len(path_to_payload) >= MAX_TRAVERSAL_DEPTH:
         return results, MAX_TRAVERSAL_DEPTH + 1
 
