@@ -1,6 +1,9 @@
 """Exports class ThreadConfig"""
 
+from copy import deepcopy
+
 import aikido_zen.background_process.comms as comms
+from aikido_zen.api_discovery.update_route_info import update_route_info
 from aikido_zen.background_process.packages import PackagesStore
 from aikido_zen.background_process.routes import Routes
 from aikido_zen.background_process.service_config import ServiceConfig
@@ -55,11 +58,25 @@ class ThreadCache:
         self.ai_stats.clear()
         PackagesStore.clear()
 
+    def _snapshot_route_deltas(self):
+        routes = deepcopy(self.routes.get_routes_with_hits())
+        for route_id, synced_route in routes.items():
+            route = self.routes.routes.get(route_id)
+            if route:
+                route["hits_delta_since_sync"] -= synced_route["hits_delta_since_sync"]
+        return routes
+
     def _restore_synced_deltas(self, payload):
         """Merges a previously-cleared payload back, used when an IPC sync fails."""
         self.middleware_installed = (
             self.middleware_installed or payload["middleware_installed"]
         )
+        for route_id, synced_route in payload["current_routes"].items():
+            route = self.routes.routes.get(route_id)
+            if route:
+                route["hits_delta_since_sync"] += synced_route["hits_delta_since_sync"]
+            else:
+                self.routes.routes[route_id] = deepcopy(synced_route)
         for entry in payload["hostnames"]:
             self.hostnames.add(entry["hostname"], entry["port"], entry["hits"])
         for entry in payload["users"]:
@@ -71,6 +88,25 @@ class ThreadCache:
             if existing:
                 existing["cleared"] = False
 
+    def _merge_synced_routes(self, synced_routes):
+        local_routes = self.routes.routes
+        for route_id, synced_route in synced_routes.items():
+            local_route = local_routes.get(route_id)
+            pending_hits = local_route["hits_delta_since_sync"] if local_route else 0
+            synced_route["hits"] += pending_hits
+            synced_route["hits_delta_since_sync"] = pending_hits
+            if pending_hits and local_route["apispec"]:
+                update_route_info(local_route["apispec"], synced_route)
+
+        for route_id, local_route in local_routes.items():
+            if (
+                route_id not in synced_routes
+                and local_route["hits_delta_since_sync"] > 0
+            ):
+                synced_routes[route_id] = local_route
+
+        self.routes.routes = synced_routes
+
     def renew(self):
         if not comms.get_comms():
             return
@@ -79,7 +115,7 @@ class ThreadCache:
         # wipe any increments that arrived in the window where the IPC released
         # the GIL.
         payload = {
-            "current_routes": self.routes.get_routes_with_hits(),
+            "current_routes": self._snapshot_route_deltas(),
             "middleware_installed": self.middleware_installed,
             "hostnames": self.hostnames.as_array(),
             "users": self.users.as_array(),
@@ -104,9 +140,7 @@ class ThreadCache:
 
         # update routes
         if isinstance(res["data"].get("routes"), dict):
-            self.routes.routes = res["data"]["routes"]
-            for route in self.routes.routes.values():
-                route["hits_delta_since_sync"] = 0
+            self._merge_synced_routes(res["data"]["routes"])
 
 
 # For these 2 functions and the data they process, we rely on Python's GIL

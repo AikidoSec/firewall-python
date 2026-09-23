@@ -560,6 +560,38 @@ def test_renew_preserves_increments_during_ipc(
 
 
 @patch("aikido_zen.background_process.comms.get_comms")
+def test_renew_preserves_route_increments_during_ipc(
+    mock_get_comms, thread_cache: ThreadCache
+):
+    mock_comms = MagicMock()
+    mock_get_comms.return_value = mock_comms
+    route_metadata = {"method": "GET", "route": "/test"}
+    thread_cache.routes.increment_route(route_metadata)
+    thread_cache.routes.increment_route(route_metadata)
+
+    def simulate_concurrent_increment(*args, **kwargs):
+        synced_route = kwargs["obj"]["current_routes"]["GET:/test"].copy()
+        synced_route["hits_delta_since_sync"] = 0
+        thread_cache.routes.increment_route(route_metadata)
+        return {
+            "success": True,
+            "data": {"routes": {"GET:/test": synced_route}},
+        }
+
+    mock_comms.send_data_to_bg_process.side_effect = simulate_concurrent_increment
+
+    thread_cache.renew()
+
+    sent_route = mock_comms.send_data_to_bg_process.call_args.kwargs["obj"][
+        "current_routes"
+    ]["GET:/test"]
+    assert sent_route["hits"] == 2
+    assert sent_route["hits_delta_since_sync"] == 2
+    assert thread_cache.routes.get(route_metadata)["hits"] == 3
+    assert thread_cache.routes.get(route_metadata)["hits_delta_since_sync"] == 1
+
+
+@patch("aikido_zen.background_process.comms.get_comms")
 def test_renew_restores_deltas_on_ipc_failure(
     mock_get_comms, thread_cache: ThreadCache
 ):
@@ -573,10 +605,14 @@ def test_renew_restores_deltas_on_ipc_failure(
     thread_cache.stats.on_detected_attack_wave(blocked=True)
     thread_cache.ai_stats.on_ai_call("openai", "gpt-4o", 100, 50)
     thread_cache.middleware_installed = True
+    route_metadata = {"method": "GET", "route": "/test"}
+    thread_cache.routes.increment_route(route_metadata)
+    thread_cache.routes.increment_route(route_metadata)
 
     def fail_after_concurrent_increment(*args, **kwargs):
         thread_cache.stats.increment_total_hits()
         thread_cache.stats.on_detected_attack_wave(blocked=False)
+        thread_cache.routes.increment_route(route_metadata)
         return {"success": False}
 
     mock_comms.send_data_to_bg_process.side_effect = fail_after_concurrent_increment
@@ -591,6 +627,8 @@ def test_renew_restores_deltas_on_ipc_failure(
     }
     assert thread_cache.middleware_installed is True
     assert thread_cache.ai_stats.get_stats()[0]["calls"] == 1
+    assert thread_cache.routes.get(route_metadata)["hits"] == 3
+    assert thread_cache.routes.get(route_metadata)["hits_delta_since_sync"] == 3
 
 
 @patch("aikido_zen.background_process.comms.get_comms")
