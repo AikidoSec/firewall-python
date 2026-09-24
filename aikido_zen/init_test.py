@@ -1,3 +1,4 @@
+import builtins
 from unittest.mock import patch
 
 import pytest
@@ -31,3 +32,23 @@ def test_protect_does_not_start_without_gil(monkeypatch):
 
     test_uds_file_access.assert_not_called()
     start_background_process.assert_not_called()
+
+
+def test_protect_registers_the_odoo_source(monkeypatch):
+    imported_modules = []
+    original_import = builtins.__import__
+
+    def track_import(name, *args, **kwargs):
+        imported_modules.append(name)
+        return original_import(name, *args, **kwargs)
+
+    monkeypatch.setattr("aikido_zen.aikido_disabled_flag_active", lambda: False)
+    monkeypatch.setattr("aikido_zen.python_version_not_supported", lambda: False)
+    monkeypatch.setattr("aikido_zen.gil_not_enabled", lambda: False)
+    monkeypatch.setattr("aikido_zen.test_uds_file_access", lambda: True)
+    monkeypatch.setattr("aikido_zen.check_gevent", lambda: False)
+    monkeypatch.setattr(builtins, "__import__", track_import)
+
+    protect(mode="daemon_disabled")
+
+    assert "aikido_zen.sources.odoo" in imported_modules

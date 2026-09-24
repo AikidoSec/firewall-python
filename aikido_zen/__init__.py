@@ -62,6 +62,7 @@ def protect(mode="daemon", token=""):
     # Import sources
     import aikido_zen.sources.django
     import aikido_zen.sources.flask
+    import aikido_zen.sources.odoo
     import aikido_zen.sources.quart
     import aikido_zen.sources.starlette
     import aikido_zen.sources.fastapi

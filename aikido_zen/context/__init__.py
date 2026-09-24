@@ -20,7 +20,7 @@ from ..helpers.headers import Headers
 UINPUT_SOURCES = ["body", "cookies", "query", "headers", "xml", "route_params"]
 current_context = contextvars.ContextVar("current_context", default=None)
 
-WSGI_SOURCES = ["django", "flask"]
+WSGI_SOURCES = ["django", "flask", "odoo"]
 ASGI_SOURCES = ["quart", "django_async", "starlette"]
 
 
