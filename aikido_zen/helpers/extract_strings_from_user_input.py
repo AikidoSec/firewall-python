@@ -8,7 +8,7 @@ from aikido_zen.helpers.build_path_to_payload import build_path_to_payload
 import aikido_zen.context as ctx
 
 # Deeper input would overflow the stack and let the request through unchecked.
-MAX_TRAVERSAL_DEPTH = 30
+MAX_TRAVERSAL_DEPTH = 64
 
 
 def extract_strings_from_user_input_cached(obj, source):
@@ -73,8 +73,6 @@ def extract_strings_and_nesting(obj, path_to_payload):
                 results[k] = v
             nesting = max(nesting, child_nesting + 1)
 
-        #  We track how deep the children nest because str() walks the whole array by
-        #  itself, ignoring our limit; too deep an array would raise a RecursionError.
         if nesting <= MAX_TRAVERSAL_DEPTH:
             results[str(obj)] = build_path_to_payload(path_to_payload)
 
