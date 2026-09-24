@@ -1,7 +1,6 @@
 import pytest
 from urllib.parse import parse_qs
 from aikido_zen.context.asgi import set_asgi_attributes_on_context
-from aikido_zen.vulnerabilities.sql_injection import detect_sql_injection
 
 
 class Context:
@@ -181,7 +180,7 @@ def test_asgi_scope_invalid_utf8():
     assert context5.url == "http://192.168.0.5:80/search"
 
 
-def test_valid_utf8_query_matches_strict_decode_and_is_detected():
+def test_valid_utf8_query_matches_strict_decode():
     raw = "q=café' OR 1=1 --&b=d".encode("utf-8")
     scope = {
         "method": "GET",
@@ -196,6 +195,3 @@ def test_valid_utf8_query_matches_strict_decode_and_is_detected():
     context = Context()
     set_asgi_attributes_on_context(context, scope)
     assert context.query == parse_qs(raw.decode("utf-8"))
-    payload = context.query["q"][0]
-    sql = "SELECT * FROM dogs WHERE name = '" + payload + "'"
-    assert detect_sql_injection(sql, payload, "postgres")

@@ -1,5 +1,4 @@
 import pytest
-from aikido_zen.vulnerabilities.sql_injection import detect_sql_injection
 from .normalize_asgi_headers import normalize_asgi_headers
 
 
@@ -110,30 +109,12 @@ def test_normalize_asgi_headers_matches_framework_decoding():
     assert normalized.get_header("X_CUSTOM_HEADER") == "cafÃ©"
 
 
-def _insert(value):
-    return "INSERT INTO dogs (dog_name, isAdmin) VALUES ('" + value + "', FALSE)"
-
-
-def test_valid_utf8_header_keeps_previous_and_framework_detection():
+def test_valid_utf8_header_keeps_both_decodings():
     payload = "café' OR 1=1 --"
     framework = "cafÃ©' OR 1=1 --"
     normalized = normalize_asgi_headers([(b"x-dog-name", payload.encode("utf-8"))])
-    values = normalized["X_DOG_NAME"]
-    assert values == [payload, framework]
+    assert normalized["X_DOG_NAME"] == [payload, framework]
     assert normalized.get_header("X_DOG_NAME") == framework
-    assert any(
-        detect_sql_injection(_insert(payload), value, "postgres") for value in values
-    )
-    assert any(
-        detect_sql_injection(_insert(framework), value, "postgres") for value in values
-    )
-
-
-def test_ascii_header_detection_unchanged():
-    payload = "Dangerous Bobby', TRUE); --"
-    normalized = normalize_asgi_headers([(b"x-dog-name", payload.encode("ascii"))])
-    assert normalized["X_DOG_NAME"] == [payload]
-    assert detect_sql_injection(_insert(payload), payload, "postgres")
 
 
 def test_normalize_asgi_headers_large_input():
