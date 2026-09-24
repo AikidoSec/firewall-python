@@ -25,7 +25,7 @@ def set_asgi_attributes_on_context(context, scope):
         context.cookies = {}
 
     context.url = build_url_from_asgi(scope)
-    context.query = parse_qs(scope["query_string"].decode("utf-8"))
+    context.query = parse_qs(scope["query_string"].decode("utf-8", errors="replace"))
 
     raw_ip = scope["client"][0] if scope["client"] else ""
     context.remote_address = get_ip_from_request(raw_ip, context.headers)
