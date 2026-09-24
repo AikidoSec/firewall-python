@@ -1,0 +1,108 @@
+x-odoo-image: &odoo-image
+  image: ${ODOO_SAMPLE_IMAGE:-firewall-python-odoo-sample:16}
+  build:
+    context: ../..
+    dockerfile: sample-apps/odoo-postgres/Dockerfile
+    args:
+      ODOO_IMAGE: ${ODOO_IMAGE:-odoo:16.0@sha256:0f36a5002a200bb1649771c2cb9403ca5392d7ac4bb23f9ad500b339df3f5a3a}
+
+x-odoo-environment: &odoo-environment
+  HOST: postgres
+  PORT: 5432
+  USER: odoo
+  PASSWORD: odoo
+
+services:
+  postgres:
+    image: postgres:15@sha256:9b1d34adbce1dd07ee6e94b4a2cf698884b89bd44a6c9c12f5da8f3acbfe4957
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: odoo
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready --username=odoo --dbname=postgres"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  odoo-init-enabled:
+    <<: *odoo-image
+    command: ["/usr/local/bin/initialize-odoo-database"]
+    environment:
+      <<: *odoo-environment
+      ODOO_DATABASE: odoo_zen
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - odoo-enabled-data:/var/lib/odoo
+
+  odoo-init-disabled:
+    <<: *odoo-image
+    command: ["/usr/local/bin/initialize-odoo-database"]
+    environment:
+      <<: *odoo-environment
+      ODOO_DATABASE: odoo_without_zen
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - odoo-disabled-data:/var/lib/odoo
+
+  odoo:
+    <<: *odoo-image
+    command:
+      - odoo
+      - --config=/etc/odoo/odoo.conf
+      - --database=odoo_zen
+      - --db-filter=^odoo_zen$$
+      - --load=base,web,aikido_zen_bootstrap
+      - --workers=${ODOO_WORKERS:-0}
+    environment:
+      <<: *odoo-environment
+      AIKIDO_BLOCK: "false"
+      AIKIDO_DEBUG: "true"
+    depends_on:
+      odoo-init-enabled:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:8069/zen/status >/dev/null"]
+      interval: 2s
+      timeout: 5s
+      retries: 60
+    ports:
+      - "${ODOO_PORT:-8116}:8069"
+    volumes:
+      - odoo-enabled-data:/var/lib/odoo
+
+  odoo-disabled:
+    <<: *odoo-image
+    command:
+      - odoo
+      - --config=/etc/odoo/odoo.conf
+      - --database=odoo_without_zen
+      - --db-filter=^odoo_without_zen$$
+      - --load=base,web,aikido_zen_bootstrap
+      - --workers=${ODOO_WORKERS:-0}
+    environment:
+      <<: *odoo-environment
+      AIKIDO_DISABLE: "true"
+    depends_on:
+      odoo-init-disabled:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:8069/zen/status >/dev/null"]
+      interval: 2s
+      timeout: 5s
+      retries: 60
+    ports:
+      - "${ODOO_DISABLED_PORT:-8117}:8069"
+    volumes:
+      - odoo-disabled-data:/var/lib/odoo
+
+volumes:
+  postgres-data:
+  odoo-enabled-data:
+  odoo-disabled-data:
