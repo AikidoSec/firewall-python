@@ -1,5 +1,7 @@
 import pytest
+from urllib.parse import parse_qs
 from aikido_zen.context.asgi import set_asgi_attributes_on_context
+from aikido_zen.vulnerabilities.sql_injection import detect_sql_injection
 
 
 class Context:
@@ -147,3 +149,53 @@ def test_asgi_scope_multiple_header_values():
     }
     assert context4.cookies == {}  # No cookies in this scope
     assert context4.url == "https://192.168.0.4:443/resource/123"
+
+
+# Scope with invalid UTF-8 in a header and in the raw query string :
+TEST_ASGI_SCOPE_INVALID_UTF8 = {
+    "method": "GET",
+    "headers": [
+        (b"COOKIE", b"session=abc123"),
+        (b"x-custom-header", b"\xff' OR 1=1 --"),
+    ],
+    "query_string": b"q=\xff' OR 1=1 --&b=d",
+    "client": ["5.5.5.5"],
+    "server": ["192.168.0.5", 80],
+    "scheme": "http",
+    "root_path": "",
+    "path": "/search",
+}
+
+
+def test_asgi_scope_invalid_utf8():
+    context5 = Context()
+    set_asgi_attributes_on_context(context5, TEST_ASGI_SCOPE_INVALID_UTF8)
+    assert context5.method == "GET"
+    assert context5.remote_address == "5.5.5.5"
+    assert context5.query == {"q": ["\ufffd' OR 1=1 --"], "b": ["d"]}
+    assert context5.headers == {
+        "COOKIE": ["session=abc123"],
+        "X_CUSTOM_HEADER": ["\xff' OR 1=1 --"],
+    }
+    assert context5.cookies == {"session": "abc123"}
+    assert context5.url == "http://192.168.0.5:80/search"
+
+
+def test_valid_utf8_query_matches_strict_decode_and_is_detected():
+    raw = "q=café' OR 1=1 --&b=d".encode("utf-8")
+    scope = {
+        "method": "GET",
+        "headers": [],
+        "query_string": raw,
+        "client": ["5.5.5.5"],
+        "server": ["192.168.0.5", 80],
+        "scheme": "http",
+        "root_path": "",
+        "path": "/search",
+    }
+    context = Context()
+    set_asgi_attributes_on_context(context, scope)
+    assert context.query == parse_qs(raw.decode("utf-8"))
+    payload = context.query["q"][0]
+    sql = "SELECT * FROM dogs WHERE name = '" + payload + "'"
+    assert detect_sql_injection(sql, payload, "postgres")
