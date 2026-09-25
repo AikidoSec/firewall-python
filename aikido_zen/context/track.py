@@ -3,9 +3,7 @@ Track file, exports the track function
 """
 
 from aikido_zen.helpers.logging import logger
-from aikido_zen.helpers.create_detected_attack_api_event import (
-    extract_request_if_possible,
-)
+from aikido_zen.helpers.create_custom_event import create_custom_event
 from . import get_current_context
 import aikido_zen.background_process.comms as comms
 from ..background_process.commands import PutEventCommand
@@ -28,12 +26,9 @@ def track(event_name):
         log_warning_track_called_without_context()
         return
 
-    event = {
-        "type": "custom",
-        "name": event_name,
-        "request": extract_request_if_possible(context),
-        "user": context.user,
-    }
+    event = create_custom_event(event_name, context)
+    if not event:
+        return
 
     ipc = comms.get_comms()
     if not ipc:

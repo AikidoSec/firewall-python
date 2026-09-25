@@ -77,11 +77,21 @@ def test_track_sends_event_over_ipc():
         "name": "my-custom-event",
         "request": {
             "method": "POST",
-            "url": "http://localhost:8080/track-me",
             "ipAddress": "1.2.3.4",
+            "userAgent": "test-agent",
             "source": "flask",
             "route": "/track-me",
-            "userAgent": "test-agent",
         },
         "user": {"id": "user-1", "name": "Jane Doe"},
     }
+
+
+def test_track_does_not_send_the_url():
+    set_context_and_lifecycle()
+
+    comms = MagicMock()
+    with patch("aikido_zen.background_process.comms.get_comms", return_value=comms):
+        track("my-custom-event")
+
+    request = comms.send_data_to_bg_process.call_args[0][1].event["request"]
+    assert "url" not in request
