@@ -2,13 +2,16 @@ import time
 import pytest
 import http.client
 import requests
-from .server.check_events_from_mock import fetch_events_from_mock, validate_started_event, filter_on_event_type
+from .server.check_events_from_mock import fetch_events_from_mock, validate_started_event, filter_on_event_type, \
+    clear_events_from_mock
 
 # e2e tests for flask_postgres sample app
 post_url_fw = "http://localhost:8102/create"
 post_url_nofw = "http://localhost:8103/create"
 sync_route_fw = "http://localhost:8102/sync_route"
 sync_route_nofw = "http://localhost:8103/sync_route"
+track_url_fw = "http://localhost:8102/track_event"
+track_url_nofw = "http://localhost:8103/track_event"
 
 def test_firewall_started_okay():
     events = fetch_events_from_mock("http://localhost:5000")
@@ -136,3 +139,37 @@ def test_sync_route_with_firewall():
 def test_sync_route_without_firewall():
     res = requests.get(sync_route_nofw)
     assert res.status_code == 200
+
+
+def test_track_sends_a_custom_event_with_firewall():
+    clear_events_from_mock("http://localhost:5000")
+    res = requests.get(track_url_fw, headers={"User-Agent": "e2e-test"})
+    assert res.status_code == 200
+
+    time.sleep(5)  # Wait for the event to be reported
+    events = fetch_events_from_mock("http://localhost:5000")
+    custom_events = filter_on_event_type(events, "custom")
+
+    assert len(custom_events) == 1
+    assert custom_events[0]["name"] == "user.login_failed"
+    assert custom_events[0]["user"]["id"] == "user123"
+    assert custom_events[0]["user"]["name"] == "John Doe"
+    assert custom_events[0]["request"] == {
+        "method": "GET",
+        "ipAddress": "127.0.0.1",
+        "userAgent": "e2e-test",
+        "source": "starlette",
+        "route": "/track_event",
+    }
+    # The custom event schema has no url, unlike a detected attack event
+    assert "url" not in custom_events[0]["request"]
+
+
+def test_track_sends_no_event_without_firewall():
+    clear_events_from_mock("http://localhost:5000")
+    res = requests.get(track_url_nofw, headers={"User-Agent": "e2e-test"})
+    assert res.status_code == 200
+
+    time.sleep(5)  # Wait, in case an event would be reported
+    events = fetch_events_from_mock("http://localhost:5000")
+    assert filter_on_event_type(events, "custom") == []

@@ -73,3 +73,8 @@ def create_dog_with_cookie():
     cursor.close()
     conn.close()
     return f'Dog {dog_name} created successfully'
+
+@app.route("/track_event", methods=['GET'])
+def track_event():
+    aikido_zen.track("user.login_failed")
+    return 'Event tracked'
