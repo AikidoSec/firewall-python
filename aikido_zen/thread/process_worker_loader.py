@@ -20,18 +20,18 @@ def load_worker():
     thread_name = "aikido-process-worker-" + str(multiprocessing.current_process().pid)
 
     with _load_worker_lock:
-        # The first HTTP request in a worker process may arrive before its local cache
-        # has received config. Synchronize with the background process immediately
-        # instead of waiting for the periodic sync.
+        # Each worker process should have only one periodic synchronization thread.
+        if any(thread.name == thread_name for thread in threading.enumerate()):
+            return
+
+        # The first request can arrive before the cache has config, so sync now
+        # instead of waiting for the periodic sync. Below the thread check so it
+        # runs once per process rather than on every request.
         if not thread_cache.is_config_loaded():
             try:
                 thread_cache.renew()
             except Exception as e:
                 logger.warning("An error occurred during data synchronization: %s", e)
-
-        # Each worker process should have only one periodic synchronization thread.
-        if any(thread.name == thread_name for thread in threading.enumerate()):
-            return
 
         # Create a new daemon thread that will handle communication to and from background agent
         thread = threading.Thread(target=aikido_process_worker_thread, name=thread_name)
