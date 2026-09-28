@@ -4,6 +4,7 @@ import pytest
 
 from . import Context, current_context
 from .track import track
+from aikido_zen.thread.thread_cache import ThreadCache
 import aikido_zen.context.track as track_module
 
 
@@ -29,6 +30,25 @@ def set_context_and_lifecycle():
     context = Context(req=wsgi_request, body=None, source="flask")
     context.set_as_current_context()
     return context
+
+
+def cache_with_bypassed_ips(*ips):
+    cache = ThreadCache()
+    cache.config.set_bypassed_ips(list(ips))
+    return cache
+
+
+def sent_event_with_cache(cache):
+    set_context_and_lifecycle()
+    comms = MagicMock()
+    with patch("aikido_zen.thread.thread_cache.get_cache", return_value=cache), patch(
+        "aikido_zen.background_process.comms.get_comms", return_value=comms
+    ):
+        track("my-custom-event")
+
+    if not comms.send_data_to_bg_process.called:
+        return None
+    return comms.send_data_to_bg_process.call_args[0][1].event
 
 
 def test_track_invalid_event_name(caplog):
@@ -65,7 +85,10 @@ def test_track_sends_event_over_ipc():
     context.user = {"id": "user-1", "name": "Jane Doe"}
 
     comms = MagicMock()
-    with patch("aikido_zen.background_process.comms.get_comms", return_value=comms):
+    with patch(
+        "aikido_zen.thread.thread_cache.get_cache",
+        return_value=cache_with_bypassed_ips(),
+    ), patch("aikido_zen.background_process.comms.get_comms", return_value=comms):
         track("my-custom-event")
 
     comms.send_data_to_bg_process.assert_called_once()
@@ -86,12 +109,41 @@ def test_track_sends_event_over_ipc():
     }
 
 
+def test_track_does_not_send_an_event_for_a_bypassed_ip():
+    assert sent_event_with_cache(cache_with_bypassed_ips("1.2.3.4")) is None
+
+
+def test_track_sends_an_event_for_an_ip_that_is_not_bypassed():
+    assert sent_event_with_cache(cache_with_bypassed_ips("5.6.7.8")) is not None
+
+
+def test_track_sends_an_event_before_the_config_was_received():
+    cache = ThreadCache()
+
+    assert cache.config.last_updated_at == -1
+    assert sent_event_with_cache(cache) is not None
+
+
+def test_track_sends_an_event_without_a_thread_cache():
+    assert sent_event_with_cache(None) is not None
+
+
+def test_track_does_not_raise_when_the_bypass_check_fails():
+    cache = MagicMock()
+    cache.is_bypassed_ip.side_effect = Exception("Test exception")
+
+    assert sent_event_with_cache(cache) is None
+
+
+def test_track_does_not_raise_without_a_client_ip():
+    context = set_context_and_lifecycle()
+    context.remote_address = None
+
+    with patch("aikido_zen.thread.thread_cache.get_cache", return_value=ThreadCache()):
+        track("my-event")
+
+
 def test_track_does_not_send_the_url():
-    set_context_and_lifecycle()
+    event = sent_event_with_cache(cache_with_bypassed_ips())
 
-    comms = MagicMock()
-    with patch("aikido_zen.background_process.comms.get_comms", return_value=comms):
-        track("my-custom-event")
-
-    request = comms.send_data_to_bg_process.call_args[0][1].event["request"]
-    assert "url" not in request
+    assert "url" not in event["request"]
