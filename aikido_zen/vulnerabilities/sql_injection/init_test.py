@@ -420,6 +420,27 @@ def test_trimmed_user_input_bypass():
     )
 
 
+def test_returns_false_when_library_cannot_be_loaded(monkeypatch):
+    monkeypatch.setattr("aikido_zen.helpers.zen_internals._detect_sql_injection", None)
+
+    assert (
+        detect_sql_injection(
+            "SELECT * FROM users WHERE id = 1 OR 1=1", "1 OR 1=1", "mysql"
+        )
+        is False
+    )
+
+
+def test_checks_do_not_open_library_again(monkeypatch):
+    def fail_to_open(_path):
+        raise OSError("opened the library again")
+
+    monkeypatch.setattr("ctypes.CDLL", fail_to_open)
+
+    for _ in range(3):
+        is_sql_injection("SELECT * FROM users WHERE id = 1 OR 1=1", "1 OR 1=1")
+
+
 def file_paths():
     script_dir = os.path.dirname(__file__)
     return [
