@@ -94,8 +94,11 @@ class ThreadCache:
             obj=payload,
             receive=True,
         )
-        if not res["success"] or not res["data"]:
+        if not res["success"]:
             self._restore_synced_deltas(payload)
+            return
+
+        if not res["data"]:
             return
 
         # update config
