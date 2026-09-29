@@ -12,7 +12,7 @@ def update_service_config(connection_manager, res):
         return
 
     heartbeat_interval_ms = res.get("heartbeatIntervalInMS")
-    if isinstance(heartbeat_interval_ms, int) and heartbeat_interval_ms >= 120_000:
+    if isinstance(heartbeat_interval_ms, int) and heartbeat_interval_ms >= 60_000:
         connection_manager.heartbeat_secs = heartbeat_interval_ms / 1000
 
     if "block" in res.keys() and res["block"] != connection_manager.block:

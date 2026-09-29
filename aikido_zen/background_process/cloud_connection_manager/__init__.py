@@ -1,6 +1,6 @@
 """This file simply exports the CloudConnectionManager class"""
 
-from aikido_zen.background_process.heartbeats import send_heartbeats_every_x_secs
+from aikido_zen.background_process.heartbeats import start_heartbeats
 from aikido_zen.background_process.routes import Routes
 from aikido_zen.ratelimiting.rate_limiter import RateLimiter
 from aikido_zen.helpers.logging import logger
@@ -29,7 +29,6 @@ class CloudConnectionManager:
 
     timeout_in_sec = 5  # Timeout of API calls to Aikido Server
     heartbeat_secs = 600  # Heartbeat every 10 minutes
-    initial_stats_timeout = 60  # Wait 60 seconds after startup for initial stats
 
     def __init__(self, block, api, token, serverless):
         self.block = block
@@ -65,30 +64,13 @@ class CloudConnectionManager:
                 "Token was invalid, not starting heartbeats and realtime polling."
             )
             return
-        event_scheduler.enter(
-            self.initial_stats_timeout, 1, self.report_initial_stats, (event_scheduler,)
-        )
+        start_heartbeats(self, event_scheduler)
         start_polling_for_changes(self, event_scheduler)
 
         if is_feature_enabled("sse") or self.conf.is_feature_enabled(
             "realtime_updates"
         ):
             listen_for_config_updates(self, event_scheduler)
-
-    def report_initial_stats(self, event_scheduler):
-        """
-        This is run 1m after startup, and checks if we should send out
-        a preliminary heartbeat with some stats.
-        """
-        data_present = (
-            not self.statistics.empty()
-            or len(self.routes.routes) > 0
-            or not self.ai_stats.empty()
-        )
-        should_report_initial_stats = data_present and not self.conf.received_any_stats
-        if should_report_initial_stats:
-            self.send_heartbeat()
-        send_heartbeats_every_x_secs(self, self.heartbeat_secs, event_scheduler)
 
     def send_heartbeat(self):
         """This will send a heartbeat to the server"""
