@@ -6,9 +6,6 @@ from aikido_zen.helpers.logging import logger
 
 
 def start_heartbeats(connection_manager, event_scheduler):
-    """
-    Start sending out heartbeats
-    """
     if connection_manager.serverless:
         logger.debug("Running in serverless environment, not starting heartbeats")
         return
