@@ -50,9 +50,7 @@ def test_cloud_connection_manager_empty_serverless():
 @patch(
     "aikido_zen.background_process.cloud_connection_manager.start_polling_for_changes"
 )
-@patch(
-    "aikido_zen.background_process.cloud_connection_manager.send_heartbeats_every_x_secs"
-)
+@patch("aikido_zen.background_process.cloud_connection_manager.start_heartbeats")
 @patch(
     "aikido_zen.background_process.cloud_connection_manager.listen_for_config_updates"
 )
@@ -77,9 +75,7 @@ def test_start_enables_sse_when_server_flag_set(
 @patch(
     "aikido_zen.background_process.cloud_connection_manager.start_polling_for_changes"
 )
-@patch(
-    "aikido_zen.background_process.cloud_connection_manager.send_heartbeats_every_x_secs"
-)
+@patch("aikido_zen.background_process.cloud_connection_manager.start_heartbeats")
 @patch(
     "aikido_zen.background_process.cloud_connection_manager.listen_for_config_updates"
 )
@@ -103,9 +99,7 @@ def test_start_does_not_enable_sse_without_flag(
 @patch(
     "aikido_zen.background_process.cloud_connection_manager.start_polling_for_changes"
 )
-@patch(
-    "aikido_zen.background_process.cloud_connection_manager.send_heartbeats_every_x_secs"
-)
+@patch("aikido_zen.background_process.cloud_connection_manager.start_heartbeats")
 @patch(
     "aikido_zen.background_process.cloud_connection_manager.listen_for_config_updates"
 )
@@ -131,9 +125,7 @@ def test_start_enables_sse_via_env_var(
 @patch(
     "aikido_zen.background_process.cloud_connection_manager.start_polling_for_changes"
 )
-@patch(
-    "aikido_zen.background_process.cloud_connection_manager.send_heartbeats_every_x_secs"
-)
+@patch("aikido_zen.background_process.cloud_connection_manager.start_heartbeats")
 @patch(
     "aikido_zen.background_process.cloud_connection_manager.listen_for_config_updates"
 )
