@@ -11,6 +11,10 @@ def update_service_config(connection_manager, res):
     if res.get("success", False) is False:
         return
 
+    heartbeat_interval_ms = res.get("heartbeatIntervalInMS")
+    if isinstance(heartbeat_interval_ms, int) and heartbeat_interval_ms >= 120_000:
+        connection_manager.heartbeat_secs = heartbeat_interval_ms / 1000
+
     if "block" in res.keys() and res["block"] != connection_manager.block:
         logger.debug("Updating blocking, setting blocking to : %s", res["block"])
         connection_manager.block = bool(res["block"])
