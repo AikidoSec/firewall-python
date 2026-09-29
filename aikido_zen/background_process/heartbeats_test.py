@@ -73,6 +73,22 @@ def test_default_heartbeat_interval(heartbeat_schedule):
     assert manager.send_heartbeat.call_count == 4
 
 
+@pytest.mark.parametrize("failed_report", [0, 1, 2])
+def test_heartbeat_exception_does_not_stop_schedule(
+    heartbeat_schedule, failed_report, caplog
+):
+    manager, start, advance_to = heartbeat_schedule
+    responses = [None] * 4
+    responses[failed_report] = RuntimeError("heartbeat failed")
+    manager.send_heartbeat.side_effect = responses
+
+    start()
+    advance_to(1350)
+
+    assert manager.send_heartbeat.call_count == 4
+    assert "Failed to send heartbeat: heartbeat failed" in caplog.text
+
+
 def test_interval_updates_apply_when_scheduling_next_heartbeat(heartbeat_schedule):
     manager, start, advance_to = heartbeat_schedule
     manager.update_service_config({"success": True, "heartbeatIntervalInMS": 120_000})

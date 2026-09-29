@@ -19,7 +19,10 @@ def start_heartbeats(connection_manager, event_scheduler):
     logger.debug("Starting heartbeats")
 
     def send_heartbeat(initial=False):
-        connection_manager.send_heartbeat()
+        try:
+            connection_manager.send_heartbeat()
+        except Exception as e:
+            logger.error("Failed to send heartbeat: %s", e)
         next_interval_in_secs = (
             SECOND_HEARTBEAT_INTERVAL_SECONDS
             if initial
