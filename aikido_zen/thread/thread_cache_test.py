@@ -532,9 +532,10 @@ def test_renew_called_with_empty_routes(mock_get_comms, thread_cache: ThreadCach
     )
 
 
+@pytest.mark.parametrize("response_data", [{}, {"routes": {}}])
 @patch("aikido_zen.background_process.comms.get_comms")
 def test_renew_preserves_increments_during_ipc(
-    mock_get_comms, thread_cache: ThreadCache
+    mock_get_comms, thread_cache: ThreadCache, response_data
 ):
     """Increments arriving during the IPC call survive on the response path -
     the snapshot is sent, but the live counter keeps the concurrent increment."""
@@ -546,7 +547,7 @@ def test_renew_preserves_increments_during_ipc(
 
     def simulate_concurrent_increment(*args, **kwargs):
         thread_cache.stats.increment_total_hits()
-        return {"success": True, "data": {"routes": {}}}
+        return {"success": True, "data": response_data}
 
     mock_comms.send_data_to_bg_process.side_effect = simulate_concurrent_increment
 
