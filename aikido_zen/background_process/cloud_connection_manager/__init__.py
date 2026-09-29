@@ -65,8 +65,9 @@ class CloudConnectionManager:
                 "Token was invalid, not starting heartbeats and realtime polling."
             )
             return
-        event_scheduler.enter(self.initial_stats_timeout, 1, self.report_initial_stats)
-        send_heartbeats_every_x_secs(self, self.heartbeat_secs, event_scheduler)
+        event_scheduler.enter(
+            self.initial_stats_timeout, 1, self.report_initial_stats, (event_scheduler,)
+        )
         start_polling_for_changes(self, event_scheduler)
 
         if is_feature_enabled("sse") or self.conf.is_feature_enabled(
@@ -74,7 +75,7 @@ class CloudConnectionManager:
         ):
             listen_for_config_updates(self, event_scheduler)
 
-    def report_initial_stats(self):
+    def report_initial_stats(self, event_scheduler):
         """
         This is run 1m after startup, and checks if we should send out
         a preliminary heartbeat with some stats.
@@ -87,6 +88,7 @@ class CloudConnectionManager:
         should_report_initial_stats = data_present and not self.conf.received_any_stats
         if should_report_initial_stats:
             self.send_heartbeat()
+        send_heartbeats_every_x_secs(self, self.heartbeat_secs, event_scheduler)
 
     def send_heartbeat(self):
         """This will send a heartbeat to the server"""

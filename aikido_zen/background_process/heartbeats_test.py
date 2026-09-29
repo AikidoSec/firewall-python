@@ -105,16 +105,21 @@ def test_failed_response_does_not_change_interval(heartbeat_schedule):
     assert manager.heartbeat_secs == 600
 
 
-def test_startup_response_sets_interval_and_keeps_initial_stats():
+@pytest.mark.parametrize("interval", [60, 120, 600])
+@pytest.mark.parametrize("received_any_stats", [False, True])
+@pytest.mark.parametrize("serverless", [None, "aws_lambda"])
+def test_startup_schedule_runs_initial_then_recurring_reports(
+    interval, received_any_stats, serverless
+):
     now = [0]
     scheduler = sched.scheduler(lambda: now[0], lambda _: None)
     api = Mock()
     api.report.return_value = {
         "success": True,
-        "receivedAnyStats": False,
-        "heartbeatIntervalInMS": 120_000,
+        "receivedAnyStats": received_any_stats,
     }
-    manager = CloudConnectionManager(False, api, "mocked_token", None)
+    manager = CloudConnectionManager(False, api, "mocked_token", serverless)
+    manager.heartbeat_secs = interval
     manager.update_firewall_lists = Mock()
     manager.send_heartbeat = Mock()
     manager.statistics.empty = Mock(return_value=False)
@@ -122,7 +127,17 @@ def test_startup_response_sets_interval_and_keeps_initial_stats():
         "aikido_zen.background_process.cloud_connection_manager.start_polling_for_changes"
     ):
         manager.start(scheduler)
-    for seconds in (30, 60, 90, 120):
+    assert len(scheduler.queue) == 1
+    initial_reports = int(not received_any_stats)
+    recurring_reports = int(not serverless)
+    for seconds, expected_reports in (
+        (59, 0),
+        (60, initial_reports),
+        (60 + interval - 1, initial_reports),
+        (60 + interval, initial_reports + recurring_reports),
+        (60 + 2 * interval, initial_reports + 2 * recurring_reports),
+    ):
         now[0] = seconds
         scheduler.run(blocking=False)
-        assert manager.send_heartbeat.call_count == (seconds >= 60) + (seconds >= 120)
+        assert manager.send_heartbeat.call_count == expected_reports
+    assert len(scheduler.queue) == recurring_reports
