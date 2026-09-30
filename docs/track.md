@@ -1,46 +1,25 @@
-# Tracking events
+# Track custom events
 
-`track` lets you record things happening in your app — like failed logins, signups, or password resets. Zen sends these to Aikido so patterns can be detected, like someone failing to log in 50 times in a minute.
+Use `track()` to report events that only your application knows about, such as failed logins. [Playbooks](https://help.aikido.dev/zen-firewall/zen-features/playbooks) can act when an event occurs repeatedly, for example by blocking an IP after three failed logins in five minutes.
 
 ```python
-from aikido_zen import track, set_user
+from aikido_zen import set_user, track
 
-def login(request):
-    user = authenticate(request)
+@app.route("/login", methods=["POST"])
+def login():
+    user = authenticate(request.form["username"], request.form["password"])
 
     if not user:
         track("user.login_failed")
-        return unauthorized_response()
+        return {"error": "Invalid credentials"}, 401
 
     set_user({"id": user.id})
     track("user.login_succeeded")
-    return success_response()
+    return {"token": create_token(user)}
 ```
 
-Zen automatically picks up the IP address, user agent, and current user (if you called [`set_user`](./user.md)) from the request — you don't need to pass those yourself.
+After adding `track()`, trigger the event at least once. It will then appear on the Playbooks page in the Aikido dashboard. From there, you can create a playbook and choose what should happen when the event occurs. Calling `track()` by itself does not create a playbook or block anything.
 
-## More examples
+Call `track()` while handling an HTTP request. Zen associates the event with the request's IP address. Playbook counts are per IP, not across your whole app. If you call [`set_user()`](./user.md) before `track()`, Zen also includes the current user. `set_user()` is optional. Events without a user are still tracked.
 
-```python
-track("user.signed_up")
-track("user.password_reset_requested")
-track("plan.invite_sent")
-track("payment.failed")
-```
-
-## Naming events
-
-Use lowercase with dots to group related events:
-
-- `user.login_failed`
-- `user.login_succeeded`
-- `user.signed_up`
-- `user.password_reset_requested`
-- `payment.failed`
-- `plan.invite_sent`
-
-## Things to know
-
-`track` only works inside an HTTP request. If you call it in a background job or a script, nothing gets sent and you'll see a warning in the console.
-
-If you haven't called `set_user` yet, the event still goes through — it just won't have a user ID attached.
+Event names can use any format. We recommend lowercase, dot-separated names such as `user.login_failed`.
