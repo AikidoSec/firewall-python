@@ -46,7 +46,7 @@ def track(event_name):
         ipc = comms.get_comms()
         if not ipc:
             return
-        send_payload(ipc, PutEventCommand.generate(event))
+        send_payload(ipc, PutEventCommand.generate(event), (10 / 1000))
     except Exception as e:
         logger.debug("Exception occurred in track: %s", e)
 
