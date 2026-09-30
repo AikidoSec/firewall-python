@@ -71,6 +71,7 @@ def test_wsgi_context_1():
         "outgoing_req_redirects": [],
         "executed_middleware": False,
         "tracked_events": 0,
+        "tracked_events_limit_warning_logged": False,
         "route_params": [],
         "protection_forced_off": None,
     }
@@ -104,6 +105,7 @@ def test_wsgi_context_2():
         "outgoing_req_redirects": [],
         "executed_middleware": False,
         "tracked_events": 0,
+        "tracked_events_limit_warning_logged": False,
         "route_params": [],
         "protection_forced_off": None,
     }

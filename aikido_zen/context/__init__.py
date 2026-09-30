@@ -70,6 +70,7 @@ class Context:
 
         self.executed_middleware = False
         self.tracked_events = 0
+        self.tracked_events_limit_warning_logged = False
 
     def __reduce__(self):
         return (
