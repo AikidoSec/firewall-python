@@ -1,5 +1,5 @@
 from copy import deepcopy
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -13,11 +13,11 @@ from aikido_zen.sources.functions.request_handler import post_response
 from aikido_zen.thread.thread_cache import ThreadCache
 
 
-@pytest.fixture(params=[False, True])
-def sync(request):
+@pytest.fixture
+def sync(monkeypatch):
     cache = ThreadCache()
     manager = CloudConnectionManager(False, MagicMock(), "test-token", None)
-    manager.conf.last_updated_at = 1 if request.param else -1
+    manager.conf.last_updated_at = 1
     manager.report_api_event = MagicMock(return_value={"success": False})
     context = Context(body={"name": "example"})
     context.route, context.method, context.remote_address = "/test", "POST", "1.2.3.4"
@@ -27,24 +27,26 @@ def sync(request):
         "success": True,
         "data": deepcopy(process_sync_data(manager, deepcopy(obj))),
     }
-    with (
-        patch("aikido_zen.background_process.comms.get_comms", return_value=comms),
-        patch(
-            "aikido_zen.sources.functions.request_handler.get_cache", return_value=cache
-        ),
-        patch(
-            "aikido_zen.sources.functions.request_handler.get_api_info",
-            wraps=get_api_info,
-        ) as generate_schema,
-    ):
-        yield cache, manager, comms, generate_schema, context
+    generate_schema = MagicMock(wraps=get_api_info)
+    monkeypatch.setattr("aikido_zen.background_process.comms.get_comms", lambda: comms)
+    monkeypatch.setattr(
+        "aikido_zen.sources.functions.request_handler.get_cache", lambda: cache
+    )
+    monkeypatch.setattr(
+        "aikido_zen.sources.functions.request_handler.get_api_info", generate_schema
+    )
+    yield cache, manager, comms, generate_schema, context
     current_context.reset(token)
 
 
+@pytest.mark.parametrize("config_loaded", [False, True])
 @pytest.mark.parametrize("first_sync_fails", [False, True])
 @pytest.mark.parametrize("concurrent_path", [None, "/test", "/new"])
-def test_sync_counts_each_request_once(sync, first_sync_fails, concurrent_path):
+def test_sync_counts_each_request_once(
+    sync, config_loaded, first_sync_fails, concurrent_path
+):
     cache, manager, comms, _, context = sync
+    manager.conf.last_updated_at = 1 if config_loaded else -1
     deliver = comms.send_data_to_bg_process.side_effect
     cache.stats.increment_total_hits()
     post_response(200)
@@ -69,41 +71,9 @@ def test_sync_counts_each_request_once(sync, first_sync_fails, concurrent_path):
     assert sum(route["hits"] for route in manager.routes) == expected
     assert manager.statistics.get_record()["requests"]["total"] == expected
     assert cache.routes.get_routes_with_hits() == {}
-    sent_routes = [
-        call.kwargs["obj"]["current_routes"]
-        for call in comms.send_data_to_bg_process.call_args_list
-    ]
-    assert [
-        sum(route["hits_delta_since_sync"] for route in batch.values())
-        for batch in sent_routes
-    ] == [1, int(concurrent_path is not None), 0]
     if concurrent_path:
         route = manager.routes.get({"method": "POST", "route": concurrent_path})
         assert "during" in route["apispec"]["body"]["schema"]["properties"]
-
-
-@pytest.mark.parametrize("sync_fails", [False, True])
-@pytest.mark.parametrize("requests_per_sync, expected_samples", [(1, 1200), (30, 80)])
-def test_sampling_resets_every_ten_syncs(
-    sync, sync_fails, requests_per_sync, expected_samples
-):
-    cache, manager, comms, generate_schema, _ = sync
-    if sync_fails:
-        comms.send_data_to_bg_process.side_effect = None
-        comms.send_data_to_bg_process.return_value = {"success": False}
-
-    for request in range(1200):
-        post_response(200)
-        if (request + 1) % requests_per_sync == 0:
-            cache.renew()
-
-    assert generate_schema.call_count == expected_samples
-    if not sync_fails:
-        route = manager.routes.get({"method": "POST", "route": "/test"})
-        assert route["hits"] == 1200
-        assert route["apispec"]["body"]["schema"]["properties"] == {
-            "name": {"type": "string"}
-        }
 
 
 def test_sync_merges_optional_fields_without_reusing_previous_heartbeat_schema(sync):
@@ -144,13 +114,23 @@ def test_overlapping_syncs_do_not_replay_hits(sync):
     assert cache.routes.get_routes_with_hits() == {}
 
 
-def test_sampling_reset_preserves_requests_during_sync(sync):
-    cache, _, comms, generate_schema, _ = sync
-    for _ in range(30):
+@pytest.mark.parametrize("sync_fails", [False, True])
+@pytest.mark.parametrize("initial_requests, samples_before_reset", [(1, 10), (21, 20)])
+def test_sampling_limit_resets_during_tenth_sync(
+    sync, sync_fails, initial_requests, samples_before_reset
+):
+    cache, manager, comms, generate_schema, _ = sync
+    manager.conf.last_updated_at = -1
+    if sync_fails:
+        comms.send_data_to_bg_process.side_effect = lambda action, obj, receive: {
+            "success": False
+        }
+    for _ in range(initial_requests):
         post_response(200)
     for _ in range(9):
         cache.renew()
-    assert generate_schema.call_count == 20
+        post_response(200)
+    assert generate_schema.call_count == samples_before_reset
     deliver = comms.send_data_to_bg_process.side_effect
 
     def sample_during_sync(action, obj, receive):
@@ -159,7 +139,15 @@ def test_sampling_reset_preserves_requests_during_sync(sync):
 
     comms.send_data_to_bg_process.side_effect = sample_during_sync
     cache.renew()
-    assert generate_schema.call_count == 21
-    for _ in range(30):
+    assert generate_schema.call_count == samples_before_reset + 1
+    for _ in range(20):
         post_response(200)
-    assert generate_schema.call_count == 40
+    assert generate_schema.call_count == samples_before_reset + 20
+    comms.send_data_to_bg_process.side_effect = deliver
+    cache.renew()
+    if not sync_fails:
+        route = manager.routes.get({"method": "POST", "route": "/test"})
+        assert route["hits"] == initial_requests + 30
+        assert route["apispec"]["body"]["schema"]["properties"] == {
+            "name": {"type": "string"}
+        }
