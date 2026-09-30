@@ -10,6 +10,8 @@ import aikido_zen.background_process.comms as comms
 from ..background_process.commands import PutEventCommand
 from ..helpers.ipc.send_payload import send_payload
 
+MAX_EVENTS_PER_REQUEST = 25
+
 logged_warning_track_called_without_context = False
 
 
@@ -31,6 +33,10 @@ def track(event_name):
         cache = thread_cache.get_cache()
         if cache and cache.is_bypassed_ip(context.remote_address):
             return
+
+        if context.tracked_events >= MAX_EVENTS_PER_REQUEST:
+            return
+        context.tracked_events += 1
 
         event = create_custom_event(event_name, context)
         if not event:

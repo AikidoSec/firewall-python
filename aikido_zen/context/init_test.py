@@ -3,7 +3,6 @@ import pickle
 import json
 from aikido_zen.context import Context, get_current_context, current_context
 
-
 basic_wsgi_req = {
     "REQUEST_METHOD": "GET",
     "HTTP_HEADER_1": "header 1 value",
@@ -71,6 +70,7 @@ def test_wsgi_context_1():
         "xml": {},
         "outgoing_req_redirects": [],
         "executed_middleware": False,
+        "tracked_events": 0,
         "route_params": [],
         "protection_forced_off": None,
     }
@@ -103,6 +103,7 @@ def test_wsgi_context_2():
         "xml": {},
         "outgoing_req_redirects": [],
         "executed_middleware": False,
+        "tracked_events": 0,
         "route_params": [],
         "protection_forced_off": None,
     }

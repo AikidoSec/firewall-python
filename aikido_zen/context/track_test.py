@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from . import Context, current_context
+from . import Context, current_context, get_current_context
 from .track import track
 from aikido_zen.thread.thread_cache import ThreadCache
 import aikido_zen.context.track as track_module
@@ -147,3 +147,68 @@ def test_track_does_not_send_the_url():
     event = sent_event_with_cache(cache_with_bypassed_ips())
 
     assert "url" not in event["request"]
+
+
+def track_n_times(n, event_name="my-custom-event"):
+    """Runs track() n times in ONE request and returns the events that were sent"""
+    set_context_and_lifecycle()
+    comms = MagicMock()
+    with patch(
+        "aikido_zen.thread.thread_cache.get_cache",
+        return_value=cache_with_bypassed_ips(),
+    ), patch("aikido_zen.background_process.comms.get_comms", return_value=comms):
+        for _ in range(n):
+            track(event_name)
+
+    return [c[0][1].event for c in comms.send_data_to_bg_process.call_args_list]
+
+
+def test_track_sends_every_event_below_the_limit():
+    sent = track_n_times(track_module.MAX_EVENTS_PER_REQUEST)
+
+    assert len(sent) == track_module.MAX_EVENTS_PER_REQUEST
+
+
+def test_track_stops_sending_events_above_the_limit():
+    sent = track_n_times(track_module.MAX_EVENTS_PER_REQUEST + 50)
+
+    assert len(sent) == track_module.MAX_EVENTS_PER_REQUEST
+
+
+def test_all_event_names_share_one_budget():
+    set_context_and_lifecycle()
+    comms = MagicMock()
+    with patch(
+        "aikido_zen.thread.thread_cache.get_cache",
+        return_value=cache_with_bypassed_ips(),
+    ), patch("aikido_zen.background_process.comms.get_comms", return_value=comms):
+        for _ in range(track_module.MAX_EVENTS_PER_REQUEST):
+            track("payment.failed")
+        track("order.completed")
+
+    names = [
+        c[0][1].event["name"] for c in comms.send_data_to_bg_process.call_args_list
+    ]
+    assert len(names) == track_module.MAX_EVENTS_PER_REQUEST
+    assert "order.completed" not in names
+
+
+def test_the_limit_is_per_request_not_per_process():
+    first = track_n_times(track_module.MAX_EVENTS_PER_REQUEST + 10)
+    second = track_n_times(1)
+
+    assert len(first) == track_module.MAX_EVENTS_PER_REQUEST
+    assert len(second) == 1
+
+
+def test_a_bypassed_ip_does_not_use_up_the_limit():
+    set_context_and_lifecycle()
+    comms = MagicMock()
+    with patch(
+        "aikido_zen.thread.thread_cache.get_cache",
+        return_value=cache_with_bypassed_ips("1.2.3.4"),
+    ), patch("aikido_zen.background_process.comms.get_comms", return_value=comms):
+        for _ in range(track_module.MAX_EVENTS_PER_REQUEST + 5):
+            track("my-custom-event")
+
+    assert get_current_context().tracked_events == 0
