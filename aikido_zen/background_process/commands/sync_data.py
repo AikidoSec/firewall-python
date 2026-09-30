@@ -1,6 +1,5 @@
 """Exports process_renew_config"""
 
-from aikido_zen.api_discovery.update_route_info import update_route_info
 from aikido_zen.background_process.packages import PackagesStore
 
 
@@ -9,7 +8,7 @@ def process_sync_data(connection_manager, data):
     Synchronizes data between the thread-local cache (with a TTL of usually 1 minute) and the
     background thread. Which data gets synced?
     Thread -> BG Process : Routes, Hostnames, Users, Stats & middleware installed
-    BG Process -> Thread : Routes and config
+    BG Process -> Thread : Config
     """
 
     # Sync routes
@@ -25,7 +24,7 @@ def process_sync_data(connection_manager, data):
         existing_route["hits"] += hits_delta_since_sync
 
         # Update API Spec :
-        update_route_info(route["apispec"], existing_route)
+        routes.update_route_with_apispec(route_metadata, route["apispec"])
 
     # Save middleware installed :
     if data.get("middleware_installed", False):
@@ -54,8 +53,5 @@ def process_sync_data(connection_manager, data):
 
     if connection_manager.conf.last_updated_at > 0:
         # Only report data if the config has been fetched.
-        return {
-            "routes": dict(connection_manager.routes.routes),
-            "config": connection_manager.conf,
-        }
+        return {"config": connection_manager.conf}
     return {}

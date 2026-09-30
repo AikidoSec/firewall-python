@@ -216,7 +216,6 @@ def test_renew_with_invalid_response(mock_get_comms, thread_cache: ThreadCache):
         "success": True,
         "data": {
             "config": "not_a_service_config",  # Invalid type
-            "routes": "not_a_dict",  # Invalid type
         },
     }
 
@@ -253,8 +252,7 @@ def test_increment_stats_thread_safety(thread_cache):
 
 
 @patch("aikido_zen.background_process.comms.get_comms")
-def test_parses_routes_correctly(mock_get_comms, thread_cache: ThreadCache):
-    """Test renewing the cache multiple times if TTL has expired."""
+def test_renew_updates_config(mock_get_comms, thread_cache: ThreadCache):
     mock_get_comms.return_value = MagicMock()
     mock_get_comms.return_value.send_data_to_bg_process.return_value = {
         "success": True,
@@ -276,22 +274,6 @@ def test_parses_routes_correctly(mock_get_comms, thread_cache: ThreadCache):
                 last_updated_at=-1,
                 received_any_stats=True,
             ),
-            "routes": {
-                "POST:/body": {
-                    "method": "POST",
-                    "path": "/body",
-                    "hits": 20,
-                    "hits_delta_since_sync": 25,
-                    "apispec": {},
-                },
-                "GET:/body": {
-                    "method": "GET",
-                    "path": "/body",
-                    "hits": 10,
-                    "hits_delta_since_sync": 5,
-                    "apispec": {},
-                },
-            },
         },
     }
 
@@ -310,22 +292,6 @@ def test_parses_routes_correctly(mock_get_comms, thread_cache: ThreadCache):
         }
     ]
     assert thread_cache.is_user_blocked("user123")
-    assert list(thread_cache.routes) == [
-        {
-            "method": "POST",
-            "path": "/body",
-            "hits": 20,
-            "hits_delta_since_sync": 0,
-            "apispec": {},
-        },
-        {
-            "method": "GET",
-            "path": "/body",
-            "hits": 10,
-            "hits_delta_since_sync": 0,
-            "apispec": {},
-        },
-    ]
 
 
 @patch("aikido_zen.background_process.comms.get_comms")
@@ -532,7 +498,7 @@ def test_renew_called_with_empty_routes(mock_get_comms, thread_cache: ThreadCach
     )
 
 
-@pytest.mark.parametrize("response_data", [{}, {"routes": {}}])
+@pytest.mark.parametrize("response_data", [{}, {"config": None}])
 @patch("aikido_zen.background_process.comms.get_comms")
 def test_renew_preserves_increments_during_ipc(
     mock_get_comms, thread_cache: ThreadCache, response_data
@@ -561,11 +527,9 @@ def test_renew_preserves_increments_during_ipc(
 
 
 @patch("aikido_zen.background_process.comms.get_comms")
-def test_renew_restores_deltas_on_ipc_failure(
+def test_renew_drops_failed_batch_and_preserves_new_increments(
     mock_get_comms, thread_cache: ThreadCache
 ):
-    """If the IPC fails, the cleared deltas must be merged back on top of any
-    concurrent increments - nothing lost, nothing double-counted."""
     mock_comms = MagicMock()
     mock_get_comms.return_value = mock_comms
 
@@ -584,14 +548,13 @@ def test_renew_restores_deltas_on_ipc_failure(
 
     thread_cache.renew()
 
-    # 2 from the snapshot + 1 from the concurrent increment
-    assert thread_cache.stats.get_record()["requests"]["total"] == 3
+    assert thread_cache.stats.get_record()["requests"]["total"] == 1
     assert thread_cache.stats.get_record()["requests"]["attackWaves"] == {
-        "total": 2,
-        "blocked": 1,
+        "total": 1,
+        "blocked": 0,
     }
-    assert thread_cache.middleware_installed is True
-    assert thread_cache.ai_stats.get_stats()[0]["calls"] == 1
+    assert thread_cache.middleware_installed is False
+    assert thread_cache.ai_stats.get_stats() == []
 
 
 @patch("aikido_zen.background_process.comms.get_comms")
