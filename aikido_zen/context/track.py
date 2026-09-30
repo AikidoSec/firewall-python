@@ -35,6 +35,7 @@ def track(event_name):
             return
 
         if context.tracked_events >= MAX_EVENTS_PER_REQUEST:
+            log_warning_event_limit_reached(context)
             return
         context.tracked_events += 1
 
@@ -61,3 +62,17 @@ def log_warning_track_called_without_context():
         "Make sure to call track(...) within an HTTP request."
     )
     logged_warning_track_called_without_context = True
+
+
+def log_warning_event_limit_reached(context):
+    """Logs a warning, but only once per request, that track(...) went over the limit"""
+    if context.tracked_events_limit_warning_logged:
+        return
+
+    logger.warning(
+        "track(...) was called more than %s times during one request. "
+        "Only the first %s events were tracked.",
+        MAX_EVENTS_PER_REQUEST,
+        MAX_EVENTS_PER_REQUEST,
+    )
+    context.tracked_events_limit_warning_logged = True

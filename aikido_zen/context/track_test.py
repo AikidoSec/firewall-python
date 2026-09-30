@@ -193,6 +193,25 @@ def test_all_event_names_share_one_budget():
     assert "order.completed" not in names
 
 
+def test_track_warns_once_per_request_when_the_limit_is_reached(caplog):
+    track_n_times(track_module.MAX_EVENTS_PER_REQUEST + 5)
+
+    assert caplog.text.count("was called more than") == 1
+
+
+def test_track_warns_again_on_the_next_request(caplog):
+    track_n_times(track_module.MAX_EVENTS_PER_REQUEST + 5)
+    track_n_times(track_module.MAX_EVENTS_PER_REQUEST + 5)
+
+    assert caplog.text.count("was called more than") == 2
+
+
+def test_track_does_not_warn_below_the_limit(caplog):
+    track_n_times(track_module.MAX_EVENTS_PER_REQUEST)
+
+    assert "was called more than" not in caplog.text
+
+
 def test_the_limit_is_per_request_not_per_process():
     first = track_n_times(track_module.MAX_EVENTS_PER_REQUEST + 10)
     second = track_n_times(1)
