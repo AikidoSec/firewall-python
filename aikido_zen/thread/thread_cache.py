@@ -10,6 +10,8 @@ from aikido_zen.storage.statistics import Statistics
 from aikido_zen.storage.users import Users
 from aikido_zen.thread import process_worker_loader
 
+SAMPLING_RESET_INTERVAL_SYNCS = 10
+
 
 class ThreadCache:
     """
@@ -37,6 +39,7 @@ class ThreadCache:
     def reset(self):
         """Empties out all values of the cache"""
         self.routes = Routes(max_size=1000)
+        self._sync_count = 0
         self.config = ServiceConfig(
             endpoints=[],
             blocked_uids=set(),
@@ -48,28 +51,16 @@ class ThreadCache:
 
     def _clear_synced_deltas(self):
         """Clears delta counters synced to the background process."""
+        self.routes.routes = {
+            key: {**route, "hits_delta_since_sync": 0, "apispec": {}}
+            for key, route in self.routes.routes.items()
+        }
         self.middleware_installed = False
         self.hostnames.clear()
         self.users.clear()
         self.stats.clear()
         self.ai_stats.clear()
         PackagesStore.clear()
-
-    def _restore_synced_deltas(self, payload):
-        """Merges a previously-cleared payload back, used when an IPC sync fails."""
-        self.middleware_installed = (
-            self.middleware_installed or payload["middleware_installed"]
-        )
-        for entry in payload["hostnames"]:
-            self.hostnames.add(entry["hostname"], entry["port"], entry["hits"])
-        for entry in payload["users"]:
-            self.users.add_user_from_entry(entry)
-        self.stats.import_from_record(payload["stats"])
-        self.ai_stats.import_list(payload["ai_stats"])
-        for pkg in payload["packages"]:
-            existing = PackagesStore.get_package(pkg["name"])
-            if existing:
-                existing["cleared"] = False
 
     def renew(self):
         if not comms.get_comms():
@@ -88,28 +79,21 @@ class ThreadCache:
             "packages": PackagesStore.export(),
         }
         self._clear_synced_deltas()
+        self._sync_count = (self._sync_count + 1) % SAMPLING_RESET_INTERVAL_SYNCS
+        if self._sync_count == 0:
+            self.routes.clear()
 
         res = comms.get_comms().send_data_to_bg_process(
             action="SYNC_DATA",
             obj=payload,
             receive=True,
         )
-        if not res["success"]:
-            self._restore_synced_deltas(payload)
-            return
-
-        if not res["data"]:
+        if not res["success"] or not res["data"]:
             return
 
         # update config
         if isinstance(res["data"].get("config"), ServiceConfig):
             self.config = res["data"]["config"]
-
-        # update routes
-        if isinstance(res["data"].get("routes"), dict):
-            self.routes.routes = res["data"]["routes"]
-            for route in self.routes.routes.values():
-                route["hits_delta_since_sync"] = 0
 
 
 # For these 2 functions and the data they process, we rely on Python's GIL
