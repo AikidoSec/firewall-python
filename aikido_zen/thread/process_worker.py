@@ -6,6 +6,8 @@ from aikido_zen.thread import thread_cache
 
 # Renew the cache from this background worker every 15 seconds
 RENEW_CACHE_EVERY_X_SEC = 15
+INITIAL_CONFIG_RETRY_SECONDS = 1
+INITIAL_CONFIG_RETRY_WINDOW_SECONDS = 15
 
 
 def aikido_process_worker_thread():
@@ -16,6 +18,7 @@ def aikido_process_worker_thread():
     """
     # Get the current process
     current_process = multiprocessing.current_process()
+    startup_deadline = time.monotonic() + INITIAL_CONFIG_RETRY_WINDOW_SECONDS
 
     while True:
         # Print information about the process
@@ -25,9 +28,12 @@ def aikido_process_worker_thread():
             current_process.name,
         )
 
-        # Renew the cache every 5 seconds
         try:
             thread_cache.renew()
         except Exception as e:
             logger.warning("An error occurred during data synchronization: %s", e)
-        time.sleep(RENEW_CACHE_EVERY_X_SEC)
+
+        if not thread_cache.is_config_loaded() and time.monotonic() < startup_deadline:
+            time.sleep(INITIAL_CONFIG_RETRY_SECONDS)
+        else:
+            time.sleep(RENEW_CACHE_EVERY_X_SEC)
