@@ -69,6 +69,7 @@ class Context:
         self.subdomains = get_subdomains_from_url(self.url)
 
         self.executed_middleware = False
+        self.tracked_events = 0
 
     def __reduce__(self):
         return (
