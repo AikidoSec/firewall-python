@@ -8,6 +8,9 @@ from aikido_zen.helpers.build_path_to_payload import build_path_to_payload
 from aikido_zen.helpers.try_decode_as_jwt import try_decode_as_jwt
 from aikido_zen.context import UINPUT_SOURCES
 
+# Deeper input would overflow the stack and let the request through unchecked.
+MAX_TRAVERSAL_DEPTH = 64
+
 
 def match_filter_part_in_user(user_input, filter_part, path_to_payload=None):
     """
@@ -15,6 +18,8 @@ def match_filter_part_in_user(user_input, filter_part, path_to_payload=None):
     """
     if not path_to_payload:
         path_to_payload = []
+    if len(path_to_payload) >= MAX_TRAVERSAL_DEPTH:
+        return {"match": False}
     if isinstance(user_input, str):
         jwt = try_decode_as_jwt(user_input)
         if jwt[0]:
