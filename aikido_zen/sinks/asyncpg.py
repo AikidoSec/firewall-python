@@ -6,6 +6,7 @@ import aikido_zen.vulnerabilities as vulns
 from aikido_zen.helpers.get_argument import get_argument
 from aikido_zen.helpers.register_call import register_call
 from aikido_zen.sinks import patch_function, before, on_import
+from aikido_zen.vulnerabilities.idor.check_idor import run_idor_check
 
 
 @before
@@ -16,6 +17,10 @@ def _execute(func, instance, args, kwargs):
     register_call(op, "sql_op")
 
     vulns.run_vulnerability_scan(kind="sql_injection", op=op, args=(query, "postgres"))
+
+    # asyncpg uses variadic positional args for params: execute(query, *args)
+    query_params = args[1:] if len(args) > 1 else None
+    run_idor_check(query, "postgres", query_params)
 
 
 @on_import("asyncpg.connection", "asyncpg", version_requirement="0.27.0")
