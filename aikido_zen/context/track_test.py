@@ -245,3 +245,20 @@ def test_track_sends_the_event_with_a_short_timeout():
 
     comms.send_data_to_bg_process.assert_called_once()
     assert comms.send_data_to_bg_process.call_args[1]["timeout_in_sec"] == 0.05
+
+
+def test_track_sends_nothing_when_the_event_could_not_be_built():
+    set_context_and_lifecycle()
+
+    comms = MagicMock()
+    with patch(
+        "aikido_zen.thread.thread_cache.get_cache",
+        return_value=cache_with_bypassed_ips(),
+    ), patch(
+        "aikido_zen.background_process.comms.get_comms", return_value=comms
+    ), patch(
+        "aikido_zen.context.track.create_custom_event", return_value=None
+    ):
+        track("my-custom-event")
+
+    comms.send_data_to_bg_process.assert_not_called()
