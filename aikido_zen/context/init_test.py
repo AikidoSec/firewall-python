@@ -62,6 +62,7 @@ def test_wsgi_context_1():
         "url": "https://example.com/hello",
         "query": {"user": ["JohnDoe"], "age": ["30", "35"]},
         "body": 123,
+        "body_raw": None,
         "route": "/hello",
         "subdomains": [],
         "user": None,
@@ -94,6 +95,7 @@ def test_wsgi_context_2():
         "url": "http://localhost:8080/hello",
         "query": {"user": ["JohnDoe"], "age": ["30", "35"]},
         "body": {"test": True},
+        "body_raw": None,
         "route": "/hello",
         "subdomains": [],
         "user": None,
@@ -317,3 +319,34 @@ def test_set_bytes_json_with_surrogate_bytes():
     context = Context(req=basic_wsgi_req, body=body, source="flask")
     assert isinstance(context.body, dict)
     assert context.body.get("username") == {"$regex": ".*"}
+
+
+def test_body_raw_set_when_bytes_json_parsed():
+    # Regression: AIKIDO-FVRDOX5M — json.loads decodes unicode escapes (e.g. # -> #)
+    # so self.body has '#' but the application's raw read still has '#'.
+    # body_raw must preserve the pre-decode string so detection finds the raw form.
+    body = b'"\\u0023 payload"'
+    context = Context(req=basic_wsgi_req, body=body, source="flask")
+    assert context.body == "# payload"
+    assert context.body_raw == '"\\u0023 payload"'
+
+
+def test_body_raw_set_when_string_json_parsed():
+    # Same bypass via a string body (framework already decoded bytes before set_body).
+    body = '"\\u0023 payload"'
+    context = Context(req=basic_wsgi_req, body=body, source="flask")
+    assert context.body == "# payload"
+    assert context.body_raw == '"\\u0023 payload"'
+
+
+def test_body_raw_none_when_no_json_parsing():
+    # When the body is not JSON-parsed, body_raw should remain None.
+    context = Context(req=basic_wsgi_req, body=b"plain bytes", source="flask")
+    assert context.body == "plain bytes"
+    assert context.body_raw is None
+
+
+def test_body_raw_none_for_non_string_body():
+    context = Context(req=basic_wsgi_req, body={"key": "value"}, source="flask")
+    assert context.body == {"key": "value"}
+    assert context.body_raw is None
