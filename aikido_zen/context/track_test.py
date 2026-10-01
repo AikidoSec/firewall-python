@@ -244,4 +244,4 @@ def test_track_sends_the_event_with_a_short_timeout():
         track("my-custom-event")
 
     comms.send_data_to_bg_process.assert_called_once()
-    assert comms.send_data_to_bg_process.call_args[1]["timeout_in_sec"] == 0.01
+    assert comms.send_data_to_bg_process.call_args[1]["timeout_in_sec"] == 0.05
