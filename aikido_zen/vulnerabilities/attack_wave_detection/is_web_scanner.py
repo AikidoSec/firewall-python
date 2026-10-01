@@ -10,10 +10,10 @@ from aikido_zen.vulnerabilities.attack_wave_detection.query_params_contain_dange
 )
 
 
-def is_web_scanner(context: Context) -> bool:
+def is_web_scanner(context: Context, status_code: int) -> bool:
     if context.method and is_web_scan_method(context.method):
         return True
-    if context.route and is_web_scan_path(context.route):
+    if context.route and is_web_scan_path(context.route, status_code):
         return True
     if query_params_contain_dangerous_strings(context):
         return True
