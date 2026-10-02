@@ -117,7 +117,7 @@ def test_reset(thread_cache: ThreadCache):
     }
 
 
-def test_clear_synced_deltas_preserves_route_added_during_copy(thread_cache):
+def test_renew_preserves_route_added_during_copy(thread_cache):
     for path in ("/first", "/second"):
         thread_cache.routes.increment_route({"method": "GET", "route": path})
 
@@ -130,7 +130,12 @@ def test_clear_synced_deltas_preserves_route_added_during_copy(thread_cache):
         thread_cache.routes.routes["GET:/first"]
     )
     outgoing = thread_cache.routes.get_routes_with_hits()
-    thread_cache._clear_synced_deltas()
+    with patch("aikido_zen.background_process.comms.get_comms") as get_comms:
+        get_comms.return_value.send_data_to_bg_process.return_value = {
+            "success": True,
+            "data": {},
+        }
+        thread_cache.renew()
 
     assert set(thread_cache.routes.get_routes_with_hits()) == {"GET:/new"}
     assert thread_cache.routes.routes["GET:/new"]["hits_delta_since_sync"] == 1
@@ -558,6 +563,42 @@ def test_renew_called_with_empty_routes(mock_get_comms, thread_cache: ThreadCach
         },
         receive=True,
     )
+
+
+@pytest.mark.parametrize("concurrent_path", ["/idle", "/new"])
+def test_sync_preserves_requests_for_routes_not_in_payload(sync, concurrent_path):
+    cache, manager, _, _, context = sync
+    cache.routes.initialize_route({"method": "POST", "route": "/idle"})
+    post_response(200)
+    get_routes = cache.routes.get_routes_with_hits
+
+    def request_after_collection():
+        routes = get_routes()
+        context.route, context.body = concurrent_path, {"during": "collection"}
+        post_response(200)
+        return routes
+
+    with patch.object(
+        cache.routes, "get_routes_with_hits", side_effect=request_after_collection
+    ):
+        cache.renew()
+
+    metadata = {"method": "POST", "route": concurrent_path}
+    pending = cache.routes.get(metadata)
+    assert pending["hits_delta_since_sync"] == 1
+    assert "during" in pending["apispec"]["body"]["schema"]["properties"]
+    assert manager.routes.get(metadata) is None
+    original = manager.routes.get({"method": "POST", "route": "/test"})
+    assert original["hits"] == 1
+    assert "name" in original["apispec"]["body"]["schema"]["properties"]
+
+    cache.renew()
+    cache.renew()
+    reported = manager.routes.get(metadata)
+    assert reported["hits"] == 1
+    assert "during" in reported["apispec"]["body"]["schema"]["properties"]
+    assert sum(route["hits"] for route in manager.routes) == 2
+    assert cache.routes.get_routes_with_hits() == {}
 
 
 @pytest.mark.parametrize("config_loaded", [False, True])
