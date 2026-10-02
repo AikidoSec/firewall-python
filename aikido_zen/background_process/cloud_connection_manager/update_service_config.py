@@ -45,3 +45,6 @@ def update_service_config(connection_manager, res):
 
     if isinstance(res.get("enabledFeatures"), list):
         connection_manager.conf.update_enabled_features(res["enabledFeatures"])
+
+    # Workers use a new revision to restart schema sampling, so we advance it
+    connection_manager.conf.revision += 1

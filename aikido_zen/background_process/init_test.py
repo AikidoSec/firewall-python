@@ -2,6 +2,7 @@ import subprocess
 import sys
 
 import aikido_zen.background_process as background_process
+from .comms_test import reset_comms_after_test
 
 
 def test_python314_configured_forkserver_uses_fork_context(monkeypatch, mocker):
