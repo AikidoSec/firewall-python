@@ -26,12 +26,14 @@ def get_data_schema(data, depth=0):
     if isinstance(data, (list, tuple)):
         # Assume that the array is homogenous (for performance reasons)
         items = None
-        for i in range(min(MAX_ARRAY_DEPTH, len(data))):
-            current_data_schema = get_data_schema(data[i])
-            if items is None:
-                items = current_data_schema
-            else:
-                items = merge_data_schemas(items, current_data_schema)
+        # If the depth is less than the maximum depth, get the schema for the items
+        if depth < MAX_TRAVERSAL_DEPTH:
+            for i in range(min(MAX_ARRAY_DEPTH, len(data))):
+                current_data_schema = get_data_schema(data[i], depth + 1)
+                if items is None:
+                    items = current_data_schema
+                else:
+                    items = merge_data_schemas(items, current_data_schema)
 
         return {"type": "array", "items": items}
 
