@@ -26,7 +26,7 @@ def get_data_schema(data, depth=0):
     if isinstance(data, (list, tuple)):
         # Assume that the array is homogenous (for performance reasons)
         items = None
-        # If the depth is less than the maximum depth, get the schema for the items
+        # Limit the depth so that nested arrays can't build a schema as deep as the body
         if depth < MAX_TRAVERSAL_DEPTH:
             for i in range(min(MAX_ARRAY_DEPTH, len(data))):
                 current_data_schema = get_data_schema(data[i], depth + 1)
