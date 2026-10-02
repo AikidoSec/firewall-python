@@ -162,7 +162,7 @@ def test_load_worker_does_not_initialize_when_worker_is_running(
 @patch.object(process_worker_loader.threading, "Thread")
 @patch.object(process_worker_loader.threading, "enumerate")
 @patch.object(process_worker_loader, "get_current_context", return_value=object())
-def test_load_worker_retries_cache_initialization_when_worker_is_running(
+def test_load_worker_does_not_sync_when_worker_is_already_running(
     _mock_context,
     mock_enumerate,
     mock_thread_type,
@@ -177,7 +177,7 @@ def test_load_worker_retries_cache_initialization_when_worker_is_running(
 
     process_worker_loader.load_worker()
 
-    mock_renew.assert_called_once_with()
+    mock_renew.assert_not_called()
     mock_thread_type.assert_not_called()
 
 
