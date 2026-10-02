@@ -10,8 +10,6 @@ from aikido_zen.storage.statistics import Statistics
 from aikido_zen.storage.users import Users
 from aikido_zen.thread import process_worker_loader
 
-SAMPLING_RESET_INTERVAL_SYNCS = 10
-
 
 class ThreadCache:
     """
@@ -39,7 +37,6 @@ class ThreadCache:
     def reset(self):
         """Empties out all values of the cache"""
         self.routes = Routes(max_size=1000)
-        self._sync_count = 0
         self.config = ServiceConfig(
             endpoints=[],
             blocked_uids=set(),
@@ -47,6 +44,7 @@ class ThreadCache:
             last_updated_at=-1,
             received_any_stats=False,
         )
+        self.config.revision = -1
         self._clear_synced_deltas()
 
     def _clear_synced_deltas(self):
@@ -70,6 +68,7 @@ class ThreadCache:
         # wipe any increments that arrived in the window where the IPC released
         # the GIL.
         payload = {
+            "config_revision": self.config.revision,
             "current_routes": self.routes.get_routes_with_hits(),
             "middleware_installed": self.middleware_installed,
             "hostnames": self.hostnames.as_array(),
@@ -79,10 +78,6 @@ class ThreadCache:
             "packages": PackagesStore.export(),
         }
         self._clear_synced_deltas()
-        self._sync_count = (self._sync_count + 1) % SAMPLING_RESET_INTERVAL_SYNCS
-        if self._sync_count == 0:
-            self.routes.clear()
-
         res = comms.get_comms().send_data_to_bg_process(
             action="SYNC_DATA",
             obj=payload,
@@ -91,9 +86,11 @@ class ThreadCache:
         if not res["success"] or not res["data"]:
             return
 
-        # update config
-        if isinstance(res["data"].get("config"), ServiceConfig):
-            self.config = res["data"]["config"]
+        config = res["data"].get("config")
+        if isinstance(config, ServiceConfig):
+            if config.revision != self.config.revision:
+                self.routes.reset_sampling()
+            self.config = config
 
 
 # For these 2 functions and the data they process, we rely on Python's GIL
