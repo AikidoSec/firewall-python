@@ -21,7 +21,7 @@ jobs:
         with:
           repository: Aikido-demo-apps/zen-demo-python
           path: zen-demo-python
-          ref: qa-test
+          ref: main
           submodules: true
           persist-credentials: false
 
@@ -48,10 +48,9 @@ jobs:
           cp firewall-python/.github/workflows/Dockerfile.qa zen-demo-python/Dockerfile
 
       - name: Run Firewall QA Tests
-        uses: AikidoSec/firewall-tester-action@v1.0.15
+        uses: AikidoSec/firewall-tester-action@3d448c6929e168148cf74c3d998d1dd5950d40ee # v1.1.1
         with:
           dockerfile_path: ./zen-demo-python/Dockerfile
           app_port: 8080
-          sleep_before_test: 10
-          config_update_delay: 100
-          skip_tests: test_demo_apps_generic_tests,test_path_traversal,test_outbound_domain_blocking,test_wave_attack,test_block_traffic_by_countries,test_user_rate_limiting_1_minute,test_rate_limiting_retry_after,test_user_ip_from_proxy
+          config_propagation_delay: 15
+          skip_tests: test-demo-apps-generic-tests,test-path-traversal,test-outbound-domain-blocking,test-wave-attack,test-block-traffic-by-countries,test-user-rate-limiting-1-minute,test-rate-limiting-retry-after,test-user-ip-from-proxy
