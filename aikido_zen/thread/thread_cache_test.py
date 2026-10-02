@@ -1,3 +1,4 @@
+from collections import UserDict
 from copy import deepcopy
 
 import pytest
@@ -114,6 +115,29 @@ def test_reset(thread_cache: ThreadCache):
         "attacksDetected": {"total": 0, "blocked": 0},
         "attackWaves": {"total": 0, "blocked": 0},
     }
+
+
+def test_clear_synced_deltas_preserves_route_added_during_copy(thread_cache):
+    for path in ("/first", "/second"):
+        thread_cache.routes.increment_route({"method": "GET", "route": path})
+
+    class RouteWithNewRequestOnCopy(UserDict):
+        def keys(self):
+            thread_cache.routes.increment_route({"method": "GET", "route": "/new"})
+            return self.data.keys()
+
+    thread_cache.routes.routes["GET:/first"] = RouteWithNewRequestOnCopy(
+        thread_cache.routes.routes["GET:/first"]
+    )
+    outgoing = thread_cache.routes.get_routes_with_hits()
+    thread_cache._clear_synced_deltas()
+
+    assert set(thread_cache.routes.get_routes_with_hits()) == {"GET:/new"}
+    assert thread_cache.routes.routes["GET:/new"]["hits_delta_since_sync"] == 1
+    for key, route in outgoing.items():
+        assert route["hits_delta_since_sync"] == 1
+        assert thread_cache.routes.routes[key]["hits_delta_since_sync"] == 0
+        assert thread_cache.routes.routes[key]["hits"] == 1
 
 
 def test_increment_total_hits(thread_cache):
