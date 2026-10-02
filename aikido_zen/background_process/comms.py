@@ -5,8 +5,8 @@ Exports the AikidoIPCCommunications class
 
 import multiprocessing.connection as con
 import os
-import queue
 from collections import namedtuple
+from queue import Queue
 from threading import Lock, Thread
 from aikido_zen.helpers.logging import logger
 
@@ -69,7 +69,7 @@ class AikidoIPCCommunications:
         Callers hold the sender lock, so a second thread cannot start a second
         sender and leave it waiting on a queue that nothing writes to.
         """
-        sender = Sender(os.getpid(), queue.Queue())
+        sender = Sender(os.getpid(), Queue())
         Thread(
             target=self._send_queued_events,
             args=(sender.events,),
