@@ -67,6 +67,10 @@ class Routes:
             result[key] = route
         return result
 
+    def reset_sampling(self):
+        for route in list(self.routes.values()):
+            route["hits"] = 0
+
     def clear(self):
         """Deletes all routes"""
         self.routes = {}

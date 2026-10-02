@@ -8,7 +8,7 @@ def process_sync_data(connection_manager, data):
     Synchronizes data between the thread-local cache (with a TTL of usually 1 minute) and the
     background thread. Which data gets synced?
     Thread -> BG Process : Routes, Hostnames, Users, Stats & middleware installed
-    BG Process -> Thread : Config
+    BG Process -> Thread : Config (only if the worker hasn't received the current revision)
     """
 
     # Sync routes
@@ -51,7 +51,9 @@ def process_sync_data(connection_manager, data):
     # Sync packages
     PackagesStore.import_list(data.get("packages", []))
 
-    if connection_manager.conf.last_updated_at > 0:
-        # Only report data if the config has been fetched.
+    if (
+        connection_manager.conf.last_updated_at > 0
+        and data.get("config_revision") != connection_manager.conf.revision
+    ):
         return {"config": connection_manager.conf}
     return {}
