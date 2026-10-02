@@ -49,10 +49,12 @@ class ThreadCache:
 
     def _clear_synced_deltas(self):
         """Clears delta counters synced to the background process."""
-        self.routes.routes = {
-            key: {**route, "hits_delta_since_sync": 0, "apispec": {}}
-            for key, route in self.routes.routes.items()
-        }
+        for key, route in list(self.routes.routes.items()):
+            self.routes.routes[key] = {
+                **route,
+                "hits_delta_since_sync": 0,
+                "apispec": {},
+            }
         self.middleware_installed = False
         self.hostnames.clear()
         self.users.clear()
