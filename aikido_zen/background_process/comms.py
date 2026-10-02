@@ -6,8 +6,12 @@ Exports the AikidoIPCCommunications class
 import multiprocessing.connection as con
 import os
 import queue
-from threading import Thread
+from collections import namedtuple
+from threading import Lock, Thread
 from aikido_zen.helpers.logging import logger
+
+# One object, so a reader cannot get the queue of one process and the pid of another.
+Sender = namedtuple("Sender", ["pid", "events"])
 
 SENDER_THREAD_NAME = "aikido-ipc-sender"
 
@@ -41,9 +45,9 @@ class AikidoIPCCommunications:
         # The key needs to be in byte form
         self.address = address
         self.key = key
-        # Both are set by reset_sender, which the first event triggers.
-        self._event_queue = None
-        self._sender_pid = None
+        # Set by reset_sender, which the first event triggers.
+        self._sender = None
+        self._sender_lock = Lock()
 
         # Set as global ipc object :
         reset_comms()
@@ -60,16 +64,27 @@ class AikidoIPCCommunications:
             return {"success": False, "error": "unknown"}
 
     def reset_sender(self):
-        """Starts an empty queue and the thread that sends what goes into it"""
-        events = queue.Queue()
-        self._event_queue = events
+        """Starts an empty queue and the thread that sends what goes into it
+
+        Callers hold the sender lock, so a second thread cannot start a second
+        sender and leave it waiting on a queue that nothing writes to.
+        """
+        sender = Sender(os.getpid(), queue.Queue())
         Thread(
             target=self._send_queued_events,
-            args=(events,),
+            args=(sender.events,),
             name=SENDER_THREAD_NAME,
             daemon=True,
         ).start()
-        self._sender_pid = os.getpid()
+        self._sender = sender
+
+    def _start_sender(self):
+        """Starts this process's sender, unless another thread got there first"""
+        with self._sender_lock:
+            sender = self._sender
+            if sender is None or sender.pid != os.getpid():
+                self.reset_sender()
+            return self._sender
 
     def _send_over_socket(self, data, receive=False):
         conn = con.Client(self.address, authkey=None)
@@ -82,20 +97,22 @@ class AikidoIPCCommunications:
 
     def _send_queued_events(self, events):
         while True:
+            # Waits here for the next event, no timeout and no cost while idle.
             data = events.get()
             try:
                 self._send_over_socket(data)
             except Exception as e:
+                # Caught so the loop carries on with the next event.
                 logger.debug("Exception occurred in sender thread : %s", e)
 
     def _queue_event(self, action, obj):
         """Hands the data to the sender thread without waiting for it to be sent"""
-        # Starts the sender on the first event, and again in a forked worker, which
-        # inherits this object but not the thread that drains the queue.
-        if self._sender_pid != os.getpid():
-            self.reset_sender()
+        # A forked worker inherits this object but not the thread draining the queue.
+        sender = self._sender
+        if sender is None or sender.pid != os.getpid():
+            sender = self._start_sender()
 
-        self._event_queue.put_nowait((action, obj))
+        sender.events.put_nowait((action, obj))
         return {"success": True, "data": None}
 
     def _send_and_wait_for_reply(self, action, obj, timeout_in_sec):

@@ -118,7 +118,7 @@ def test_resetting_the_sender_starts_over_with_an_empty_queue(monkeypatch):
 
         comms.reset_sender()
 
-        assert comms._event_queue.empty()
+        assert comms._sender.events.empty()
         assert count_senders() == before + 1
     finally:
         release.set()
@@ -154,7 +154,7 @@ def test_a_forked_process_starts_its_own_sender(monkeypatch):
     assert wait_for(lambda: len(sent) == 1)
     before = count_senders()
 
-    monkeypatch.setattr(comms_module.os, "getpid", lambda: comms._sender_pid + 1)
+    monkeypatch.setattr(comms_module.os, "getpid", lambda: comms._sender.pid + 1)
     comms.send_data_to_bg_process("put_event", {"n": "child"})
 
     assert count_senders() == before + 1
@@ -199,3 +199,51 @@ def test_nothing_is_sent_without_a_key():
         "success": False,
         "error": "invalid_key",
     }
+
+
+def test_threads_sending_their_first_event_together_start_one_sender(monkeypatch):
+    for _ in range(5):
+        before = count_senders()
+        comms, sent = collecting_comms(monkeypatch)
+        start = threading.Barrier(32)
+
+        def fire(n):
+            start.wait()
+            comms.send_data_to_bg_process("put_event", {"n": n})
+
+        threads = [threading.Thread(target=fire, args=(n,)) for n in range(32)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert count_senders() == before + 1
+        assert wait_for(lambda: len(sent) == 32)
+
+
+def test_a_send_that_fails_does_not_hold_up_the_next_event(monkeypatch):
+    attempts = []
+
+    class RefusingConnection:
+        def __init__(self):
+            attempts.append(1)
+
+        def send(self, data):
+            raise ConnectionRefusedError("the background process is not there")
+
+        def close(self):
+            pass
+
+    class FakeCon:
+        @staticmethod
+        def Client(address, authkey=None):
+            return RefusingConnection()
+
+    monkeypatch.setattr(comms_module, "con", FakeCon)
+    comms = AikidoIPCCommunications("localhost", b"mock_key")
+
+    for n in range(10):
+        comms.send_data_to_bg_process("put_event", {"n": n})
+
+    assert wait_for(lambda: len(attempts) == 10)
+    assert comms._sender.events.empty()
