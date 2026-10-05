@@ -565,6 +565,35 @@ def test_renew_called_with_empty_routes(mock_get_comms, thread_cache: ThreadCach
     )
 
 
+def test_sync_includes_updates_to_routes_already_in_payload(sync):
+    cache, manager, _, _, context = sync
+    post_response(200)
+    get_routes = cache.routes.get_routes_with_hits
+
+    def request_after_collection():
+        routes = get_routes()
+        context.body = {"during": "collection"}
+        post_response(200)
+        return routes
+
+    with patch.object(
+        cache.routes, "get_routes_with_hits", side_effect=request_after_collection
+    ):
+        cache.renew()
+
+    metadata = {"method": "POST", "route": "/test"}
+    reported = manager.routes.get(metadata)
+    assert reported["hits"] == 2
+    assert set(reported["apispec"]["body"]["schema"]["properties"]) == {
+        "name",
+        "during",
+    }
+    assert cache.routes.get_routes_with_hits() == {}
+
+    cache.renew()
+    assert manager.routes.get(metadata)["hits"] == 2
+
+
 @pytest.mark.parametrize("concurrent_path", ["/idle", "/new"])
 def test_sync_preserves_requests_for_routes_not_in_payload(sync, concurrent_path):
     cache, manager, _, _, context = sync

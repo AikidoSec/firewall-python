@@ -63,9 +63,18 @@ class ThreadCache:
         # Clear deltas before the IPC, not after. Clearing post-response would
         # wipe any increments that arrived in the window where the IPC released
         # the GIL.
+        routes_to_send = self.routes.get_routes_with_hits()
+        # Keep the original route objects in the payload. Resetting them in place
+        # would also erase the hits and schemas being sent.
+        for key, route_to_send in routes_to_send.items():
+            self.routes.routes[key] = {
+                **route_to_send,
+                "hits_delta_since_sync": 0,
+                "apispec": {},
+            }
         payload = {
             "config_revision": self.config.revision,
-            "current_routes": self.routes.get_routes_with_hits(),
+            "current_routes": routes_to_send,
             "middleware_installed": self.middleware_installed,
             "hostnames": self.hostnames.as_array(),
             "users": self.users.as_array(),
@@ -73,12 +82,6 @@ class ThreadCache:
             "ai_stats": self.ai_stats.get_stats(),
             "packages": PackagesStore.export(),
         }
-        for key, route in payload["current_routes"].items():
-            self.routes.routes[key] = {
-                **route,
-                "hits_delta_since_sync": 0,
-                "apispec": {},
-            }
         self._clear_synced_deltas()
         res = comms.get_comms().send_data_to_bg_process(
             action="SYNC_DATA",
