@@ -23,12 +23,12 @@ def extract_data_from_xml_body(user_input, root_element):
             for key, value in element.items():
                 extracted_xml.setdefault(key, set()).add(value)
             for text in (element.text, element.tail):
-                if text:
-                    stripped = text.strip()
-                    if stripped:
-                        extracted_xml.setdefault(element.tag, set()).update(
-                            (text, stripped)
-                        )
+                if not text:
+                    continue
+                stripped = text.strip()
+                if not stripped:
+                    continue
+                extracted_xml.setdefault(element.tag, set()).update((text, stripped))
         context.set_as_current_context()
     except Exception as e:
         logger.debug("Exception occurred when extracting XML: %s", e)
