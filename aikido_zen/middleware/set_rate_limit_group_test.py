@@ -81,6 +81,22 @@ def test_set_rate_limit_group_zero_string_group_id(caplog):
     assert "Group ID cannot be empty." not in caplog.text
 
 
+def test_set_rate_limit_group_false_group_id(caplog):
+    context1 = test_utils.generate_and_set_context()
+    assert context1.rate_limit_group is None
+    set_rate_limit_group(False)
+    assert context1.rate_limit_group is None
+    assert "Group ID must be a string or a number" in caplog.text
+
+
+def test_set_rate_limit_group_true_group_id(caplog):
+    context1 = test_utils.generate_and_set_context()
+    assert context1.rate_limit_group is None
+    set_rate_limit_group(True)
+    assert context1.rate_limit_group is None
+    assert "Group ID must be a string or a number" in caplog.text
+
+
 def test_set_rate_limit_group_non_string_group_id_non_number(caplog):
     context1 = test_utils.generate_and_set_context()
     assert context1.rate_limit_group is None
