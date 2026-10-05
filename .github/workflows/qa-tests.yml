@@ -53,4 +53,4 @@ jobs:
           dockerfile_path: ./zen-demo-python/Dockerfile
           app_port: 8080
           config_propagation_delay: 15
-          skip_tests: test-demo-apps-generic-tests,test-path-traversal,test-outbound-domain-blocking,test-wave-attack,test-block-traffic-by-countries,test-user-rate-limiting-1-minute,test-rate-limiting-retry-after,test-user-ip-from-proxy,test-bypassed-ip
+          skip_tests: test-demo-apps-generic-tests,test-path-traversal,test-outbound-domain-blocking,test-wave-attack,test-block-traffic-by-countries,test-user-rate-limiting-1-minute,test-rate-limiting-retry-after,test-user-ip-from-proxy
