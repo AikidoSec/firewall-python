@@ -5,7 +5,7 @@ from aikido_zen.helpers.logging import logger
 
 
 def set_rate_limit_group(group_id: Union[str, int]):
-    if not group_id:
+    if group_id == None or group_id == "":
         logger.warning("Group ID cannot be empty.")
         return
 
