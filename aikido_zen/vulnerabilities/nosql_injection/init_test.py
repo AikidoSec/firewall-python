@@ -1,5 +1,8 @@
 import pytest
-from aikido_zen.vulnerabilities.nosql_injection import detect_nosql_injection
+from aikido_zen.vulnerabilities.nosql_injection import (
+    MAX_TRAVERSAL_DEPTH,
+    detect_nosql_injection,
+)
 from aikido_zen.context import Context
 from collections import defaultdict, OrderedDict, ChainMap
 
@@ -639,6 +642,53 @@ def test_does_not_flag_when_app_ignores_user_operators_and_uses_hardcoded_filter
         detect_nosql_injection(
             create_context(body={"username": {"$ne": None}}),
             {"username": "hardcoded"},
+        )
+        == {}
+    )
+
+
+def nested_list(depth, leaf):
+    current = [leaf]
+    for _ in range(depth):
+        current = [current]
+    return current
+
+
+def nested_dict(depth, leaf):
+    current = leaf
+    for _ in range(depth):
+        current = {"a": current}
+    return current
+
+
+def test_deeply_nested_body_does_not_hide_injection(create_context):
+    assert detect_nosql_injection(
+        create_context(
+            body={"nested": nested_list(100_000, "x"), "username": {"$ne": None}}
+        ),
+        {"username": {"$ne": None}},
+    ) == {
+        "injection": True,
+        "source": "body",
+        "pathToPayload": ".username",
+        "payload": {"$ne": None},
+    }
+
+
+def test_matches_user_operators_up_to_max_depth_only(create_context):
+    assert detect_nosql_injection(
+        create_context(body=nested_dict(MAX_TRAVERSAL_DEPTH - 1, {"$ne": None})),
+        {"username": {"$ne": None}},
+    ) == {
+        "injection": True,
+        "source": "body",
+        "pathToPayload": ".a" * (MAX_TRAVERSAL_DEPTH - 1),
+        "payload": {"$ne": None},
+    }
+    assert (
+        detect_nosql_injection(
+            create_context(body=nested_dict(MAX_TRAVERSAL_DEPTH, {"$ne": None})),
+            {"username": {"$ne": None}},
         )
         == {}
     )
