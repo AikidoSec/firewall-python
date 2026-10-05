@@ -5,12 +5,14 @@ from aikido_zen.helpers.logging import logger
 
 
 def set_rate_limit_group(group_id: Union[str, int]):
-    if group_id == None or group_id == "":
+    if group_id is None or group_id == "":
         logger.warning("Group ID cannot be empty.")
         return
 
     # Check if it's string of number, ensure string.
-    if not isinstance(group_id, str) and not isinstance(group_id, int):
+    if isinstance(group_id, bool) or (
+        not isinstance(group_id, str) and not isinstance(group_id, int)
+    ):
         logger.warning("Group ID must be a string or a number")
         return
     group_id = str(group_id)
