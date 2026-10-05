@@ -1,7 +1,3 @@
-"""
-Track file, exports the track function
-"""
-
 from aikido_zen.helpers.logging import logger
 from aikido_zen.helpers.create_custom_event import create_custom_event
 from . import get_current_context
