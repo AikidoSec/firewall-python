@@ -124,7 +124,7 @@ def test_track_sends_a_custom_event_with_firewall():
 
     assert len(custom_events) == 1
     assert custom_events[0]["name"] == "user.login_failed"
-    assert custom_events[0]["user"] is None
+    assert "user" not in custom_events[0]
     assert custom_events[0]["request"] == {
         "method": "GET",
         "ipAddress": "127.0.0.1",

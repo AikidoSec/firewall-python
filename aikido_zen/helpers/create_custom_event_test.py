@@ -15,7 +15,7 @@ def test_create_custom_event_success():
     assert event is not None
     assert event["type"] == "custom"
     assert event["name"] == "user.login_failed"
-    assert event["user"] is None
+    assert "user" not in event
     assert event["request"] is not None
 
 
@@ -26,6 +26,15 @@ def test_create_custom_event_with_user():
     event = create_custom_event("user.signed_up", context)
 
     assert event["user"] == {"id": "user-1", "name": "Jane Doe"}
+
+
+def test_create_custom_event_does_not_include_the_user_without_one():
+    """The user is only set if set_user(...) was called during the request"""
+    context = test_utils.generate_context()
+
+    event = create_custom_event("user.login_failed", context)
+
+    assert "user" not in event
 
 
 def test_create_custom_event_request_data():
@@ -60,7 +69,7 @@ def test_create_custom_event_no_context():
     event = create_custom_event("user.login_failed", None)
 
     assert event["request"] is None
-    assert event["user"] is None
+    assert "user" not in event
 
 
 def test_create_custom_event_exception_handling():

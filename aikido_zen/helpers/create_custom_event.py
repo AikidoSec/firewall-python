@@ -3,12 +3,15 @@ from aikido_zen.helpers.logging import logger
 
 def create_custom_event(event_name, context):
     try:
-        return {
+        event = {
             "type": "custom",
             "name": event_name,
             "request": extract_request_if_possible(context),
-            "user": getattr(context, "user", None),
         }
+        user = getattr(context, "user", None)
+        if user:
+            event["user"] = user
+        return event
     except Exception as e:
         logger.error("Failed to create custom API event: %s", str(e))
         return None

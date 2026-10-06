@@ -26,6 +26,10 @@ def track(event_name):
             log_warning_track_called_without_context()
             return
 
+        ipc = comms.get_comms()
+        if not ipc:
+            return
+
         cache = thread_cache.get_cache()
         if cache and cache.is_bypassed_ip(context.remote_address):
             return
@@ -39,9 +43,6 @@ def track(event_name):
         if not event:
             return
 
-        ipc = comms.get_comms()
-        if not ipc:
-            return
         send_payload(ipc, PutEventCommand.generate(event), (50 / 1000))
     except Exception as e:
         logger.debug("Exception occurred in track: %s", e)
