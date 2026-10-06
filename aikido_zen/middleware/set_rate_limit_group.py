@@ -10,9 +10,7 @@ def set_rate_limit_group(group_id: Union[str, int]):
         return
 
     # Check if it's string of number, ensure string.
-    if isinstance(group_id, bool) or (
-        not isinstance(group_id, str) and not isinstance(group_id, int)
-    ):
+    if isinstance(group_id, bool) or not isinstance(group_id, (str, int)):
         logger.warning("Group ID must be a string or a number")
         return
     group_id = str(group_id)
