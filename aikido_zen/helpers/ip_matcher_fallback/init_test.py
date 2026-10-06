@@ -72,6 +72,7 @@ def test_with_invalid_ranges():
     assert matcher.has("10.0.0.1") == False
     assert matcher.has("192.168.0.255") == True
     assert matcher.has("") == False
+    assert matcher.has(None) == False
     assert matcher.has("1") == False
     assert matcher.has("192.168.0.1/32") == True
 

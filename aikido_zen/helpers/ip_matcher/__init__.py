@@ -39,6 +39,8 @@ if PYTRICIA_AVAILABLE:
             self.trie.freeze()
 
         def has(self, network):
+            if not network:
+                return False
             try:
                 return self.trie.get(preparse(network)) is not None
             except ValueError:
