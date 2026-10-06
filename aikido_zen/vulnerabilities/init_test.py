@@ -104,6 +104,23 @@ def test_sql_injection(caplog, get_context, monkeypatch):
     assert get_cache().stats.get_record()["requests"]["attacksDetected"]["blocked"] == 1
 
 
+def test_sql_injection_without_a_client_ip(get_context, monkeypatch):
+    get_context.remote_address = None
+    get_context.set_as_current_context()
+    get_cache().config.bypassed_ips = IPMatcher(["198.51.100.23"])
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
+
+    assert get_cache().stats.get_record()["requests"]["attacksDetected"]["total"] == 0
+    with pytest.raises(AikidoSQLInjection):
+        run_vulnerability_scan(
+            kind="sql_injection",
+            op="test_op",
+            args=("INSERT * INTO VALUES ('doggoss2', TRUE);", "mysql"),
+        )
+    assert get_cache().stats.get_record()["requests"]["attacksDetected"]["total"] == 1
+    assert get_cache().stats.get_record()["requests"]["attacksDetected"]["blocked"] == 1
+
+
 def test_sql_injection_but_blocking_off(caplog, get_context, monkeypatch):
     get_context.set_as_current_context()
     monkeypatch.setenv("AIKIDO_BLOCK", "0")
