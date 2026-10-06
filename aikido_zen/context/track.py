@@ -21,13 +21,13 @@ def track(event_name):
             logger.info("track(...) expects a non-empty string as event name.")
             return
 
+        ipc = comms.get_comms()
+        if not ipc:
+            return
+
         context = get_current_context()
         if not context:
             log_warning_track_called_without_context()
-            return
-
-        ipc = comms.get_comms()
-        if not ipc:
             return
 
         cache = thread_cache.get_cache()

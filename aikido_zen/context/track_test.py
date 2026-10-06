@@ -62,22 +62,29 @@ def test_track_empty_event_name(caplog):
 
 
 def test_track_without_context(caplog):
-    track("my-event")
+    with patch(
+        "aikido_zen.background_process.comms.get_comms", return_value=MagicMock()
+    ):
+        track("my-event")
+
     assert "track(...) was called without a context." in caplog.text
 
 
 def test_track_without_context_only_logs_once(caplog):
-    track("my-event")
-    track("my-event")
+    with patch(
+        "aikido_zen.background_process.comms.get_comms", return_value=MagicMock()
+    ):
+        track("my-event")
+        track("my-event")
+
     assert caplog.text.count("track(...) was called without a context.") == 1
 
 
-def test_track_without_comms():
-    set_context_and_lifecycle()
-
+def test_track_without_comms(caplog):
     with patch("aikido_zen.background_process.comms.get_comms", return_value=None):
-        # Should not raise
         track("my-event")
+
+    assert "track(...) was called without a context." not in caplog.text
 
 
 def test_track_sends_event_over_ipc():

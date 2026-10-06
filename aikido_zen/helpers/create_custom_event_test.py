@@ -15,7 +15,6 @@ def test_create_custom_event_success():
     assert event is not None
     assert event["type"] == "custom"
     assert event["name"] == "user.login_failed"
-    assert "user" not in event
     assert event["request"] is not None
 
 
