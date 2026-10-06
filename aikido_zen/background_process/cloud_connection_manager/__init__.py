@@ -27,7 +27,7 @@ from .send_heartbeat import send_heartbeat
 class CloudConnectionManager:
     """CloudConnectionManager class"""
 
-    timeout_in_sec = 5  # Timeout of API calls to Aikido Server
+    timeout_in_sec = 30  # Timeout of API calls to Aikido Server
     heartbeat_secs = 600  # Heartbeat every 10 minutes
 
     def __init__(self, block, api, token, serverless):
