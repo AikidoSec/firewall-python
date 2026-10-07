@@ -6,7 +6,6 @@ and listen for data sent by our sources and sinks
 import multiprocessing
 import os
 import platform
-import sys
 
 from aikido_zen.helpers.token import get_token_from_env
 from aikido_zen.helpers.get_temp_dir import get_temp_dir
@@ -25,20 +24,16 @@ def get_process_factory():
     """
     Return a process factory that is safe to start while an app is importing.
 
-    Python 3.14 changed the default POSIX start method from fork to forkserver.
-    Forkserver re-imports the application's main module, but Zen starts its
-    background process while that module is still importing.
-
-    Inspect the configured start method without setting multiprocessing's
-    process-wide default. If it is unset, get_all_start_methods() reports the
-    platform default as its first entry.
+    "spawn" (macOS's default) and "forkserver" (Linux's default on Python
+    3.14+) both re-exec sys.executable to boot a fresh interpreter, which
+    breaks inside hosts that embed their own Python interpreter (e.g. uWSGI).
+    "fork" doesn't re-exec, so force it unless the app explicitly configured
+    its own method. Windows has no "fork" context, so leave it alone there.
     """
-    if sys.version_info >= (3, 14):
-        start_method = multiprocessing.get_start_method(allow_none=True)
-        if start_method is None:
-            start_method = multiprocessing.get_all_start_methods()[0]
-        if start_method == "forkserver":
-            return multiprocessing.get_context("fork").Process
+    configured = multiprocessing.get_start_method(allow_none=True)
+    needs_fork = configured is None or configured == "forkserver"
+    if needs_fork and platform.system() != "Windows":
+        return multiprocessing.get_context("fork").Process
     return multiprocessing.Process
 
 

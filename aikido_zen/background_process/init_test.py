@@ -5,17 +5,12 @@ import aikido_zen.background_process as background_process
 from .comms_test import reset_comms_after_test
 
 
-def test_python314_configured_forkserver_uses_fork_context(monkeypatch, mocker):
-    monkeypatch.setattr(background_process.sys, "version_info", (3, 14))
+def test_configured_forkserver_uses_fork_context(mocker):
     get_start_method = mocker.patch.object(
         background_process.multiprocessing,
         "get_start_method",
         return_value="forkserver",
     )
-    get_all_start_methods = mocker.patch.object(
-        background_process.multiprocessing,
-        "get_all_start_methods",
-    )
     fork_context = mocker.patch.object(
         background_process.multiprocessing,
         "get_context",
@@ -23,22 +18,15 @@ def test_python314_configured_forkserver_uses_fork_context(monkeypatch, mocker):
 
     assert background_process.get_process_factory() == fork_context.Process
     get_start_method.assert_called_once_with(allow_none=True)
-    get_all_start_methods.assert_not_called()
     background_process.multiprocessing.get_context.assert_called_once_with("fork")
 
 
-def test_python314_unset_forkserver_default_uses_fork_context(monkeypatch, mocker):
-    monkeypatch.setattr(background_process.sys, "version_info", (3, 14))
+def test_unset_default_uses_fork_context(mocker):
     get_start_method = mocker.patch.object(
         background_process.multiprocessing,
         "get_start_method",
         return_value=None,
     )
-    get_all_start_methods = mocker.patch.object(
-        background_process.multiprocessing,
-        "get_all_start_methods",
-        return_value=["forkserver", "spawn", "fork"],
-    )
     fork_context = mocker.patch.object(
         background_process.multiprocessing,
         "get_context",
@@ -46,20 +34,14 @@ def test_python314_unset_forkserver_default_uses_fork_context(monkeypatch, mocke
 
     assert background_process.get_process_factory() == fork_context.Process
     get_start_method.assert_called_once_with(allow_none=True)
-    get_all_start_methods.assert_called_once_with()
     background_process.multiprocessing.get_context.assert_called_once_with("fork")
 
 
-def test_python314_configured_spawn_uses_configured_context(monkeypatch, mocker):
-    monkeypatch.setattr(background_process.sys, "version_info", (3, 14))
+def test_configured_spawn_uses_configured_context(mocker):
     get_start_method = mocker.patch.object(
         background_process.multiprocessing,
         "get_start_method",
         return_value="spawn",
-    )
-    get_all_start_methods = mocker.patch.object(
-        background_process.multiprocessing,
-        "get_all_start_methods",
     )
     get_context = mocker.patch.object(
         background_process.multiprocessing,
@@ -71,7 +53,20 @@ def test_python314_configured_spawn_uses_configured_context(monkeypatch, mocker)
         == background_process.multiprocessing.Process
     )
     get_start_method.assert_called_once_with(allow_none=True)
-    get_all_start_methods.assert_not_called()
+    get_context.assert_not_called()
+
+
+def test_windows_unset_default_uses_configured_context(monkeypatch, mocker):
+    monkeypatch.setattr(background_process.platform, "system", lambda: "Windows")
+    mocker.patch.object(
+        background_process.multiprocessing, "get_start_method", return_value=None
+    )
+    get_context = mocker.patch.object(background_process.multiprocessing, "get_context")
+
+    assert (
+        background_process.get_process_factory()
+        == background_process.multiprocessing.Process
+    )
     get_context.assert_not_called()
 
 
