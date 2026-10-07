@@ -1,3 +1,4 @@
+from aikido_zen.helpers.get_current_unixtime_ms import get_unixtime_ms
 from aikido_zen.helpers.logging import logger
 
 
@@ -5,6 +6,7 @@ def create_custom_event(event_name, context):
     try:
         event = {
             "type": "custom",
+            "time": get_unixtime_ms(),
             "name": event_name,
             "request": extract_request_if_possible(context),
         }

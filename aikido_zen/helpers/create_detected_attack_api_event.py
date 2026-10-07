@@ -1,5 +1,6 @@
 import json
 
+from aikido_zen.helpers.get_current_unixtime_ms import get_unixtime_ms
 from aikido_zen.helpers.limit_length_metadata import limit_length_metadata
 from aikido_zen.helpers.logging import logger
 
@@ -8,6 +9,7 @@ def create_detected_attack_api_event(attack, context, blocked, stack):
     try:
         return {
             "type": "detected_attack",
+            "time": get_unixtime_ms(),
             "attack": {
                 **attack,
                 "user": getattr(context, "user", None),

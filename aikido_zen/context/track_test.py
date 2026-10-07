@@ -95,7 +95,12 @@ def test_track_sends_event_over_ipc():
     with patch(
         "aikido_zen.thread.thread_cache.get_cache",
         return_value=cache_with_bypassed_ips(),
-    ), patch("aikido_zen.background_process.comms.get_comms", return_value=comms):
+    ), patch(
+        "aikido_zen.background_process.comms.get_comms", return_value=comms
+    ), patch(
+        "aikido_zen.helpers.create_custom_event.get_unixtime_ms",
+        return_value=111,
+    ):
         track("my-custom-event")
 
     comms.send_data_to_bg_process.assert_called_once()
@@ -104,6 +109,7 @@ def test_track_sends_event_over_ipc():
     assert returns_data is False
     assert request.event == {
         "type": "custom",
+        "time": 111,
         "name": "my-custom-event",
         "request": {
             "method": "POST",
