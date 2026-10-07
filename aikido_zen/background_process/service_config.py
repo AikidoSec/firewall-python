@@ -76,8 +76,6 @@ class ServiceConfig:
 
     def is_bypassed_ip(self, ip):
         """Checks if the IP is on the bypass list"""
-        if not ip:
-            return False
         return self.bypassed_ips.has(ip)
 
     def update_excluded_user_ids_from_rate_limiting(self, user_ids):
