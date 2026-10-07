@@ -18,12 +18,12 @@ def create_attack_wave_event(context):
 
         return {
             "type": "detected_attack_wave",
-            "time": get_unixtime_ms(),
             "attack": {
                 "user": getattr(context, "user", None),
                 "metadata": limit_length_metadata(metadata, 4096),
             },
             "request": extract_request_if_possible(context),
+            "time": get_unixtime_ms(),
         }
     except Exception as e:
         logger.error("Failed to create detected_attack_wave API event: %s", str(e))

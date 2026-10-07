@@ -6,9 +6,9 @@ def create_custom_event(event_name, context):
     try:
         event = {
             "type": "custom",
-            "time": get_unixtime_ms(),
             "name": event_name,
             "request": extract_request_if_possible(context),
+            "time": get_unixtime_ms(),
         }
         user = getattr(context, "user", None)
         if user:
