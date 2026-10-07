@@ -35,7 +35,7 @@ filenames = {name.lower() for name in file_names}
 directories = {name.lower() for name in directory_names}
 
 
-def is_web_scan_path(path: str, status_code: int = 404) -> bool:
+def is_web_scan_path(path: str, status_code: int) -> bool:
     """
     is_web_scan_path gets the current route and wants to determine whether it's a test by some web scanner.
     Checks filename if it exists (list of suspicious filenames & list of supsicious extensions)
