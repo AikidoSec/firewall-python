@@ -4,7 +4,7 @@ from aikido_zen.helpers.ipc.command_types import Command, CommandContext, Payloa
 class PutEventReq:
     def __init__(self, event):
         # Event is a dictionary containing data that is going to be reported to core
-        # The CloudConnectionManager adds "agent", and "time" if the event has none
+        # The CloudConnectionManager adds the "agent" field
         self.event = event
 
 
