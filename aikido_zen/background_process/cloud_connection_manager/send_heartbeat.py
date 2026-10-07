@@ -1,6 +1,7 @@
 """Exports the send_heartbeat function"""
 
 from aikido_zen.background_process.packages import PackagesStore
+from aikido_zen.helpers.get_current_unixtime_ms import get_unixtime_ms
 from aikido_zen.helpers.logging import logger
 
 
@@ -35,6 +36,7 @@ def send_heartbeat(connection_manager):
             "routes": routes,
             "users": users,
             "middlewareInstalled": connection_manager.middleware_installed,
+            "time": get_unixtime_ms(),
         }
     )
     connection_manager.update_service_config(res)

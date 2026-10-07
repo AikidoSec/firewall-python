@@ -9,7 +9,6 @@ def create_detected_attack_api_event(attack, context, blocked, stack):
     try:
         return {
             "type": "detected_attack",
-            "time": get_unixtime_ms(),
             "attack": {
                 **attack,
                 "user": getattr(context, "user", None),
@@ -19,6 +18,7 @@ def create_detected_attack_api_event(attack, context, blocked, stack):
                 "stack": stack,
             },
             "request": extract_request_if_possible(context),
+            "time": get_unixtime_ms(),
         }
     except Exception as e:
         logger.error("Failed to create detected_attack API event: %s", str(e))
