@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from .create_detected_attack_api_event import create_detected_attack_api_event
 from aikido_zen.context import Context
 import aikido_zen.test_utils as test_utils
@@ -39,7 +39,11 @@ def test_create_attack_event_with_long_metadata():
     assert event["attack"]["metadata"]["test"] == long_metadata[:4096]
 
 
-def test_create_attack_event_success():
+@patch(
+    "aikido_zen.helpers.create_detected_attack_api_event.get_unixtime_ms",
+    return_value=111,
+)
+def test_create_attack_event_success(mock_time):
     attack = {
         "payload": {"key": "value"},
         "metadata": {},
@@ -68,6 +72,7 @@ def test_create_attack_event_success():
             "userAgent": None,
         },
         "type": "detected_attack",
+        "time": 111,
     }
 
 
