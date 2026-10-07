@@ -8,6 +8,9 @@ from aikido_zen.helpers.build_path_to_payload import build_path_to_payload
 from aikido_zen.helpers.try_decode_as_jwt import try_decode_as_jwt
 from aikido_zen.context import UINPUT_SOURCES
 
+# Deeper input would overflow the stack and let the request through unchecked.
+MAX_TRAVERSAL_DEPTH = 64
+
 
 def match_filter_part_in_user(user_input, filter_part, path_to_payload=None):
     """
@@ -15,6 +18,8 @@ def match_filter_part_in_user(user_input, filter_part, path_to_payload=None):
     """
     if not path_to_payload:
         path_to_payload = []
+    if len(path_to_payload) >= MAX_TRAVERSAL_DEPTH:
+        return {"match": False}
     if isinstance(user_input, str):
         jwt = try_decode_as_jwt(user_input)
         if jwt[0]:
@@ -24,7 +29,7 @@ def match_filter_part_in_user(user_input, filter_part, path_to_payload=None):
 
     if is_mapping(user_input):
         filtered_input = remove_keys_that_dont_start_with_dollar_sign(user_input)
-        if filtered_input == filter_part:
+        if is_user_operators_subset_of(filtered_input, filter_part):
             return {
                 "match": True,
                 "pathToPayload": build_path_to_payload(path_to_payload),
@@ -55,6 +60,20 @@ def remove_keys_that_dont_start_with_dollar_sign(nosql_filter):
     This removes key that don't start with $, since they are not dangerous
     """
     return {key: value for key, value in nosql_filter.items() if key.startswith("$")}
+
+
+def is_user_operators_subset_of(user_operators, filter_operators):
+    """
+    Returns True if every operator in user_operators is present in filter_operators
+    with the same value — i.e. the user-supplied operators are a subset of the filter.
+    An empty user_operators dict never matches (no operators = no injection).
+    """
+    has_keys = False
+    for key, value in user_operators.items():
+        if key not in filter_operators or filter_operators[key] != value:
+            return False
+        has_keys = True
+    return has_keys
 
 
 def find_filter_part_with_operators(user_input, part_of_filter):

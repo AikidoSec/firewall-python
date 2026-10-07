@@ -1,5 +1,8 @@
 import pytest
-from aikido_zen.vulnerabilities.nosql_injection import detect_nosql_injection
+from aikido_zen.vulnerabilities.nosql_injection import (
+    MAX_TRAVERSAL_DEPTH,
+    detect_nosql_injection,
+)
 from aikido_zen.context import Context
 from collections import defaultdict, OrderedDict, ChainMap
 
@@ -537,6 +540,155 @@ def test_ignores_safe_pipeline_aggregations(create_context):
                     },
                 },
             ],
+        )
+        == {}
+    )
+
+
+def test_detects_injection_when_app_merges_user_operators_with_own_dollar_keys(
+    create_context,
+):
+    assert detect_nosql_injection(
+        create_context(body={"username": {"$ne": None}}),
+        {"title": {"$ne": None, "$exists": True}},
+    ) == {
+        "injection": True,
+        "source": "body",
+        "pathToPayload": ".username",
+        "payload": {"$ne": None, "$exists": True},
+    }
+
+
+def test_detects_injection_when_app_prepends_own_dollar_key_before_user_operators(
+    create_context,
+):
+    assert detect_nosql_injection(
+        create_context(body={"username": {"$gt": ""}}),
+        {"title": {"$exists": True, "$gt": ""}},
+    ) == {
+        "injection": True,
+        "source": "body",
+        "pathToPayload": ".username",
+        "payload": {"$exists": True, "$gt": ""},
+    }
+
+
+def test_does_not_flag_when_user_operator_value_differs(create_context):
+    assert (
+        detect_nosql_injection(
+            create_context(body={"username": {"$ne": "different"}}),
+            {"title": {"$ne": None, "$exists": True}},
+        )
+        == {}
+    )
+
+
+def test_detects_injection_when_app_adds_non_dollar_key_to_subobject(create_context):
+    assert detect_nosql_injection(
+        create_context(body={"field": {"$elemMatch": {"$gt": 5}}}),
+        {"items": {"$elemMatch": {"$gt": 5, "verified": True}}},
+    ) == {
+        "injection": True,
+        "source": "body",
+        "pathToPayload": ".field.$elemMatch",
+        "payload": {"$gt": 5},
+    }
+
+
+def test_does_not_flag_when_user_sends_empty_object(create_context):
+    assert (
+        detect_nosql_injection(
+            create_context(body={"username": {}}),
+            {"title": {"$exists": True}},
+        )
+        == {}
+    )
+
+
+def test_does_not_flag_when_user_object_has_only_non_dollar_keys(create_context):
+    assert (
+        detect_nosql_injection(
+            create_context(body={"username": {"name": "alice"}}),
+            {"title": {"$exists": True}},
+        )
+        == {}
+    )
+
+
+def test_does_not_flag_when_user_dollar_key_absent_from_filter(create_context):
+    assert (
+        detect_nosql_injection(
+            create_context(body={"username": {"$ne": None}}),
+            {"title": {"$exists": True}},
+        )
+        == {}
+    )
+
+
+def test_does_not_flag_when_filter_uses_subset_of_user_operators(create_context):
+    assert (
+        detect_nosql_injection(
+            create_context(body={"username": {"$ne": None, "$gt": 0}}),
+            {"title": {"$ne": None}},
+        )
+        == {}
+    )
+
+
+def test_does_not_flag_when_app_ignores_user_operators_and_uses_hardcoded_filter(
+    create_context,
+):
+    assert (
+        detect_nosql_injection(
+            create_context(body={"username": {"$ne": None}}),
+            {"username": "hardcoded"},
+        )
+        == {}
+    )
+
+
+def nested_list(depth, leaf):
+    current = [leaf]
+    for _ in range(depth):
+        current = [current]
+    return current
+
+
+def nested_dict(depth, leaf):
+    current = leaf
+    for _ in range(depth):
+        current = {"a": current}
+    return current
+
+
+def test_deeply_nested_body_does_not_hide_injection(create_context):
+    assert detect_nosql_injection(
+        create_context(
+            body={"nested": nested_list(100_000, "x"), "username": {"$ne": None}}
+        ),
+        {"username": {"$ne": None}},
+    ) == {
+        "injection": True,
+        "source": "body",
+        "pathToPayload": ".username",
+        "payload": {"$ne": None},
+    }
+
+
+def test_matches_user_operators_up_to_max_depth_only(create_context):
+    assert detect_nosql_injection(
+        create_context(body=nested_dict(MAX_TRAVERSAL_DEPTH - 1, {"$ne": None})),
+        {"username": {"$ne": None}},
+    ) == {
+        "injection": True,
+        "source": "body",
+        "pathToPayload": ".a" * (MAX_TRAVERSAL_DEPTH - 1),
+        "payload": {"$ne": None},
+    }
+    assert (
+        detect_nosql_injection(
+            create_context(body=nested_dict(MAX_TRAVERSAL_DEPTH, {"$ne": None})),
+            {"username": {"$ne": None}},
         )
         == {}
     )

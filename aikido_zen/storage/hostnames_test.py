@@ -99,6 +99,35 @@ def test_add_none_port():
     assert hostnames.map[key]["hits"] == 1
 
 
+def test_add_numeric_string_port():
+    """Test that a numeric string port is stored as an int."""
+    hostnames = Hostnames(max_entries=3)
+    hostnames.add("example.com", "80")
+    key = "example.com:80"
+    assert key in hostnames.map
+    assert hostnames.map[key]["port"] == 80
+    assert isinstance(hostnames.map[key]["port"], int)
+
+
+def test_add_service_name_port():
+    """Test that a service name port (e.g. 'https') is resolved to its number."""
+    hostnames = Hostnames(max_entries=3)
+    hostnames.add("example.com", "https")
+    key = "example.com:443"
+    assert key in hostnames.map
+    assert hostnames.map[key]["port"] == 443
+    assert isinstance(hostnames.map[key]["port"], int)
+
+
+def test_add_unknown_service_name_port():
+    """Test that an unresolvable service name port falls back to None."""
+    hostnames = Hostnames(max_entries=3)
+    hostnames.add("example.com", "not-a-real-service")
+    key = "example.com:None"
+    assert key in hostnames.map
+    assert hostnames.map[key]["port"] is None
+
+
 def test_exceed_max_entries_with_multiple_ports():
     """Test exceeding max entries with multiple ports."""
     hostnames = Hostnames(max_entries=3)

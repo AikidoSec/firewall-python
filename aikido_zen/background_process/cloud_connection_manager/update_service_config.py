@@ -11,6 +11,10 @@ def update_service_config(connection_manager, res):
     if res.get("success", False) is False:
         return
 
+    heartbeat_interval_ms = res.get("heartbeatIntervalInMS")
+    if isinstance(heartbeat_interval_ms, int) and heartbeat_interval_ms >= 60_000:
+        connection_manager.heartbeat_secs = heartbeat_interval_ms / 1000
+
     if "block" in res.keys() and res["block"] != connection_manager.block:
         logger.debug("Updating blocking, setting blocking to : %s", res["block"])
         connection_manager.block = bool(res["block"])
@@ -38,3 +42,9 @@ def update_service_config(connection_manager, res):
 
     if "domains" in res:
         connection_manager.conf.update_outbound_domains(res["domains"])
+
+    if isinstance(res.get("enabledFeatures"), list):
+        connection_manager.conf.update_enabled_features(res["enabledFeatures"])
+
+    # Workers use a new revision to restart schema sampling, so we advance it
+    connection_manager.conf.revision += 1

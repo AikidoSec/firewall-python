@@ -150,3 +150,9 @@ def test_replacement_char_prefix_does_not_hide_traversal():
         detect_path_traversal(replacement * 3 + traversal, replacement * 3 + traversal)
         is True
     )
+
+
+def test_case_insensitive_path_containment():
+    assert detect_path_traversal("/etc/passwd", "/ETC/passwd") is True
+    assert detect_path_traversal("/etc/passwd", "/ETC/PASSWD") is True
+    assert detect_path_traversal("/home/user/file.txt", "/HOME/USER/file.txt") is True

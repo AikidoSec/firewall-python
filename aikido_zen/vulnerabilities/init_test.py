@@ -130,6 +130,7 @@ def test_sql_injection_with_route_params(caplog, get_context, monkeypatch):
 
 
 def test_sql_injection_with_comms(caplog, get_context, monkeypatch):
+    get_cache().config.last_updated_at = 1
     get_context.set_as_current_context()
     monkeypatch.setenv("AIKIDO_BLOCK", "1")
     with patch("aikido_zen.background_process.comms.get_comms") as mock_get_comms:

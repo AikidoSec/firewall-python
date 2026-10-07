@@ -74,3 +74,19 @@ def test_parse_xml_with_set_context():
         "smthelse": {"2"},
         "test": {"test1"},
     }
+
+
+def test_parse_xml_bytes_with_set_context():
+    body = XML_STRING.encode("utf-8")
+    set_context(body=body)
+    root = parse_xml(body)
+
+    assert root[0].find("name").text == "Test Name"
+
+    context = get_current_context()
+    assert context.xml == {
+        "attr": {"chill"},
+        "smth": {"2"},
+        "smthelse": {"2"},
+        "test": {"test1"},
+    }

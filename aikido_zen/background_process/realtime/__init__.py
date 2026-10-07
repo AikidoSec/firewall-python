@@ -15,7 +15,7 @@ def get_realtime_url():
         if not realtime_url.endswith("/"):
             realtime_url += "/"
         return realtime_url
-    return "https://runtime.aikido.dev/"
+    return get_api_url()
 
 
 def get_config(token):
@@ -39,7 +39,7 @@ def get_config_last_updated_at(token):
     headers = {
         "Authorization": str(token),
     }
-    response = requests.get(url, headers=headers, timeout=0.5)  # timeout in 500ms
+    response = requests.get(url, headers=headers, timeout=3)  # timeout in 3 seconds
     if response.status_code != 200:
         logger.info("Invalid response from realtime api : %s", response.status_code)
 

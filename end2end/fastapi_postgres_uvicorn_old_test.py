@@ -4,7 +4,7 @@ import requests
 from .server.check_events_from_mock import (
     fetch_events_from_mock,
     validate_started_event,
-    validate_heartbeat,
+    wait_for_heartbeats,
     filter_on_event_type,
 )
 
@@ -77,16 +77,16 @@ def test_sync_route_without_firewall():
 
 
 def test_routes_discovered_in_heartbeat():
+    wait_for_heartbeats("http://localhost:5000", check_reported_routes)
+
+
+def check_reported_routes(heartbeat_events):
     # This test verifies that FastAPI APIRoute endpoints are discovered via route discovery.
     # Without patching fastapi.routing.request_response, the heartbeat will report
     # current_routes: {} even with active traffic, because the post_response hook never fires.
-    time.sleep(55)  # Wait for first heartbeat (fires ~60s after start)
-
-    events = fetch_events_from_mock("http://localhost:5000")
-    heartbeat_events = filter_on_event_type(events, "heartbeat")
     assert len(heartbeat_events) >= 1
 
-    routes = heartbeat_events[0]["routes"]
+    routes = [route for heartbeat in heartbeat_events for route in heartbeat["routes"]]
     route_map = {(r["method"], r["path"]): r for r in routes}
 
     assert ("POST", "/create") in route_map

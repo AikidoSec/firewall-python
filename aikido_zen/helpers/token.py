@@ -27,3 +27,22 @@ def get_token_from_env():
     if aikido_token_env is not None:
         return Token(aikido_token_env)
     return None
+
+
+def extract_region_from_token(token):
+    """
+    Extracts the region from a runtime token.
+
+    New format: AIK_RUNTIME_{sys_group_id}_{service_id}_{region}_{random}
+    Old format: AIK_RUNTIME_{sys_group_id}_{service_id}_{random}
+    """
+    if not token or not token.startswith("AIK_RUNTIME_"):
+        return "EU"
+
+    token_without_prefix = token[len("AIK_RUNTIME_") :]
+    parts = token_without_prefix.split("_")
+
+    if len(parts) == 4:
+        return parts[2]
+
+    return "EU"

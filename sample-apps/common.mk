@@ -32,9 +32,7 @@ AIKIDO_ENV_DISABLED = \
 # Common target definitions
 .PHONY: install
 install:
-	# ignore poetry install failures, these can be due to locking issues when 
-	# 2 poetry installs are run at the same time.
-	poetry install || true;
+	poetry install
 
 .PHONY: health-check
 health-check:

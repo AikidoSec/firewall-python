@@ -81,6 +81,7 @@ def test_cache_comms_with_endpoints():
             },
         }
     ]
+    thread_cache.config.last_updated_at = 1
     assert get_current_context().executed_middleware == False
     assert thread_cache.middleware_installed == False
 

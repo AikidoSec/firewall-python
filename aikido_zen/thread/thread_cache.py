@@ -44,6 +44,7 @@ class ThreadCache:
             last_updated_at=-1,
             received_any_stats=False,
         )
+        self.config.revision = -1
         self._clear_synced_deltas()
 
     def _clear_synced_deltas(self):
@@ -55,22 +56,6 @@ class ThreadCache:
         self.ai_stats.clear()
         PackagesStore.clear()
 
-    def _restore_synced_deltas(self, payload):
-        """Merges a previously-cleared payload back, used when an IPC sync fails."""
-        self.middleware_installed = (
-            self.middleware_installed or payload["middleware_installed"]
-        )
-        for entry in payload["hostnames"]:
-            self.hostnames.add(entry["hostname"], entry["port"], entry["hits"])
-        for entry in payload["users"]:
-            self.users.add_user_from_entry(entry)
-        self.stats.import_from_record(payload["stats"])
-        self.ai_stats.import_list(payload["ai_stats"])
-        for pkg in payload["packages"]:
-            existing = PackagesStore.get_package(pkg["name"])
-            if existing:
-                existing["cleared"] = False
-
     def renew(self):
         if not comms.get_comms():
             return
@@ -78,8 +63,18 @@ class ThreadCache:
         # Clear deltas before the IPC, not after. Clearing post-response would
         # wipe any increments that arrived in the window where the IPC released
         # the GIL.
+        routes_to_send = self.routes.get_routes_with_hits()
+        # Keep the original route objects in the payload. Resetting them in place
+        # would also erase the hits and schemas being sent.
+        for key, route_to_send in routes_to_send.items():
+            self.routes.routes[key] = {
+                **route_to_send,
+                "hits_delta_since_sync": 0,
+                "apispec": {},
+            }
         payload = {
-            "current_routes": self.routes.get_routes_with_hits(),
+            "config_revision": self.config.revision,
+            "current_routes": routes_to_send,
             "middleware_installed": self.middleware_installed,
             "hostnames": self.hostnames.as_array(),
             "users": self.users.as_array(),
@@ -88,25 +83,19 @@ class ThreadCache:
             "packages": PackagesStore.export(),
         }
         self._clear_synced_deltas()
-
         res = comms.get_comms().send_data_to_bg_process(
             action="SYNC_DATA",
             obj=payload,
             receive=True,
         )
         if not res["success"] or not res["data"]:
-            self._restore_synced_deltas(payload)
             return
 
-        # update config
-        if isinstance(res["data"].get("config"), ServiceConfig):
-            self.config = res["data"]["config"]
-
-        # update routes
-        if isinstance(res["data"].get("routes"), dict):
-            self.routes.routes = res["data"]["routes"]
-            for route in self.routes.routes.values():
-                route["hits_delta_since_sync"] = 0
+        config = res["data"].get("config")
+        if isinstance(config, ServiceConfig):
+            if config.revision != self.config.revision:
+                self.routes.reset_sampling()
+            self.config = config
 
 
 # For these 2 functions and the data they process, we rely on Python's GIL
@@ -121,6 +110,10 @@ def get_cache():
     """
     process_worker_loader.load_worker()
     return global_thread_cache
+
+
+def is_config_loaded():
+    return global_thread_cache.config.last_updated_at > 0
 
 
 def renew():

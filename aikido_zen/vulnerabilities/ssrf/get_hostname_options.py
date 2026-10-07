@@ -10,12 +10,20 @@ def get_hostname_options(raw_hostname: str) -> List[str]:
 
     # Add a case when the hostname is in punycode (like xn--pp-oia.aikido.dev)
     if "xn--" in raw_hostname:
-        hostname_decoded = raw_hostname.encode("ascii", errors="").decode("idna")
-        options_urls.append(try_parse_url(f"http://{hostname_decoded}"))
+        try:
+            hostname_decoded = raw_hostname.encode("ascii", errors="").decode("idna")
+        except UnicodeError:
+            # Malformed punycode (e.g. xn--a.attacker.com): keep the raw form only,
+            # so the SSRF scan still runs against the requested hostname instead
+            # of aborting with an exception.
+            hostname_decoded = None
+        if hostname_decoded:
+            options_urls.append(try_parse_url(f"http://{hostname_decoded}"))
 
-    # Map to url.hostname
+    # Map to url.hostname, deduplicating (bracketed and unbracketed
+    # variants can resolve to the same hostname depending on Python version)
     options = []
     for options_url in options_urls:
-        if options_url and options_url.hostname:
+        if options_url and options_url.hostname and options_url.hostname not in options:
             options.append(options_url.hostname)
     return options

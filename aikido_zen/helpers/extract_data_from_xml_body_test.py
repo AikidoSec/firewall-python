@@ -117,3 +117,47 @@ def test_extract_data_from_xml_body_context_set_as_current(mock_context):
         extract_data_from_xml_body(user_input, root_element)
 
         mock_context.set_as_current_context.assert_called_once()
+
+
+def test_extract_data_from_xml_body_bytes_user_input(mock_context):
+    with patch("aikido_zen.context.get_current_context", return_value=mock_context):
+        user_input = b"valid_input"
+        root_element = [{"attr1": "value1"}, {"attr2": "value2"}]
+
+        extract_data_from_xml_body(user_input, root_element)
+
+        assert mock_context.xml == {"attr1": {"value1"}, "attr2": {"value2"}}
+
+
+def test_extract_data_from_xml_body_bytes_invalid_user_input(mock_context):
+    with patch("aikido_zen.context.get_current_context", return_value=mock_context):
+        user_input = b"invalid_input"
+        root_element = [{"attr1": "value1"}]
+
+        extract_data_from_xml_body(user_input, root_element)
+
+        assert mock_context.xml == {}
+
+
+@pytest.mark.parametrize(
+    "user_input", [bytearray(b"valid_input"), memoryview(b"valid_input")]
+)
+def test_extract_data_from_xml_body_byteslike_user_input(mock_context, user_input):
+    with patch("aikido_zen.context.get_current_context", return_value=mock_context):
+        root_element = [{"attr1": "value1"}]
+
+        extract_data_from_xml_body(user_input, root_element)
+
+        assert mock_context.xml == {"attr1": {"value1"}}
+
+
+def test_extract_data_from_xml_body_bytes_invalid_utf8_matches_body():
+    body = b'<xml><item id="1\xff"></item></xml>'
+    context = ctx.Context(body=body, source="test")
+    context.set_as_current_context()
+    try:
+        extract_data_from_xml_body(body, [{"id": "1\ufffd"}])
+
+        assert context.xml == {"id": {"1\ufffd"}}
+    finally:
+        ctx.current_context.set(None)

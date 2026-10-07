@@ -90,6 +90,33 @@ def test_normalize_asgi_headers_non_ascii():
     assert normalize_asgi_headers(headers) == expected
 
 
+def test_normalize_asgi_headers_invalid_utf8():
+    headers = [
+        (b"x-custom-header", b"\xff' OR 1=1 --"),
+        (b"cookie", b"session=\xfe\xff"),
+    ]
+    expected = {
+        "X_CUSTOM_HEADER": ["\xff' OR 1=1 --"],
+        "COOKIE": ["session=\xfe\xff"],
+    }
+    assert normalize_asgi_headers(headers) == expected
+
+
+def test_normalize_asgi_headers_matches_framework_decoding():
+    headers = [(b"x-custom-header", "café".encode("utf-8"))]
+    normalized = normalize_asgi_headers(headers)
+    assert normalized == {"X_CUSTOM_HEADER": ["café", "cafÃ©"]}
+    assert normalized.get_header("X_CUSTOM_HEADER") == "cafÃ©"
+
+
+def test_valid_utf8_header_keeps_both_decodings():
+    payload = "café' OR 1=1 --"
+    framework = "cafÃ©' OR 1=1 --"
+    normalized = normalize_asgi_headers([(b"x-dog-name", payload.encode("utf-8"))])
+    assert normalized["X_DOG_NAME"] == [payload, framework]
+    assert normalized.get_header("X_DOG_NAME") == framework
+
+
 def test_normalize_asgi_headers_large_input():
     headers = [
         (f"header-{i}".encode("utf-8"), f"value-{i}".encode("utf-8"))
