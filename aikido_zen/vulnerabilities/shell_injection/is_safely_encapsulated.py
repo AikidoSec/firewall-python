@@ -2,43 +2,87 @@
 Exports the is_safely_encapsulated function
 """
 
-from aikido_zen.helpers.get_current_and_next_segments import (
-    get_current_and_next_segments,
-)
-
 escape_chars = ['"', "'"]
 dangerous_chars_inside_double_quotes = ["$", "`", "\\", "!"]
 
 
+def _parse_shell_quoting_state(command, user_input_start, user_input_end):
+    """
+    Parse the shell quoting state at the position where user_input appears.
+    Returns the active quote character ('"', "'", or None) at the start of user_input.
+
+    This function walks through the command character by character, tracking
+    which quote context is active, to determine if user_input is truly
+    encapsulated in quotes.
+    """
+    quote_state = None  # None, '"', or "'"
+    i = 0
+
+    while i < user_input_start:
+        char = command[i]
+
+        if quote_state is None:
+            # Not inside any quotes
+            if char == '"':
+                quote_state = '"'
+            elif char == "'":
+                quote_state = "'"
+        elif quote_state == '"':
+            # Inside double quotes
+            if char == "\\" and i + 1 < len(command):
+                # Backslash escapes the next character in double quotes
+                i += 1  # Skip the next character
+            elif char == '"':
+                quote_state = None
+        elif quote_state == "'":
+            # Inside single quotes - nothing escapes except closing single quote
+            if char == "'":
+                quote_state = None
+
+        i += 1
+
+    return quote_state
+
+
 def is_safely_encapsulated(command, user_input):
     """Checks if the user input is safely encapsulated inside the command"""
-    segments = get_current_and_next_segments(command.split(user_input))
+    if not user_input or user_input not in command:
+        return True
 
-    for segment in segments:
-        current_segment = segment[0]
-        next_segment = segment[1]
+    # Find all occurrences of user_input in command
+    start_index = 0
+    all_safe = True
 
-        char_before_user_input = current_segment[-1] if current_segment else None
-        char_after_user_input = next_segment[0] if next_segment else None
+    while True:
+        pos = command.find(user_input, start_index)
+        if pos == -1:
+            break
 
-        is_escape_char = char_before_user_input in escape_chars
+        user_input_start = pos
+        user_input_end = pos + len(user_input)
 
-        if not is_escape_char:
-            return False
+        # Parse the shell quoting state at this position
+        quote_state = _parse_shell_quoting_state(
+            command, user_input_start, user_input_end
+        )
 
-        if char_before_user_input != char_after_user_input:
-            return False
+        # Check if the user input is safely encapsulated
+        if quote_state is None:
+            # Not inside any quotes - not safe
+            all_safe = False
+            break
+        elif quote_state == "'":
+            # Inside single quotes - safe (nothing is interpreted)
+            # But check if the user input contains the quote character itself
+            if "'" in user_input:
+                all_safe = False
+                break
+        elif quote_state == '"':
+            # Inside double quotes - only safe if no dangerous characters
+            if any(char in user_input for char in dangerous_chars_inside_double_quotes):
+                all_safe = False
+                break
 
-        if char_before_user_input in user_input:
-            return False
+        start_index = user_input_end
 
-        #  There are no dangerous characters inside single quotes
-        #  You can use certain characters inside double quotes
-        #  https://www.gnu.org/software/bash/manual/html_node/Single-Quotes.html
-        #  https://www.gnu.org/software/bash/manual/html_node/Double-Quotes.html
-        if char_before_user_input == '"' and any(
-            char in user_input for char in dangerous_chars_inside_double_quotes
-        ):
-            return False
-
-    return True
+    return all_safe

@@ -49,6 +49,11 @@ def test_detects_command_substitution():
         '$(echo "Inner: $(echo "This is nested")")',
     )
 
+    # Test nested quote contexts - single quotes inside double quotes don't protect
+    is_shell_injection("echo \"'$(id)'\"", "$(id)")
+    is_shell_injection("echo \"' `whoami` '\"", "`whoami`")
+    is_shell_injection("echo \"'$USER'\"", "$USER")
+
 
 def test_detects_backticks():
     is_shell_injection("echo `echo`", "`echo`")

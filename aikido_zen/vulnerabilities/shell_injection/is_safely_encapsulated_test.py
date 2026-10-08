@@ -38,3 +38,15 @@ def test_first_or_last_character_not_escape_char():
 def test_user_input_does_not_occur_in_command():
     assert is_safely_encapsulated("echo 'USER'", "$USER") == True
     assert is_safely_encapsulated('echo "USER"', "$USER") == True
+
+
+def test_nested_quote_contexts():
+    # Test that single quotes inside double quotes don't provide protection
+    assert is_safely_encapsulated("echo \"'$(id)'\"", "$(id)") == False
+    assert is_safely_encapsulated("echo \"' `whoami` '\"", "`whoami`") == False
+    assert is_safely_encapsulated("echo \"'$USER'\"", "$USER") == False
+
+    # Test that double quotes inside single quotes are safe (literal)
+    assert is_safely_encapsulated("echo '\"$(id)\"'", "$(id)") == True
+    assert is_safely_encapsulated("echo '\" `whoami` \"'", "`whoami`") == True
+    assert is_safely_encapsulated("echo '\"$USER\"'", "$USER") == True
