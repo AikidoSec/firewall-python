@@ -1,11 +1,15 @@
 import subprocess
 import sys
 
+import pytest
+
 import aikido_zen.background_process as background_process
 from .comms_test import reset_comms_after_test
 
 
-def test_configured_forkserver_uses_fork_context(mocker):
+@pytest.mark.parametrize("version", [(3, 8), (3, 13), (3, 14)])
+def test_configured_forkserver_uses_fork_context(monkeypatch, mocker, version):
+    monkeypatch.setattr(sys, "version_info", version)
     get_start_method = mocker.patch.object(
         background_process.multiprocessing,
         "get_start_method",
@@ -21,11 +25,16 @@ def test_configured_forkserver_uses_fork_context(mocker):
     background_process.multiprocessing.get_context.assert_called_once_with("fork")
 
 
-def test_unset_default_uses_fork_context(mocker):
+def test_unset_forkserver_default_uses_fork_context(mocker):
     get_start_method = mocker.patch.object(
         background_process.multiprocessing,
         "get_start_method",
         return_value=None,
+    )
+    mocker.patch.object(
+        background_process.multiprocessing,
+        "get_all_start_methods",
+        return_value=["forkserver", "spawn", "fork"],
     )
     fork_context = mocker.patch.object(
         background_process.multiprocessing,
@@ -37,11 +46,12 @@ def test_unset_default_uses_fork_context(mocker):
     background_process.multiprocessing.get_context.assert_called_once_with("fork")
 
 
-def test_configured_spawn_uses_configured_context(mocker):
+@pytest.mark.parametrize("start_method", ["spawn", "fork"])
+def test_configured_method_is_preserved(mocker, start_method):
     get_start_method = mocker.patch.object(
         background_process.multiprocessing,
         "get_start_method",
-        return_value="spawn",
+        return_value=start_method,
     )
     get_context = mocker.patch.object(
         background_process.multiprocessing,
@@ -56,10 +66,20 @@ def test_configured_spawn_uses_configured_context(mocker):
     get_context.assert_not_called()
 
 
-def test_windows_unset_default_uses_configured_context(monkeypatch, mocker):
-    monkeypatch.setattr(background_process.platform, "system", lambda: "Windows")
+@pytest.mark.parametrize("system", ["Darwin", "Windows"])
+@pytest.mark.parametrize("version", [(3, 8), (3, 13), (3, 14)])
+def test_unset_spawn_default_is_preserved(monkeypatch, mocker, system, version):
+    monkeypatch.setattr(sys, "version_info", version)
+    monkeypatch.setattr(background_process.platform, "system", lambda: system)
     mocker.patch.object(
         background_process.multiprocessing, "get_start_method", return_value=None
+    )
+    mocker.patch.object(
+        background_process.multiprocessing,
+        "get_all_start_methods",
+        return_value=(
+            ["spawn"] if system == "Windows" else ["spawn", "fork", "forkserver"]
+        ),
     )
     get_context = mocker.patch.object(background_process.multiprocessing, "get_context")
 
@@ -68,6 +88,42 @@ def test_windows_unset_default_uses_configured_context(monkeypatch, mocker):
         == background_process.multiprocessing.Process
     )
     get_context.assert_not_called()
+
+
+def test_unset_fork_default_is_preserved(mocker):
+    mocker.patch.object(
+        background_process.multiprocessing, "get_start_method", return_value=None
+    )
+    mocker.patch.object(
+        background_process.multiprocessing,
+        "get_all_start_methods",
+        return_value=["fork", "spawn", "forkserver"],
+    )
+    get_context = mocker.patch.object(background_process.multiprocessing, "get_context")
+
+    assert (
+        background_process.get_process_factory()
+        == background_process.multiprocessing.Process
+    )
+    get_context.assert_not_called()
+
+
+@pytest.mark.parametrize("system", ["Darwin", "Linux"])
+@pytest.mark.parametrize("start_method", [None, "spawn", "forkserver"])
+def test_uwsgi_uses_fork_context(monkeypatch, mocker, system, start_method):
+    monkeypatch.setattr(background_process.platform, "system", lambda: system)
+    monkeypatch.setitem(sys.modules, "uwsgi", mocker.Mock())
+    mocker.patch.object(
+        background_process.multiprocessing,
+        "get_start_method",
+        return_value=start_method,
+    )
+    fork_context = mocker.patch.object(
+        background_process.multiprocessing, "get_context"
+    ).return_value
+
+    assert background_process.get_process_factory() == fork_context.Process
+    background_process.multiprocessing.get_context.assert_called_once_with("fork")
 
 
 def test_get_process_factory_does_not_set_global_start_method():

@@ -11,8 +11,10 @@ def postfork(prev_func):
     Function: postfork()
     """
 
+    aikido_zen.protect(mode="daemon_disabled")
+
     def aik_postfork():
-        aikido_zen.protect()
+        aikido_zen.protect(mode="daemon_only")
         prev_func()
 
     return aik_postfork

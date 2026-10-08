@@ -6,6 +6,7 @@ and listen for data sent by our sources and sinks
 import multiprocessing
 import os
 import platform
+import sys
 
 from aikido_zen.helpers.token import get_token_from_env
 from aikido_zen.helpers.get_temp_dir import get_temp_dir
@@ -22,17 +23,22 @@ from .aikido_background_process import AikidoBackgroundProcess
 
 def get_process_factory():
     """
-    Return a process factory that is safe to start while an app is importing.
+    Choose how Zen's background process starts, without changing the start
+    method used by the application's own processes.
 
-    "spawn" (macOS's default) and "forkserver" (Linux's default on Python
-    3.14+) both re-exec sys.executable to boot a fresh interpreter, which
-    breaks inside hosts that embed their own Python interpreter (e.g. uWSGI).
-    "fork" doesn't re-exec, so force it unless the app explicitly configured
-    its own method. Windows has no "fork" context, so leave it alone there.
+    Use the application's configured method, or Python's default if unset:
+    - fork or spawn: use that method.
+    - forkserver: use fork instead. Forkserver can rerun app startup and call
+      protect() again, which tries to start another Zen process before the new
+      process finishes initializing. Python rejects this with RuntimeError.
+
+    Under uWSGI, always use fork: its executable cannot run the Python
+    commands needed by spawn or forkserver.
     """
-    configured = multiprocessing.get_start_method(allow_none=True)
-    needs_fork = configured is None or configured == "forkserver"
-    if needs_fork and platform.system() != "Windows":
+    start_method = multiprocessing.get_start_method(allow_none=True)
+    if start_method is None:
+        start_method = multiprocessing.get_all_start_methods()[0]
+    if start_method == "forkserver" or "uwsgi" in sys.modules:
         return multiprocessing.get_context("fork").Process
     return multiprocessing.Process
 
