@@ -6,7 +6,7 @@
 pip install aikido_zen
 ```
 
-2. uWSGI preforks worker processes from its master by default, so Zen must be started with uWSGI's own `postfork` decorator instead of a plain `aikido_zen.protect()` call. Add this at the top of your app file, above any other import :
+2. uWSGI preforks worker processes from its master by default. Use the decorators below to instrument your app before its imports and start Zen's background process after each fork. Add this at the top of your app file, above any other import:
 ```python
 from uwsgidecorators import postfork
 import aikido_zen.decorators.uwsgi as aik
