@@ -72,17 +72,9 @@ We recommend testing Zen locally or on staging before deploying to production.
 
 ```sh
 pip install aikido_zen
-```
-
-Using Poetry:
-
-```sh
+# or
 poetry add aikido_zen
-```
-
-Using uv:
-
-```sh
+# or
 uv add aikido_zen
 ```
 
@@ -99,6 +91,7 @@ For framework-specific instructions, check out our docs:
 
 - [Troubleshooting](docs/troubleshooting.md) — common issues and how to debug Zen
 - [Set the current user](docs/user.md) — identify users for rate limiting, blocking, and attack reports
+- [Track custom events](docs/track.md) — trigger events that Playbooks can act on
 - [Proxy / IP headers](docs/proxy.md) — configure client IP detection behind load balancers
 - [Logging](docs/logging.md) — enable debug logging
 - [Background process](docs/background_process.md) — how Zen's background process communicates over IPC
@@ -148,14 +141,11 @@ disclosing the source code of your own applications.
 For more information, please contact Aikido Security at this
 address: support@aikido.dev or create an account at https://app.aikido.dev.
 
-## Benchmarks 
-The following table summarizes the performance of both a typical SQL Query and a typical NoSQL Query with and without the Zen, measured in milliseconds :
-| Operation | Avg. time w/o Zen | Avg. time w/ Zen | Delta | Delta in % |
-| --------- | ---------------------- | --------------------- | ----- | ---------- |
-| SQL Query | 1.222 ms | 1.257 ms | +0.035 ms | +3% |
-| NoSQL Query | 1.090 ms | 1.110 ms | +0.020 ms | +2% |
+## Benchmarks
 
-See [benchmarks](benchmarks/) folder for more.
+We run a benchmark on every commit to ensure Zen has a minimal impact on your application's performance.
+
+See [benchmarks](benchmarks/)
 
 ## Bug bounty program
 
