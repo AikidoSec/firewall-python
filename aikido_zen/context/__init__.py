@@ -39,6 +39,9 @@ class Context:
     """
 
     def __init__(self, context_obj=None, body=None, req=None, source=None):
+        # Initialize default attributes that may not be in context_obj
+        self.firewall_enforced = False
+
         if context_obj:
             logger.debug("Creating Context instance based on dict object.")
             self.__dict__.update(context_obj)
@@ -92,6 +95,7 @@ class Context:
                     "xml": self.xml,
                     "outgoing_req_redirects": self.outgoing_req_redirects,
                     "executed_middleware": self.executed_middleware,
+                    "firewall_enforced": self.firewall_enforced,
                     "route_params": self.route_params,
                 },
                 None,

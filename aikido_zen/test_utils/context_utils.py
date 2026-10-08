@@ -57,4 +57,5 @@ class MockTestContext(Context):
         self.user = None
         self.rate_limit_group = None
         self.executed_middleware = False
+        self.firewall_enforced = False
         self.protection_forced_off = False

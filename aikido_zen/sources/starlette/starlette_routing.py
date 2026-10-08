@@ -32,12 +32,23 @@ def aik_route_func_wrapper(func):
             if not req:
                 return
             await extract_data_from_request(req)
-            pre_response_results = request_handler(stage="pre_response")
-            if pre_response_results:
-                response = create_starlette_response(pre_response_results)
-                if response:
-                    # Make sure to not return when an error occurred or there is an invalid response
-                    return response
+
+            # Check if firewall enforcement already happened at __call__ stage
+            from aikido_zen.context import get_current_context
+
+            context = get_current_context()
+            if not context or not context.firewall_enforced:
+                # Firewall not yet enforced, do it now
+                pre_response_results = request_handler(stage="pre_response")
+                if pre_response_results:
+                    response = create_starlette_response(pre_response_results)
+                    if response:
+                        # Make sure to not return when an error occurred or there is an invalid response
+                        return response
+                # Mark as enforced for any subsequent checks
+                if context:
+                    context.firewall_enforced = True
+                    context.set_as_current_context()
         except Exception as e:
             logger.debug("Exception occurred in pre_response stage starlette : %s", e)
 
