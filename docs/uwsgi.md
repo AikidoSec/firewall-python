@@ -1,7 +1,7 @@
 # uWSGI
 
 ## Installation/Setup
-1. Install `aikido_zen` package with pip :
+1. Install `aikido_zen` package with pip:
 ```sh
 pip install aikido_zen
 ```
@@ -18,7 +18,7 @@ def start_aikido():
     pass
 ```
 
-3. Setting your environment variables :
+3. Setting your environment variables:
 Make sure to set your token in order to communicate with Aikido's servers
 ```env
 AIKIDO_TOKEN="AIK_RUNTIME_YOUR_TOKEN_HERE"
