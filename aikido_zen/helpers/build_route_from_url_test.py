@@ -51,6 +51,16 @@ def test_replace_dates():
     assert build_route_from_url("/posts/01-05-2023") == "/posts/:date"
 
 
+def test_does_not_replace_date_with_suffix():
+    # Segments that start with a date but have additional characters should not be replaced
+    assert (
+        build_route_from_url("/internal/2024-01-01-export")
+        == "/internal/2024-01-01-export"
+    )
+    assert build_route_from_url("/api/2023-12-31-backup") == "/api/2023-12-31-backup"
+    assert build_route_from_url("/data/01-01-2024-report") == "/data/01-01-2024-report"
+
+
 def test_matches_arrays():
     assert build_route_from_url("/posts/3,000") == "/posts/:array(number)"
     assert build_route_from_url("/posts/0,1,2,3,4") == "/posts/:array(number)"

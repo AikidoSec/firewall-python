@@ -16,7 +16,7 @@ OBJECT_ID_REGEX = re.compile(r"^[0-9a-f]{24}$", re.I)
 
 ULID_REGEX = re.compile(r"^[0-9A-HJKMNP-TV-Z]{26}$", re.I)
 NUMBER_REGEX = re.compile(r"^\d+$")
-DATE_REGEX = re.compile(r"^\d{4}-\d{2}-\d{2}|\d{2}-\d{2}-\d{4}$")
+DATE_REGEX = re.compile(r"^(?:\d{4}-\d{2}-\d{2}|\d{2}-\d{2}-\d{4})$")
 EMAIL_REGEX = re.compile(
     r"^[a-zA-Z0-9.!#$%&\'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
 )
