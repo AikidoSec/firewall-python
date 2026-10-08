@@ -18,6 +18,18 @@ def _execute(func, instance, args, kwargs):
     vulns.run_vulnerability_scan(kind="sql_injection", op=op, args=(query, "postgres"))
 
 
+@before
+def _executemany(func, instance, args, kwargs):
+    command = get_argument(args, kwargs, 0, "command")
+
+    op = f"asyncpg.connection.Connection.{func.__name__}"
+    register_call(op, "sql_op")
+
+    vulns.run_vulnerability_scan(
+        kind="sql_injection", op=op, args=(command, "postgres")
+    )
+
+
 @on_import("asyncpg.connection", "asyncpg", version_requirement="0.27.0")
 def patch(m):
     """
@@ -28,5 +40,5 @@ def patch(m):
     src: https://github.com/MagicStack/asyncpg/blob/85d7eed40637e7cad73a44ed2439ffeb2a8dc1c2/asyncpg/connection.py#L43
     """
     patch_function(m, "Connection.execute", _execute)
-    patch_function(m, "Connection.executemany", _execute)
+    patch_function(m, "Connection.executemany", _executemany)
     patch_function(m, "Connection._execute", _execute)

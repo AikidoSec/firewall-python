@@ -13,7 +13,7 @@ async def database_conn():
     import asyncpg
 
     conn = await asyncpg.connect(
-        host="127.0.0.1", user="user", password="password", database="db"
+        host="127.0.0.1", user="user", ****="****", database="db"
     )
     return conn
 
@@ -152,5 +152,49 @@ async def test_conn_cursor(database_conn):
             called_with_args = mock_run_vulnerability_scan.call_args[1]["args"]
             assert called_with_args[0] == "BEGIN;"
             assert called_with_args[1] == "postgres"
+
+        await conn.close()
+
+
+@pytest.mark.asyncio
+async def test_conn_executemany_positional(database_conn):
+    reset_comms()
+    with patch(
+        "aikido_zen.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        conn = await database_conn
+        command = "INSERT INTO dogs (dog_name, isadmin) VALUES ($1, $2)"
+        data = [("Dog1", False), ("Dog2", True)]
+        await conn.executemany(command, data)
+
+        called_with_args = mock_run_vulnerability_scan.call_args[1]["args"]
+        called_with_op = mock_run_vulnerability_scan.call_args[1]["op"]
+        called_with_kind = mock_run_vulnerability_scan.call_args[1]["kind"]
+        assert called_with_args[0] == command
+        assert called_with_args[1] == "postgres"
+        assert called_with_op == "asyncpg.connection.Connection.executemany"
+        assert called_with_kind == "sql_injection"
+
+        await conn.close()
+
+
+@pytest.mark.asyncio
+async def test_conn_executemany_keyword(database_conn):
+    reset_comms()
+    with patch(
+        "aikido_zen.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        conn = await database_conn
+        command = "INSERT INTO dogs (dog_name, isadmin) VALUES ($1, $2)"
+        data = [("Dog1", False), ("Dog2", True)]
+        await conn.executemany(command=command, args=data)
+
+        called_with_args = mock_run_vulnerability_scan.call_args[1]["args"]
+        called_with_op = mock_run_vulnerability_scan.call_args[1]["op"]
+        called_with_kind = mock_run_vulnerability_scan.call_args[1]["kind"]
+        assert called_with_args[0] == command
+        assert called_with_args[1] == "postgres"
+        assert called_with_op == "asyncpg.connection.Connection.executemany"
+        assert called_with_kind == "sql_injection"
 
         await conn.close()
