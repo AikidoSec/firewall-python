@@ -24,7 +24,14 @@ jobs:
         with:
           python-version: 3.9
       - name: Setup safe-chain
-        run: curl -fsSL https://github.com/AikidoSec/safe-chain/releases/latest/download/install-safe-chain.sh | sh -s -- --ci
+        env:
+          SAFECHAIN_VERSION: "1.0.0"
+          SAFECHAIN_SHA256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        run: |
+          curl -fsSL -o install-safe-chain.sh "https://github.com/AikidoSec/safe-chain/releases/download/v${SAFECHAIN_VERSION}/install-safe-chain.sh"
+          echo "${SAFECHAIN_SHA256}  install-safe-chain.sh" | sha256sum -c -
+          sh install-safe-chain.sh --ci
+          rm install-safe-chain.sh
 
       - name: Install dependencies
         run: |
