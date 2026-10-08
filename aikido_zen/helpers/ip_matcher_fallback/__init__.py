@@ -3,8 +3,25 @@ Based on https://github.com/demskie/netparser
 MIT License - Copyright (c) 2019 alex
 """
 
+import ipaddress
 from .shared import parse_base_network, sort_networks, summarize_sorted_networks
 from .sort import binary_search_for_insertion_index
+
+
+def preparse(network: str) -> str:
+    """
+    Canonicalize IPv4-mapped IPv6 addresses to their IPv4 form.
+    This ensures that ::ffff:169.254.169.254 matches 169.254.169.254 rules.
+    """
+    # Remove the brackets around IPv6 addresses if they are there.
+    network = network.strip("[]")
+    try:
+        ip = ipaddress.IPv6Address(network)
+        if ip.ipv4_mapped:
+            return str(ip.ipv4_mapped)
+    except ValueError:
+        pass
+    return network
 
 
 class IPMatcher:
@@ -13,7 +30,7 @@ class IPMatcher:
         if networks is not None:
             subnets = []
             for s in networks:
-                net = parse_base_network(s, False)
+                net = parse_base_network(preparse(s), False)
                 if net and net.is_valid():
                     subnets.append(net)
             sort_networks(subnets)
@@ -23,7 +40,7 @@ class IPMatcher:
         """
         Checks if the given IP address is in the list of networks.
         """
-        net = parse_base_network(network, False)
+        net = parse_base_network(preparse(network), False)
         if not net or not net.is_valid():
             return False
         idx = binary_search_for_insertion_index(net, self.sorted)
@@ -36,7 +53,7 @@ class IPMatcher:
         return False
 
     def add(self, network):
-        net = parse_base_network(network, False)
+        net = parse_base_network(preparse(network), False)
         if not net or not net.is_valid():
             return self
         idx = binary_search_for_insertion_index(net, self.sorted)
