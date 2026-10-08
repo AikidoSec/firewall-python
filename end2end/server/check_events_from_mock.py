@@ -9,6 +9,10 @@ def fetch_events_from_mock(url):
     json_events = json.loads(res.content.decode("utf-8"))
     return json_events
 
+def fetch_agent_headers_from_mock(url):
+    res = requests.get(f"{url}/mock/agent_headers", timeout=5)
+    return json.loads(res.content.decode("utf-8"))
+
 def clear_events_from_mock(url):
     mock_events_url = f"{url}/mock/reset"
     res = requests.get(mock_events_url, timeout=5)

@@ -11,6 +11,7 @@ import sys
 from aikido_zen.helpers.token import get_token_from_env
 from aikido_zen.helpers.get_temp_dir import get_temp_dir
 from aikido_zen.helpers.hash_aikido_token import hash_aikido_token
+from aikido_zen.helpers.get_agent_session_id import get_agent_session_id
 from aikido_zen.helpers.logging import logger
 
 from aikido_zen.background_process.comms import (
@@ -71,7 +72,7 @@ def start_background_process():
     #  Daemon is set to True so that the process kills itself when the main process dies
     background_process = get_process_factory()(
         target=AikidoBackgroundProcess,
-        args=(comms.address, comms.key),
+        args=(comms.address, comms.key, get_agent_session_id()),
         name="zen-agent-process",
         daemon=True,
     )

@@ -1,9 +1,9 @@
 """Exports get_manager_info function"""
 
-import socket
 import platform
 import aikido_zen.config as config
 import aikido_zen.helpers.get_machine_ip as h
+from aikido_zen.helpers.get_hostname import get_hostname
 
 
 def get_manager_info(connection_manager):
@@ -12,7 +12,7 @@ def get_manager_info(connection_manager):
     """
     return {
         "dryMode": not connection_manager.block,
-        "hostname": socket.gethostname(),
+        "hostname": get_hostname(),
         "version": config.PKG_VERSION,
         "library": "firewall-python",
         "ipAddress": h.get_ip(),

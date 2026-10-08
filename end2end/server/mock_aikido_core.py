@@ -45,6 +45,7 @@ responses = {
 }
 
 events = []
+agent_headers = []
 
 
 @app.route('/config', methods=['GET'])
@@ -77,6 +78,11 @@ def post_events():
     print("Got event: ", request.get_json())
     if request.get_json():
         events.append(request.get_json())
+        # The WSGI environ loses the original casing, so store them lowercase.
+        agent_headers.append({
+            name.lower(): value for name, value in request.headers.items()
+            if name.lower().startswith('x-agent-')
+        })
     return jsonify(responses["config"])
 
 
@@ -93,6 +99,10 @@ def mock_set_config():
 def mock_get_events():
     return jsonify(events)
 
+@app.route('/mock/agent_headers', methods=['GET'])
+def mock_get_agent_headers():
+    return jsonify(agent_headers)
+
 @app.route('/timeout5/api/runtime/events', methods=['POST'])
 def mock_timeout_5_secs():
     time.sleep(5)
@@ -103,6 +113,7 @@ def mock_timeout_5_secs():
 @app.route('/mock/reset', methods=['GET'])
 def mock_reset_events():
     events.clear()
+    agent_headers.clear()
     return jsonify({"msg": "OK"})
 
 

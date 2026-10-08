@@ -11,6 +11,7 @@ import sys
 import platform
 from threading import Thread
 from queue import Queue
+from aikido_zen.helpers.get_agent_session_id import set_agent_session_id
 from aikido_zen.helpers.logging import logger
 from aikido_zen.background_process.cloud_connection_manager import (
     CloudConnectionManager,
@@ -33,7 +34,9 @@ class AikidoBackgroundProcess:
     - (spawned) reporting thread which collects IPC data and send it to a CloudConnectionManager
     """
 
-    def __init__(self, address, key):
+    def __init__(self, address, key, session_id):
+        # Spawn re-imports this module and would otherwise create another session id.
+        set_agent_session_id(session_id)
         try:
             listener = con.Listener(address, authkey=None)
         except OSError:
