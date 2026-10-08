@@ -1,7 +1,7 @@
 .PHONY: install
 install:
 	pip install -r requirements.txt
-	pip install poetry
+	pip install poetry==1.8.5
 	rm -rf ../../dist
 
 	cd ../../ && $(MAKE) build

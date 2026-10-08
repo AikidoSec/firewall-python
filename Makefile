@@ -19,7 +19,7 @@ lint:
 	poetry run black aikido_zen/
 	poetry run pylint aikido_zen/
 install: check_binaries
-	pip install poetry
+	pip install poetry==1.8.5
 	poetry install
 .PHONY: dev_install
 dev_install: install
