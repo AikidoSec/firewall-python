@@ -82,10 +82,14 @@ replace_version:
 	@if [ -z "$(version)" ]; then \
 		echo "Error: No version specified. Use 'make replace_version version=<new_version>'."; \
 		exit 1; \
+	fi; \
+	if ! echo "$(version)" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-(alpha|beta|rc)\.[0-9]+)?$$'; then \
+		echo "Error: Invalid version format '$(version)'. Expected semantic version (e.g., 1.2.3, 1.2.3-alpha.1)."; \
+		exit 1; \
 	fi;
 
-	poetry version $(version)
-	sed -i.bak "s/1.0-REPLACE-VERSION/$$version/g" aikido_zen/config.py
+	poetry version "$(version)"
+	sed -i.bak "s/1.0-REPLACE-VERSION/$(version)/g" aikido_zen/config.py
 	rm aikido_zen/config.py.bak
 
 
