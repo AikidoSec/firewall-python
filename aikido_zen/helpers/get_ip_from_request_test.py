@@ -48,50 +48,67 @@ def test_x_forwarded_for_without_trust_proxy_ipv6(monkeypatch):
     )
 
 
-def test_x_forwarded_for_with_trust_proxy_invalid_ip():
+def test_x_forwarded_for_default_does_not_trust_proxy(monkeypatch):
+    # Test case: Default behavior (no AIKIDO_TRUST_PROXY set) should not trust proxy headers
+    # This is the secure default to prevent IP spoofing
+    monkeypatch.delenv("AIKIDO_TRUST_PROXY", raising=False)
+    headers = Headers()
+    headers.store_header("x-forwarded-for", "9.9.9.9")
+    # Should return the actual remote address, not the forwarded header
+    assert get_ip_from_request("1.2.3.4", headers) == "1.2.3.4"
+
+
+def test_x_forwarded_for_with_trust_proxy_invalid_ip(monkeypatch):
     # Test case 4: x-forwarded-for with trust proxy and invalid IP
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "true")
     headers = Headers()
     headers.store_header("x-forwarded-for", "invalid")
     assert get_ip_from_request("1.2.3.4", headers) == "1.2.3.4"
 
 
-def test_x_forwarded_for_with_trust_proxy_ip_with_port():
+def test_x_forwarded_for_with_trust_proxy_ip_with_port(monkeypatch):
     # Test case 5: x-forwarded-for with trust proxy and IP contains port
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "true")
     headers = Headers()
     headers.store_header("x-forwarded-for", "9.9.9.9:8080")
     assert get_ip_from_request("1.2.3.4", headers) == "9.9.9.9"
 
 
-def test_x_forwarded_for_with_trust_proxy_and_trailing_comma():
+def test_x_forwarded_for_with_trust_proxy_and_trailing_comma(monkeypatch):
     # Test case 6: x-forwarded-for with trailing comma
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "true")
     headers = Headers()
     headers.store_header("x-forwarded-for", "9.9.9.9,")
     assert get_ip_from_request("1.2.3.4", headers) == "9.9.9.9"
 
 
-def test_x_forwarded_for_with_trust_proxy_and_leading_comma():
+def test_x_forwarded_for_with_trust_proxy_and_leading_comma(monkeypatch):
     # Test case 6: x-forwarded-for with trailing comma
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "true")
     headers = Headers()
     headers.store_header("x-forwarded-for", ",9.9.9.9,,")
     assert get_ip_from_request("1.2.3.4", headers) == "9.9.9.9"
 
 
-def test_x_forwarded_for_with_trust_proxy_public_ip():
+def test_x_forwarded_for_with_trust_proxy_public_ip(monkeypatch):
     # Test case 9: x-forwarded-for with trust proxy and public IP
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "true")
     headers = Headers()
     headers.store_header("x-forwarded-for", "9.9.9.9")
     assert get_ip_from_request("1.2.3.4", headers) == "9.9.9.9"
 
 
-def test_x_forwarded_for_with_trust_proxy_multiple_ips():
+def test_x_forwarded_for_with_trust_proxy_multiple_ips(monkeypatch):
     # Test case 10: x-forwarded-for with trust proxy and multiple IPs
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "true")
     headers = Headers()
     headers.store_header("x-forwarded-for", "9.9.9.9, 8.8.8.8, 7.7.7.7")
     assert get_ip_from_request("1.2.3.4", headers) == "9.9.9.9"
 
 
-def test_x_forwarded_for_with_trust_proxy_multiple_ips_ipv6():
+def test_x_forwarded_for_with_trust_proxy_multiple_ips_ipv6(monkeypatch):
     # Test case 10: x-forwarded-for with trust proxy and multiple IPs
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "true")
     headers = Headers()
     headers.store_header(
         "x-forwarded-for",

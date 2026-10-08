@@ -48,11 +48,11 @@ def get_client_ip_from_header(value):
 
 def trust_proxy():
     """
-    Checks the environment variables for `AIKIDO_TRUST_PROXY`, Defaults to true.
+    Checks the environment variables for `AIKIDO_TRUST_PROXY`, Defaults to false.
     """
     trust_proxy_env = os.getenv("AIKIDO_TRUST_PROXY")
     if not trust_proxy_env:
-        return True  # default to trusting proxy
+        return False  # default to not trusting proxy headers for security
 
     if trust_proxy_env.lower() in ["0", "false"]:
         return False

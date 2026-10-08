@@ -30,20 +30,30 @@ def test_returns_false_if_hostname_is_different():
     assert not is_request_to_itself("https://aikido.dev:4000", "google.com", 443)
 
 
-def test_returns_true_if_server_does_request_to_itself():
+def test_returns_true_if_server_does_request_to_itself(monkeypatch):
+    # Need to explicitly trust proxy for this check to work
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "true")
     assert is_request_to_itself("https://aikido.dev", "aikido.dev", 443)
     assert is_request_to_itself("http://aikido.dev:4000", "aikido.dev", 4000)
     assert is_request_to_itself("http://aikido.dev", "aikido.dev", 80)
     assert is_request_to_itself("https://aikido.dev:4000", "aikido.dev", 4000)
 
 
-def test_returns_true_for_special_case_http_to_https():
+def test_returns_true_for_special_case_http_to_https(monkeypatch):
+    # Need to explicitly trust proxy for this check to work
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "true")
     assert is_request_to_itself("http://aikido.dev", "aikido.dev", 443)
     assert is_request_to_itself("https://aikido.dev", "aikido.dev", 80)
 
 
 def test_returns_false_if_trust_proxy_is_false(monkeypatch):
     monkeypatch.setenv("AIKIDO_TRUST_PROXY", "false")
+    assert not is_request_to_itself("https://aikido.dev", "aikido.dev", 443)
+    assert not is_request_to_itself("http://aikido.dev", "aikido.dev", 80)
+
+
+def test_returns_false_if_trust_proxy_is_default():
+    # With the new secure default, trust_proxy is false by default
     assert not is_request_to_itself("https://aikido.dev", "aikido.dev", 443)
     assert not is_request_to_itself("http://aikido.dev", "aikido.dev", 80)
 
