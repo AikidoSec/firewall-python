@@ -1,0 +1,32 @@
+# Trusted SHA256 digests for zen-internals v0.1.60 binaries
+# Format: <sha256> <filename>
+# These digests are independently verified and committed to the repository
+# Any mismatch will cause the build to fail
+
+# INITIALIZATION REQUIRED:
+# Before merging this security fix, run one of:
+#   python3 scripts/init_digests_from_upstream.py  (faster, uses upstream checksums)
+#   python3 scripts/compute_binary_digests.py      (more thorough, computes independently)
+#
+# Then review the digests and commit the updated file.
+
+# When upgrading zen-internals version:
+# 1. Update BASE_URL in Makefile and scripts/*.py
+# 2. Verify the release authenticity (GPG signature, release notes, security advisory)
+# 3. Run: python3 scripts/compute_binary_digests.py
+# 4. Review and commit the updated digests
+
+# macOS ARM64 (Apple Silicon)
+PLACEHOLDER_DIGEST_MUST_BE_REPLACED_BEFORE_BUILD  libzen_internals_aarch64-apple-darwin.dylib
+
+# Linux ARM64
+PLACEHOLDER_DIGEST_MUST_BE_REPLACED_BEFORE_BUILD  libzen_internals_aarch64-unknown-linux-gnu.so
+
+# macOS x86_64 (Intel)
+PLACEHOLDER_DIGEST_MUST_BE_REPLACED_BEFORE_BUILD  libzen_internals_x86_64-apple-darwin.dylib
+
+# Windows x86_64
+PLACEHOLDER_DIGEST_MUST_BE_REPLACED_BEFORE_BUILD  libzen_internals_x86_64-pc-windows-gnu.dll
+
+# Linux x86_64
+PLACEHOLDER_DIGEST_MUST_BE_REPLACED_BEFORE_BUILD  libzen_internals_x86_64-unknown-linux-gnu.so
