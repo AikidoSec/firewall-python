@@ -109,6 +109,17 @@ path_prefixes = [
 
 separators = [" ", "\t", "\n", ";", "&", "|", "(", ")", "<", ">", "\r", "\f"]
 
+# Patterns that can expand to create separators at runtime
+# These are shell expansion patterns that can be used to bypass literal separator checks
+expansion_patterns = [
+    "${IFS}",  # Internal Field Separator (whitespace by default)
+    "$IFS",  # IFS without braces
+    "${IFS%?}",  # IFS with parameter expansion (removes shortest suffix)
+    "${IFS#?}",  # IFS with parameter expansion (removes shortest prefix)
+    "${IFS%%?}",  # IFS with parameter expansion (removes longest suffix)
+    "${IFS##?}",  # IFS with parameter expansion (removes longest prefix)
+]
+
 
 # Function to sort commands by length (longer commands first)
 def by_length(a, b):
@@ -138,6 +149,12 @@ def contains_shell_syntax(command, user_input):
     if any(c in user_input for c in dangerous_chars):
         return True
 
+    # Check if user input contains shell expansion patterns that can create separators
+    # e.g., ${IFS}, $IFS which expand to whitespace at runtime
+    for pattern in expansion_patterns:
+        if pattern in user_input:
+            return True
+
     # The command is the same as the user input
     # Rare case, but it's possible
     # e.g. command is `shutdown` and user input is `shutdown`
@@ -161,6 +178,44 @@ def contains_shell_syntax(command, user_input):
         # e.g. `echo<tab>hello`
         char_before = command[match.start() - 1] if match.start() > 0 else None
         char_after = command[match.end()] if match.end() < len(command) else None
+
+        # Check if preceded by an expansion pattern that can create a separator
+        # e.g. `true;${IFS}whoami` where ${IFS} expands to whitespace
+        if match.start() > 0:
+            for pattern in expansion_patterns:
+                pattern_start = match.start() - len(pattern)
+                if pattern_start >= 0:
+                    preceding_text = command[pattern_start : match.start()]
+                    if preceding_text == pattern:
+                        # Found an expansion pattern immediately before the matched command
+                        # Check if there's a separator before the expansion pattern
+                        char_before_expansion = (
+                            command[pattern_start - 1] if pattern_start > 0 else None
+                        )
+                        if (
+                            char_before_expansion in separators
+                            or char_before_expansion is None
+                        ):
+                            return True
+
+        # Check if followed by an expansion pattern that can create a separator
+        # e.g. `whoami${IFS}echo` where ${IFS} expands to whitespace
+        if match.end() < len(command):
+            for pattern in expansion_patterns:
+                pattern_end = match.end() + len(pattern)
+                if pattern_end <= len(command):
+                    following_text = command[match.end() : pattern_end]
+                    if following_text == pattern:
+                        # Found an expansion pattern immediately after the matched command
+                        # Check if there's a separator after the expansion pattern
+                        char_after_expansion = (
+                            command[pattern_end] if pattern_end < len(command) else None
+                        )
+                        if (
+                            char_after_expansion in separators
+                            or char_after_expansion is None
+                        ):
+                            return True
 
         # Check surrounding characters
         if char_before in separators and char_after in separators:

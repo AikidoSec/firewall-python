@@ -426,3 +426,25 @@ def test_form_feed_as_separator_between_commands():
     is_shell_injection("ls\frm", "rm")
     is_shell_injection("echo test\frm -rf /", "rm")
     is_shell_injection("rm\fls", "rm")
+
+
+def test_detects_shell_expansion_bypass():
+    # Test the specific bypass case from the security report
+    is_shell_injection("true;${IFS}whoami", "whoami")
+
+    # Test various IFS expansion patterns
+    is_shell_injection("echo${IFS}whoami", "whoami")
+    is_shell_injection("ls;${IFS}rm", "rm")
+    is_shell_injection("true;$IFS whoami", "whoami")
+    is_shell_injection("cmd;${IFS%?}whoami", "whoami")
+    is_shell_injection("cmd;${IFS#?}whoami", "whoami")
+    is_shell_injection("cmd;${IFS%%?}whoami", "whoami")
+    is_shell_injection("cmd;${IFS##?}whoami", "whoami")
+
+    # Test expansion patterns in user input
+    is_shell_injection("cmd ${IFS}whoami", "${IFS}whoami")
+    is_shell_injection("cmd $IFS", "$IFS")
+
+    # Test expansion after command
+    is_shell_injection("whoami${IFS}echo", "whoami")
+    is_shell_injection("rm${IFS%?}ls", "rm")

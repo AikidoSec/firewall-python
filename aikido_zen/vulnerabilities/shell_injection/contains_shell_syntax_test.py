@@ -161,3 +161,30 @@ def test_form_feed_as_separator():
     assert contains_shell_syntax("ls\frm", "rm") is True
     assert contains_shell_syntax("echo test\frm -rf /", "rm") is True
     assert contains_shell_syntax("rm\fls", "rm") is True
+
+
+def test_detects_shell_expansion_separators():
+    # Test ${IFS} expansion that creates runtime separators
+    assert contains_shell_syntax("true;${IFS}whoami", "whoami") is True
+    assert contains_shell_syntax("echo${IFS}whoami", "whoami") is True
+    assert contains_shell_syntax("ls;${IFS}rm", "rm") is True
+
+    # Test $IFS expansion (without braces)
+    assert contains_shell_syntax("true;$IFS whoami", "whoami") is True
+    assert contains_shell_syntax("echo$IFS rm", "rm") is True
+
+    # Test IFS with parameter expansion (various forms)
+    assert contains_shell_syntax("true;${IFS%?}whoami", "whoami") is True
+    assert contains_shell_syntax("true;${IFS#?}whoami", "whoami") is True
+    assert contains_shell_syntax("true;${IFS%%?}whoami", "whoami") is True
+    assert contains_shell_syntax("true;${IFS##?}whoami", "whoami") is True
+
+    # Test expansion patterns in user input itself
+    assert contains_shell_syntax("cmd ${IFS}whoami", "${IFS}whoami") is True
+    assert contains_shell_syntax("cmd $IFS", "$IFS") is True
+    assert contains_shell_syntax("cmd ${IFS%?}", "${IFS%?}") is True
+
+    # Test expansion after command
+    assert contains_shell_syntax("whoami${IFS}echo", "whoami") is True
+    assert contains_shell_syntax("rm${IFS%?}ls", "rm") is True
+    assert contains_shell_syntax("rm${IFS##?}ls", "rm") is True
