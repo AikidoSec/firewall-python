@@ -23,17 +23,13 @@ from .aikido_background_process import AikidoBackgroundProcess
 
 def get_process_factory():
     """
-    Choose how Zen's background process starts, without changing the start
-    method used by the application's own processes.
+    Choose how Zen's background process starts:
+    - Use the application's configured method, or Python's default if unset.
+    - Use fork instead of forkserver to avoid startup errors caused by
+      re-importing the app and calling protect() again.
+    - Always use fork under uWSGI; its executable cannot run Python subprocesses.
 
-    Use the application's configured method, or Python's default if unset:
-    - fork or spawn: use that method.
-    - forkserver: use fork instead. Forkserver can rerun app startup and call
-      protect() again, which tries to start another Zen process before the new
-      process finishes initializing. Python rejects this with RuntimeError.
-
-    Under uWSGI, always use fork: its executable cannot run the Python
-    commands needed by spawn or forkserver.
+    The application's own start method is unchanged.
     """
     start_method = multiprocessing.get_start_method(allow_none=True)
     if start_method is None:

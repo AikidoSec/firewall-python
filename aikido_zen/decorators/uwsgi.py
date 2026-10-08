@@ -1,5 +1,7 @@
 """
-Includes all the wrappers for uwsgi apps
+Set up Zen in two steps:
+1. Install instrumentation when the decorator is applied.
+2. Start the background process from uWSGI's postfork hook.
 """
 
 import aikido_zen
