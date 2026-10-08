@@ -4,6 +4,13 @@ import sys
 import pytest
 
 import aikido_zen.background_process as background_process
+from aikido_zen.background_process.aikido_background_process import (
+    AikidoBackgroundProcess,
+)
+from aikido_zen.helpers.get_agent_session_id import (
+    get_agent_session_id,
+    set_agent_session_id,
+)
 from .comms_test import reset_comms_after_test
 
 
@@ -164,3 +171,36 @@ def test_stale_socket_removed_by_another_worker(monkeypatch, mocker):
     background_process.start_background_process()
 
     process.return_value.start.assert_called_once_with()
+
+
+def test_started_process_receives_the_current_session_id(monkeypatch, mocker):
+    process = mocker.patch(
+        "aikido_zen.background_process.get_process_factory"
+    ).return_value
+    monkeypatch.setenv("AIKIDO_TOKEN", "AIK_RUNTIME_TEST")
+    monkeypatch.setattr(background_process.platform, "system", lambda: "Linux")
+    monkeypatch.setattr(
+        background_process, "get_uds_filename", lambda: "/tmp/aikido-session.sock"
+    )
+    monkeypatch.setattr(background_process.os.path, "exists", lambda _path: False)
+
+    background_process.start_background_process()
+
+    assert process.call_args.kwargs["args"][2] == get_agent_session_id()
+
+
+def test_background_process_adopts_the_parent_session_id(monkeypatch):
+    def listener(*_args, **_kwargs):
+        raise OSError("address in use")
+
+    original = get_agent_session_id()
+    monkeypatch.setattr(
+        "aikido_zen.background_process.aikido_background_process.con.Listener",
+        listener,
+    )
+    try:
+        with pytest.raises(SystemExit):
+            AikidoBackgroundProcess("/tmp/zen-session.sock", b"key", "parent-session")
+        assert get_agent_session_id() == "parent-session"
+    finally:
+        set_agent_session_id(original)

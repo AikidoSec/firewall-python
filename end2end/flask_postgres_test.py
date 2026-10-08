@@ -2,7 +2,7 @@ import time
 import pytest
 import json
 import requests
-from .server.check_events_from_mock import fetch_events_from_mock, validate_started_event, filter_on_event_type, \
+from .server.check_events_from_mock import fetch_events_from_mock, fetch_agent_headers_from_mock, validate_started_event, filter_on_event_type, \
     clear_events_from_mock
 
 # e2e tests for flask_postgres sample app
@@ -144,3 +144,23 @@ def test_track_sends_no_event_without_firewall():
     time.sleep(5)  # Wait, in case an event would be reported
     events = fetch_events_from_mock("http://localhost:5000")
     assert filter_on_event_type(events, "custom") == []
+
+
+def test_events_carry_the_agent_headers():
+    clear_events_from_mock("http://localhost:5000")
+    res = requests.get(track_url_fw, headers={"User-Agent": "e2e-test"})
+    assert res.status_code == 200
+
+    time.sleep(5)  # Wait for the event to be reported
+    agent_headers = fetch_agent_headers_from_mock("http://localhost:5000")
+
+    assert len(agent_headers) > 0
+    for headers in agent_headers:
+        assert headers["x-agent-platform"] == "python"
+        assert headers["x-agent-version"] == "1.0-REPLACE-VERSION"
+        assert headers["x-agent-hostname"]
+        assert headers["x-agent-ip-address"]
+
+    session_ids = {headers["x-agent-session-id"] for headers in agent_headers}
+    assert len(session_ids) == 1
+    assert session_ids.pop()
