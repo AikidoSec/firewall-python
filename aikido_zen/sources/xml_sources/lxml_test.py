@@ -68,9 +68,12 @@ def test_parse_xml_with_set_context():
     context = get_current_context()
     assert context.xml == {
         "attr": {"chill"},
+        "name": {"Test Name"},
+        "ok": {"boomer"},
         "smth": {"2"},
         "smthelse": {"2"},
-        "test": {"test1"},
+        "test": {"test1", "test2"},
+        "value": {"42"},
     }
 
 
@@ -84,7 +87,10 @@ def test_parse_xml_bytes_with_set_context():
     context = get_current_context()
     assert context.xml == {
         "attr": {"chill"},
+        "name": {"Test Name"},
+        "ok": {"boomer"},
         "smth": {"2"},
         "smthelse": {"2"},
-        "test": {"test1"},
+        "test": {"test1", "test2"},
+        "value": {"42"},
     }
