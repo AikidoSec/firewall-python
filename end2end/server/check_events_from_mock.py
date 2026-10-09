@@ -3,9 +3,10 @@ import requests
 import json
 import time
 
-def fetch_events_from_mock(url):
+def fetch_events_from_mock(url, include_headers=False):
     mock_events_url = f"{url}/mock/events"
-    res = requests.get(mock_events_url, timeout=5)
+    params = {"includeHeaders": "true"} if include_headers else None
+    res = requests.get(mock_events_url, params=params, timeout=5)
     json_events = json.loads(res.content.decode("utf-8"))
     return json_events
 

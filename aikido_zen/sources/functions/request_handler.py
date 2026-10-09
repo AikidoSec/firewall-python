@@ -1,7 +1,7 @@
 """Exports request_handler function"""
 
 import aikido_zen.context as ctx
-from aikido_zen.api_discovery.update_route_info import update_route_info_from_context
+from aikido_zen.api_discovery.get_api_info import get_api_info
 from aikido_zen.helpers.is_useful_route import is_useful_route
 from aikido_zen.helpers.logging import logger
 from aikido_zen.helpers.create_attack_wave_event import create_attack_wave_event
@@ -12,6 +12,8 @@ from ...background_process.commands import PutEventCommand
 from ...helpers.ipc.send_payload import send_payload
 from ...helpers.serialize_to_json import serialize_to_json
 from ...storage.attack_wave_detector_store import attack_wave_detector_store
+
+ANALYSIS_ON_FIRST_X_ROUTES = 20
 
 
 def request_handler(stage, status_code=0):
@@ -106,7 +108,7 @@ def post_response(status_code):
     if cache.is_bypassed_ip(context.remote_address):
         return
 
-    attack_wave = attack_wave_detector_store.is_attack_wave(context)
+    attack_wave = attack_wave_detector_store.is_attack_wave(context, status_code)
     if attack_wave:
         cache.stats.on_detected_attack_wave(blocked=False)
 
@@ -128,4 +130,7 @@ def post_response(status_code):
 
         # api spec generation
         route = cache.routes.get(route_metadata)
-        update_route_info_from_context(context, route)
+        if route["hits"] <= ANALYSIS_ON_FIRST_X_ROUTES:
+            cache.routes.update_route_with_apispec(
+                route_metadata, get_api_info(context)
+            )

@@ -8,6 +8,7 @@ from aikido_zen.storage.hostnames import Hostnames
 from aikido_zen.ratelimiting.rate_limiter import RateLimiter
 from aikido_zen.storage.statistics import Statistics
 from . import CloudConnectionManager
+import aikido_zen.test_utils as test_utils
 
 
 @pytest.fixture
@@ -17,6 +18,27 @@ def setup_cloud_connection_manager():
     token = Token("AIK_TOKEN_TEST")  # Mock or create an instance of Token
     serverless = "some_value"  # Valid serverless value
     return CloudConnectionManager(block, api, token, serverless)
+
+
+def test_report_api_event_only_adds_the_agent(setup_cloud_connection_manager):
+    manager = setup_cloud_connection_manager
+    manager.api.report = MagicMock(return_value={"success": True})
+
+    manager.report_api_event({"type": "detected_attack", "time": 111})
+
+    payload = manager.api.report.call_args[0][1]
+    assert payload["time"] == 111
+    assert "agent" in payload
+
+
+def test_send_heartbeat_sets_the_time(setup_cloud_connection_manager):
+    manager = setup_cloud_connection_manager
+    manager.report_api_event = MagicMock(return_value={"success": True})
+
+    with test_utils.patch_time(time_ms=111):
+        manager.send_heartbeat()
+
+    assert manager.report_api_event.call_args[0][0]["time"] == 111
 
 
 def test_cloud_connection_manager_initialization(setup_cloud_connection_manager):

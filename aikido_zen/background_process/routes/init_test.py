@@ -106,6 +106,30 @@ def test_increment_route_twice():
     assert routes.routes["GET:/api/resource"]["hits"] == 2
 
 
+def test_reset_sampling_preserves_route_added_during_iteration():
+    routes = Routes()
+    for path in ("/first", "/second"):
+        routes.increment_route(gen_route_metadata(route=path))
+
+    class RouteWithNewRequestOnReset(dict):
+        def __setitem__(self, key, value):
+            super().__setitem__(key, value)
+            if key == "hits" and value == 0:
+                routes.increment_route(gen_route_metadata(route="/new"))
+
+    routes.routes["GET:/first"] = RouteWithNewRequestOnReset(
+        routes.routes["GET:/first"]
+    )
+    routes.reset_sampling()
+
+    for path in ("/first", "/second"):
+        route = routes.get(gen_route_metadata(route=path))
+        assert route["hits"] == 0
+        assert route["hits_delta_since_sync"] == 1
+    new_route = routes.get(gen_route_metadata(route="/new"))
+    assert new_route["hits"] == new_route["hits_delta_since_sync"] == 1
+
+
 def test_clear_routes():
     routes = Routes(max_size=3)
     routes.initialize_route(gen_route_metadata(route="/api/resource"))

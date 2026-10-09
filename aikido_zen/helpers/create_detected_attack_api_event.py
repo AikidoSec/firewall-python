@@ -1,5 +1,6 @@
 import json
 
+from aikido_zen.helpers.get_current_unixtime_ms import get_unixtime_ms
 from aikido_zen.helpers.limit_length_metadata import limit_length_metadata
 from aikido_zen.helpers.logging import logger
 
@@ -17,6 +18,7 @@ def create_detected_attack_api_event(attack, context, blocked, stack):
                 "stack": stack,
             },
             "request": extract_request_if_possible(context),
+            "time": get_unixtime_ms(),
         }
     except Exception as e:
         logger.error("Failed to create detected_attack API event: %s", str(e))

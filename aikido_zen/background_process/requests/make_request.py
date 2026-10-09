@@ -4,6 +4,9 @@ import socket
 import urllib.request
 import urllib.error
 
+from aikido_zen.background_process.get_common_agent_headers import (
+    get_common_agent_headers,
+)
 from aikido_zen.background_process.requests.errors import TimeoutExceeded
 
 
@@ -11,9 +14,8 @@ def make_request(method, url, timeout, data=None, headers=None):
     req = urllib.request.Request(url, data=data, method=method)
 
     # Add headers
-    if headers:
-        for key, value in headers.items():
-            req.add_header(key, value)
+    for key, value in {**get_common_agent_headers(), **(headers or {})}.items():
+        req.add_header(key, value)
     try:
         with urllib.request.urlopen(req, timeout=timeout) as response:
             return Response(response)

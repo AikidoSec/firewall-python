@@ -11,6 +11,7 @@ import sys
 from aikido_zen.helpers.token import get_token_from_env
 from aikido_zen.helpers.get_temp_dir import get_temp_dir
 from aikido_zen.helpers.hash_aikido_token import hash_aikido_token
+from aikido_zen.helpers.get_agent_session_id import get_agent_session_id
 from aikido_zen.helpers.logging import logger
 
 from aikido_zen.background_process.comms import (
@@ -23,22 +24,19 @@ from .aikido_background_process import AikidoBackgroundProcess
 
 def get_process_factory():
     """
-    Return a process factory that is safe to start while an app is importing.
+    Choose how Zen's background process starts:
+    - Use the application's configured method, or Python's default if unset.
+    - Use fork instead of forkserver to avoid startup errors caused by
+      re-importing the app and calling protect() again.
+    - Always use fork under uWSGI; its executable cannot run Python subprocesses.
 
-    Python 3.14 changed the default POSIX start method from fork to forkserver.
-    Forkserver re-imports the application's main module, but Zen starts its
-    background process while that module is still importing.
-
-    Inspect the configured start method without setting multiprocessing's
-    process-wide default. If it is unset, get_all_start_methods() reports the
-    platform default as its first entry.
+    The application's own start method is unchanged.
     """
-    if sys.version_info >= (3, 14):
-        start_method = multiprocessing.get_start_method(allow_none=True)
-        if start_method is None:
-            start_method = multiprocessing.get_all_start_methods()[0]
-        if start_method == "forkserver":
-            return multiprocessing.get_context("fork").Process
+    start_method = multiprocessing.get_start_method(allow_none=True)
+    if start_method is None:
+        start_method = multiprocessing.get_all_start_methods()[0]
+    if start_method == "forkserver" or "uwsgi" in sys.modules:
+        return multiprocessing.get_context("fork").Process
     return multiprocessing.Process
 
 
@@ -74,7 +72,7 @@ def start_background_process():
     #  Daemon is set to True so that the process kills itself when the main process dies
     background_process = get_process_factory()(
         target=AikidoBackgroundProcess,
-        args=(comms.address, comms.key),
+        args=(comms.address, comms.key, get_agent_session_id()),
         name="zen-agent-process",
         daemon=True,
     )

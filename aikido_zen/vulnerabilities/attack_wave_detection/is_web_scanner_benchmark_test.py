@@ -32,11 +32,11 @@ def test_performance():
     iterations = 25_000
     start = time.perf_counter_ns()
     for _ in range(iterations):
-        is_web_scanner(get_test_context("/wp-config.php", "GET", {"test": "1"}))
+        is_web_scanner(get_test_context("/wp-config.php", "GET", {"test": "1"}), 404)
         is_web_scanner(
             get_test_context("/vulnerable", "GET", {"test": "1'; DROP TABLE users; --"})
         )
-        is_web_scanner(get_test_context("/", "GET", {"test": "1"}))
+        is_web_scanner(get_test_context("/", "GET", {"test": "1"}), 404)
     end = time.perf_counter_ns()
 
     total_time_ms = (end - start) / 1_000_000

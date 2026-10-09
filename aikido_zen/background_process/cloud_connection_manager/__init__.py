@@ -11,7 +11,6 @@ from aikido_zen.storage.users import Users
 from aikido_zen.storage.hostnames import Hostnames
 from ..realtime.start_polling_for_changes import start_polling_for_changes
 from ..realtime.listen_for_config_updates import listen_for_config_updates
-from ...helpers.get_current_unixtime_ms import get_unixtime_ms
 from ...storage.ai_statistics import AIStatistics
 from ...storage.firewall_lists import FirewallLists
 from ...storage.statistics import Statistics
@@ -27,7 +26,7 @@ from .send_heartbeat import send_heartbeat
 class CloudConnectionManager:
     """CloudConnectionManager class"""
 
-    timeout_in_sec = 5  # Timeout of API calls to Aikido Server
+    timeout_in_sec = 30  # Timeout of API calls to Aikido Server
     heartbeat_secs = 600  # Heartbeat every 10 minutes
 
     def __init__(self, block, api, token, serverless):
@@ -88,10 +87,7 @@ class CloudConnectionManager:
         if not self.token:
             return {"success": False, "error": "invalid_token"}
         try:
-            payload = {
-                "time": get_unixtime_ms(),
-                "agent": get_manager_info(self),
-            }
+            payload = {"agent": get_manager_info(self)}
             payload.update(event)  # Merge default fields with event fields
 
             result = self.api.report(self.token, payload, self.timeout_in_sec)

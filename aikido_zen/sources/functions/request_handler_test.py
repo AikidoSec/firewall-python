@@ -952,7 +952,7 @@ def test_attack_wave_samples_structure(firewall_lists):
     ):
         for i in range(15):
             context = get_current_context()
-            detector.is_attack_wave(context)
+            detector.is_attack_wave(context, 404)
 
     # Get the samples that were stored for this IP
     samples = detector.get_samples_for_ip("11.11.11.11")
