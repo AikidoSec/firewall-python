@@ -17,8 +17,9 @@ from aikido_zen.background_process.cloud_connection_manager.get_manager_info imp
 
 
 @pytest.fixture(autouse=True)
-def reset_cached_ip_address():
+def reset_cached_instance_values():
     get_ip.cache_clear()
+    get_hostname.cache_clear()
 
 
 def test_common_agent_headers(monkeypatch):
@@ -26,6 +27,7 @@ def test_common_agent_headers(monkeypatch):
 
     assert get_common_agent_headers() == {
         "X-Agent-Platform": "python",
+        "X-Agent-Library": config.LIBRARY_NAME,
         "X-Agent-Version": config.PKG_VERSION,
         "X-Agent-Hostname": get_hostname() or "unknown",
         "X-Agent-IP-Address": "10.0.0.1",
@@ -50,6 +52,12 @@ def test_hostname_and_ip_match_the_event_payload(monkeypatch):
     assert headers["X-Agent-IP-Address"] == manager_info["ipAddress"]
 
 
+def test_hostname_that_cannot_be_a_header_is_unknown(monkeypatch):
+    monkeypatch.setattr(socket, "gethostname", lambda: "p\u0101yments")
+
+    assert get_common_agent_headers()["X-Agent-Hostname"] == "unknown"
+
+
 def test_missing_hostname_is_unknown(monkeypatch):
     monkeypatch.setattr(socket, "gethostname", lambda: "")
 
@@ -57,6 +65,13 @@ def test_missing_hostname_is_unknown(monkeypatch):
 
 
 def test_unresolved_ip_address_is_unknown(monkeypatch):
-    monkeypatch.setattr(headers_module, "get_ip", lambda: "x.x.x.x")
+    monkeypatch.setattr(headers_module, "get_ip", lambda: "")
 
     assert get_common_agent_headers()["X-Agent-IP-Address"] == "unknown"
+
+
+def test_library_matches_the_event_payload():
+    assert (
+        get_common_agent_headers()["X-Agent-Library"]
+        == get_manager_info(MagicMock())["library"]
+    )

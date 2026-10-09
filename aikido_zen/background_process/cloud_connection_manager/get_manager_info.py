@@ -14,7 +14,7 @@ def get_manager_info(connection_manager):
         "dryMode": not connection_manager.block,
         "hostname": get_hostname(),
         "version": config.PKG_VERSION,
-        "library": "firewall-python",
+        "library": config.LIBRARY_NAME,
         "ipAddress": h.get_ip(),
         "serverless": bool(connection_manager.serverless),
         "stack": (
