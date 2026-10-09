@@ -3,8 +3,6 @@ from aikido_zen.helpers.get_agent_session_id import get_agent_session_id
 from aikido_zen.helpers.get_hostname import get_hostname
 from aikido_zen.helpers.get_machine_ip import get_ip
 
-_UNKNOWN = "unknown"
-
 
 def get_common_agent_headers():
     return {
@@ -22,5 +20,5 @@ def _header_value(value):
     try:
         value.encode("latin-1")
     except UnicodeEncodeError:
-        return _UNKNOWN
-    return value or _UNKNOWN
+        return "unknown"
+    return value or "unknown"
