@@ -11,12 +11,11 @@ from aikido_zen.background_process.requests.errors import TimeoutExceeded
 
 
 def make_request(method, url, timeout, data=None, headers=None):
-    req = urllib.request.Request(
-        url,
-        data=data,
-        method=method,
-        headers={**get_common_agent_headers(), **(headers or {})},
-    )
+    req = urllib.request.Request(url, data=data, method=method)
+
+    # Add headers
+    for key, value in {**get_common_agent_headers(), **(headers or {})}.items():
+        req.add_header(key, value)
     try:
         with urllib.request.urlopen(req, timeout=timeout) as response:
             return Response(response)
