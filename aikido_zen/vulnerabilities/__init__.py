@@ -11,6 +11,7 @@ from aikido_zen.errors import (
     AikidoShellInjection,
     AikidoPathTraversal,
     AikidoSSRF,
+    AikidoAIToolCallBlocked,
 )
 import aikido_zen.background_process.comms as comm
 from aikido_zen.helpers.logging import logger
@@ -29,6 +30,9 @@ from .shell_injection.check_context_for_shell_injection import (
 from .path_traversal.check_context_for_path_traversal import (
     check_context_for_path_traversal,
 )
+from .ai_tool_call.check_ai_response_for_blocked_tool_call import (
+    check_ai_response_for_blocked_tool_call,
+)
 from ..background_process.commands import PutEventCommand
 from ..helpers.create_detected_attack_api_event import create_detected_attack_api_event
 from ..helpers.ipc.send_payload import send_payload
@@ -44,14 +48,17 @@ def run_vulnerability_scan(kind, op, args):
     if is_protection_forced_off_cached(context):
         return
 
+    # SSRF and AI tool calls can be inspected without request context / thread cache.
+    kinds_without_context = ("ssrf", "ai_tool_call")
+
     comms = comm.get_comms()
     thread_cache = get_cache()
-    if not context and kind != "ssrf":
+    if not context and kind not in kinds_without_context:
         # Make a special exception for SSRF, which checks itself if context is set.
         # This is because some scans/tests for SSRF do not require a context to be set.
         return
 
-    if not thread_cache and kind != "ssrf":
+    if not thread_cache and kind not in kinds_without_context:
         # Make a special exception for SSRF, which checks itself if thread cache is set.
         # This is because some scans/tests for SSRF do not require a thread cache to be set.
         return
@@ -89,6 +96,14 @@ def run_vulnerability_scan(kind, op, args):
             dns_results, hostname, port = args
             injection_results = inspect_getaddrinfo_result(dns_results, hostname, port)
             error_type = AikidoSSRF
+        elif kind == "ai_tool_call":
+            injection_results = check_ai_response_for_blocked_tool_call(
+                response=args[0], operation=op
+            )
+            error_type = AikidoAIToolCallBlocked
+            if injection_results:
+                metadata = injection_results.get("metadata") or {}
+                error_args = (metadata.get("tool", "unknown"), metadata.get("pattern"))
         else:
             logger.error(
                 "Vulnerability type %s currently has no scans implemented", kind
@@ -99,7 +114,8 @@ def run_vulnerability_scan(kind, op, args):
     if injection_results:
         blocked = is_blocking_enabled()
         operation = injection_results["operation"]
-        thread_cache.stats.on_detected_attack(blocked, operation)
+        if thread_cache:
+            thread_cache.stats.on_detected_attack(blocked, operation)
 
         stack = get_clean_stacktrace()
 

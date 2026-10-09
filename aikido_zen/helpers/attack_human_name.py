@@ -13,4 +13,6 @@ def attack_human_name(kind):
         return "a path traversal attack"
     if kind == "ssrf":
         return "a server-side request forgery"
+    if kind == "ai_tool_call":
+        return "a dangerous AI tool call"
     return "unknown"
