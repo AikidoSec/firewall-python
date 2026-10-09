@@ -27,7 +27,7 @@ def test_get_ip_failure(monkeypatch):
         lambda hostname: (_ for _ in ()).throw(Exception("Mocked exception")),
     )
 
-    assert get_ip() == "x.x.x.x"
+    assert get_ip() == ""
 
 
 def test_get_ip_is_resolved_once(monkeypatch):
@@ -53,5 +53,5 @@ def test_get_ip_resolves_a_failure_once(monkeypatch):
         or (_ for _ in ()).throw(Exception("Mocked exception")),
     )
 
-    assert get_ip() == get_ip() == "x.x.x.x"
+    assert get_ip() == get_ip() == ""
     assert len(calls) == 1

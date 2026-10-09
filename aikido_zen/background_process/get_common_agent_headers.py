@@ -4,15 +4,23 @@ from aikido_zen.helpers.get_hostname import get_hostname
 from aikido_zen.helpers.get_machine_ip import get_ip
 
 _UNKNOWN = "unknown"
-_UNRESOLVED_IP = "x.x.x.x"  # What get_ip returns when it cannot resolve the address.
 
 
 def get_common_agent_headers():
-    ip_address = get_ip()
     return {
         "X-Agent-Platform": "python",
+        "X-Agent-Library": config.LIBRARY_NAME,
         "X-Agent-Version": config.PKG_VERSION,
-        "X-Agent-Hostname": get_hostname() or _UNKNOWN,
-        "X-Agent-IP-Address": _UNKNOWN if ip_address == _UNRESOLVED_IP else ip_address,
+        "X-Agent-Hostname": _header_value(get_hostname()),
+        "X-Agent-IP-Address": _header_value(get_ip()),
         "X-Agent-Session-Id": get_agent_session_id(),
     }
+
+
+def _header_value(value):
+    # Header values are latin-1, and one that cannot be encoded fails the request.
+    try:
+        value.encode("latin-1")
+    except UnicodeEncodeError:
+        return _UNKNOWN
+    return value or _UNKNOWN
