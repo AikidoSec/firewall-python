@@ -69,6 +69,7 @@ def should_block_request():
                     "type": "ratelimited",
                     "trigger": ratelimit_res["data"]["trigger"],
                     "ip": context.remote_address,
+                    "retry_after_seconds": ratelimit_res["data"]["retry_after_seconds"],
                 }
     except Exception as e:
         logger.debug("Exception occurred in should_block_request: %s", e)
