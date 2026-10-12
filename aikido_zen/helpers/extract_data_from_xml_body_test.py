@@ -166,6 +166,26 @@ def test_extract_data_from_xml_body_invalid_root_element(mock_context, root_elem
         assert mock_context.xml == {}
 
 
+def test_extract_data_from_xml_body_text_after_a_comment(mock_context):
+    with patch("aikido_zen.context.get_current_context", return_value=mock_context):
+        parser = ET.XMLParser(target=ET.TreeBuilder(insert_comments=True))
+        root_element = ET.fromstring("<root><a>bob<!-- -->after</a></root>", parser)
+
+        extract_data_from_xml_body("valid_input", root_element)
+
+        assert mock_context.xml == {"a": {"bob", "after"}}
+
+
+def test_extract_data_from_xml_body_text_after_a_processing_instruction(mock_context):
+    with patch("aikido_zen.context.get_current_context", return_value=mock_context):
+        parser = ET.XMLParser(target=ET.TreeBuilder(insert_pis=True))
+        root_element = ET.fromstring("<root><a>bob<?pi data?>after</a></root>", parser)
+
+        extract_data_from_xml_body("valid_input", root_element)
+
+        assert mock_context.xml == {"a": {"bob", "after"}}
+
+
 def test_extract_data_from_xml_body_comments_and_processing_instructions(mock_context):
     with patch("aikido_zen.context.get_current_context", return_value=mock_context):
         parser = ET.XMLParser(
