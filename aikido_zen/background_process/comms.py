@@ -66,15 +66,15 @@ class AikidoIPCCommunications:
         def target(address, key, receive, data, result_obj):
             try:
                 # Create a connection, this can get stuck :
-                conn = con.Client(address, authkey=None)
-
-                # Send/Receive data :
-                conn.send(data)
-                if receive:
-                    result_obj[1] = conn.recv()
-                # Close the connection :
-                conn.close()
-                result_obj[0] = True  #  Connection ended gracefully
+                with con.Client(address, authkey=None) as conn:
+                    # Send/Receive data :
+                    conn.send(data)
+                    if receive:
+                        # Without this the thread is stranded when no answer comes.
+                        if not conn.poll(timeout_in_sec):
+                            return
+                        result_obj[1] = conn.recv()
+                    result_obj[0] = True  #  Connection ended gracefully
             except Exception as e:
                 logger.debug("Exception occurred in thread : %s", e)
 
@@ -83,10 +83,10 @@ class AikidoIPCCommunications:
         t = Thread(
             target=target,
             args=(self.address, self.key, receive, (action, obj), result_obj),
-            daemon=True,  #  This allows us to join and set a timeout after which the thread closes
+            daemon=True,  #  So an unfinished call never holds up interpreter exit
         )
 
-        # Start and join the thread for 100ms, afterwards the thread is forced to close (daemon=True)
+        # Joining with a timeout only stops us waiting, it does not end the thread.
         t.start()
         t.join(timeout=timeout_in_sec)
         if not result_obj[0]:
