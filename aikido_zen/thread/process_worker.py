@@ -7,7 +7,7 @@ from aikido_zen.thread import thread_cache
 # Renew the cache from this background worker every 15 seconds
 RENEW_CACHE_EVERY_X_SEC = 15
 INITIAL_CONFIG_RETRY_SECONDS = 1
-INITIAL_CONFIG_RETRY_WINDOW_SECONDS = 15
+INITIAL_CONFIG_RETRY_WINDOW_SECONDS = 60
 
 
 def aikido_process_worker_thread():
