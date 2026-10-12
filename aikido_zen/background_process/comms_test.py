@@ -256,3 +256,19 @@ def test_a_send_that_fails_does_not_hold_up_the_next_event(monkeypatch):
 
     assert wait_for(lambda: len(attempts) == 10)
     assert comms._sender.events.empty()
+
+
+def test_a_stalled_socket_drops_events_instead_of_growing_the_queue(monkeypatch):
+    release = threading.Event()
+    comms, _ = collecting_comms(monkeypatch, release=release)
+    try:
+        overflow = comms_module.EVENT_QUEUE_MAX_SIZE + 50
+        results = [
+            comms.send_data_to_bg_process("put_event", {"n": n})
+            for n in range(overflow)
+        ]
+
+        assert results[-1] == {"success": False, "error": "queue_full"}
+        assert comms._sender.events.qsize() <= comms_module.EVENT_QUEUE_MAX_SIZE
+    finally:
+        release.set()

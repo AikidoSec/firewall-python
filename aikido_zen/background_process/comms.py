@@ -6,7 +6,7 @@ Exports the AikidoIPCCommunications class
 import multiprocessing.connection as con
 import os
 from collections import namedtuple
-from queue import Queue
+from queue import Full, Queue
 from threading import Lock, Thread
 from aikido_zen.helpers.logging import logger
 
@@ -14,6 +14,9 @@ from aikido_zen.helpers.logging import logger
 Sender = namedtuple("Sender", ["pid", "events"])
 
 SENDER_THREAD_NAME = "aikido-ipc-sender"
+
+# Ten times the 100 events per hour the background process reports.
+EVENT_QUEUE_MAX_SIZE = 1000
 
 # pylint: disable=invalid-name # This variable does change
 comms = None
@@ -69,7 +72,7 @@ class AikidoIPCCommunications:
         Callers hold the sender lock, so a second thread cannot start a second
         sender and leave it waiting on a queue that nothing writes to.
         """
-        sender = Sender(os.getpid(), Queue())
+        sender = Sender(os.getpid(), Queue(maxsize=EVENT_QUEUE_MAX_SIZE))
         Thread(
             target=self._send_queued_events,
             args=(sender.events,),
@@ -112,7 +115,10 @@ class AikidoIPCCommunications:
         if sender is None or sender.pid != os.getpid():
             sender = self._start_sender()
 
-        sender.events.put_nowait((action, obj))
+        try:
+            sender.events.put_nowait((action, obj))
+        except Full:
+            return {"success": False, "error": "queue_full"}
         return {"success": True, "data": None}
 
     def _send_and_wait_for_reply(self, action, obj, timeout_in_sec):
