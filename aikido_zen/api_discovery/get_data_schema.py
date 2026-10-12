@@ -65,4 +65,5 @@ def normalize_python_types(type_name):
         return "number"
     if type_name == "bool":
         return "boolean"
-    return type_name
+    # The values behind any other type name are text.
+    return "string"
