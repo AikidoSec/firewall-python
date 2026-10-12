@@ -17,9 +17,9 @@ class AikidoException(Exception):
 
     def __init__(self, message=None):
         if isinstance(message, str):
-            super().__init__(self, message)
+            super().__init__(message)
         else:
-            super().__init__(self, generate_default_message(self.kind))
+            super().__init__(generate_default_message(self.kind))
 
 
 class AikidoSQLInjection(AikidoException):

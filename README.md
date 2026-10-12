@@ -66,6 +66,36 @@ Zen instruments the following AI SDKs to track which models are used and how man
 
 Zen is compatible with Python 3.8-3.14 and can run on Windows, Linux, and Mac OS X.
 
+## Installation
+
+We recommend testing Zen locally or on staging before deploying to production.
+
+```sh
+pip install aikido_zen
+# or
+poetry add aikido_zen
+# or
+uv add aikido_zen
+```
+
+For framework-specific instructions, check out our docs:
+
+- [Django](docs/django.md)
+- [Flask](docs/flask.md)
+- [Gunicorn](docs/gunicorn.md)
+- [Quart](docs/quart.md)
+- [Starlette](docs/starlette.md)
+- [FastAPI](docs/fastapi.md)
+
+## Guides
+
+- [Troubleshooting](docs/troubleshooting.md) — common issues and how to debug Zen
+- [Set the current user](docs/user.md) — identify users for rate limiting, blocking, and attack reports
+- [Track custom events](docs/track.md) — trigger events that Playbooks can act on
+- [Proxy / IP headers](docs/proxy.md) — configure client IP detection behind load balancers
+- [Logging](docs/logging.md) — enable debug logging
+- [Background process](docs/background_process.md) — how Zen's background process communicates over IPC
+
 ## Reporting to your Aikido Security dashboard
 
 > Aikido is your no nonsense application security platform. One central system that scans your source code & cloud, shows you what vulnerabilities matter, and how to fix them - fast. So you can get back to building.
@@ -100,14 +130,22 @@ See [Reporting to Aikido](#reporting-to-your-aikido-security-dashboard) to learn
 
 [Configure Zen using environment variables for authentication, mode settings, debugging, and more.](https://help.aikido.dev/doc/configuration-via-env-vars/docrSItUkeR9)
 
-## Benchmarks 
-The following table summarizes the performance of both a typical SQL Query and a typical NoSQL Query with and without the Zen, measured in milliseconds :
-| Operation | Avg. time w/o Zen | Avg. time w/ Zen | Delta | Delta in % |
-| --------- | ---------------------- | --------------------- | ----- | ---------- |
-| SQL Query | 1.222 ms | 1.257 ms | +0.035 ms | +3% |
-| NoSQL Query | 1.090 ms | 1.110 ms | +0.020 ms | +2% |
+## License
 
-See [benchmarks](benchmarks/) folder for more.
+This program is offered under a commercial and under the AGPL license.
+You can be released from the requirements of the AGPL license by purchasing
+a commercial license. Buying such a license is mandatory as soon as you
+develop commercial activities involving the Zen software without
+disclosing the source code of your own applications.
+
+For more information, please contact Aikido Security at this
+address: support@aikido.dev or create an account at https://app.aikido.dev.
+
+## Benchmarks
+
+We run a benchmark on every commit to ensure Zen has a minimal impact on your application's performance.
+
+See [benchmarks](benchmarks/)
 
 ## Bug bounty program
 

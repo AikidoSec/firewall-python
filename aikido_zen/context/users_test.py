@@ -117,7 +117,6 @@ def test_set_valid_user():
     assert context1.user == {
         "id": "456",
         "name": "Bob",
-        "lastIpAddress": "198.51.100.23",
     }
 
     assert len(get_cache().users.as_array()) == 1
@@ -137,7 +136,6 @@ def test_set_valid_user_without_name():
 
     assert context1.user == {
         "id": "456",
-        "lastIpAddress": "198.51.100.23",
     }
 
     assert len(get_cache().users.as_array()) == 1
@@ -158,7 +156,6 @@ def test_re_set_valid_user():
     assert context1.user == {
         "id": "456",
         "name": "Bob",
-        "lastIpAddress": "198.51.100.23",
     }
     assert len(get_cache().users.as_array()) == 1
     user_1 = get_cache().users.as_array()[0]
@@ -173,7 +170,6 @@ def test_re_set_valid_user():
     assert context1.user == {
         "id": "1000",
         "name": "Alice",
-        "lastIpAddress": "198.51.100.23",
     }
 
     assert len(get_cache().users.as_array()) == 2
@@ -197,7 +193,6 @@ def test_after_middleware(caplog):
     assert context1.user == {
         "id": "456",
         "name": "Bob",
-        "lastIpAddress": "198.51.100.23",
     }
 
 
@@ -211,7 +206,6 @@ def test_set_valid_user_twice():
     assert context1.user == {
         "id": "456",
         "name": "Bob",
-        "lastIpAddress": "198.51.100.23",
     }
     assert len(get_cache().users.as_array()) == 1
     first_seen_at = int(get_cache().users.as_array()[0]["firstSeenAt"])

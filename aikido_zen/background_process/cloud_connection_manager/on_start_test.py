@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import MagicMock, patch
 from .on_start import on_start
+import aikido_zen.test_utils as test_utils
 
 
 @pytest.fixture
@@ -20,6 +21,14 @@ def test_on_start_no_token():
     connection_manager.token = None
     on_start(connection_manager)
     connection_manager.report_api_event.assert_called()
+
+
+def test_on_start_sets_the_time(mock_connection_manager):
+    """Test that the event carries the time it was built"""
+    with test_utils.patch_time(time_ms=111):
+        on_start(mock_connection_manager)
+
+    assert mock_connection_manager.report_api_event.call_args[0][0]["time"] == 111
 
 
 def test_on_start_success(mock_connection_manager, caplog):

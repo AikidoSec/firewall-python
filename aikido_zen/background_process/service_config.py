@@ -22,6 +22,7 @@ class ServiceConfig:
         self.update(
             endpoints, last_updated_at, blocked_uids, bypassed_ips, received_any_stats
         )
+        self.revision = 0
         self.block_new_outgoing_requests = False
         self.outbound_domains = {}
         self.excluded_user_ids_from_rate_limiting = set()

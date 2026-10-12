@@ -1,10 +1,12 @@
 import platform
 import requests
 import json
+import time
 
-def fetch_events_from_mock(url):
+def fetch_events_from_mock(url, include_headers=False):
     mock_events_url = f"{url}/mock/events"
-    res = requests.get(mock_events_url, timeout=5)
+    params = {"includeHeaders": "true"} if include_headers else None
+    res = requests.get(mock_events_url, params=params, timeout=5)
     json_events = json.loads(res.content.decode("utf-8"))
     return json_events
 
@@ -16,6 +18,20 @@ def clear_events_from_mock(url):
 
 def filter_on_event_type(events, type):
     return [event for event in events if event["type"] == type]
+
+
+def wait_for_heartbeats(url, check, timeout=180):
+    deadline = time.monotonic() + timeout
+    while True:
+        events = fetch_events_from_mock(url)
+        try:
+            check(filter_on_event_type(events, "heartbeat"))
+            return
+        except AssertionError:
+            if time.monotonic() >= deadline:
+                raise
+        time.sleep(1)
+
 
 def validate_started_event(event, stack, dry_mode=False, serverless=False, os_name=platform.system(), platform_name="CPython"):
     assert event["agent"]["dryMode"] == dry_mode
