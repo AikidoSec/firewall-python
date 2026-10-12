@@ -76,6 +76,10 @@ async def benchmark_route(request: Request):
 def sync_route(request):
     data = {"message": "This is a non-async route!"}
     return JSONResponse(data)
+
+async def track_event(request: Request):
+    aikido_zen.track("user.login_failed")
+    return JSONResponse({"message": "Event tracked"})
 middleware = []
 if dont_add_middleware is None or dont_add_middleware.lower() != "1":
     # Use DONT_ADD_MIDDLEWARE so we don't add this middleware during e.g. benchmarks.
@@ -100,7 +104,8 @@ routes = [
     Route("/create", create_dog, methods=["POST"]),
     Route("/create_dog_from_headers", create_dog_from_headers, methods=["GET"]),
     Route("/sync_route", sync_route),
-    Route("/benchmark", benchmark_route, methods=["GET"])
+    Route("/benchmark", benchmark_route, methods=["GET"]),
+    Route("/track_event", track_event, methods=["GET"])
 ]
 if len(middleware) != 0:
     app = Starlette(routes=routes, middleware=middleware)

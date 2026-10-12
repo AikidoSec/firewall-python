@@ -1,5 +1,6 @@
 import pytest
 import socket
+from aikido_zen.helpers.get_hostname import get_hostname
 from unittest.mock import MagicMock, patch
 from .get_manager_info import get_manager_info
 
@@ -22,6 +23,7 @@ def mock_connection_manager():
 # Fixture to patch socket.gethostname
 @pytest.fixture(autouse=True)
 def patch_gethostname(monkeypatch):
+    get_hostname.cache_clear()
     monkeypatch.setattr(socket, "gethostname", lambda: "test-hostname")
 
 

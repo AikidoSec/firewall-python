@@ -2,9 +2,7 @@
 Exports class Routes
 """
 
-from aikido_zen.helpers.logging import logger
-from aikido_zen.api_discovery.update_route_info import update_route_info
-from aikido_zen.api_discovery.get_api_info import get_api_info
+from aikido_zen.api_discovery.update_route_info import update_api_info
 from .route_to_key import route_to_key
 
 
@@ -53,7 +51,7 @@ class Routes:
         key = route_to_key(route_metadata)
         route = self.routes.get(key)
         if route:
-            update_route_info(apispec, route)
+            route["apispec"] = update_api_info(apispec, route["apispec"])
 
     def get(self, route_metadata):
         """Gets you the route entry if it exists using route metadata"""
@@ -68,6 +66,10 @@ class Routes:
                 continue  # do not add routes without a hit delta
             result[key] = route
         return result
+
+    def reset_sampling(self):
+        for route in list(self.routes.values()):
+            route["hits"] = 0
 
     def clear(self):
         """Deletes all routes"""

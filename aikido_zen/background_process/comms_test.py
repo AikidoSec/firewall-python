@@ -3,7 +3,16 @@ import time
 
 import pytest
 import aikido_zen.background_process.comms as comms_module
-from aikido_zen.background_process.comms import AikidoIPCCommunications
+from aikido_zen.background_process.comms import (
+    AikidoIPCCommunications,
+    reset_comms,
+)
+
+
+@pytest.fixture(autouse=True)
+def reset_comms_after_test():
+    yield
+    reset_comms()
 
 
 def test_comms_init():

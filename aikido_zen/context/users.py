@@ -27,7 +27,6 @@ def set_user(user):
             "set_user(...) must be called before the Zen middleware is executed."
         )
 
-    validated_user["lastIpAddress"] = context.remote_address
     context.user = validated_user
 
     # Send validated_user object to background process :
@@ -36,7 +35,7 @@ def set_user(user):
         cache.users.add_user(
             user_id=validated_user.get("id"),
             user_name=validated_user.get("name"),
-            user_ip=validated_user.get("lastIpAddress"),
+            user_ip=context.remote_address,
             current_time=t.get_unixtime_ms(),
         )
 

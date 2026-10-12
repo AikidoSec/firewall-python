@@ -8,6 +8,7 @@ from aikido_zen.background_process.test_uds_file_access import test_uds_file_acc
 
 # Re-export functions :
 from aikido_zen.context.users import set_user
+from aikido_zen.context.track import track
 from aikido_zen.helpers.check_gevent import check_gevent
 from aikido_zen.helpers.gil_not_enabled import gil_not_enabled
 from aikido_zen.helpers.python_version_not_supported import python_version_not_supported

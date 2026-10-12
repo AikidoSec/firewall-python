@@ -1,5 +1,13 @@
+from uwsgidecorators import postfork
 import aikido_zen # Aikido package import
-aikido_zen.protect()
+import aikido_zen.decorators.uwsgi as aik
+
+
+@postfork
+@aik.postfork
+def start_aikido():
+    pass
+
 
 import time
 from flask import Flask, render_template, request

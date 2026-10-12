@@ -1,7 +1,7 @@
 import time
 import pytest
 import requests
-from .server.check_events_from_mock import fetch_events_from_mock, validate_started_event, filter_on_event_type, validate_heartbeat
+from .server.check_events_from_mock import fetch_events_from_mock, validate_started_event, filter_on_event_type, wait_for_heartbeats
 
 # e2e tests for django_mysql sample app
 base_url_fw = "http://localhost:8080/app"
@@ -75,42 +75,43 @@ def test_dangerous_response_without_firewall():
     res = requests.post(base_url_nofw + "/create", data={'dog_name': dog_name})
     assert res.status_code == 200
 
-def test_initial_heartbeat():
-    time.sleep(55)  # Sleep 5 + 55 seconds for heartbeat
-    events = fetch_events_from_mock("http://localhost:5000")
-    heartbeat_events = filter_on_event_type(events, "heartbeat")
-    assert len(heartbeat_events) == 1
-    validate_heartbeat(
-        heartbeat_events[0],
-        routes=[{
-            "apispec": {
-                'body': {
-                    'type': 'form-urlencoded',
-                    'schema': {
-                        'type': 'object',
-                        'properties': {
-                            'dog_name': {
-                                'items': {'type': 'string'},
-                                'type': 'array'
-                            }
+def test_reported_heartbeat_data():
+    wait_for_heartbeats("http://localhost:5000", check_reported_heartbeat_data)
+
+
+def check_reported_heartbeat_data(heartbeat_events):
+    assert len(heartbeat_events) >= 1
+    routes = [route for heartbeat in heartbeat_events for route in heartbeat["routes"]]
+    assert routes == [{
+        "apispec": {
+            'body': {
+                'type': 'form-urlencoded',
+                'schema': {
+                    'type': 'object',
+                    'properties': {
+                        'dog_name': {
+                            'items': {'type': 'string'},
+                            'type': 'array'
                         }
                     }
-                },
-                'query': None,
-                'auth': None
+                }
             },
-            "hits": 1,
-            "hits_delta_since_sync": 0,
-            "method": "POST",
-            "path": "/app/create"
-        }],
-        packages={'wrapt', 'asgiref', 'aikido_zen', 'django', 'sqlparse', 'mysqlclient', 'regex'}
-    )
-    req_stats = heartbeat_events[0]["stats"]["requests"]
-    assert req_stats["aborted"] == 0
-    assert req_stats["rateLimited"] == 0
-    assert req_stats["attacksDetected"] == {"blocked": 2, "total": 2}
-    assert req_stats["attackWaves"] == {"total": 0, "blocked": 0}
+            'query': None,
+            'auth': None
+        },
+        "hits": 1,
+        "hits_delta_since_sync": 0,
+        "method": "POST",
+        "path": "/app/create"
+    }]
+    packages = {package["name"] for heartbeat in heartbeat_events for package in heartbeat["packages"]}
+    assert packages == {'wrapt', 'asgiref', 'aikido_zen', 'django', 'sqlparse', 'mysqlclient', 'regex'}
+    req_stats = [heartbeat["stats"]["requests"] for heartbeat in heartbeat_events]
+    assert all(stats["aborted"] == 0 for stats in req_stats)
+    assert all(stats["rateLimited"] == 0 for stats in req_stats)
+    assert sum(stats["attacksDetected"]["blocked"] for stats in req_stats) == 2
+    assert sum(stats["attacksDetected"]["total"] for stats in req_stats) == 2
+    assert all(stats["attackWaves"] == {"total": 0, "blocked": 0} for stats in req_stats)
 
 
 # --- AIKIDO-5RDTZW1V regression: invalid UTF-8 bytes must not bypass detection ---

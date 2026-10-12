@@ -3,13 +3,12 @@ The code to send out a heartbeat is in here
 """
 
 from aikido_zen.helpers.logging import logger
-from aikido_zen.helpers.create_interval import create_interval
+
+FIRST_HEARTBEAT_INTERVAL_SECONDS = 30
+SECOND_HEARTBEAT_INTERVAL_SECONDS = 120
 
 
-def send_heartbeats_every_x_secs(connection_manager, interval_in_secs, event_scheduler):
-    """
-    Start sending out heartbeats every x seconds
-    """
+def start_heartbeats(connection_manager, event_scheduler):
     if connection_manager.serverless:
         logger.debug("Running in serverless environment, not starting heartbeats")
         return
@@ -19,10 +18,16 @@ def send_heartbeats_every_x_secs(connection_manager, interval_in_secs, event_sch
 
     logger.debug("Starting heartbeats")
 
-    # Create an interval for "interval_in_secs" seconds :
-    create_interval(
-        event_scheduler=event_scheduler,
-        interval_in_secs=interval_in_secs,
-        function=lambda connection_manager: connection_manager.send_heartbeat(),
-        args=(connection_manager,),
-    )
+    def send_heartbeat(initial=False):
+        try:
+            connection_manager.send_heartbeat()
+        except Exception as e:
+            logger.error("Failed to send heartbeat: %s", e)
+        next_interval_in_secs = (
+            SECOND_HEARTBEAT_INTERVAL_SECONDS
+            if initial
+            else connection_manager.heartbeat_secs
+        )
+        event_scheduler.enter(next_interval_in_secs, 1, send_heartbeat)
+
+    event_scheduler.enter(FIRST_HEARTBEAT_INTERVAL_SECONDS, 1, send_heartbeat, (True,))
