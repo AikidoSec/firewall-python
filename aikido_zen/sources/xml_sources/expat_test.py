@@ -203,6 +203,53 @@ def test_values_parsed_after_a_query_are_scanned():
     assert results == [False, True]
 
 
+def test_character_references_are_scanned_inside_characters():
+    body = "<xml><id>" + "".join(f"&#{ord(c)};" for c in PAYLOAD) + "</id></xml>"
+    set_context(body=body)
+    results = []
+
+    class QueryWhileBuilding(ContentHandler):
+        value = ""
+
+        def characters(self, content):
+            self.value += content
+            if self.value == PAYLOAD:
+                results.append(bool(is_reported(self.value)))
+
+    xml.sax.parseString(body.encode(), QueryWhileBuilding())
+
+    assert results == [True]
+
+
+def test_equal_value_from_another_element_is_kept():
+    body = "<xml><id>1'</id><id>&#49;&#39;&#32;x</id></xml>"
+    set_context(body=body)
+    xml.sax.parseString(body.encode(), ContentHandler())
+
+    assert get_current_context().xml["id"] == {"1'", "1' x"}
+
+
+def test_character_references_arrive_as_one_piece():
+    set_context(body=XML_STRING)
+    parser = expat.ParserCreate()
+    pieces = []
+    parser.CharacterDataHandler = pieces.append
+    parser.Parse("<xml>" + "&#65;" * 100 + "</xml>", True)
+
+    assert pieces == ["A" * 100]
+
+
+def test_app_can_turn_buffer_text_off():
+    set_context(body=XML_STRING)
+    parser = expat.ParserCreate()
+    parser.buffer_text = False
+    pieces = []
+    parser.CharacterDataHandler = pieces.append
+    parser.Parse("<xml>&#65;&#66;</xml>", True)
+
+    assert pieces == ["A", "B"]
+
+
 def test_each_chunk_is_compared_once():
     body = "<xml>" + "<a>filler</a>" * 10000 + f"<id>{PAYLOAD}</id></xml>"
     set_context(body=body)

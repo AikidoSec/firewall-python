@@ -71,12 +71,8 @@ class Collector:
 
     def end_text_run(self):
         pieces = self.pieces_since_last_tag
-        if len(pieces) == 1:
-            text = pieces[0]
-            if len(text) == 1:
-                self.add(self.tags[-1], text)
-        else:
-            text = "".join(pieces)
+        text = pieces[0] if len(pieces) == 1 else "".join(pieces)
+        if len(pieces) > 1:
             self.add(self.tags[-1], text)
         pieces.clear()
         return text
@@ -126,10 +122,7 @@ class Collector:
         try:
             if self.tags:
                 self.pieces_since_last_tag.append(data)
-                # Character references arrive one character per call; the checks
-                # skip single characters, and the joined run is added at the next tag.
-                if len(data) > 1:
-                    self.add(self.tags[-1], data)
+                self.add(self.tags[-1], data)
         except Exception as e:
             self.fail(e)
         handler = self.CharacterDataHandler
@@ -189,7 +182,11 @@ def _parser_create(func, instance, args, kwargs):
     context = ctx.get_current_context()
     if not context or not isinstance(context.body, str):
         return None
-    return CollectingParser(func(*args, **kwargs), context)
+    parser = func(*args, **kwargs)
+    # Without it, sax and pulldom get each character reference as its own callback, so a
+    # value is only complete at the next tag, after an app that queries in characters().
+    parser.buffer_text = True
+    return CollectingParser(parser, context)
 
 
 @on_import("xml.parsers.expat")
