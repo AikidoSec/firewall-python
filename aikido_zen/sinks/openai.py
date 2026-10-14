@@ -2,8 +2,10 @@
 patching module openai
 - patches function create(...) on Responses class, to inspect response
 - patches function create(...) on Completions class, to inspect response
+- inspects tool_calls in the returned payload and can block dangerous ones
 """
 
+import aikido_zen.vulnerabilities as vulns
 from aikido_zen.helpers.on_ai_call import on_ai_call
 from aikido_zen.helpers.register_call import register_call
 from aikido_zen.sinks import on_import, patch_function, after
@@ -30,6 +32,7 @@ def _create_responses(func, instance, args, kwargs, return_value):
         input_tokens=res.usage.input_tokens,
         output_tokens=res.usage.output_tokens,
     )
+    vulns.run_vulnerability_scan(kind="ai_tool_call", op=op, args=(res,))
 
 
 @after
@@ -44,6 +47,7 @@ def _create_completions(func, instance, args, kwargs, return_value):
         input_tokens=res.usage.prompt_tokens,
         output_tokens=res.usage.completion_tokens,
     )
+    vulns.run_vulnerability_scan(kind="ai_tool_call", op=op, args=(res,))
 
 
 @on_import("openai.resources.responses.responses", "openai", "1.0")
