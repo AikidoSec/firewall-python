@@ -174,3 +174,31 @@ def test_track_sends_no_event_without_firewall():
     time.sleep(5)  # Wait, in case an event would be reported
     events = fetch_events_from_mock("http://localhost:5000")
     assert filter_on_event_type(events, "custom") == []
+
+
+def test_dangerous_xml_body_with_firewall():
+    xml_data = "<dogs><dog>Malicious dog', TRUE); -- </dog></dogs>"
+    res = requests.post("http://localhost:8102/create_xml", data=xml_data, headers={"Content-Type": "application/xml"})
+    assert res.status_code == 500
+
+    time.sleep(5)  # Wait for attack to be reported
+    events = fetch_events_from_mock("http://localhost:5000")
+    attacks = [
+        a for a in filter_on_event_type(events, "detected_attack")
+        if a["request"]["route"] == "/create_xml"
+    ]
+
+    assert len(attacks) == 1
+    assert attacks[0]["attack"]["blocked"] == True
+    assert attacks[0]["attack"]["kind"] == "sql_injection"
+    assert attacks[0]["attack"]["metadata"]["sql"] == "INSERT INTO dogs (dog_name, isAdmin) VALUES ('Malicious dog', TRUE); -- ', FALSE)"
+    assert attacks[0]["attack"]["operation"] == "asyncpg.connection.Connection.execute"
+    assert attacks[0]["attack"]["pathToPayload"] == ".dog.[0]"
+    assert attacks[0]["attack"]["payload"] in ("\"Malicious dog', TRUE); -- \"", "\"Malicious dog', TRUE); --\"")
+    assert attacks[0]["attack"]["source"] == "xml"
+
+
+def test_dangerous_xml_body_without_firewall():
+    xml_data = "<dogs><dog>Malicious dog', TRUE); -- </dog></dogs>"
+    res = requests.post("http://localhost:8103/create_xml", data=xml_data, headers={"Content-Type": "application/xml"})
+    assert res.status_code in (200, 201)

@@ -1,7 +1,9 @@
 import aikido_zen  # Aikido package import
 aikido_zen.protect()
 
+import io
 import asyncpg
+import xml.etree.ElementTree as ET
 from quart import Quart, render_template, request, jsonify
 from aikido_zen.middleware import AikidoQuartMiddleware
 
@@ -63,6 +65,17 @@ async def create_dog():
         await conn.close()
 
     return jsonify({"message": f'Dog {dog_name} created successfully'}), 201
+
+@app.route("/create_xml", methods=['POST'])
+async def create_dog_xml():
+    root = ET.parse(io.BytesIO(await request.get_data())).getroot()
+    conn = await get_db_connection()
+    try:
+        for dog in root.iter('dog'):
+            await conn.execute(f"INSERT INTO dogs (dog_name, isAdmin) VALUES ('%s', FALSE)" % (dog.text))
+    finally:
+        await conn.close()
+    return jsonify({"message": "Dogs created successfully"}), 201
 
 @app.route("/create_many", methods=['POST'])
 async def create_dog_many():
