@@ -44,16 +44,16 @@ def _parse(func, instance, args, kwargs):
     register_call("xml.etree.ElementTree.ElementTree.parse", "deserialize_op")
     if _expat_hook_collects(args, kwargs):
         return func(*args, **kwargs)
-    reader, args, kwargs = body_reader(args, kwargs, "source")
-    root = func(*args, **kwargs)
+    reader, new_args, new_kwargs = body_reader(args, kwargs, "source")
+    root = func(*new_args, **new_kwargs)
     add_parsed_tree_to_context(reader, root)
     return root
 
 
 def _iterparse(func, instance, args, kwargs):
     register_call("xml.etree.ElementTree.iterparse", "deserialize_op")
-    reader, args, kwargs = body_reader(args, kwargs, "source")
-    events = func(*args, **kwargs)
+    reader, new_args, new_kwargs = body_reader(args, kwargs, "source")
+    events = func(*new_args, **new_kwargs)
     if reader is None:
         return events
     return IterparseCollector(events, reader)
