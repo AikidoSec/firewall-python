@@ -121,3 +121,14 @@ def execute_command_get(command):
 @app.route("/test_ratelimiting_1", methods=["GET"])
 def test_ratelimiting_1():
     return "OK"
+
+# End2End Test route :
+@app.route("/test_background_process/<string:action>", methods=["GET"])
+def test_background_process(action):
+    import multiprocessing, signal, threading
+    agent = next(p for p in multiprocessing.active_children() if p.name == "zen-agent-process")
+    if action == "freeze":
+        os.kill(agent.pid, signal.SIGSTOP)
+    elif action == "resume":
+        os.kill(agent.pid, signal.SIGCONT)
+    return {"threads": threading.active_count()}

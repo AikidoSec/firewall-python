@@ -145,3 +145,21 @@ def test_set_ip_forwarded_for():
     })
     assert res.status_code == 403
     assert res.text == "Your IP address is blocked due to geo restrictions (Your IP: 1.2.3.4)"
+
+
+def test_frozen_background_process_does_not_strand_threads():
+    before = requests.get(base_url_fw + "/test_background_process/count").json()["threads"]
+    requests.get(base_url_fw + "/test_background_process/freeze")
+    try:
+        for _ in range(200):
+            res = requests.get(base_url_fw + "/", headers={"X-Forwarded-For": "1.2.3.4"})
+            assert res.status_code == 200
+        time.sleep(1)
+        after = requests.get(base_url_fw + "/test_background_process/count").json()["threads"]
+        assert after - before < 10
+    finally:
+        requests.get(base_url_fw + "/test_background_process/resume")
+
+    time.sleep(1)
+    res = requests.get(base_url_fw + "/", headers={"X-Forwarded-For": "1.2.3.4"})
+    assert res.status_code == 403

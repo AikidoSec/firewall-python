@@ -4,6 +4,8 @@ Exports the AikidoIPCCommunications class
 """
 
 import multiprocessing.connection as con
+import socket
+import struct
 from threading import Thread
 from aikido_zen.helpers.logging import logger
 
@@ -26,6 +28,27 @@ def reset_comms():
     if comms:
         logger.debug("Resetting communications. (comms = None)")
         comms = None
+
+
+def connect(address, timeout_in_sec):
+    """con.Client() with a timeout: con.Client() can block forever on connect."""
+    family = con.address_type(address)
+    with socket.socket(getattr(socket, family)) as s:
+        if family == "AF_UNIX":
+            # settimeout() would make a connect to a full queue fail at once on
+            # Linux. SO_SNDTIMEO waits for room, up to the timeout.
+            sec = int(timeout_in_sec)
+            usec = int((timeout_in_sec - sec) * 1_000_000)
+            timeval = struct.pack("ll", sec, usec)
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDTIMEO, timeval)
+            s.connect(address)
+            # Left on, the limit would cut off a large send to a busy process.
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDTIMEO, struct.pack("ll", 0, 0))
+        else:
+            s.settimeout(timeout_in_sec)
+            s.connect(address)
+            s.setblocking(True)
+        return con.Connection(s.detach())
 
 
 class AikidoIPCCommunications:
@@ -65,8 +88,12 @@ class AikidoIPCCommunications:
         # If something goes wrong, it will also be encapsulated in the thread i.e. no crashes
         def target(address, key, receive, data, result_obj):
             try:
-                # Create a connection, this can get stuck :
-                with con.Client(address, authkey=None) as conn:
+                # An event keeps waiting to connect, so it still arrives after a freeze.
+                if receive:
+                    conn = connect(address, timeout_in_sec)
+                else:
+                    conn = con.Client(address, authkey=None)
+                with conn:
                     # Send/Receive data :
                     conn.send(data)
                     if receive:
