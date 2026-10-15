@@ -4,6 +4,7 @@ Exports the AikidoIPCCommunications class
 """
 
 import multiprocessing.connection as con
+import time
 from threading import Thread
 from aikido_zen.helpers.logging import logger
 
@@ -61,19 +62,20 @@ class AikidoIPCCommunications:
             return {"success": False, "error": "invalid_key"}
 
         # We want to make sure that sending out this data affects the process as little as possible
-        # So we run it inside a separate thread with a timeout of 100ms
         # If something goes wrong, it will also be encapsulated in the thread i.e. no crashes
+        deadline = time.monotonic() + timeout_in_sec
+
         def target(address, key, receive, data, result_obj):
             try:
                 # Create a connection, this can get stuck :
-                conn = con.Client(address, authkey=None)
-
-                # Send/Receive data :
-                conn.send(data)
-                if receive:
-                    result_obj[1] = conn.recv()
-                # Close the connection :
-                conn.close()
+                with con.Client(address, authkey=None) as conn:
+                    conn.send(data)
+                    if receive:
+                        # Joining a daemon thread does not cancel a blocked receive.
+                        remaining = deadline - time.monotonic()
+                        if remaining <= 0 or not conn.poll(remaining):
+                            return
+                        result_obj[1] = conn.recv()
                 result_obj[0] = True  #  Connection ended gracefully
             except Exception as e:
                 logger.debug("Exception occurred in thread : %s", e)
@@ -83,10 +85,9 @@ class AikidoIPCCommunications:
         t = Thread(
             target=target,
             args=(self.address, self.key, receive, (action, obj), result_obj),
-            daemon=True,  #  This allows us to join and set a timeout after which the thread closes
+            daemon=True,
         )
 
-        # Start and join the thread for 100ms, afterwards the thread is forced to close (daemon=True)
         t.start()
         t.join(timeout=timeout_in_sec)
         if not result_obj[0]:
