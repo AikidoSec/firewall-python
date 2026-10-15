@@ -9,4 +9,5 @@ urlpatterns = [
     path("create", views.create_dogpage, name="create"),
     path("read", views.read_file, name="read"),
     path("json-sql", views.json_sql, name="json_sql"),
+    path("xml-sql", views.xml_sql, name="xml_sql"),
 ]
