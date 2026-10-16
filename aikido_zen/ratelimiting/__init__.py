@@ -28,34 +28,46 @@ def should_ratelimit_request(
     windows_size_in_ms = int(endpoint["rateLimiting"]["windowSizeInMS"])
 
     if group:
-        allowed = connection_manager.rate_limiter.is_allowed(
+        result = connection_manager.rate_limiter.is_allowed(
             get_key_for_group(endpoint, group),
             windows_size_in_ms,
             max_requests,
         )
-        if not allowed:
-            return {"block": True, "trigger": "group"}
+        if not result["allowed"]:
+            return {
+                "block": True,
+                "trigger": "group",
+                "retry_after_seconds": result["retry_after_seconds"],
+            }
 
         # Do not check IP or user rate limit if group is set
         return {"block": False}
     if user:
-        allowed = connection_manager.rate_limiter.is_allowed(
+        result = connection_manager.rate_limiter.is_allowed(
             get_key_for_user(endpoint, user),
             windows_size_in_ms,
             max_requests,
         )
-        if not allowed:
-            return {"block": True, "trigger": "user"}
+        if not result["allowed"]:
+            return {
+                "block": True,
+                "trigger": "user",
+                "retry_after_seconds": result["retry_after_seconds"],
+            }
         # Do not check IP rate limit if user is set
         return {"block": False}
     if remote_address:
-        allowed = connection_manager.rate_limiter.is_allowed(
+        result = connection_manager.rate_limiter.is_allowed(
             get_key_for_ip(endpoint, remote_address),
             windows_size_in_ms,
             max_requests,
         )
-        if not allowed:
-            return {"block": True, "trigger": "ip"}
+        if not result["allowed"]:
+            return {
+                "block": True,
+                "trigger": "ip",
+                "retry_after_seconds": result["retry_after_seconds"],
+            }
 
     return {"block": False}
 
