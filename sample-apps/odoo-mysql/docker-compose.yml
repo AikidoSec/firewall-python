@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  # PostgreSQL database for Odoo core
+  postgres:
+    image: postgres:15
+    container_name: odoo_postgres_db
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=odoo
+      - POSTGRES_PASSWORD=odoo
+    volumes:
+      - odoo_postgres_data:/var/lib/postgresql/data
+    networks:
+      - odoo_network
+
+  # MySQL database for dog management app
+  mysql:
+    image: mysql:8.0
+    container_name: odoo_mysql_db
+    environment:
+      - MYSQL_DATABASE=db
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=password
+      - MYSQL_ROOT_PASSWORD=password
+    volumes:
+      - odoo_mysql_data:/var/lib/mysql
+      - ../databases/mysql_init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "3306:3306"
+    networks:
+      - odoo_network
+    command: --default-authentication-plugin=mysql_native_password
+
+  # Odoo application
+  odoo:
+    build:
+      context: ../..
+      dockerfile: sample-apps/odoo-mysql/Dockerfile
+    container_name: odoo_app
+    depends_on:
+      - postgres
+      - mysql
+    ports:
+      - "8114:8069"
+    volumes:
+      - odoo_data:/var/lib/odoo
+      - ./addons:/mnt/extra-addons
+      - ./odoo.conf:/etc/odoo/odoo.conf
+      - ../../:/opt/aikido_zen:ro
+    environment:
+      - PYTHONPATH=/opt/aikido_zen:$PYTHONPATH
+      - HOST=postgres
+      - USER=odoo
+      - PASSWORD=odoo
+      - AIKIDO_DEBUG=true
+      - AIKIDO_BLOCK=true
+      - AIKIDO_TOKEN=AIK_secret_token
+      - AIKIDO_REALTIME_ENDPOINT=http://localhost:5000/
+      - AIKIDO_ENDPOINT=http://localhost:5000/
+      - AIKIDO_DISABLE=0
+    networks:
+      - odoo_network
+    command: odoo -c /etc/odoo/odoo.conf --dev=all
+
+  # Odoo without Aikido (for comparison/testing)
+  odoo_disabled:
+    build:
+      context: ../..
+      dockerfile: sample-apps/odoo-mysql/Dockerfile
+    container_name: odoo_app_disabled
+    depends_on:
+      - postgres
+      - mysql
+    ports:
+      - "8115:8069"
+    volumes:
+      - odoo_disabled_data:/var/lib/odoo
+      - ./addons:/mnt/extra-addons
+      - ./odoo.conf:/etc/odoo/odoo.conf
+      - ../../:/opt/aikido_zen:ro
+    environment:
+      - PYTHONPATH=/opt/aikido_zen:$PYTHONPATH
+      - HOST=postgres
+      - USER=odoo
+      - PASSWORD=odoo
+      - AIKIDO_DISABLE=1
+    networks:
+      - odoo_network
+    command: odoo -c /etc/odoo/odoo.conf --dev=all
+    profiles:
+      - disabled
+
+volumes:
+  odoo_postgres_data:
+  odoo_mysql_data:
+  odoo_data:
+  odoo_disabled_data:
+
+networks:
+  odoo_network:
+    driver: bridge
