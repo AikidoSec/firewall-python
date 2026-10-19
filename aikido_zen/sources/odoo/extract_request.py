@@ -1,5 +1,9 @@
+from uuid import UUID
+
 from aikido_zen.context import get_current_context
 from aikido_zen.helpers.logging import logger
+
+PLAIN_ROUTE_TYPES = (str, int, float, bool)
 
 
 def _value_lists(mapping):
@@ -15,7 +19,6 @@ def _value_lists(mapping):
 
 
 def merge_listed_values(existing, framework):
-    """Keep every scanned value, with the framework value last."""
     merged = _value_lists(existing)
     for key, values in _value_lists(framework).items():
         current = merged.setdefault(key, [])
@@ -39,8 +42,7 @@ def merge_cookies(existing, framework):
 
 
 def _drop_cached_strings(context, *sources):
-    # Odoo runs SQL before these values are stored. That scan caches the old
-    # strings, and a later scan would not see the new ones.
+    # Odoo's own SQL is scanned first, and that caches the old values.
     cached = getattr(context, "parsed_userinput", None)
     if not cached:
         return
@@ -95,12 +97,17 @@ def save_route_args(route_args):
         return
     try:
         existing = context.route_params or {}
-        # The WSGI context stores URL segments as a list. Odoo's values hold text
-        # after ";" in a segment, which the segments do not.
+        # Odoo's values hold text after ";" that the URL segments do not.
         if isinstance(existing, list):
             existing = {"url_segments": existing}
         merged = dict(existing)
         for key, value in route_args.items():
+            if isinstance(value, UUID):
+                value = str(value)
+            # Record converters pass Odoo records, and comparing one runs SQL.
+            # Their URL text matches only letters, digits, "-" and "_".
+            if type(value) not in PLAIN_ROUTE_TYPES:
+                continue
             previous = merged.get(key)
             if previous is None or previous == value:
                 merged[key] = value
