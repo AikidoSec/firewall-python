@@ -88,7 +88,7 @@ def get_uds_filename():
 
 
 def background_process_already_active(comms):
-    res = comms.send_data_to_bg_process(action="PING", obj=tuple(), receive=True)
+    res = comms.send_data_to_bg_process(action="PING", obj=tuple())
     if res["success"] and res["data"] == "Received":
         # Ping is active, return.
         logger.debug(

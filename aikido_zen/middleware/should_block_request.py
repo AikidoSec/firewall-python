@@ -59,7 +59,6 @@ def should_block_request():
                     "group": context.rate_limit_group,
                     "remote_address": context.remote_address,
                 },
-                receive=True,
                 timeout_in_sec=(10 / 1000),  # 10ms
             )
             if ratelimit_res["success"] and ratelimit_res["data"]["block"]:

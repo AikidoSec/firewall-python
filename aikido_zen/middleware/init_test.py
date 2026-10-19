@@ -141,7 +141,6 @@ def test_cache_comms_with_endpoints():
                 "group": "my_group",
                 "remote_address": "1.1.1.1",
             },
-            receive=True,
             timeout_in_sec=0.01,
         )
 

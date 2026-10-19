@@ -11,12 +11,10 @@ def mock_get_comms(mocker):
         def __init__(self):
             self.action = None
             self.obj = None
-            self.receive = False
 
-        def send_data_to_bg_process(self, action, obj, receive):
+        def send_data_to_bg_process(self, action, obj, timeout_in_sec=0.1):
             self.action = action
             self.obj = obj
-            self.receive = receive
             return {"success": True, "data": True}
 
     return FakeComms

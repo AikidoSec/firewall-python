@@ -49,7 +49,7 @@ def sync(monkeypatch):
     context.route, context.method, context.remote_address = "/test", "POST", "1.2.3.4"
     token = current_context.set(context)
     comms = MagicMock()
-    comms.send_data_to_bg_process.side_effect = lambda action, obj, receive: {
+    comms.send_data_to_bg_process.side_effect = lambda action, obj: {
         "success": True,
         "data": deepcopy(process_sync_data(manager, deepcopy(obj))),
     }
@@ -464,7 +464,6 @@ def test_renew_called_with_correct_args(mock_get_comms, thread_cache: ThreadCach
                 }
             ],
         },
-        receive=True,
     )
 
 
@@ -524,7 +523,6 @@ def test_sync_data_for_users(mock_get_comms, thread_cache: ThreadCache):
                 },
             ],
         },
-        receive=True,
     )
 
 
@@ -561,7 +559,6 @@ def test_renew_called_with_empty_routes(mock_get_comms, thread_cache: ThreadCach
             "ai_stats": [],
             "packages": [],
         },
-        receive=True,
     )
 
 
@@ -642,10 +639,8 @@ def test_sync_counts_each_request_once(
     cache.stats.increment_total_hits()
     post_response(200)
 
-    def first_sync(action, obj, receive):
-        response = (
-            {"success": False} if first_sync_fails else deliver(action, obj, receive)
-        )
+    def first_sync(action, obj):
+        response = {"success": False} if first_sync_fails else deliver(action, obj)
         if concurrent_path:
             context.route, context.body = concurrent_path, {"during": "sync"}
             cache.stats.increment_total_hits()
@@ -693,11 +688,11 @@ def test_overlapping_syncs_do_not_replay_hits(sync):
     deliver = comms.send_data_to_bg_process.side_effect
     post_response(200)
 
-    def first_sync(action, obj, receive):
+    def first_sync(action, obj):
         comms.send_data_to_bg_process.side_effect = deliver
         post_response(200)
         cache.renew()
-        return deliver(action, obj, receive)
+        return deliver(action, obj)
 
     comms.send_data_to_bg_process.side_effect = first_sync
     cache.renew()
@@ -711,8 +706,8 @@ def test_config_is_sent_once_per_worker_per_cloud_response(sync):
     deliver = comms.send_data_to_bg_process.side_effect
     replies = []
 
-    def record_reply(action, obj, receive):
-        response = deliver(action, obj, receive)
+    def record_reply(action, obj):
+        response = deliver(action, obj)
         replies.append(response["data"])
         return response
 
@@ -747,8 +742,8 @@ def test_config_is_retried_after_lost_reply(sync):
     cache, manager, comms, _, _ = sync
     deliver = comms.send_data_to_bg_process.side_effect
 
-    def lose_reply(action, obj, receive):
-        assert "config" in deliver(action, obj, receive)["data"]
+    def lose_reply(action, obj):
+        assert "config" in deliver(action, obj)["data"]
         return {"success": False}
 
     comms.send_data_to_bg_process.side_effect = lose_reply
@@ -820,8 +815,8 @@ def test_sampling_reset_preserves_requests_collected_during_sync(
         manager.send_heartbeat()
     deliver = comms.send_data_to_bg_process.side_effect
 
-    def request_during_sync(action, obj, receive):
-        response = deliver(action, obj, receive)
+    def request_during_sync(action, obj):
+        response = deliver(action, obj)
         context.route, context.body = concurrent_path, {"during": "sync"}
         for _ in range(requests_during_sync):
             post_response(200)
@@ -941,5 +936,4 @@ def test_renew_called_with_no_requests(mock_get_comms, thread_cache: ThreadCache
             "ai_stats": [],
             "packages": [],
         },
-        receive=True,
     )

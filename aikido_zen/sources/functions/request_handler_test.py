@@ -46,7 +46,7 @@ class MyMockComms:
         self.conn_manager.attack_wave_detector = AttackWaveDetector()
         self.attacks = []
 
-    def send_data_to_bg_process(self, action, obj, receive=False, timeout_in_sec=0.1):
+    def send_data_to_bg_process(self, action, obj, timeout_in_sec=0.1):
         if action != "CHECK_FIREWALL_LISTS":
             return {"success": False}
         res = process_check_firewall_lists(self.conn_manager, obj)

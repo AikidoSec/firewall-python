@@ -86,7 +86,6 @@ class ThreadCache:
         res = comms.get_comms().send_data_to_bg_process(
             action="SYNC_DATA",
             obj=payload,
-            receive=True,
         )
         if not res["success"] or not res["data"]:
             return

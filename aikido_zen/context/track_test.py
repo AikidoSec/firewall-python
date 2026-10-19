@@ -46,9 +46,9 @@ def sent_event_with_cache(cache):
     ):
         track("my-custom-event")
 
-    if not comms.send_data_to_bg_process.called:
+    if not comms.enqueue_event.called:
         return None
-    return comms.send_data_to_bg_process.call_args[0][1].event
+    return comms.enqueue_event.call_args[0][1].event
 
 
 def test_track_invalid_event_name(caplog):
@@ -103,10 +103,9 @@ def test_track_sends_event_over_ipc():
     ):
         track("my-custom-event")
 
-    comms.send_data_to_bg_process.assert_called_once()
-    identifier, request, returns_data = comms.send_data_to_bg_process.call_args[0]
+    comms.enqueue_event.assert_called_once()
+    identifier, request = comms.enqueue_event.call_args[0]
     assert identifier == "put_event"
-    assert returns_data is False
     assert request.event == {
         "type": "custom",
         "time": 111,
@@ -173,7 +172,7 @@ def track_n_times(n, event_name="my-custom-event"):
         for _ in range(n):
             track(event_name)
 
-    return [c[0][1].event for c in comms.send_data_to_bg_process.call_args_list]
+    return [c[0][1].event for c in comms.enqueue_event.call_args_list]
 
 
 def test_track_sends_every_event_below_the_limit():
@@ -199,9 +198,7 @@ def test_all_event_names_share_one_budget():
             track("payment.failed")
         track("order.completed")
 
-    names = [
-        c[0][1].event["name"] for c in comms.send_data_to_bg_process.call_args_list
-    ]
+    names = [c[0][1].event["name"] for c in comms.enqueue_event.call_args_list]
     assert len(names) == track_module.MAX_EVENTS_PER_REQUEST
     assert "order.completed" not in names
 
@@ -246,7 +243,7 @@ def test_a_bypassed_ip_does_not_use_up_the_limit():
     assert get_current_context().tracked_events == 0
 
 
-def test_track_sends_the_event_with_a_short_timeout():
+def test_track_does_not_wait_for_ipc_delivery():
     set_context_and_lifecycle()
 
     comms = MagicMock()
@@ -256,8 +253,8 @@ def test_track_sends_the_event_with_a_short_timeout():
     ), patch("aikido_zen.background_process.comms.get_comms", return_value=comms):
         track("my-custom-event")
 
-    comms.send_data_to_bg_process.assert_called_once()
-    assert comms.send_data_to_bg_process.call_args[1]["timeout_in_sec"] == 0.05
+    comms.enqueue_event.assert_called_once()
+    comms.send_data_to_bg_process.assert_not_called()
 
 
 def test_track_sends_nothing_when_the_event_could_not_be_built():
@@ -274,4 +271,4 @@ def test_track_sends_nothing_when_the_event_could_not_be_built():
     ):
         track("my-custom-event")
 
-    comms.send_data_to_bg_process.assert_not_called()
+    comms.enqueue_event.assert_not_called()

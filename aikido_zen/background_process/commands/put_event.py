@@ -14,10 +14,6 @@ class PutEventCommand(Command):
         return "put_event"
 
     @classmethod
-    def returns_data(cls) -> bool:
-        return False
-
-    @classmethod
     def run(cls, context: CommandContext, request: PutEventReq):
         #  Events sent here get put in the event queue so that they are processed in the background
         context.queue.put(request.event)

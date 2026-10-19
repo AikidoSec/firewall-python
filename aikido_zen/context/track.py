@@ -43,7 +43,7 @@ def track(event_name):
         if not event:
             return
 
-        send_payload(ipc, PutEventCommand.generate(event), (50 / 1000))
+        send_payload(ipc, PutEventCommand.generate(event))
     except Exception as e:
         logger.debug("Exception occurred in track: %s", e)
 

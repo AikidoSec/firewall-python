@@ -11,7 +11,7 @@ def is_blocking_enabled():
     if get_comms():
         # Only check if comms are defined
         should_block_res = get_comms().send_data_to_bg_process(
-            action="READ_PROPERTY", obj="block", receive=True
+            action="READ_PROPERTY", obj="block"
         )
         if should_block_res["success"]:
             return should_block_res["data"]

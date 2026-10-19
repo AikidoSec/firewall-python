@@ -143,8 +143,8 @@ def test_sql_injection_with_comms(caplog, get_context, monkeypatch):
                 op="test_op",
                 args=("INSERT * INTO VALUES ('doggoss2', TRUE);", "mysql"),
             )
-        mock_comms.send_data_to_bg_process.assert_called_once()
-        call_args = mock_comms.send_data_to_bg_process.call_args[0]
+        mock_comms.enqueue_event.assert_called_once()
+        call_args = mock_comms.enqueue_event.call_args[0]
         assert call_args[0] == "put_event"
         assert call_args[1].event["request"] == {
             "ipAddress": "198.51.100.23",

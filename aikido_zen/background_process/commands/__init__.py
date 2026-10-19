@@ -27,8 +27,8 @@ def process_incoming_command(connection_manager, obj, conn, queue):
 
     for cmd in modern_commands:
         if cmd.identifier() == inbound_identifier:
-            cmd.run(CommandContext(connection_manager, queue, conn), inbound_request)
-            return None
+            result = cmd.run(CommandContext(connection_manager, queue), inbound_request)
+            return conn.send(result)
 
     logger.debug("Command : `%s` not found - did not execute", inbound_identifier)
     return None
