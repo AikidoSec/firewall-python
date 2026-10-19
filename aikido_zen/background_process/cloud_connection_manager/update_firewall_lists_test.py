@@ -107,6 +107,15 @@ def test_update_firewall_lists_success(connection_manager):
     assert not connection_manager.firewall_lists.is_user_agent_blocked(None)
 
 
+def test_update_firewall_lists_without_ip_matcher(connection_manager, monkeypatch):
+    monkeypatch.setattr("aikido_zen.helpers.zen_internals._ip_matcher_create", None)
+
+    update_firewall_lists(connection_manager)
+
+    assert not connection_manager.firewall_lists.is_blocked_ip("192.168.1.1")
+    assert connection_manager.firewall_lists.is_allowed_ip("1.1.1.1")
+
+
 def test_update_firewall_lists_no_ua(connection_manager):
     # Call the function to test
     connection_manager.api = MockApiNoUA()

@@ -6,30 +6,64 @@ this module is imported, and every feature that uses it goes through these funct
 import ctypes
 import os
 import platform
+from array import array
+from itertools import accumulate, islice
 
-from aikido_zen.helpers.get_lib_path import get_binary_path
 from aikido_zen.helpers.logging import logger
 
 
+_TARGET = f"{platform.system().lower()}-{platform.machine().lower()}"
+
+
+def _binary_path():
+    os_name = platform.system().lower()
+    machine = platform.machine().lower()
+    is_arm = "arm64" in machine or "aarch64" in machine
+    file_name = "libzen_internals_"
+
+    # On macOS, platform.machine() returns "arm64" for Apple Silicon
+    # On Linux, platform.machine() returns "aarch64" for ARM64
+    if is_arm:
+        file_name += "aarch64-"
+    # On macOS, platform.machine() returns "x86_64" for Intel
+    # On Linux, platform.machine() returns "x86_64" for AMD64
+    elif "x86_64" in machine or "amd64" in machine:
+        file_name += "x86_64-"
+
+    if os_name == "windows":
+        file_name += "pc-windows-msvc.dll" if is_arm else "pc-windows-gnu.dll"
+    elif os_name == "darwin":
+        file_name += "apple-darwin.dylib"
+    elif os_name in ["linux", "linux2"]:
+        # platform.libc_ver() names glibc and is empty on musl (Alpine), which cannot
+        # load the glibc build.
+        libc = "gnu" if platform.libc_ver()[0] == "glibc" else "musl"
+        file_name += f"unknown-linux-{libc}.so"
+
+    return os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "../libs", file_name
+    )
+
+
 def _load():
-    binary_path = get_binary_path()
-    target = f"{platform.system().lower()}-{platform.machine().lower()}"
+    """Returns the loaded library and None, or None and the reason it did not load."""
+    binary_path = _binary_path()
     if not os.path.exists(binary_path):
-        logger.warning(
-            "Zen will NOT block SQL injection attacks. Cannot find the zen-internals library for %s. "
-            "Request support: https://github.com/AikidoSec/firewall-python/issues",
-            target,
+        return None, (
+            f"Cannot find the zen-internals library for {_TARGET}. "
+            "Request support: https://github.com/AikidoSec/firewall-python/issues"
         )
-        return None
     try:
-        return ctypes.CDLL(binary_path)
+        return ctypes.CDLL(binary_path), None
     except OSError as e:
-        logger.warning(
-            "Zen will NOT block SQL injection attacks. Failed to load the zen-internals library for %s: %s",
-            target,
-            e,
-        )
-        return None
+        return None, f"Failed to load the zen-internals library for {_TARGET}: {e}"
+
+
+def _warn_unavailable(consequence, function_name):
+    reason = _load_error or (
+        f"The zen-internals library for {_TARGET} has no {function_name} function."
+    )
+    logger.warning("%s. %s", consequence, reason)
 
 
 def _bind(internals_lib, name, argtypes, restype):
@@ -46,7 +80,7 @@ def _bind(internals_lib, name, argtypes, restype):
     return function
 
 
-_internals_lib = _load()
+_internals_lib, _load_error = _load()
 
 _detect_sql_injection = _bind(
     _internals_lib,
@@ -60,6 +94,10 @@ _detect_sql_injection = _bind(
     ],
     ctypes.c_int,
 )
+if _detect_sql_injection is None:
+    _warn_unavailable(
+        "Zen will NOT block SQL injection attacks", "detect_sql_injection"
+    )
 
 
 def detect_sql_injection(query: bytes, user_input: bytes, dialect: int) -> int:
@@ -74,3 +112,61 @@ def detect_sql_injection(query: bytes, user_input: bytes, dialect: int) -> int:
     return _detect_sql_injection(
         query_buffer, len(query), user_input_buffer, len(user_input), dialect
     )
+
+
+class _ByteSlice(ctypes.Structure):
+    _fields_ = [("ptr", ctypes.c_char_p), ("len", ctypes.c_size_t)]
+
+
+_ip_matcher_create = _bind(
+    _internals_lib,
+    "ip_matcher_create",
+    [ctypes.POINTER(_ByteSlice), ctypes.c_size_t],
+    ctypes.c_void_p,
+)
+_ip_matcher_has = _bind(
+    _internals_lib,
+    "ip_matcher_has",
+    [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_size_t],
+    ctypes.c_int,
+)
+_ip_matcher_free = _bind(_internals_lib, "ip_matcher_free", [ctypes.c_void_p], None)
+
+
+def has_ip_matcher() -> bool:
+    return None not in (_ip_matcher_create, _ip_matcher_has, _ip_matcher_free)
+
+
+if not has_ip_matcher():
+    _warn_unavailable(
+        "Zen will NOT apply IP lists or block SSRF attacks", "ip_matcher_create"
+    )
+
+
+def ip_matcher_create(networks: list):
+    """Returns the matcher handle, or None when the library cannot build one."""
+    if _ip_matcher_create is None:
+        return None
+    count = len(networks)
+    if not count:
+        return _ip_matcher_create(None, 0) or None
+
+    # One ctypes object per network holds the GIL for the whole loop, so the thread that
+    # answers CHECK_FIREWALL_LISTS misses its 10 ms timeout during a rebuild. One buffer
+    # and a flat array of (pointer, length) pairs keep the Python part short.
+    lengths = array("Q", map(len, networks))
+    buffer = ctypes.create_string_buffer(b"".join(networks), sum(lengths))
+    offsets = islice(accumulate(lengths, initial=0), count)
+    pairs = array("Q", bytes(ctypes.sizeof(_ByteSlice) * count))
+    pairs[0::2] = array("Q", map(ctypes.addressof(buffer).__add__, offsets))
+    pairs[1::2] = lengths
+    descriptors = (_ByteSlice * count).from_buffer(pairs)
+    return _ip_matcher_create(descriptors, count) or None
+
+
+def ip_matcher_has(handle, network: bytes) -> bool:
+    return _ip_matcher_has(handle, network, len(network)) == 1
+
+
+def ip_matcher_free(handle) -> None:
+    _ip_matcher_free(handle)

@@ -20,7 +20,11 @@ class FirewallLists:
         return False
 
     def set_allowed_ips(self, allowed_ip_entries):
-        self.allowed_ips = list(map(parse_ip_entry, allowed_ip_entries))
+        allowed_ips = list(map(parse_ip_entry, allowed_ip_entries))
+        # An allowlist that failed to build would block the visitors it should allow.
+        if not all(entry["iplist"].is_built() for entry in allowed_ips):
+            allowed_ips = []
+        self.allowed_ips = allowed_ips
 
     def is_allowed_ip(self, ip):
         # If allowed_ips is empty, we are not in allow mode, so we don't check

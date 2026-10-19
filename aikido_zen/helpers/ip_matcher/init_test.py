@@ -1,3 +1,6 @@
+import gc
+import pickle
+
 import pytest
 from . import IPMatcher
 
@@ -56,6 +59,8 @@ def test_with_invalid_ranges():
         "123.123.123.123/1999",
         "",
         ",,,",
+        None,
+        "\udc80.1.1.1",
         "192.168.0.124/32",
         "192.168.0.125/32",
         "192.168.0.170/32",
@@ -72,6 +77,7 @@ def test_with_invalid_ranges():
     assert matcher.has("10.0.0.1") == False
     assert matcher.has("192.168.0.255") == True
     assert matcher.has("") == False
+    assert matcher.has(None) == False
     assert matcher.has("1") == False
     assert matcher.has("192.168.0.1/32") == True
 
@@ -114,6 +120,14 @@ def test_with_ipv6_ranges():
     assert matcher.has("2001:db9::abc") == True
 
 
+def test_strips_zones_from_scoped_ipv6_addresses():
+    matcher = IPMatcher(["fe80::/10", "::1/128"])
+    assert matcher.has("fe80::1%eth0") == True
+    assert matcher.has("fe80::1%dummy0") == True
+    assert matcher.has("::1%lo") == True
+    assert matcher.has("fe80::1%") == False
+
+
 def test_mix_ipv4_and_ipv6():
     input_list = ["2002:db8::/32", "10.0.0.0/8"]
     matcher = IPMatcher(input_list)
@@ -123,6 +137,9 @@ def test_mix_ipv4_and_ipv6():
     assert matcher.has("10.0.0.1") == True
     assert matcher.has("10.0.0.255") == True
     assert matcher.has("192.168.1.1") == False
+    assert matcher.has("a00::1") == False
+    assert IPMatcher(["205.30.0.0/16"]).has("cd1e::1") == False
+    assert IPMatcher(["205.30.0.0/16"]).has("cd1e:ffff::1") == False
 
 
 def test_add_ips_later():
@@ -144,10 +161,11 @@ def test_strange_ips():
     matcher = IPMatcher(input_list)
     assert matcher.has("::ffff:0.0.0.0") == True
     assert matcher.has("::ffff:127.0.0.1") == True
-    assert matcher.has("::ffff:123") == True
+    assert matcher.has("::ffff:123") == False
     assert matcher.has("2001:db8::1") == False
     assert matcher.has("[::ffff:0.0.0.0]") == True
     assert matcher.has("::ffff:0:0:0:0") == True
+    assert IPMatcher(["127.0.0.0/8"]).has("::ffff:127.0.0.1") == True
 
 
 def test_different_cidr_ranges():
@@ -197,7 +215,44 @@ def test_allow_all_ips():
     assert matcher.has("192.168.1.1") == True
 
 
+def test_adjacent_4_ranges_at_end_of_address_space():
+    matcher = IPMatcher(["224.0.0.0/4", "240.0.0.0/4"])
+    assert matcher.has("224.0.0.1") == True
+    assert matcher.has("240.0.0.1") == True
+    assert matcher.has("255.255.255.255") == True
+    assert matcher.has("223.255.255.255") == False
+
+
 def test_edge_cases():
     matcher1 = IPMatcher(["224.0.0.0/4"])
     assert matcher1.has("224.0.0.1") == True
     assert matcher1.has("240.0.0.0") == False
+
+
+def test_pickle_round_trip():
+    matcher = pickle.loads(pickle.dumps(IPMatcher(["192.168.0.0/24", "2001:db8::/32"])))
+    assert matcher.has("192.168.0.42") == True
+    assert matcher.has("2001:db8::1") == True
+    assert matcher.has("10.0.0.1") == False
+
+
+def test_frees_the_matcher_when_it_is_dropped(monkeypatch):
+    freed = []
+    monkeypatch.setattr(
+        "aikido_zen.helpers.zen_internals.ip_matcher_free", freed.append
+    )
+
+    matcher = IPMatcher(["192.168.0.0/24"])
+    handle = matcher._handle
+    del matcher
+    gc.collect()
+
+    assert freed == [handle]
+
+
+def test_matches_nothing_without_the_library(monkeypatch):
+    monkeypatch.setattr("aikido_zen.helpers.zen_internals._ip_matcher_create", None)
+
+    matcher = IPMatcher(["192.168.0.0/24"])
+    assert matcher.is_built() == False
+    assert matcher.has("192.168.0.1") == False
