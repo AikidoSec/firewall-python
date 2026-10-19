@@ -9,6 +9,7 @@ from aikido_zen.sinks import (
     on_import,
     patch_function,
 )
+from aikido_zen.helpers.logging import logger
 import aikido_zen.sources.functions.request_handler as funcs
 from aikido_zen.sources.functions.request_handler import pre_response as should_block
 
@@ -71,8 +72,7 @@ def _dispatch(func, instance, args, kwargs):
 
 @after
 def _get_json_data(func, instance, args, kwargs, return_value):
-    # Odoo has already read wsgi.input, so store its parsed JSON. The controller
-    # runs its SQL after this call.
+    # Odoo has already read wsgi.input, so store its parsed JSON.
     save_parsed_request(getattr(instance, "httprequest", None), body=return_value)
 
 
@@ -90,19 +90,57 @@ def _worker_http_start(func, instance, args, kwargs):
     aikido_zen.protect()
 
 
+HOOKS = {
+    "Application.__call__": _call,
+    # Inherited by every dispatcher, including Odoo 19's json2.
+    "Dispatcher.pre_dispatch": _dispatch,
+    "Request.get_json_data": _get_json_data,
+    "Request.get_http_params": _get_http_params,
+}
+
+
+def _has_method(module, path):
+    class_name, method_name = path.split(".")
+    return callable(getattr(getattr(module, class_name, None), method_name, None))
+
+
 @on_import("odoo.http")
 def patch(module):
     """
     Patch odoo.http once Odoo imports it. Distribution metadata is not
     required because Odoo is often a source checkout.
     """
-    patch_function(module, "Application.__call__", _call)
-    patch_function(module, "JsonRPCDispatcher.dispatch", _dispatch)
-    patch_function(module, "HttpDispatcher.dispatch", _dispatch)
-    patch_function(module, "Request.get_json_data", _get_json_data)
-    patch_function(module, "Request.get_http_params", _get_http_params)
+    patch_odoo_http(module)
+
+
+def patch_odoo_http(module):
+    missing = [path for path in HOOKS if not _has_method(module, path)]
+    if missing:
+        # Patching only some hooks would build a context without the body.
+        logger.warning(
+            "Odoo request protection disabled, odoo.http has no %s",
+            ", ".join(missing),
+        )
+        return
+    for path, wrapper in HOOKS.items():
+        patch_function(module, path, wrapper)
 
 
 @on_import("odoo.service.server")
 def patch_server(module):
     patch_function(module, "WorkerHTTP.start", _worker_http_start)
+
+
+@before
+def _xmlrpc(func, instance, args, kwargs):
+    # xmlrpc.client.loads parses the XML only once the body is on the context.
+    from odoo.http import request
+
+    httprequest = getattr(request, "httprequest", None)
+    if httprequest is not None:
+        save_parsed_request(httprequest, body=httprequest.get_data(as_text=True))
+
+
+@on_import("odoo.addons.base.controllers.rpc")
+def patch_rpc(module):
+    patch_function(module, "RPC._xmlrpc", _xmlrpc)

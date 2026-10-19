@@ -1,5 +1,11 @@
-import pytest
+import sys
+import types
+import uuid
 
+import pytest
+import wrapt
+
+import aikido_zen.sources.odoo as odoo_source
 from aikido_zen.context import Context, current_context, get_current_context
 from aikido_zen.sources.odoo.extract_request import save_parsed_request, save_route_args
 from aikido_zen.vulnerabilities.sql_injection.context_contains_sql_injection import (
@@ -191,9 +197,107 @@ def test_route_args_are_kept_after_an_earlier_scan(context):
     assert found["source"] == "route_params"
 
 
+def test_record_route_args_are_not_stored(context):
+    class Record:
+        def __eq__(self, other):
+            raise AssertionError("comparing an Odoo record runs SQL")
+
+        __hash__ = object.__hash__
+
+    save_route_args(
+        {
+            "partner": Record(),
+            "nested": {"value": PAYLOAD},
+            "dog_name": PAYLOAD,
+            "page": 3,
+            "published": True,
+        }
+    )
+
+    route_params = get_current_context().route_params
+    assert "partner" not in route_params
+    assert "nested" not in route_params
+    assert route_params["dog_name"] == PAYLOAD
+    assert route_params["page"] == 3
+    assert route_params["published"] is True
+
+
+def test_uuid_route_args_are_stored_as_text(context):
+    value = uuid.UUID("12345678-1234-5678-1234-567812345678")
+
+    save_route_args({"token": value})
+
+    assert get_current_context().route_params["token"] == str(value)
+
+
+def _odoo_http(missing=None):
+    def method(*args, **kwargs):
+        return None
+
+    classes = {
+        "Application": ["__call__"],
+        "Dispatcher": ["pre_dispatch"],
+        "Request": ["get_json_data", "get_http_params"],
+    }
+    module = types.ModuleType("fake_odoo_http")
+    for class_name, methods in classes.items():
+        attrs = {name: method for name in methods if f"{class_name}.{name}" != missing}
+        setattr(module, class_name, type(class_name, (), attrs))
+    return module
+
+
+def _is_patched(module, class_name, method_name):
+    method = vars(getattr(module, class_name)).get(method_name)
+    return isinstance(method, wrapt.FunctionWrapper)
+
+
+def test_every_hook_is_patched_when_odoo_has_them():
+    module = _odoo_http()
+
+    odoo_source.patch_odoo_http(module)
+
+    assert _is_patched(module, "Application", "__call__")
+    assert _is_patched(module, "Dispatcher", "pre_dispatch")
+    assert _is_patched(module, "Request", "get_json_data")
+    assert _is_patched(module, "Request", "get_http_params")
+
+
+def test_no_hook_is_patched_when_one_is_missing(caplog):
+    module = _odoo_http(missing="Request.get_json_data")
+
+    odoo_source.patch_odoo_http(module)
+
+    assert not _is_patched(module, "Application", "__call__")
+    assert not _is_patched(module, "Dispatcher", "pre_dispatch")
+    assert not _is_patched(module, "Request", "get_http_params")
+    assert "Request.get_json_data" in caplog.text
+
+
 def test_odoo_http_import_hook_is_registered():
     import aikido_zen.sources.odoo
     from wrapt.importer import _post_import_hooks
 
     assert "odoo.http" in _post_import_hooks
     assert "odoo.service.server" in _post_import_hooks
+    assert "odoo.addons.base.controllers.rpc" in _post_import_hooks
+
+
+def test_xmlrpc_body_is_stored_before_odoo_parses_it(context, monkeypatch):
+    xml_body = (
+        "<?xml version='1.0'?><methodCall><methodName>execute_kw</methodName>"
+        f"<params><param><value><string>{PAYLOAD}</string></value></param>"
+        "</params></methodCall>"
+    )
+
+    class _XmlHttpRequest(_HttpRequest):
+        def get_data(self, as_text=False):
+            return xml_body if as_text else xml_body.encode()
+
+    odoo_http = types.ModuleType("odoo.http")
+    odoo_http.request = types.SimpleNamespace(httprequest=_XmlHttpRequest())
+    monkeypatch.setitem(sys.modules, "odoo", types.ModuleType("odoo"))
+    monkeypatch.setitem(sys.modules, "odoo.http", odoo_http)
+
+    odoo_source._xmlrpc(lambda: None, None, (), {})
+
+    assert get_current_context().body == xml_body
