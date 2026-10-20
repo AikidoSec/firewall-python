@@ -5,9 +5,7 @@ from aikido_zen.vulnerabilities.sql_injection import (
     detect_sql_injection,
     should_return_early,
 )
-from aikido_zen.vulnerabilities.sql_injection.map_dialect_to_rust_int import (
-    map_dialect_to_rust_int,
-)
+from .map_dialect_to_rust_int import map_dialect_to_rust_int
 
 """Removed tests :
 -> `I'm writting you` : Invalid SQL
@@ -436,19 +434,21 @@ def test_trimmed_user_input_bypass():
 
 
 def test_mysql_does_not_detect_dash_dash_without_space():
-    sql = "SELECT * FROM comments WHERE comment = 'I'm writting you--'"
-    input = "I'm writting you--"
-    is_tokenize_error(sql, input, "mysql")
-    assert detect_sql_injection(sql, input, "mysql") is False
-    for dialect in ["generic", "postgres", "sqlite"]:
-        is_sql_injection(sql, input, dialect)
-
-    sql = "INSERT INTO pets (name, owner) VALUES ('x', 'dummy'), ('injected', 'hacker'); --', 'owner')"
-    input = "x', 'dummy'), ('injected', 'hacker'); --    "
-    is_tokenize_error(sql, input, "mysql")
-    assert detect_sql_injection(sql, input, "mysql") is False
-    for dialect in ["generic", "postgres", "sqlite"]:
-        is_sql_injection(sql, input, dialect)
+    for sql, input in [
+        (
+            "SELECT * FROM comments WHERE comment = 'I'm writting you--'",
+            "I'm writting you--",
+        ),
+        (
+            "INSERT INTO pets (name, owner) VALUES ('x', 'dummy'), ('injected', 'hacker'); --', 'owner')",
+            "x', 'dummy'), ('injected', 'hacker'); --    ",
+        ),
+    ]:
+        is_tokenize_error(sql, input, "mysql")
+        is_not_sql_injection(sql, input, "mysql")
+        is_sql_injection(sql, input, "generic")
+        is_sql_injection(sql, input, "postgres")
+        is_sql_injection(sql, input, "sqlite")
 
 
 def test_returns_false_when_library_cannot_be_loaded(monkeypatch):
