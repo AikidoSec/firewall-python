@@ -64,10 +64,12 @@ def test_load_returns_none_when_library_fails_to_load(monkeypatch, caplog):
 def test_load_falls_back_to_the_musl_build_when_the_glibc_build_fails(
     monkeypatch, tmp_path
 ):
-    gnu_path = tmp_path / "libzen_internals_x86_64-unknown-linux-gnu.so"
+    libs = tmp_path / "app-gnu.so" / "libs"
+    libs.mkdir(parents=True)
+    gnu_path = libs / "libzen_internals_x86_64-unknown-linux-gnu.so"
     gnu_path.write_text("not a library")
     shutil.copy(
-        zen_internals._binary_path(), tmp_path / gnu_path.name.replace("-gnu", "-musl")
+        zen_internals._binary_path(), libs / gnu_path.name.replace("-gnu", "-musl")
     )
     monkeypatch.setattr(
         "aikido_zen.helpers.zen_internals._binary_path", lambda: str(gnu_path)
