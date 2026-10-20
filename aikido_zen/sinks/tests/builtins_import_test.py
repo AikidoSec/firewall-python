@@ -1,3 +1,5 @@
+import importlib.metadata
+
 import pytest
 
 import aikido_zen
@@ -54,3 +56,35 @@ def test_recursive_package_store_2(monkeypatch):
 
     # Restore the original method after the test
     monkeypatch.undo()
+
+
+def test_imports_during_scan_do_not_start_nested_scans(monkeypatch):
+    running = []
+    nested = []
+    original_version = importlib.metadata.version
+
+    def version_that_imports(name):
+        if running:
+            nested.append(name)
+        running.append(name)
+        try:
+            import pytest
+            import packaging
+
+            return original_version(name)
+        finally:
+            running.pop()
+
+    seen = set()
+
+    def get_package_once(name):
+        if name in seen:
+            return {"name": name}
+        seen.add(name)
+
+    monkeypatch.setattr(PackagesStore, "get_package", get_package_once)
+    monkeypatch.setattr(importlib.metadata, "version", version_that_imports)
+
+    import flask
+
+    assert nested == []
