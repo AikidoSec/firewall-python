@@ -146,7 +146,7 @@ def test_sql_injection_with_ipc(caplog, get_context, monkeypatch):
             )
         mock_ipc.send_message_async.assert_called_once()
         (message,) = mock_ipc.send_message_async.call_args.args
-        assert message.identifier == "put_event"
+        assert message.identifier == "PUT_EVENT"
         assert message.request.event["request"] == {
             "ipAddress": "198.51.100.23",
             "method": "GET",

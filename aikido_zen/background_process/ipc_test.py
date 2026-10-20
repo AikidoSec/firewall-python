@@ -218,7 +218,7 @@ def test_commands_return_results_or_acknowledgments(
         "success": True,
         "data": expected,
     }
-    if message.identifier == "put_event":
+    if message.identifier == "PUT_EVENT":
         assert events.get_nowait() == {"name": "login.failed"}
     assert_released(resources, [])
 
@@ -570,7 +570,7 @@ def test_async_calls_return_while_delivery_is_stalled_and_share_one_worker(
     assert_drained(sender)
     assert worker_ids == [first_worker.ident] * 20
     calls = ipc.send_message.call_args_list + other.send_message.call_args_list
-    assert all(call.args[0].identifier == "put_event" for call in calls)
+    assert all(call.args[0].identifier == "PUT_EVENT" for call in calls)
     assert [call.args[0].request.event for call in calls] == list(range(20))
     assert all(call.args[0].timeout_in_sec == 5 for call in calls)
 

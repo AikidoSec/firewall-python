@@ -1,6 +1,6 @@
 from aikido_zen.helpers.ipc.command_types import Payload
 
-IDENTIFIER = "put_event"
+IDENTIFIER = "PUT_EVENT"
 
 
 def generate(event, timeout_in_sec=5) -> Payload:

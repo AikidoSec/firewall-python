@@ -105,7 +105,7 @@ def test_track_sends_event_over_ipc():
 
     ipc.send_message_async.assert_called_once()
     (message,) = ipc.send_message_async.call_args.args
-    assert message.identifier == "put_event"
+    assert message.identifier == "PUT_EVENT"
     assert message.request.event == {
         "type": "custom",
         "time": 111,

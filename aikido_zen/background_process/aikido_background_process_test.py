@@ -19,7 +19,7 @@ def test_event_is_acknowledged_after_enqueueing():
     event = {"name": "login.failed"}
 
     process_incoming_command(
-        None, ("put_event", PutEventReq(event)), connection, events
+        None, ("PUT_EVENT", PutEventReq(event)), connection, events
     )
 
     assert operations == [("queued", event), ("reply", None)]
@@ -34,7 +34,7 @@ def test_event_is_not_acknowledged_when_enqueueing_fails():
     with pytest.raises(RuntimeError, match="Queue unavailable"):
         process_incoming_command(
             None,
-            ("put_event", PutEventReq({"name": "login.failed"})),
+            ("PUT_EVENT", PutEventReq({"name": "login.failed"})),
             connection,
             events,
         )
