@@ -104,30 +104,63 @@ def test_warning_names_the_missing_function_when_library_is_loaded(monkeypatch, 
 
 
 @pytest.mark.parametrize(
-    "system, machine, libc, file_name",
+    "system, machine, host, file_name",
     [
         ("Darwin", "arm64", "", "libzen_internals_aarch64-apple-darwin.dylib"),
         ("Darwin", "x86_64", "", "libzen_internals_x86_64-apple-darwin.dylib"),
-        ("Linux", "aarch64", "glibc", "libzen_internals_aarch64-unknown-linux-gnu.so"),
-        ("Linux", "x86_64", "glibc", "libzen_internals_x86_64-unknown-linux-gnu.so"),
-        ("Linux", "aarch64", "", "libzen_internals_aarch64-unknown-linux-musl.so"),
-        ("Linux", "x86_64", "", "libzen_internals_x86_64-unknown-linux-musl.so"),
-        ("Windows", "AMD64", "", "libzen_internals_x86_64-pc-windows-gnu.dll"),
-        ("Windows", "ARM64", "", "libzen_internals_aarch64-pc-windows-msvc.dll"),
+        (
+            "Linux",
+            "aarch64",
+            "aarch64-unknown-linux-gnu",
+            "libzen_internals_aarch64-unknown-linux-gnu.so",
+        ),
+        (
+            "Linux",
+            "x86_64",
+            "x86_64-pc-linux-gnu",
+            "libzen_internals_x86_64-unknown-linux-gnu.so",
+        ),
+        (
+            "Linux",
+            "aarch64",
+            "aarch64-alpine-linux-musl",
+            "libzen_internals_aarch64-unknown-linux-musl.so",
+        ),
+        (
+            "Linux",
+            "x86_64",
+            "x86_64-pc-linux-musl",
+            "libzen_internals_x86_64-unknown-linux-musl.so",
+        ),
+        ("Linux", "x86_64", None, "libzen_internals_x86_64-unknown-linux-gnu.so"),
+        ("Windows", "AMD64", None, "libzen_internals_x86_64-pc-windows-gnu.dll"),
+        ("Windows", "ARM64", None, "libzen_internals_aarch64-pc-windows-msvc.dll"),
     ],
 )
 def test_binary_path_picks_the_build_for_the_platform(
-    monkeypatch, system, machine, libc, file_name
+    monkeypatch, system, machine, host, file_name
 ):
     monkeypatch.setattr("platform.system", lambda: system)
     monkeypatch.setattr("platform.machine", lambda: machine)
-    monkeypatch.setattr("platform.libc_ver", lambda: (libc, ""))
+    monkeypatch.setattr("sysconfig.get_config_var", lambda name: host)
 
     path = zen_internals._binary_path()
 
     assert os.path.basename(path) == file_name
     assert os.path.dirname(os.path.normpath(path)).endswith(
         os.path.join("aikido_zen", "libs")
+    )
+
+
+def test_binary_path_ignores_what_the_system_reports_about_libc(monkeypatch):
+    monkeypatch.setattr("platform.system", lambda: "Linux")
+    monkeypatch.setattr("platform.machine", lambda: "x86_64")
+    monkeypatch.setattr("sysconfig.get_config_var", lambda name: "x86_64-pc-linux-gnu")
+    monkeypatch.setattr("platform.libc_ver", lambda: ("", ""))
+    monkeypatch.setattr("glob.glob", lambda pattern: ["/lib/ld-musl-x86_64.so.1"])
+
+    assert os.path.basename(zen_internals._binary_path()) == (
+        "libzen_internals_x86_64-unknown-linux-gnu.so"
     )
 
 

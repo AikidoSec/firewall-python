@@ -6,6 +6,7 @@ this module is imported, and every feature that uses it goes through these funct
 import ctypes
 import os
 import platform
+import sysconfig
 
 from aikido_zen.helpers.logging import logger
 
@@ -33,9 +34,11 @@ def _binary_path():
     elif os_name == "darwin":
         file_name += "apple-darwin.dylib"
     elif os_name in ["linux", "linux2"]:
-        # platform.libc_ver() names glibc and is empty on musl (Alpine), which cannot
-        # load the glibc build.
-        libc = "gnu" if platform.libc_ver()[0] == "glibc" else "musl"
+        # The library must use the same libc as this Python, which records it at build
+        # time (for example "x86_64-pc-linux-musl"). platform.libc_ver() and files under
+        # /lib describe the system, which can have both glibc and musl installed.
+        host = sysconfig.get_config_var("HOST_GNU_TYPE") or ""
+        libc = "musl" if "musl" in host else "gnu"
         file_name += f"unknown-linux-{libc}.so"
 
     return os.path.join(
