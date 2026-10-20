@@ -49,15 +49,16 @@ def _binary_path():
 
 
 def _load():
-    """Returns the loaded library and None, or None and the reason it did not load."""
     binary_path = _binary_path()
     if not os.path.exists(binary_path):
-        return None, (
-            f"Cannot find the zen-internals library for {_TARGET}. "
-            "Request support: https://github.com/AikidoSec/firewall-python/issues"
+        logger.warning(
+            "Cannot find the zen-internals library for %s. "
+            "Request support: https://github.com/AikidoSec/firewall-python/issues",
+            _TARGET,
         )
+        return None
     try:
-        return ctypes.CDLL(binary_path), None
+        return ctypes.CDLL(binary_path)
     except OSError as e:
         error = e
     # A musl Python built without HOST_GNU_TYPE picks the glibc build, which musl
@@ -65,17 +66,13 @@ def _load():
     musl_path = binary_path.replace("-gnu.so", "-musl.so")
     if musl_path != binary_path and os.path.exists(musl_path):
         try:
-            return ctypes.CDLL(musl_path), None
+            return ctypes.CDLL(musl_path)
         except OSError:
             pass
-    return None, f"Failed to load the zen-internals library for {_TARGET}: {error}"
-
-
-def _warn_unavailable(consequence, function_name):
-    reason = _load_error or (
-        f"The zen-internals library for {_TARGET} has no {function_name} function."
+    logger.warning(
+        "Failed to load the zen-internals library for %s: %s", _TARGET, error
     )
-    logger.warning("%s. %s", consequence, reason)
+    return None
 
 
 def _bind(internals_lib, name, argtypes, restype):
@@ -85,14 +82,16 @@ def _bind(internals_lib, name, argtypes, restype):
     try:
         function = getattr(internals_lib, name)
     except AttributeError:
-        logger.debug("The zen-internals library has no function %s", name)
+        logger.warning(
+            "The zen-internals library for %s has no %s function.", _TARGET, name
+        )
         return None
     function.argtypes = argtypes
     function.restype = restype
     return function
 
 
-_internals_lib, _load_error = _load()
+_internals_lib = _load()
 
 _detect_sql_injection = _bind(
     _internals_lib,
@@ -107,9 +106,7 @@ _detect_sql_injection = _bind(
     ctypes.c_int,
 )
 if _detect_sql_injection is None:
-    _warn_unavailable(
-        "Zen will NOT block SQL injection attacks", "detect_sql_injection"
-    )
+    logger.warning("Zen will NOT block SQL injection attacks.")
 
 
 def detect_sql_injection(query: bytes, user_input: bytes, dialect: int) -> int:
@@ -150,9 +147,7 @@ def has_ip_matcher() -> bool:
 
 
 if not has_ip_matcher():
-    _warn_unavailable(
-        "Zen will NOT apply IP lists or block SSRF attacks", "ip_matcher_create"
-    )
+    logger.warning("Zen will NOT apply IP lists or block SSRF attacks.")
 
 
 def ip_matcher_create(networks: list):
