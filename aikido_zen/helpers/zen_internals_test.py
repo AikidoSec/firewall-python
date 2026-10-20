@@ -1,5 +1,6 @@
 import ctypes
 import os
+import shutil
 
 import pytest
 
@@ -58,6 +59,23 @@ def test_load_returns_none_when_library_fails_to_load(monkeypatch):
     internals_lib, error = zen_internals._load()
     assert internals_lib is None
     assert "Failed to load the zen-internals library" in error
+
+
+def test_load_falls_back_to_the_musl_build_when_the_glibc_build_fails(
+    monkeypatch, tmp_path
+):
+    gnu_path = tmp_path / "libzen_internals_x86_64-unknown-linux-gnu.so"
+    gnu_path.write_text("not a library")
+    shutil.copy(
+        zen_internals._binary_path(), tmp_path / gnu_path.name.replace("-gnu", "-musl")
+    )
+    monkeypatch.setattr(
+        "aikido_zen.helpers.zen_internals._binary_path", lambda: str(gnu_path)
+    )
+
+    internals_lib, error = zen_internals._load()
+    assert internals_lib is not None
+    assert error is None
 
 
 def test_bind_returns_none_when_library_is_not_loaded():
