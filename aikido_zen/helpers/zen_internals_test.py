@@ -1,6 +1,8 @@
 import ctypes
 import os
 import shutil
+import subprocess
+import sys
 
 import pytest
 
@@ -39,26 +41,24 @@ def test_detect_sql_injection_returns_error_when_function_is_not_loaded(monkeypa
     assert zen_internals.detect_sql_injection(query, b"1 or 1=1", MYSQL) == 2
 
 
-def test_load_returns_none_when_library_file_is_missing(monkeypatch):
+def test_load_returns_none_when_library_file_is_missing(monkeypatch, caplog):
     monkeypatch.setattr(
         "aikido_zen.helpers.zen_internals._binary_path",
         lambda: "/nonexistent/libzen_internals.so",
     )
 
-    internals_lib, error = zen_internals._load()
-    assert internals_lib is None
-    assert "Cannot find the zen-internals library" in error
-    assert "Request support" in error
+    assert zen_internals._load() is None
+    assert "Cannot find the zen-internals library" in caplog.text
+    assert "Request support" in caplog.text
 
 
-def test_load_returns_none_when_library_fails_to_load(monkeypatch):
+def test_load_returns_none_when_library_fails_to_load(monkeypatch, caplog):
     monkeypatch.setattr(
         "aikido_zen.helpers.zen_internals._binary_path", lambda: __file__
     )
 
-    internals_lib, error = zen_internals._load()
-    assert internals_lib is None
-    assert "Failed to load the zen-internals library" in error
+    assert zen_internals._load() is None
+    assert "Failed to load the zen-internals library" in caplog.text
 
 
 def test_load_falls_back_to_the_musl_build_when_the_glibc_build_fails(
@@ -73,16 +73,14 @@ def test_load_falls_back_to_the_musl_build_when_the_glibc_build_fails(
         "aikido_zen.helpers.zen_internals._binary_path", lambda: str(gnu_path)
     )
 
-    internals_lib, error = zen_internals._load()
-    assert internals_lib is not None
-    assert error is None
+    assert zen_internals._load() is not None
 
 
 def test_bind_returns_none_when_library_is_not_loaded():
     assert zen_internals._bind(None, "detect_sql_injection", [], ctypes.c_int) is None
 
 
-def test_bind_returns_none_when_function_is_missing():
+def test_bind_returns_none_when_function_is_missing(caplog):
     class LibraryWithoutFunctions:
         pass
 
@@ -92,33 +90,47 @@ def test_bind_returns_none_when_function_is_missing():
         )
         is None
     )
-
-
-def test_warning_gives_the_load_error_when_library_is_missing(monkeypatch, caplog):
-    monkeypatch.setattr(
-        "aikido_zen.helpers.zen_internals._load_error",
-        "Cannot find the zen-internals library for test-target.",
-    )
-
-    zen_internals._warn_unavailable(
-        "Zen will NOT block SQL injection attacks", "detect_sql_injection"
-    )
-
-    assert (
-        "Zen will NOT block SQL injection attacks. Cannot find the zen-internals "
-        "library for test-target." in caplog.text
-    )
-
-
-def test_warning_names_the_missing_function_when_library_is_loaded(monkeypatch, caplog):
-    monkeypatch.setattr("aikido_zen.helpers.zen_internals._load_error", None)
-
-    zen_internals._warn_unavailable(
-        "Zen will NOT block SQL injection attacks", "detect_sql_injection"
-    )
-
-    assert "Zen will NOT block SQL injection attacks." in caplog.text
     assert "has no detect_sql_injection function" in caplog.text
+
+
+def _warnings_at_import(cdll_patch):
+    script = (
+        "import ctypes\n" f"{cdll_patch}\n" "import aikido_zen.helpers.zen_internals\n"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", script], capture_output=True, text=True, check=True
+    )
+    return result.stdout + result.stderr
+
+
+def test_warns_once_per_disabled_feature_when_library_fails_to_load():
+    output = _warnings_at_import(
+        "def fail(*args, **kwargs):\n"
+        "    raise OSError('cannot open shared object file')\n"
+        "ctypes.CDLL = fail"
+    )
+
+    assert "Failed to load the zen-internals library" in output
+    assert "cannot open shared object file" in output
+    assert "Zen will NOT block SQL injection attacks." in output
+
+
+def test_warns_about_the_missing_function_when_library_is_loaded():
+    output = _warnings_at_import(
+        "real_cdll = ctypes.CDLL\n"
+        "class WithoutSql:\n"
+        "    def __init__(self, lib):\n"
+        "        self._lib = lib\n"
+        "    def __getattr__(self, name):\n"
+        "        if name == 'detect_sql_injection':\n"
+        "            raise AttributeError(name)\n"
+        "        return getattr(self._lib, name)\n"
+        "ctypes.CDLL = lambda path, *args, **kwargs: WithoutSql(real_cdll(path))"
+    )
+
+    assert "has no detect_sql_injection function" in output
+    assert "Zen will NOT block SQL injection attacks." in output
+    assert "Failed to load the zen-internals library" not in output
 
 
 @pytest.mark.parametrize(
