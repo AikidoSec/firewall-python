@@ -2,13 +2,13 @@ import os
 import platform
 import sys
 
-from aikido_zen.background_process import get_uds_filename
+from aikido_zen.background_process import get_socket_path
 from aikido_zen.helpers.logging import logger
 
 
 def test_uds_file_access():
     """Returns true if access is possible, false if it's not."""
-    filename = get_uds_filename()
+    filename = get_socket_path()
     directory = "/".join(filename.split("/")[:-1])
 
     if platform.system() == "Windows":

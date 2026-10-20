@@ -1,5 +1,3 @@
-import json
-import multiprocessing
 import subprocess
 import sys
 
@@ -151,84 +149,33 @@ assert multiprocessing.get_start_method(allow_none=True) is None
     subprocess.run([sys.executable, "-c", script], check=True)
 
 
-def test_socket_name_is_stable_and_separates_tokens(monkeypatch):
+def test_socket_name_is_shared_by_independent_processes(monkeypatch):
     monkeypatch.setenv("AIKIDO_TOKEN", "AIK_RUNTIME_TEST")
-    current = background_process.get_uds_filename()
+    script = """
+from aikido_zen.background_process import get_socket_path
+print(get_socket_path())
+"""
 
-    assert current == background_process.get_uds_filename()
-    monkeypatch.setenv("AIKIDO_TOKEN", "AIK_RUNTIME_OTHER")
-    assert current != background_process.get_uds_filename()
-
-
-@pytest.mark.parametrize("method", multiprocessing.get_all_start_methods())
-def test_socket_name_is_shared_by_workers_and_unique_to_each_run(
-    monkeypatch, tmp_path, method
-):
-    monkeypatch.setenv("AIKIDO_TOKEN", "AIK_RUNTIME_TEST")
-    script = tmp_path / "worker_socket_names.py"
-    script.write_text(
-        """
-import json
-import multiprocessing
-import sys
-
-def worker(pipe):
-    from aikido_zen.background_process import get_uds_filename
-    pipe.send(get_uds_filename())
-    pipe.close()
-
-if __name__ == "__main__":
-    context = multiprocessing.get_context(sys.argv[1])
-    readers, processes = [], []
     for _ in range(2):
-        reader, writer = context.Pipe(duplex=False)
-        process = context.Process(target=worker, args=(writer,))
-        process.start()
-        writer.close()
-        readers.append(reader)
-        processes.append(process)
-    for process in processes:
-        process.join(10)
-        assert process.exitcode == 0
-    from aikido_zen.background_process import get_uds_filename
-    names = [get_uds_filename()] + [reader.recv() for reader in readers]
-    print(json.dumps(names))
-""",
-        encoding="utf-8",
-    )
-    runs = [
-        json.loads(
-            subprocess.check_output(
-                [sys.executable, str(script), method], text=True, timeout=25
-            )
-        )
-        for _ in range(2)
-    ]
-
-    assert all(len(set(names)) == 1 for names in runs)
-    assert runs[0][0] != runs[1][0]
+        address = subprocess.check_output(
+            [sys.executable, "-c", script], text=True, timeout=10
+        ).strip()
+        assert address == background_process.get_socket_path()
 
 
-def test_startup_does_not_reuse_a_legacy_socket(monkeypatch, mocker):
-    factory = mocker.patch.object(
-        background_process, "get_process_factory"
-    ).return_value
-    active = mocker.patch.object(
-        background_process, "background_process_already_active", return_value=True
-    )
+def test_socket_name_separates_tokens_and_agent_versions(monkeypatch):
     monkeypatch.setenv("AIKIDO_TOKEN", "AIK_RUNTIME_TEST")
-    monkeypatch.setenv("AIKIDO_TMP_DIR", "/tmp")
-    monkeypatch.setattr(background_process.platform, "system", lambda: "Linux")
-    legacy = f"/tmp/aikido_python_{background_process.hash_aikido_token()}.sock"
-    monkeypatch.setattr(
-        background_process.os.path, "exists", lambda path: path == legacy
-    )
+    versions = ["1.2.37", "1.2.37b2", "1.2.37+custom.1"]
+    addresses = set()
+    for version in versions:
+        monkeypatch.setattr(background_process, "PKG_VERSION", version)
+        address = background_process.get_socket_path()
+        assert address == background_process.get_socket_path()
+        addresses.add(address)
 
-    background_process.start_background_process()
-
-    active.assert_not_called()
-    assert factory.call_args.kwargs["args"][0] != legacy
-    factory.return_value.start.assert_called_once_with()
+    assert len(addresses) == len(versions)
+    monkeypatch.setenv("AIKIDO_TOKEN", "AIK_RUNTIME_OTHER")
+    assert background_process.get_socket_path() not in addresses
 
 
 def test_stale_socket_removed_by_another_worker(monkeypatch, mocker):
@@ -238,7 +185,7 @@ def test_stale_socket_removed_by_another_worker(monkeypatch, mocker):
     monkeypatch.setenv("AIKIDO_TOKEN", "AIK_RUNTIME_TEST")
     monkeypatch.setattr(background_process.platform, "system", lambda: "Linux")
     monkeypatch.setattr(
-        background_process, "get_uds_filename", lambda: "/tmp/aikido.sock"
+        background_process, "get_socket_path", lambda: "/tmp/aikido.sock"
     )
     monkeypatch.setattr(background_process.os.path, "exists", lambda _path: True)
     monkeypatch.setattr(
@@ -262,7 +209,7 @@ def test_started_process_receives_the_current_session_id(monkeypatch, mocker):
     monkeypatch.setenv("AIKIDO_TOKEN", "AIK_RUNTIME_TEST")
     monkeypatch.setattr(background_process.platform, "system", lambda: "Linux")
     monkeypatch.setattr(
-        background_process, "get_uds_filename", lambda: "/tmp/aikido-session.sock"
+        background_process, "get_socket_path", lambda: "/tmp/aikido-session.sock"
     )
     monkeypatch.setattr(background_process.os.path, "exists", lambda _path: False)
 

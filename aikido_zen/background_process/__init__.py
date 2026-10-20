@@ -14,6 +14,7 @@ from aikido_zen.helpers.get_temp_dir import get_temp_dir
 from aikido_zen.helpers.hash_aikido_token import hash_aikido_token
 from aikido_zen.helpers.get_agent_session_id import get_agent_session_id
 from aikido_zen.helpers.logging import logger
+from aikido_zen.config import PKG_VERSION
 
 from aikido_zen.background_process.ipc import IPCClient
 from aikido_zen.background_process.commands import ping
@@ -51,7 +52,7 @@ def start_background_process():
         )
         return
 
-    address = get_uds_filename()
+    address = get_socket_path()
     if platform.system() == "Windows":
         # Python does not support Windows UDS just yet, so we have to rely on INET
         address = ("127.0.0.1", 49156)
@@ -77,13 +78,14 @@ def start_background_process():
     background_process.start()
 
 
-def get_uds_filename():
-    """Returns the address for UDS file"""
+def get_socket_path():
     temp_dir = get_temp_dir()
-    prefix = "aikido_python"
-    # This key is shared by workers and changes between application runs.
-    identity = hash_aikido_token().encode() + multiprocessing.current_process().authkey
-    name = hashlib.sha256(identity).hexdigest()
+    prefix = "aikido_zen"
+
+    # Include the package version to avoid reusing a background process from a previous release.
+    identity = f"{hash_aikido_token()}:{PKG_VERSION}"
+
+    name = hashlib.sha256(identity.encode()).hexdigest()
     return f"{temp_dir}/{prefix}_{name}.sock"
 
 
