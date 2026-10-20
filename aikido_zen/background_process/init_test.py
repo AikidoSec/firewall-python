@@ -11,7 +11,7 @@ from aikido_zen.helpers.get_agent_session_id import (
     get_agent_session_id,
     set_agent_session_id,
 )
-from .comms_test import reset_comms_after_test
+from .ipc_test import reset_ipc_after_test
 
 
 @pytest.mark.parametrize("version", [(3, 8), (3, 13), (3, 14)])
@@ -160,7 +160,7 @@ def test_stale_socket_removed_by_another_worker(monkeypatch, mocker):
     )
     monkeypatch.setattr(background_process.os.path, "exists", lambda _path: True)
     monkeypatch.setattr(
-        background_process, "background_process_already_active", lambda _comms: False
+        background_process, "background_process_already_active", lambda _ipc: False
     )
     monkeypatch.setattr(
         background_process.os,

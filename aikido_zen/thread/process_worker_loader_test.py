@@ -54,7 +54,9 @@ def load_worker_times(n, renew=None):
 
 
 def test_startup_sync_runs_on_the_first_request():
-    assert load_worker_times(1) == 1
+    renew = MagicMock()
+    assert load_worker_times(1, renew=renew) == 1
+    renew.assert_called_once_with()
 
 
 def test_startup_sync_is_attempted_only_once_per_process():

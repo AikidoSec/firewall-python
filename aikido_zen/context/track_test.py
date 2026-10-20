@@ -40,15 +40,15 @@ def cache_with_bypassed_ips(*ips):
 
 def sent_event_with_cache(cache):
     set_context_and_lifecycle()
-    comms = MagicMock()
+    ipc = MagicMock()
     with patch("aikido_zen.thread.thread_cache.get_cache", return_value=cache), patch(
-        "aikido_zen.background_process.comms.get_comms", return_value=comms
+        "aikido_zen.background_process.ipc.IPCClient.get", return_value=ipc
     ):
         track("my-custom-event")
 
-    if not comms.enqueue_event.called:
+    if not ipc.send_message_async.called:
         return None
-    return comms.enqueue_event.call_args[0][1].event
+    return ipc.send_message_async.call_args.args[0].request.event
 
 
 def test_track_invalid_event_name(caplog):
@@ -63,7 +63,7 @@ def test_track_empty_event_name(caplog):
 
 def test_track_without_context(caplog):
     with patch(
-        "aikido_zen.background_process.comms.get_comms", return_value=MagicMock()
+        "aikido_zen.background_process.ipc.IPCClient.get", return_value=MagicMock()
     ):
         track("my-event")
 
@@ -72,7 +72,7 @@ def test_track_without_context(caplog):
 
 def test_track_without_context_only_logs_once(caplog):
     with patch(
-        "aikido_zen.background_process.comms.get_comms", return_value=MagicMock()
+        "aikido_zen.background_process.ipc.IPCClient.get", return_value=MagicMock()
     ):
         track("my-event")
         track("my-event")
@@ -80,8 +80,8 @@ def test_track_without_context_only_logs_once(caplog):
     assert caplog.text.count("track(...) was called without a context.") == 1
 
 
-def test_track_without_comms(caplog):
-    with patch("aikido_zen.background_process.comms.get_comms", return_value=None):
+def test_track_without_ipc(caplog):
+    with patch("aikido_zen.background_process.ipc.IPCClient.get", return_value=None):
         track("my-event")
 
     assert "track(...) was called without a context." not in caplog.text
@@ -91,22 +91,22 @@ def test_track_sends_event_over_ipc():
     context = set_context_and_lifecycle()
     context.user = {"id": "user-1", "name": "Jane Doe"}
 
-    comms = MagicMock()
+    ipc = MagicMock()
     with patch(
         "aikido_zen.thread.thread_cache.get_cache",
         return_value=cache_with_bypassed_ips(),
     ), patch(
-        "aikido_zen.background_process.comms.get_comms", return_value=comms
+        "aikido_zen.background_process.ipc.IPCClient.get", return_value=ipc
     ), patch(
         "aikido_zen.helpers.create_custom_event.get_unixtime_ms",
         return_value=111,
     ):
         track("my-custom-event")
 
-    comms.enqueue_event.assert_called_once()
-    identifier, request = comms.enqueue_event.call_args[0]
-    assert identifier == "put_event"
-    assert request.event == {
+    ipc.send_message_async.assert_called_once()
+    (message,) = ipc.send_message_async.call_args.args
+    assert message.identifier == "put_event"
+    assert message.request.event == {
         "type": "custom",
         "time": 111,
         "name": "my-custom-event",
@@ -164,15 +164,15 @@ def test_track_does_not_send_the_url():
 def track_n_times(n, event_name="my-custom-event"):
     """Runs track() n times in ONE request and returns the events that were sent"""
     set_context_and_lifecycle()
-    comms = MagicMock()
+    ipc = MagicMock()
     with patch(
         "aikido_zen.thread.thread_cache.get_cache",
         return_value=cache_with_bypassed_ips(),
-    ), patch("aikido_zen.background_process.comms.get_comms", return_value=comms):
+    ), patch("aikido_zen.background_process.ipc.IPCClient.get", return_value=ipc):
         for _ in range(n):
             track(event_name)
 
-    return [c[0][1].event for c in comms.enqueue_event.call_args_list]
+    return [c.args[0].request.event for c in ipc.send_message_async.call_args_list]
 
 
 def test_track_sends_every_event_below_the_limit():
@@ -189,16 +189,18 @@ def test_track_stops_sending_events_above_the_limit():
 
 def test_all_event_names_share_one_budget():
     set_context_and_lifecycle()
-    comms = MagicMock()
+    ipc = MagicMock()
     with patch(
         "aikido_zen.thread.thread_cache.get_cache",
         return_value=cache_with_bypassed_ips(),
-    ), patch("aikido_zen.background_process.comms.get_comms", return_value=comms):
+    ), patch("aikido_zen.background_process.ipc.IPCClient.get", return_value=ipc):
         for _ in range(track_module.MAX_EVENTS_PER_REQUEST):
             track("payment.failed")
         track("order.completed")
 
-    names = [c[0][1].event["name"] for c in comms.enqueue_event.call_args_list]
+    names = [
+        c.args[0].request.event["name"] for c in ipc.send_message_async.call_args_list
+    ]
     assert len(names) == track_module.MAX_EVENTS_PER_REQUEST
     assert "order.completed" not in names
 
@@ -232,11 +234,11 @@ def test_the_limit_is_per_request_not_per_process():
 
 def test_a_bypassed_ip_does_not_use_up_the_limit():
     set_context_and_lifecycle()
-    comms = MagicMock()
+    ipc = MagicMock()
     with patch(
         "aikido_zen.thread.thread_cache.get_cache",
         return_value=cache_with_bypassed_ips("1.2.3.4"),
-    ), patch("aikido_zen.background_process.comms.get_comms", return_value=comms):
+    ), patch("aikido_zen.background_process.ipc.IPCClient.get", return_value=ipc):
         for _ in range(track_module.MAX_EVENTS_PER_REQUEST + 5):
             track("my-custom-event")
 
@@ -246,29 +248,29 @@ def test_a_bypassed_ip_does_not_use_up_the_limit():
 def test_track_does_not_wait_for_ipc_delivery():
     set_context_and_lifecycle()
 
-    comms = MagicMock()
+    ipc = MagicMock()
     with patch(
         "aikido_zen.thread.thread_cache.get_cache",
         return_value=cache_with_bypassed_ips(),
-    ), patch("aikido_zen.background_process.comms.get_comms", return_value=comms):
+    ), patch("aikido_zen.background_process.ipc.IPCClient.get", return_value=ipc):
         track("my-custom-event")
 
-    comms.enqueue_event.assert_called_once()
-    comms.send_data_to_bg_process.assert_not_called()
+    ipc.send_message_async.assert_called_once()
+    ipc.send_message.assert_not_called()
 
 
 def test_track_sends_nothing_when_the_event_could_not_be_built():
     set_context_and_lifecycle()
 
-    comms = MagicMock()
+    ipc = MagicMock()
     with patch(
         "aikido_zen.thread.thread_cache.get_cache",
         return_value=cache_with_bypassed_ips(),
     ), patch(
-        "aikido_zen.background_process.comms.get_comms", return_value=comms
+        "aikido_zen.background_process.ipc.IPCClient.get", return_value=ipc
     ), patch(
         "aikido_zen.context.track.create_custom_event", return_value=None
     ):
         track("my-custom-event")
 
-    comms.enqueue_event.assert_not_called()
+    ipc.send_message_async.assert_not_called()

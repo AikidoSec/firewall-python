@@ -1,21 +1,21 @@
 from aikido_zen.helpers.logging import logger
-from aikido_zen.helpers.ipc.command_types import CommandContext
-from .put_event import PutEventCommand
-from .check_firewall_lists import process_check_firewall_lists
-from .read_property import process_read_property
-from .should_ratelimit import process_should_ratelimit
-from .ping import process_ping
-from .sync_data import process_sync_data
+from . import (
+    check_firewall_lists,
+    ping,
+    put_event,
+    read_property,
+    should_ratelimit,
+    sync_data,
+)
 
 commands_map = {
-    "SYNC_DATA": process_sync_data,
-    "READ_PROPERTY": process_read_property,
-    "SHOULD_RATELIMIT": process_should_ratelimit,
-    "PING": process_ping,
-    "CHECK_FIREWALL_LISTS": process_check_firewall_lists,
+    check_firewall_lists.IDENTIFIER: check_firewall_lists.process,
+    ping.IDENTIFIER: ping.process,
+    put_event.IDENTIFIER: put_event.process,
+    read_property.IDENTIFIER: read_property.process,
+    should_ratelimit.IDENTIFIER: should_ratelimit.process,
+    sync_data.IDENTIFIER: sync_data.process,
 }
-
-modern_commands = [PutEventCommand]
 
 
 def process_incoming_command(connection_manager, obj, conn, queue):
@@ -23,12 +23,7 @@ def process_incoming_command(connection_manager, obj, conn, queue):
     inbound_request = obj[1]
     if inbound_identifier in commands_map:
         func = commands_map[inbound_identifier]
-        return conn.send(func(connection_manager, inbound_request))
-
-    for cmd in modern_commands:
-        if cmd.identifier() == inbound_identifier:
-            result = cmd.run(CommandContext(connection_manager, queue), inbound_request)
-            return conn.send(result)
+        return conn.send(func(connection_manager, inbound_request, queue))
 
     logger.debug("Command : `%s` not found - did not execute", inbound_identifier)
     return None

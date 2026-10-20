@@ -14,11 +14,8 @@ from aikido_zen.helpers.hash_aikido_token import hash_aikido_token
 from aikido_zen.helpers.get_agent_session_id import get_agent_session_id
 from aikido_zen.helpers.logging import logger
 
-from aikido_zen.background_process.comms import (
-    AikidoIPCCommunications,
-    get_comms,
-    reset_comms,
-)
+from aikido_zen.background_process.ipc import IPCClient
+from aikido_zen.background_process.commands import ping
 from .aikido_background_process import AikidoBackgroundProcess
 
 
@@ -58,10 +55,10 @@ def start_background_process():
         # Python does not support Windows UDS just yet, so we have to rely on INET
         address = ("127.0.0.1", 49156)
 
-    comms = AikidoIPCCommunications(address, secret_key_bytes)
+    ipc = IPCClient(address, secret_key_bytes)
 
     if isinstance(address, str) and os.path.exists(address):
-        if background_process_already_active(comms):
+        if background_process_already_active(ipc):
             return  # Don't start if the background process is already active
         try:
             os.remove(address)
@@ -72,7 +69,7 @@ def start_background_process():
     #  Daemon is set to True so that the process kills itself when the main process dies
     background_process = get_process_factory()(
         target=AikidoBackgroundProcess,
-        args=(comms.address, comms.key, get_agent_session_id()),
+        args=(ipc.address, ipc.key, get_agent_session_id()),
         name="zen-agent-process",
         daemon=True,
     )
@@ -87,8 +84,8 @@ def get_uds_filename():
     return f"{temp_dir}/{prefix}_{name}.sock"
 
 
-def background_process_already_active(comms):
-    res = comms.send_data_to_bg_process(action="PING", obj=tuple())
+def background_process_already_active(ipc):
+    res = ipc.send_message(ping.generate())
     if res["success"] and res["data"] == "Received":
         # Ping is active, return.
         logger.debug(

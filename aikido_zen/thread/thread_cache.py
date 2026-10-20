@@ -1,6 +1,7 @@
 """Exports class ThreadConfig"""
 
-import aikido_zen.background_process.comms as comms
+from aikido_zen.background_process.ipc import IPCClient
+from aikido_zen.background_process.commands import sync_data
 from aikido_zen.background_process.packages import PackagesStore
 from aikido_zen.background_process.routes import Routes
 from aikido_zen.background_process.service_config import ServiceConfig
@@ -57,7 +58,8 @@ class ThreadCache:
         PackagesStore.clear()
 
     def renew(self):
-        if not comms.get_comms():
+        ipc = IPCClient.get()
+        if not ipc:
             return
 
         # Clear deltas before the IPC, not after. Clearing post-response would
@@ -83,10 +85,7 @@ class ThreadCache:
             "packages": PackagesStore.export(),
         }
         self._clear_synced_deltas()
-        res = comms.get_comms().send_data_to_bg_process(
-            action="SYNC_DATA",
-            obj=payload,
-        )
+        res = ipc.send_message(sync_data.generate(payload))
         if not res["success"] or not res["data"]:
             return
 

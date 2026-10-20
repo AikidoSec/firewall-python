@@ -2,9 +2,8 @@ from aikido_zen.helpers.logging import logger
 from aikido_zen.helpers.create_custom_event import create_custom_event
 from . import get_current_context
 import aikido_zen.thread.thread_cache as thread_cache
-import aikido_zen.background_process.comms as comms
-from ..background_process.commands import PutEventCommand
-from ..helpers.ipc.send_payload import send_payload
+from aikido_zen.background_process.ipc import IPCClient
+from ..background_process.commands import put_event
 
 MAX_EVENTS_PER_REQUEST = 25
 
@@ -21,7 +20,7 @@ def track(event_name):
             logger.info("track(...) expects a non-empty string as event name.")
             return
 
-        ipc = comms.get_comms()
+        ipc = IPCClient.get()
         if not ipc:
             return
 
@@ -43,7 +42,7 @@ def track(event_name):
         if not event:
             return
 
-        send_payload(ipc, PutEventCommand.generate(event))
+        ipc.send_message_async(put_event.generate(event))
     except Exception as e:
         logger.debug("Exception occurred in track: %s", e)
 

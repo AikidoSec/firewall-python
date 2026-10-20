@@ -10,7 +10,7 @@ from aikido_zen.background_process.cloud_connection_manager import (
     CloudConnectionManager,
 )
 from aikido_zen.background_process.cloud_connection_manager.on_start import on_start
-from aikido_zen.background_process.commands.sync_data import process_sync_data
+from aikido_zen.background_process.commands import sync_data
 from aikido_zen.background_process.routes import Routes
 from aikido_zen.sources.functions.request_handler import post_response
 from . import process_worker_loader
@@ -48,20 +48,20 @@ def sync(monkeypatch):
     context = Context(body={"name": "example"})
     context.route, context.method, context.remote_address = "/test", "POST", "1.2.3.4"
     token = current_context.set(context)
-    comms = MagicMock()
-    comms.send_data_to_bg_process.side_effect = lambda action, obj: {
+    ipc = MagicMock()
+    ipc.send_message.side_effect = lambda message: {
         "success": True,
-        "data": deepcopy(process_sync_data(manager, deepcopy(obj))),
+        "data": deepcopy(sync_data.process(manager, deepcopy(message.request), None)),
     }
     generate_schema = MagicMock(wraps=get_api_info)
-    monkeypatch.setattr("aikido_zen.background_process.comms.get_comms", lambda: comms)
+    monkeypatch.setattr("aikido_zen.background_process.ipc.IPCClient.get", lambda: ipc)
     monkeypatch.setattr(
         "aikido_zen.sources.functions.request_handler.get_cache", lambda: cache
     )
     monkeypatch.setattr(
         "aikido_zen.sources.functions.request_handler.get_api_info", generate_schema
     )
-    yield cache, manager, comms, generate_schema, context
+    yield cache, manager, ipc, generate_schema, context
     current_context.reset(token)
 
 
@@ -130,8 +130,8 @@ def test_renew_preserves_route_added_during_copy(thread_cache):
         thread_cache.routes.routes["GET:/first"]
     )
     outgoing = thread_cache.routes.get_routes_with_hits()
-    with patch("aikido_zen.background_process.comms.get_comms") as get_comms:
-        get_comms.return_value.send_data_to_bg_process.return_value = {
+    with patch("aikido_zen.background_process.ipc.IPCClient.get") as get_ipc:
+        get_ipc.return_value.send_message.return_value = {
             "success": True,
             "data": {},
         }
@@ -154,9 +154,9 @@ def test_increment_total_hits(thread_cache):
     assert thread_cache.stats.get_record()["requests"]["total"] == 2
 
 
-def test_renew_with_no_comms(thread_cache: ThreadCache):
+def test_renew_with_no_ipc(thread_cache: ThreadCache):
     """Test that renew does not proceed if there are no communications available."""
-    with patch("aikido_zen.background_process.comms.get_comms", return_value=None):
+    with patch("aikido_zen.background_process.ipc.IPCClient.get", return_value=None):
         thread_cache.renew()
         assert isinstance(thread_cache.config.bypassed_ips, IPMatcher)
         assert thread_cache.get_endpoints() == []
@@ -272,11 +272,11 @@ def test_load_worker_starts_thread_when_cache_renewal_fails(
     )
 
 
-@patch("aikido_zen.background_process.comms.get_comms")
-def test_renew_with_invalid_response(mock_get_comms, thread_cache: ThreadCache):
+@patch("aikido_zen.background_process.ipc.IPCClient.get")
+def test_renew_with_invalid_response(mock_get_ipc, thread_cache: ThreadCache):
     """Test that renew handles an invalid response gracefully."""
-    mock_get_comms.return_value = MagicMock()
-    mock_get_comms.return_value.send_data_to_bg_process.return_value = {
+    mock_get_ipc.return_value = MagicMock()
+    mock_get_ipc.return_value.send_message.return_value = {
         "success": True,
         "data": {
             "config": "not_a_service_config",  # Invalid type
@@ -315,10 +315,10 @@ def test_increment_stats_thread_safety(thread_cache):
     )  # 10 threads incrementing 100 times
 
 
-@patch("aikido_zen.background_process.comms.get_comms")
-def test_renew_updates_config(mock_get_comms, thread_cache: ThreadCache):
-    mock_get_comms.return_value = MagicMock()
-    mock_get_comms.return_value.send_data_to_bg_process.return_value = {
+@patch("aikido_zen.background_process.ipc.IPCClient.get")
+def test_renew_updates_config(mock_get_ipc, thread_cache: ThreadCache):
+    mock_get_ipc.return_value = MagicMock()
+    mock_get_ipc.return_value.send_message.return_value = {
         "success": True,
         "data": {
             "config": ServiceConfig(
@@ -358,11 +358,10 @@ def test_renew_updates_config(mock_get_comms, thread_cache: ThreadCache):
     assert thread_cache.is_user_blocked("user123")
 
 
-@patch("aikido_zen.background_process.comms.get_comms")
-def test_renew_called_with_correct_args(mock_get_comms, thread_cache: ThreadCache):
-    """Test that renew calls send_data_to_bg_process with correct arguments."""
-    mock_comms = MagicMock()
-    mock_get_comms.return_value = mock_comms
+@patch("aikido_zen.background_process.ipc.IPCClient.get")
+def test_renew_called_with_correct_args(mock_get_ipc, thread_cache: ThreadCache):
+    mock_ipc = MagicMock()
+    mock_get_ipc.return_value = mock_ipc
 
     # Setup initial state
     thread_cache.stats.increment_total_hits()
@@ -395,83 +394,82 @@ def test_renew_called_with_correct_args(mock_get_comms, thread_cache: ThreadCach
     }
     assert PackagesStore.export() == []
 
-    # Assert that send_data_to_bg_process was called with the correct arguments
-    mock_comms.send_data_to_bg_process.assert_called_once_with(
-        action="SYNC_DATA",
-        obj={
-            "config_revision": -1,
-            "current_routes": {
-                "GET:/test": {
-                    "method": "GET",
-                    "path": "/test",
-                    "hits": 1,
-                    "hits_delta_since_sync": 1,
-                    "apispec": {},
-                }
-            },
-            "stats": {
-                "startedAt": -1,
-                "endedAt": -1,
-                "requests": {
-                    "total": 2,
-                    "rateLimited": 0,
-                    "aborted": 0,
-                    "attacksDetected": {"blocked": 1, "total": 3},
-                    "attackWaves": {"total": 0, "blocked": 0},
-                },
-                "operations": {
-                    "op1": {
-                        "attacksDetected": {"blocked": 1, "total": 2},
-                        "kind": "sql_op",
-                        "total": 1,
-                    },
-                    "op2": {
-                        "attacksDetected": {"blocked": 0, "total": 1},
-                        "kind": "sql_op",
-                        "total": 1,
-                    },
-                },
-            },
-            "ai_stats": [
-                {
-                    "provider": "openai",
-                    "model": "gpt-4o",
-                    "calls": 1,
-                    "tokens": {"input": 6427, "output": 200, "total": 6627},
-                },
-                {
-                    "provider": "openai",
-                    "model": "gpt-4o2",
-                    "calls": 2,
-                    "tokens": {"input": 656, "output": 1167, "total": 1823},
-                },
-                {
-                    "provider": "openai",
-                    "model": "gpt-4o3",
-                    "calls": 1,
-                    "tokens": {"input": 8223, "output": 173, "total": 8396},
-                },
-            ],
-            "middleware_installed": False,
-            "hostnames": [],
-            "users": [],
-            "packages": [
-                {
-                    "name": "test-package-1",
-                    "version": "4.3.0",
-                    "requiredAt": -1,
-                    "cleared": False,
-                }
-            ],
+    mock_ipc.send_message.assert_called_once()
+    (message,) = mock_ipc.send_message.call_args.args
+    assert message.identifier == "SYNC_DATA"
+    assert message.timeout_in_sec == 5
+    assert message.request == {
+        "config_revision": -1,
+        "current_routes": {
+            "GET:/test": {
+                "method": "GET",
+                "path": "/test",
+                "hits": 1,
+                "hits_delta_since_sync": 1,
+                "apispec": {},
+            }
         },
-    )
+        "stats": {
+            "startedAt": -1,
+            "endedAt": -1,
+            "requests": {
+                "total": 2,
+                "rateLimited": 0,
+                "aborted": 0,
+                "attacksDetected": {"blocked": 1, "total": 3},
+                "attackWaves": {"total": 0, "blocked": 0},
+            },
+            "operations": {
+                "op1": {
+                    "attacksDetected": {"blocked": 1, "total": 2},
+                    "kind": "sql_op",
+                    "total": 1,
+                },
+                "op2": {
+                    "attacksDetected": {"blocked": 0, "total": 1},
+                    "kind": "sql_op",
+                    "total": 1,
+                },
+            },
+        },
+        "ai_stats": [
+            {
+                "provider": "openai",
+                "model": "gpt-4o",
+                "calls": 1,
+                "tokens": {"input": 6427, "output": 200, "total": 6627},
+            },
+            {
+                "provider": "openai",
+                "model": "gpt-4o2",
+                "calls": 2,
+                "tokens": {"input": 656, "output": 1167, "total": 1823},
+            },
+            {
+                "provider": "openai",
+                "model": "gpt-4o3",
+                "calls": 1,
+                "tokens": {"input": 8223, "output": 173, "total": 8396},
+            },
+        ],
+        "middleware_installed": False,
+        "hostnames": [],
+        "users": [],
+        "packages": [
+            {
+                "name": "test-package-1",
+                "version": "4.3.0",
+                "requiredAt": -1,
+                "cleared": False,
+            }
+        ],
+    }
 
 
-@patch("aikido_zen.background_process.comms.get_comms")
-def test_sync_data_for_users(mock_get_comms, thread_cache: ThreadCache):
-    """Test that renew calls send_data_to_bg_process with correct arguments."""
-    mock_comms = MagicMock()
-    mock_get_comms.return_value = mock_comms
+@patch("aikido_zen.background_process.ipc.IPCClient.get")
+def test_sync_data_for_users(mock_get_ipc, thread_cache: ThreadCache):
+    mock_ipc = MagicMock()
+    mock_get_ipc.return_value = mock_ipc
     test_utils.generate_and_set_context(ip="5.6.7.8")
 
     # Setup initial state
@@ -484,82 +482,81 @@ def test_sync_data_for_users(mock_get_comms, thread_cache: ThreadCache):
     with test_utils.patch_time(time_ms=-1):
         thread_cache.renew()
 
-    # Assert that send_data_to_bg_process was called with the correct arguments
-    mock_comms.send_data_to_bg_process.assert_called_once_with(
-        action="SYNC_DATA",
-        obj={
-            "config_revision": -1,
-            "current_routes": {},
-            "stats": {
-                "startedAt": -1,
-                "endedAt": -1,
-                "requests": {
-                    "total": 1,
-                    "rateLimited": 0,
-                    "aborted": 0,
-                    "attacksDetected": {"total": 0, "blocked": 0},
-                    "attackWaves": {"total": 0, "blocked": 0},
-                },
-                "operations": {},
+    mock_ipc.send_message.assert_called_once()
+    (message,) = mock_ipc.send_message.call_args.args
+    assert message.identifier == "SYNC_DATA"
+    assert message.timeout_in_sec == 5
+    assert message.request == {
+        "config_revision": -1,
+        "current_routes": {},
+        "stats": {
+            "startedAt": -1,
+            "endedAt": -1,
+            "requests": {
+                "total": 1,
+                "rateLimited": 0,
+                "aborted": 0,
+                "attacksDetected": {"total": 0, "blocked": 0},
+                "attackWaves": {"total": 0, "blocked": 0},
             },
-            "middleware_installed": False,
-            "hostnames": [],
-            "ai_stats": [],
-            "packages": [],
-            "users": [
-                {
-                    "id": "123",
-                    "name": "test",
-                    "lastIpAddress": "5.6.7.8",
-                    "firstSeenAt": 1,
-                    "lastSeenAt": 1,
-                },
-                {
-                    "id": "567",
-                    "name": "test",
-                    "lastIpAddress": "5.6.7.8",
-                    "firstSeenAt": 1,
-                    "lastSeenAt": 1,
-                },
-            ],
+            "operations": {},
         },
-    )
+        "middleware_installed": False,
+        "hostnames": [],
+        "ai_stats": [],
+        "packages": [],
+        "users": [
+            {
+                "id": "123",
+                "name": "test",
+                "lastIpAddress": "5.6.7.8",
+                "firstSeenAt": 1,
+                "lastSeenAt": 1,
+            },
+            {
+                "id": "567",
+                "name": "test",
+                "lastIpAddress": "5.6.7.8",
+                "firstSeenAt": 1,
+                "lastSeenAt": 1,
+            },
+        ],
+    }
 
 
-@patch("aikido_zen.background_process.comms.get_comms")
-def test_renew_called_with_empty_routes(mock_get_comms, thread_cache: ThreadCache):
-    """Test that renew calls send_data_to_bg_process with empty routes."""
-    mock_comms = MagicMock()
-    mock_get_comms.return_value = mock_comms
+@patch("aikido_zen.background_process.ipc.IPCClient.get")
+def test_renew_called_with_empty_routes(mock_get_ipc, thread_cache: ThreadCache):
+    mock_ipc = MagicMock()
+    mock_get_ipc.return_value = mock_ipc
 
     with test_utils.patch_time(time_ms=-1):
         thread_cache.renew()
 
-    # Assert that send_data_to_bg_process was called with the correct arguments
-    mock_comms.send_data_to_bg_process.assert_called_once_with(
-        action="SYNC_DATA",
-        obj={
-            "config_revision": -1,
-            "current_routes": {},
-            "stats": {
-                "startedAt": -1,
-                "endedAt": -1,
-                "requests": {
-                    "total": 0,
-                    "rateLimited": 0,
-                    "aborted": 0,
-                    "attacksDetected": {"total": 0, "blocked": 0},
-                    "attackWaves": {"total": 0, "blocked": 0},
-                },
-                "operations": {},
+    mock_ipc.send_message.assert_called_once()
+    (message,) = mock_ipc.send_message.call_args.args
+    assert message.identifier == "SYNC_DATA"
+    assert message.timeout_in_sec == 5
+    assert message.request == {
+        "config_revision": -1,
+        "current_routes": {},
+        "stats": {
+            "startedAt": -1,
+            "endedAt": -1,
+            "requests": {
+                "total": 0,
+                "rateLimited": 0,
+                "aborted": 0,
+                "attacksDetected": {"total": 0, "blocked": 0},
+                "attackWaves": {"total": 0, "blocked": 0},
             },
-            "middleware_installed": False,
-            "hostnames": [],
-            "users": [],
-            "ai_stats": [],
-            "packages": [],
+            "operations": {},
         },
-    )
+        "middleware_installed": False,
+        "hostnames": [],
+        "users": [],
+        "ai_stats": [],
+        "packages": [],
+    }
 
 
 def test_sync_includes_updates_to_routes_already_in_payload(sync):
@@ -633,23 +630,23 @@ def test_sync_preserves_requests_for_routes_not_in_payload(sync, concurrent_path
 def test_sync_counts_each_request_once(
     sync, config_loaded, first_sync_fails, concurrent_path
 ):
-    cache, manager, comms, _, context = sync
+    cache, manager, ipc, _, context = sync
     manager.conf.last_updated_at = 1 if config_loaded else -1
-    deliver = comms.send_data_to_bg_process.side_effect
+    deliver = ipc.send_message.side_effect
     cache.stats.increment_total_hits()
     post_response(200)
 
-    def first_sync(action, obj):
-        response = {"success": False} if first_sync_fails else deliver(action, obj)
+    def first_sync(message):
+        response = {"success": False} if first_sync_fails else deliver(message)
         if concurrent_path:
             context.route, context.body = concurrent_path, {"during": "sync"}
             cache.stats.increment_total_hits()
             post_response(200)
         return response
 
-    comms.send_data_to_bg_process.side_effect = first_sync
+    ipc.send_message.side_effect = first_sync
     cache.renew()
-    comms.send_data_to_bg_process.side_effect = deliver
+    ipc.send_message.side_effect = deliver
     cache.renew()
     cache.renew()
 
@@ -684,34 +681,34 @@ def test_sync_merges_optional_fields_without_reusing_previous_heartbeat_schema(s
 
 
 def test_overlapping_syncs_do_not_replay_hits(sync):
-    cache, manager, comms, _, _ = sync
-    deliver = comms.send_data_to_bg_process.side_effect
+    cache, manager, ipc, _, _ = sync
+    deliver = ipc.send_message.side_effect
     post_response(200)
 
-    def first_sync(action, obj):
-        comms.send_data_to_bg_process.side_effect = deliver
+    def first_sync(message):
+        ipc.send_message.side_effect = deliver
         post_response(200)
         cache.renew()
-        return deliver(action, obj)
+        return deliver(message)
 
-    comms.send_data_to_bg_process.side_effect = first_sync
+    ipc.send_message.side_effect = first_sync
     cache.renew()
     assert manager.routes.get({"method": "POST", "route": "/test"})["hits"] == 2
     assert cache.routes.get_routes_with_hits() == {}
 
 
 def test_config_is_sent_once_per_worker_per_cloud_response(sync):
-    cache, manager, comms, _, _ = sync
+    cache, manager, ipc, _, _ = sync
     workers = (cache, ThreadCache())
-    deliver = comms.send_data_to_bg_process.side_effect
+    deliver = ipc.send_message.side_effect
     replies = []
 
-    def record_reply(action, obj):
-        response = deliver(action, obj)
+    def record_reply(message):
+        response = deliver(message)
         replies.append(response["data"])
         return response
 
-    comms.send_data_to_bg_process.side_effect = record_reply
+    ipc.send_message.side_effect = record_reply
     for _ in range(2):
         manager.update_service_config({"success": True, "configUpdatedAt": 1})
         for worker in workers:
@@ -735,28 +732,31 @@ def test_initial_config_is_sent_after_failed_cloud_startup(sync):
     cache.renew()
     assert cache.config.revision == 0
     assert cache.config.last_updated_at > 0
-    assert process_sync_data(manager, {"config_revision": cache.config.revision}) == {}
+    assert (
+        sync_data.process(manager, {"config_revision": cache.config.revision}, None)
+        == {}
+    )
 
 
 def test_config_is_retried_after_lost_reply(sync):
-    cache, manager, comms, _, _ = sync
-    deliver = comms.send_data_to_bg_process.side_effect
+    cache, manager, ipc, _, _ = sync
+    deliver = ipc.send_message.side_effect
 
-    def lose_reply(action, obj):
-        assert "config" in deliver(action, obj)["data"]
+    def lose_reply(message):
+        assert "config" in deliver(message)["data"]
         return {"success": False}
 
-    comms.send_data_to_bg_process.side_effect = lose_reply
+    ipc.send_message.side_effect = lose_reply
     cache.renew()
     assert cache.config.last_updated_at == -1
-    comms.send_data_to_bg_process.side_effect = deliver
+    ipc.send_message.side_effect = deliver
     cache.renew()
     assert cache.config.last_updated_at == manager.conf.last_updated_at
-    request = comms.send_data_to_bg_process.call_args.kwargs["obj"]
-    assert "config" in process_sync_data(manager, request)
+    request = ipc.send_message.call_args.args[0].request
+    assert "config" in sync_data.process(manager, request, None)
     cache.renew()
-    request = comms.send_data_to_bg_process.call_args.kwargs["obj"]
-    assert process_sync_data(manager, request) == {}
+    request = ipc.send_message.call_args.args[0].request
+    assert sync_data.process(manager, request, None) == {}
 
 
 @pytest.mark.parametrize("config_loaded", [False, True])
@@ -765,7 +765,7 @@ def test_config_is_retried_after_lost_reply(sync):
 def test_sampling_limit_resets_after_fresh_config(
     sync, config_loaded, report_succeeds, first_sync_fails
 ):
-    cache, manager, comms, generate_schema, _ = sync
+    cache, manager, ipc, generate_schema, _ = sync
     manager.conf.last_updated_at = 1 if config_loaded else -1
     manager.report_api_event.return_value = {
         "success": report_succeeds,
@@ -780,19 +780,19 @@ def test_sampling_limit_resets_after_fresh_config(
     expected_samples = 40 if config_loaded else 20
     assert generate_schema.call_count == expected_samples
 
-    deliver = comms.send_data_to_bg_process.side_effect
+    deliver = ipc.send_message.side_effect
     for heartbeat_at in (31_000, 131_000):
         with test_utils.patch_time(time_ms=heartbeat_at):
             manager.send_heartbeat()
         post_response(200)
         assert generate_schema.call_count == expected_samples
         if first_sync_fails:
-            comms.send_data_to_bg_process.side_effect = None
-            comms.send_data_to_bg_process.return_value = {"success": False}
+            ipc.send_message.side_effect = None
+            ipc.send_message.return_value = {"success": False}
             cache.renew()
             post_response(200)
             assert generate_schema.call_count == expected_samples
-            comms.send_data_to_bg_process.side_effect = deliver
+            ipc.send_message.side_effect = deliver
         cache.renew()
         for _ in range(21):
             post_response(200)
@@ -806,23 +806,23 @@ def test_sampling_limit_resets_after_fresh_config(
 def test_sampling_reset_preserves_requests_collected_during_sync(
     sync, concurrent_path, requests_during_sync
 ):
-    cache, manager, comms, generate_schema, context = sync
+    cache, manager, ipc, generate_schema, context = sync
     manager.report_api_event.return_value = {"success": True, "configUpdatedAt": 1}
     for _ in range(3):
         post_response(200)
     cache.renew()
     with test_utils.patch_time(time_ms=31_000):
         manager.send_heartbeat()
-    deliver = comms.send_data_to_bg_process.side_effect
+    deliver = ipc.send_message.side_effect
 
-    def request_during_sync(action, obj):
-        response = deliver(action, obj)
+    def request_during_sync(message):
+        response = deliver(message)
         context.route, context.body = concurrent_path, {"during": "sync"}
         for _ in range(requests_during_sync):
             post_response(200)
         return response
 
-    comms.send_data_to_bg_process.side_effect = request_during_sync
+    ipc.send_message.side_effect = request_during_sync
     cache.renew()
     metadata = {"method": "POST", "route": concurrent_path}
     pending = cache.routes.get(metadata)
@@ -831,7 +831,7 @@ def test_sampling_reset_preserves_requests_collected_during_sync(
     assert pending["apispec"]["body"]["schema"]["properties"] == {
         "during": {"type": "string"}
     }
-    comms.send_data_to_bg_process.side_effect = deliver
+    ipc.send_message.side_effect = deliver
     cache.renew()
     reported = manager.routes.get(metadata)
     assert reported["hits"] == requests_during_sync
@@ -842,14 +842,14 @@ def test_sampling_reset_preserves_requests_collected_during_sync(
 
 
 @pytest.mark.parametrize("response_data", [{}, {"config": None}])
-@patch("aikido_zen.background_process.comms.get_comms")
+@patch("aikido_zen.background_process.ipc.IPCClient.get")
 def test_renew_preserves_increments_during_ipc(
-    mock_get_comms, thread_cache: ThreadCache, response_data
+    mock_get_ipc, thread_cache: ThreadCache, response_data
 ):
     """Increments arriving during the IPC call survive on the response path -
     the snapshot is sent, but the live counter keeps the concurrent increment."""
-    mock_comms = MagicMock()
-    mock_get_comms.return_value = mock_comms
+    mock_ipc = MagicMock()
+    mock_get_ipc.return_value = mock_ipc
 
     thread_cache.stats.increment_total_hits()
     thread_cache.stats.increment_total_hits()
@@ -858,23 +858,23 @@ def test_renew_preserves_increments_during_ipc(
         thread_cache.stats.increment_total_hits()
         return {"success": True, "data": response_data}
 
-    mock_comms.send_data_to_bg_process.side_effect = simulate_concurrent_increment
+    mock_ipc.send_message.side_effect = simulate_concurrent_increment
 
     thread_cache.renew()
 
-    sent_total = mock_comms.send_data_to_bg_process.call_args.kwargs["obj"]["stats"][
-        "requests"
-    ]["total"]
+    sent_total = mock_ipc.send_message.call_args.args[0].request["stats"]["requests"][
+        "total"
+    ]
     assert sent_total == 2
     assert thread_cache.stats.get_record()["requests"]["total"] == 1
 
 
-@patch("aikido_zen.background_process.comms.get_comms")
+@patch("aikido_zen.background_process.ipc.IPCClient.get")
 def test_renew_drops_failed_batch_and_preserves_new_increments(
-    mock_get_comms, thread_cache: ThreadCache
+    mock_get_ipc, thread_cache: ThreadCache
 ):
-    mock_comms = MagicMock()
-    mock_get_comms.return_value = mock_comms
+    mock_ipc = MagicMock()
+    mock_get_ipc.return_value = mock_ipc
 
     thread_cache.stats.increment_total_hits()
     thread_cache.stats.increment_total_hits()
@@ -887,7 +887,7 @@ def test_renew_drops_failed_batch_and_preserves_new_increments(
         thread_cache.stats.on_detected_attack_wave(blocked=False)
         return {"success": False}
 
-    mock_comms.send_data_to_bg_process.side_effect = fail_after_concurrent_increment
+    mock_ipc.send_message.side_effect = fail_after_concurrent_increment
 
     thread_cache.renew()
 
@@ -900,11 +900,10 @@ def test_renew_drops_failed_batch_and_preserves_new_increments(
     assert thread_cache.ai_stats.get_stats() == []
 
 
-@patch("aikido_zen.background_process.comms.get_comms")
-def test_renew_called_with_no_requests(mock_get_comms, thread_cache: ThreadCache):
-    """Test that renew calls send_data_to_bg_process with zero requests."""
-    mock_comms = MagicMock()
-    mock_get_comms.return_value = mock_comms
+@patch("aikido_zen.background_process.ipc.IPCClient.get")
+def test_renew_called_with_no_requests(mock_get_ipc, thread_cache: ThreadCache):
+    mock_ipc = MagicMock()
+    mock_get_ipc.return_value = mock_ipc
 
     # Setup initial state with a route but no requests
     thread_cache.routes.initialize_route({"method": "GET", "route": "/test"})
@@ -912,28 +911,28 @@ def test_renew_called_with_no_requests(mock_get_comms, thread_cache: ThreadCache
     with test_utils.patch_time(time_ms=-1):
         thread_cache.renew()
 
-    # Assert that send_data_to_bg_process was called with the correct arguments
-    mock_comms.send_data_to_bg_process.assert_called_once_with(
-        action="SYNC_DATA",
-        obj={
-            "config_revision": -1,
-            "current_routes": {},
-            "stats": {
-                "startedAt": -1,
-                "endedAt": -1,
-                "requests": {
-                    "total": 0,
-                    "rateLimited": 0,
-                    "aborted": 0,
-                    "attacksDetected": {"total": 0, "blocked": 0},
-                    "attackWaves": {"total": 0, "blocked": 0},
-                },
-                "operations": {},
+    mock_ipc.send_message.assert_called_once()
+    (message,) = mock_ipc.send_message.call_args.args
+    assert message.identifier == "SYNC_DATA"
+    assert message.timeout_in_sec == 5
+    assert message.request == {
+        "config_revision": -1,
+        "current_routes": {},
+        "stats": {
+            "startedAt": -1,
+            "endedAt": -1,
+            "requests": {
+                "total": 0,
+                "rateLimited": 0,
+                "aborted": 0,
+                "attacksDetected": {"total": 0, "blocked": 0},
+                "attackWaves": {"total": 0, "blocked": 0},
             },
-            "middleware_installed": False,
-            "hostnames": [],
-            "users": [],
-            "ai_stats": [],
-            "packages": [],
+            "operations": {},
         },
-    )
+        "middleware_installed": False,
+        "hostnames": [],
+        "users": [],
+        "ai_stats": [],
+        "packages": [],
+    }
