@@ -85,8 +85,13 @@ def test_ip_matcher_round_trip():
     zen_internals.ip_matcher_free(handle)
 
 
-def test_ip_matcher_create_returns_none_when_function_is_not_loaded(monkeypatch):
-    monkeypatch.setattr("aikido_zen.helpers.zen_internals._ip_matcher_create", None)
+@pytest.mark.parametrize(
+    "function", ["_ip_matcher_create", "_ip_matcher_has", "_ip_matcher_free"]
+)
+def test_ip_matcher_create_returns_none_when_function_is_not_loaded(
+    monkeypatch, function
+):
+    monkeypatch.setattr(f"aikido_zen.helpers.zen_internals.{function}", None)
 
     assert zen_internals.has_ip_matcher() is False
     assert zen_internals.ip_matcher_create([b"10.0.0.0/8"]) is None

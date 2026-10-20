@@ -148,7 +148,9 @@ if not has_ip_matcher():
 
 def ip_matcher_create(networks: list):
     """Returns the matcher handle, or None when the library cannot build one."""
-    if _ip_matcher_create is None:
+    # A handle is only useful when has and free exist too, so ip_matcher_has and
+    # ip_matcher_free never need their own check.
+    if not has_ip_matcher():
         return None
     count = len(networks)
     if not count:
