@@ -1,4 +1,7 @@
 import ctypes
+import os
+
+import pytest
 
 from aikido_zen.helpers import zen_internals
 
@@ -35,25 +38,26 @@ def test_detect_sql_injection_returns_error_when_function_is_not_loaded(monkeypa
     assert zen_internals.detect_sql_injection(query, b"1 or 1=1", MYSQL) == 2
 
 
-def test_load_returns_none_when_library_file_is_missing(monkeypatch, caplog):
+def test_load_returns_none_when_library_file_is_missing(monkeypatch):
     monkeypatch.setattr(
-        "aikido_zen.helpers.zen_internals.get_binary_path",
+        "aikido_zen.helpers.zen_internals._binary_path",
         lambda: "/nonexistent/libzen_internals.so",
     )
 
-    assert zen_internals._load() is None
-    assert "Zen will NOT block SQL injection attacks" in caplog.text
-    assert "Cannot find the zen-internals library" in caplog.text
+    internals_lib, error = zen_internals._load()
+    assert internals_lib is None
+    assert "Cannot find the zen-internals library" in error
+    assert "Request support" in error
 
 
-def test_load_returns_none_when_library_fails_to_load(monkeypatch, caplog):
+def test_load_returns_none_when_library_fails_to_load(monkeypatch):
     monkeypatch.setattr(
-        "aikido_zen.helpers.zen_internals.get_binary_path", lambda: __file__
+        "aikido_zen.helpers.zen_internals._binary_path", lambda: __file__
     )
 
-    assert zen_internals._load() is None
-    assert "Zen will NOT block SQL injection attacks" in caplog.text
-    assert "Failed to load the zen-internals library" in caplog.text
+    internals_lib, error = zen_internals._load()
+    assert internals_lib is None
+    assert "Failed to load the zen-internals library" in error
 
 
 def test_bind_returns_none_when_library_is_not_loaded():
@@ -70,3 +74,62 @@ def test_bind_returns_none_when_function_is_missing():
         )
         is None
     )
+
+
+def test_warning_gives_the_load_error_when_library_is_missing(monkeypatch, caplog):
+    monkeypatch.setattr(
+        "aikido_zen.helpers.zen_internals._load_error",
+        "Cannot find the zen-internals library for test-target.",
+    )
+
+    zen_internals._warn_unavailable(
+        "Zen will NOT block SQL injection attacks", "detect_sql_injection"
+    )
+
+    assert (
+        "Zen will NOT block SQL injection attacks. Cannot find the zen-internals "
+        "library for test-target." in caplog.text
+    )
+
+
+def test_warning_names_the_missing_function_when_library_is_loaded(monkeypatch, caplog):
+    monkeypatch.setattr("aikido_zen.helpers.zen_internals._load_error", None)
+
+    zen_internals._warn_unavailable(
+        "Zen will NOT block SQL injection attacks", "detect_sql_injection"
+    )
+
+    assert "Zen will NOT block SQL injection attacks." in caplog.text
+    assert "has no detect_sql_injection function" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "system, machine, libc, file_name",
+    [
+        ("Darwin", "arm64", "", "libzen_internals_aarch64-apple-darwin.dylib"),
+        ("Darwin", "x86_64", "", "libzen_internals_x86_64-apple-darwin.dylib"),
+        ("Linux", "aarch64", "glibc", "libzen_internals_aarch64-unknown-linux-gnu.so"),
+        ("Linux", "x86_64", "glibc", "libzen_internals_x86_64-unknown-linux-gnu.so"),
+        ("Linux", "aarch64", "", "libzen_internals_aarch64-unknown-linux-musl.so"),
+        ("Linux", "x86_64", "", "libzen_internals_x86_64-unknown-linux-musl.so"),
+        ("Windows", "AMD64", "", "libzen_internals_x86_64-pc-windows-gnu.dll"),
+        ("Windows", "ARM64", "", "libzen_internals_aarch64-pc-windows-msvc.dll"),
+    ],
+)
+def test_binary_path_picks_the_build_for_the_platform(
+    monkeypatch, system, machine, libc, file_name
+):
+    monkeypatch.setattr("platform.system", lambda: system)
+    monkeypatch.setattr("platform.machine", lambda: machine)
+    monkeypatch.setattr("platform.libc_ver", lambda: (libc, ""))
+
+    path = zen_internals._binary_path()
+
+    assert os.path.basename(path) == file_name
+    assert os.path.dirname(os.path.normpath(path)).endswith(
+        os.path.join("aikido_zen", "libs")
+    )
+
+
+def test_binary_path_exists_for_this_machine():
+    assert os.path.exists(zen_internals._binary_path())
