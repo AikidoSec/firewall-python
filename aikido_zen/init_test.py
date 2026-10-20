@@ -24,10 +24,10 @@ def test_protect_sets_token():
 def test_protect_does_not_start_without_gil(monkeypatch):
     monkeypatch.setattr("aikido_zen.gil_not_enabled", lambda: True)
 
-    with patch("aikido_zen.test_uds_file_access") as test_uds_file_access, patch(
+    with patch("aikido_zen.check_socket_access") as check_socket_access, patch(
         "aikido_zen.start_background_process"
     ) as start_background_process:
         protect()
 
-    test_uds_file_access.assert_not_called()
+    check_socket_access.assert_not_called()
     start_background_process.assert_not_called()
