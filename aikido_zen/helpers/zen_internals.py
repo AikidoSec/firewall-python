@@ -61,7 +61,10 @@ def _load():
         error = e
     # A musl Python built without HOST_GNU_TYPE picks the glibc build, which musl
     # cannot load.
-    musl_path = binary_path.replace("-gnu.so", "-musl.so")
+    musl_path = os.path.join(
+        os.path.dirname(binary_path),
+        os.path.basename(binary_path).replace("-gnu.so", "-musl.so"),
+    )
     if musl_path != binary_path and os.path.exists(musl_path):
         try:
             return ctypes.CDLL(musl_path)
