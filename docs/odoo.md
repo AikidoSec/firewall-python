@@ -1,6 +1,6 @@
 # Odoo
 
-Zen supports self-hosted Odoo 16 through 19 on Odoo's regular HTTP server, in threaded and prefork worker mode. Zen stores the JSON-RPC body, the HTTP form, the query, cookies, route arguments, and upload file names from Odoo's own parse, then checks database, file, shell and outbound calls against that input.
+Zen protects self-hosted Odoo on Odoo's regular HTTP server, in threaded and prefork worker mode. It is tested on Odoo 16 through 19. Zen stores the JSON-RPC body, the HTTP form, the query, cookies, route arguments, and upload file names from Odoo's own parse, then checks database, file, shell and outbound calls against that input.
 
 ## Installation
 
