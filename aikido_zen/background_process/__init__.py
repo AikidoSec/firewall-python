@@ -3,6 +3,7 @@ Aikido background process, this will create a new process
 and listen for data sent by our sources and sinks
 """
 
+import hashlib
 import multiprocessing
 import os
 import platform
@@ -80,7 +81,9 @@ def get_uds_filename():
     """Returns the address for UDS file"""
     temp_dir = get_temp_dir()
     prefix = "aikido_python"
-    name = hash_aikido_token()
+    # This key is shared by workers and changes between application runs.
+    identity = hash_aikido_token().encode() + multiprocessing.current_process().authkey
+    name = hashlib.sha256(identity).hexdigest()
     return f"{temp_dir}/{prefix}_{name}.sock"
 
 

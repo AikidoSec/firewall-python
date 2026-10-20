@@ -90,8 +90,6 @@ class IPCClient:
             with open_connection(self.address, deadline) as conn:
                 conn.send((message.identifier, message.request))
                 result = conn.recv()
-            if time.monotonic() >= deadline:
-                return {"success": False, "error": "timeout"}
         except Exception as e:
             logger.debug("Exception occurred in IPC call : %s", e)
             return {"success": False, "error": "timeout"}

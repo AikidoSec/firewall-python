@@ -16,7 +16,12 @@ import pytest
 
 from aikido_zen.background_process import ipc as module
 from aikido_zen.background_process import socket_connection as transport
-from aikido_zen.background_process.commands import ping, put_event, read_property
+from aikido_zen.background_process.commands import (
+    check_firewall_lists,
+    ping,
+    put_event,
+    read_property,
+)
 from aikido_zen.background_process.commands import process_incoming_command
 
 
@@ -221,6 +226,29 @@ def test_commands_return_results_or_acknowledgments(
     if message.identifier == "PUT_EVENT":
         assert events.get_nowait() == {"name": "login.failed"}
     assert_released(resources, [])
+
+
+def test_completed_blocked_reply_is_kept_after_deadline(monkeypatch):
+    clock = Mock(return_value=0.0)
+    verdict = {"blocked": True, "type": "bot-blocking"}
+
+    def receive():
+        clock.return_value = 0.02
+        return verdict
+
+    @contextmanager
+    def completed_connection(address, deadline):
+        assert address == "fixture"
+        assert deadline == 0.01
+        yield SimpleNamespace(send=Mock(), recv=receive)
+
+    monkeypatch.setattr(module, "time", SimpleNamespace(monotonic=clock))
+    monkeypatch.setattr(module, "open_connection", completed_connection)
+    ipc = module.IPCClient("fixture", b"fixture")
+
+    assert ipc.send_message(
+        check_firewall_lists.generate("203.0.113.10", "browser")
+    ) == {"success": True, "data": verdict}
 
 
 @pytest.mark.parametrize(
