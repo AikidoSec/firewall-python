@@ -7,29 +7,61 @@ import ctypes
 import os
 import platform
 
-from aikido_zen.helpers.get_lib_path import get_binary_path
 from aikido_zen.helpers.logging import logger
 
 
+_TARGET = f"{platform.system().lower()}-{platform.machine().lower()}"
+
+
+def _binary_path():
+    os_name = platform.system().lower()
+    machine = platform.machine().lower()
+    is_arm = "arm64" in machine or "aarch64" in machine
+    file_name = "libzen_internals_"
+
+    # On macOS, platform.machine() returns "arm64" for Apple Silicon
+    # On Linux, platform.machine() returns "aarch64" for ARM64
+    if is_arm:
+        file_name += "aarch64-"
+    # On macOS, platform.machine() returns "x86_64" for Intel
+    # On Linux, platform.machine() returns "x86_64" for AMD64
+    elif "x86_64" in machine or "amd64" in machine:
+        file_name += "x86_64-"
+
+    if os_name == "windows":
+        file_name += "pc-windows-msvc.dll" if is_arm else "pc-windows-gnu.dll"
+    elif os_name == "darwin":
+        file_name += "apple-darwin.dylib"
+    elif os_name in ["linux", "linux2"]:
+        # platform.libc_ver() names glibc and is empty on musl (Alpine), which cannot
+        # load the glibc build.
+        libc = "gnu" if platform.libc_ver()[0] == "glibc" else "musl"
+        file_name += f"unknown-linux-{libc}.so"
+
+    return os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "../libs", file_name
+    )
+
+
 def _load():
-    binary_path = get_binary_path()
-    target = f"{platform.system().lower()}-{platform.machine().lower()}"
+    """Returns the loaded library and None, or None and the reason it did not load."""
+    binary_path = _binary_path()
     if not os.path.exists(binary_path):
-        logger.warning(
-            "Zen will NOT block SQL injection attacks. Cannot find the zen-internals library for %s. "
-            "Request support: https://github.com/AikidoSec/firewall-python/issues",
-            target,
+        return None, (
+            f"Cannot find the zen-internals library for {_TARGET}. "
+            "Request support: https://github.com/AikidoSec/firewall-python/issues"
         )
-        return None
     try:
-        return ctypes.CDLL(binary_path)
+        return ctypes.CDLL(binary_path), None
     except OSError as e:
-        logger.warning(
-            "Zen will NOT block SQL injection attacks. Failed to load the zen-internals library for %s: %s",
-            target,
-            e,
-        )
-        return None
+        return None, f"Failed to load the zen-internals library for {_TARGET}: {e}"
+
+
+def _warn_unavailable(consequence, function_name):
+    reason = _load_error or (
+        f"The zen-internals library for {_TARGET} has no {function_name} function."
+    )
+    logger.warning("%s. %s", consequence, reason)
 
 
 def _bind(internals_lib, name, argtypes, restype):
@@ -46,7 +78,7 @@ def _bind(internals_lib, name, argtypes, restype):
     return function
 
 
-_internals_lib = _load()
+_internals_lib, _load_error = _load()
 
 _detect_sql_injection = _bind(
     _internals_lib,
@@ -60,6 +92,10 @@ _detect_sql_injection = _bind(
     ],
     ctypes.c_int,
 )
+if _detect_sql_injection is None:
+    _warn_unavailable(
+        "Zen will NOT block SQL injection attacks", "detect_sql_injection"
+    )
 
 
 def detect_sql_injection(query: bytes, user_input: bytes, dialect: int) -> int:
