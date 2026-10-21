@@ -7,7 +7,8 @@ permissions:
 
 jobs:
   benchmark_sql_algorithm:
-    runs-on: ubuntu-latest
+    # actions/setup-python has no Python 3.9 for Ubuntu 26.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Checkout code
@@ -41,7 +42,8 @@ jobs:
           poetry run python ./benchmarks/sql_benchmark/sql_benchmark_no_fw.py
 
   benchmark_with_flask_mysql:
-    runs-on: ubuntu-latest
+    # actions/setup-python has no Python 3.9 for Ubuntu 26.04
+    runs-on: ${{ matrix.python-version == '3.9' && 'ubuntu-24.04' || 'ubuntu-latest' }}
     timeout-minutes: 10
     strategy:
       fail-fast: false
@@ -90,7 +92,8 @@ jobs:
             k6 run -q ./benchmarks/flask-mysql-benchmarks.js
 
   wrk_benchmarks:
-    runs-on: ubuntu-latest
+    # actions/setup-python has no Python 3.9 for Ubuntu 26.04
+    runs-on: ${{ matrix.python-version == '3.9' && 'ubuntu-24.04' || 'ubuntu-latest' }}
     timeout-minutes: 10
     strategy:
       fail-fast: false
