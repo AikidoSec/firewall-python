@@ -13,7 +13,7 @@ class IPMatcher:
             if isinstance(network, str) and network.isascii()
         ]
         self._handle = zen_internals.ip_matcher_create(
-            [network.encode() for network in self._networks]
+            "\n".join(self._networks).encode()
         )
         if self._handle is not None:
             weakref.finalize(self, zen_internals.ip_matcher_free, self._handle)

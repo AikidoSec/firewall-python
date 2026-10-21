@@ -7,8 +7,6 @@ import ctypes
 import os
 import platform
 import sysconfig
-from array import array
-from itertools import accumulate, islice
 
 from aikido_zen.helpers.logging import logger
 
@@ -126,14 +124,10 @@ def detect_sql_injection(query: bytes, user_input: bytes, dialect: int) -> int:
     )
 
 
-class _ByteSlice(ctypes.Structure):
-    _fields_ = [("ptr", ctypes.c_char_p), ("len", ctypes.c_size_t)]
-
-
 _ip_matcher_create = _bind(
     _internals_lib,
     "ip_matcher_create",
-    [ctypes.POINTER(_ByteSlice), ctypes.c_size_t],
+    [ctypes.c_char_p, ctypes.c_size_t],
     ctypes.c_void_p,
 )
 _ip_matcher_has = _bind(
@@ -153,27 +147,13 @@ if not has_ip_matcher():
     logger.warning("Zen will NOT apply IP lists or block SSRF attacks.")
 
 
-def ip_matcher_create(networks: list):
-    """Returns the matcher handle, or None when the library cannot build one."""
+def ip_matcher_create(networks: bytes):
+    """Builds a matcher from newline-separated networks. Returns None on failure."""
     # A handle is only useful when has and free exist too, so ip_matcher_has and
     # ip_matcher_free never need their own check.
     if not has_ip_matcher():
         return None
-    count = len(networks)
-    if not count:
-        return _ip_matcher_create(None, 0) or None
-
-    # One ctypes object per network holds the GIL for the whole loop, so the thread that
-    # answers CHECK_FIREWALL_LISTS misses its 10 ms timeout during a rebuild. One buffer
-    # and a flat array of (pointer, length) pairs keep the Python part short.
-    lengths = array("Q", map(len, networks))
-    buffer = ctypes.create_string_buffer(b"".join(networks), sum(lengths))
-    offsets = islice(accumulate(lengths, initial=0), count)
-    pairs = array("Q", bytes(ctypes.sizeof(_ByteSlice) * count))
-    pairs[0::2] = array("Q", map(ctypes.addressof(buffer).__add__, offsets))
-    pairs[1::2] = lengths
-    descriptors = (_ByteSlice * count).from_buffer(pairs)
-    return _ip_matcher_create(descriptors, count) or None
+    return _ip_matcher_create(networks, len(networks))
 
 
 def ip_matcher_has(handle, network: bytes) -> bool:
