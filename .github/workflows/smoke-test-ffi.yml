@@ -52,3 +52,32 @@ jobs:
 
       - name: Run tests
         run: poetry run pytest aikido_zen/vulnerabilities/sql_injection/init_test.py
+
+  smoke-test-musl:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-22.04-arm]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Download binaries
+        run: make binaries && cp -r .cache/binaries/* aikido_zen/libs
+
+      # pip runs inside the container, so safe-chain is set up there and not on the runner.
+      # build-base compiles pytricia, which has no prebuilt wheel.
+      - name: Run tests on python:${{ matrix.python-version }}-alpine
+        run: |
+          docker run --rm -v "$(pwd):/app" -w /app python:${{ matrix.python-version }}-alpine sh -eo pipefail -c "
+            apk add --no-cache build-base curl
+            curl -fsSL https://github.com/AikidoSec/safe-chain/releases/latest/download/install-safe-chain.sh | sh -s -- --ci
+            export PATH=\"\$HOME/.safe-chain/shims:\$HOME/.safe-chain/bin:\$PATH\"
+            pip install --root-user-action=ignore . pytest
+            python -m pytest aikido_zen/helpers/zen_internals_test.py
+          "
