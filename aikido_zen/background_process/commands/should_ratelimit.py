@@ -1,20 +1,32 @@
-"""Exports `process_should_ratelimit`"""
-
 import aikido_zen.ratelimiting as ratelimiting
 
+from aikido_zen.helpers.ipc.command_types import Payload
 
-def process_should_ratelimit(connection_manager, data):
-    """
-    Called to check if the context passed along as data should be rate limited
-    data object should be a dict including route_metadata, remote_address and user
-    route_metadata object includes route, url and method
-    """
+IDENTIFIER = "SHOULD_RATELIMIT"
+
+
+def generate(
+    route_metadata, user, group, remote_address, timeout_in_sec=0.01
+) -> Payload:
+    return Payload(
+        IDENTIFIER,
+        {
+            "route_metadata": route_metadata,
+            "user": user,
+            "group": group,
+            "remote_address": remote_address,
+        },
+        timeout_in_sec,
+    )
+
+
+def process(connection_manager, request, queue):
     if not connection_manager:
         return False
     return ratelimiting.should_ratelimit_request(
-        route_metadata=data["route_metadata"],
-        remote_address=data["remote_address"],
-        user=data["user"],
+        route_metadata=request["route_metadata"],
+        remote_address=request["remote_address"],
+        user=request["user"],
         connection_manager=connection_manager,
-        group=data["group"],
+        group=request["group"],
     )

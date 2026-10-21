@@ -2,7 +2,7 @@ import asyncio
 import pytest
 from unittest.mock import patch
 import aikido_zen.sinks.pymongo
-from aikido_zen.background_process.comms import reset_comms
+from aikido_zen.background_process.ipc import IPCClient
 import pymongo.errors as mongo_errs
 
 
@@ -16,7 +16,7 @@ def db():
 
 @pytest.mark.asyncio
 async def test_replace_one(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -34,7 +34,7 @@ async def test_replace_one(db):
 
 @pytest.mark.asyncio
 async def test_update_one(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -50,7 +50,7 @@ async def test_update_one(db):
 
 @pytest.mark.asyncio
 async def test_update_many(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -66,7 +66,7 @@ async def test_update_many(db):
 
 @pytest.mark.asyncio
 async def test_delete_one(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -82,7 +82,7 @@ async def test_delete_one(db):
 
 @pytest.mark.asyncio
 async def test_delete_many(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -98,7 +98,7 @@ async def test_delete_many(db):
 
 @pytest.mark.asyncio
 async def test_find_one(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -115,7 +115,7 @@ async def test_find_one(db):
 
 @pytest.mark.asyncio
 async def test_count_documents(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -132,7 +132,7 @@ async def test_count_documents(db):
 
 @pytest.mark.asyncio
 async def test_find_one_and_delete(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -149,7 +149,7 @@ async def test_find_one_and_delete(db):
 
 @pytest.mark.asyncio
 async def test_find_one_and_replace(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -168,7 +168,7 @@ async def test_find_one_and_replace(db):
 
 @pytest.mark.asyncio
 async def test_find_one_and_update(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -185,7 +185,7 @@ async def test_find_one_and_update(db):
 
 @pytest.mark.asyncio
 async def test_find_empty(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -196,7 +196,7 @@ async def test_find_empty(db):
 
 @pytest.mark.asyncio
 async def test_find_not_empty(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -213,7 +213,7 @@ async def test_find_not_empty(db):
 
 @pytest.mark.asyncio
 async def test_find_raw_batches(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -230,7 +230,7 @@ async def test_find_raw_batches(db):
 
 @pytest.mark.asyncio
 async def test_distinct(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -247,7 +247,7 @@ async def test_distinct(db):
 
 @pytest.mark.asyncio
 async def test_distinct_kwargs(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -264,7 +264,7 @@ async def test_distinct_kwargs(db):
 
 @pytest.mark.asyncio
 async def test_distinct_empty(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:

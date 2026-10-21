@@ -1,3 +1,4 @@
+import threading
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -54,7 +55,9 @@ def load_worker_times(n, renew=None):
 
 
 def test_startup_sync_runs_on_the_first_request():
-    assert load_worker_times(1) == 1
+    renew = MagicMock()
+    assert load_worker_times(1, renew=renew) == 1
+    renew.assert_called_once_with()
 
 
 def test_startup_sync_is_attempted_only_once_per_process():
@@ -86,3 +89,21 @@ def test_a_failed_sync_is_not_retried_on_the_request_path():
     renew = MagicMock(side_effect=Exception("IPC down"))
 
     assert load_worker_times(20, renew=renew) == 1
+
+
+def test_load_worker_called_again_during_the_startup_sync_does_not_deadlock():
+    renew = MagicMock(side_effect=loader.load_worker)
+
+    def first_request():
+        set_context()
+        loader.load_worker()
+
+    request = threading.Thread(target=first_request, daemon=True)
+    with patch.object(loader, "_load_worker_lock", threading.Lock()), patch(
+        "aikido_zen.thread.thread_cache.renew", renew
+    ), patch("threading.enumerate", return_value=[]), patch("threading.Thread"):
+        request.start()
+        request.join(timeout=5)
+
+    assert not request.is_alive()
+    assert renew.call_count == 1

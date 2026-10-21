@@ -18,9 +18,9 @@ def run_around_tests():
 
 
 @pytest.fixture
-def mock_comms():
-    """Fixture to mock the get_comms function."""
-    with patch("aikido_zen.background_process.comms.get_comms") as mock:
+def mock_ipc():
+    """Fixture to mock the get_ipc function."""
+    with patch("aikido_zen.background_process.ipc.IPCClient.get") as mock:
         yield mock
 
 
@@ -129,24 +129,25 @@ def test_sql_injection_with_route_params(caplog, get_context, monkeypatch):
         )
 
 
-def test_sql_injection_with_comms(caplog, get_context, monkeypatch):
+def test_sql_injection_with_ipc(caplog, get_context, monkeypatch):
     get_cache().config.last_updated_at = 1
     get_context.set_as_current_context()
     monkeypatch.setenv("AIKIDO_BLOCK", "1")
-    with patch("aikido_zen.background_process.comms.get_comms") as mock_get_comms:
-        # Create a mock comms object
-        mock_comms = MagicMock()
-        mock_get_comms.return_value = mock_comms  # Set the return value of get_comms
+    with patch("aikido_zen.background_process.ipc.IPCClient.get") as mock_get_ipc:
+        # Create a mock ipc object
+        mock_ipc = MagicMock()
+        mock_ipc.send_message.return_value = {"success": True, "data": True}
+        mock_get_ipc.return_value = mock_ipc  # Set the return value of get_ipc
         with pytest.raises(AikidoSQLInjection):
             run_vulnerability_scan(
                 kind="sql_injection",
                 op="test_op",
                 args=("INSERT * INTO VALUES ('doggoss2', TRUE);", "mysql"),
             )
-        mock_comms.send_data_to_bg_process.assert_called_once()
-        call_args = mock_comms.send_data_to_bg_process.call_args[0]
-        assert call_args[0] == "put_event"
-        assert call_args[1].event["request"] == {
+        mock_ipc.send_message_async.assert_called_once()
+        (message,) = mock_ipc.send_message_async.call_args.args
+        assert message.identifier == "PUT_EVENT"
+        assert message.request.event["request"] == {
             "ipAddress": "198.51.100.23",
             "method": "GET",
             "route": "/hello",
@@ -154,8 +155,8 @@ def test_sql_injection_with_comms(caplog, get_context, monkeypatch):
             "url": "http://localhost:8080/hello",
             "userAgent": None,
         }
-        del call_args[1].event["attack"]["stack"]  # Hard to test
-        assert call_args[1].event["attack"] == {
+        del message.request.event["attack"]["stack"]  # Hard to test
+        assert message.request.event["attack"] == {
             "blocked": True,
             "kind": "sql_injection",
             "metadata": {
@@ -215,10 +216,10 @@ def test_ssrf_vulnerability_scan_protection_gets_forced_off(get_context):
 def test_sql_injection_with_protection_forced_off(caplog, get_context, monkeypatch):
     get_context.set_as_current_context()
     monkeypatch.setenv("AIKIDO_BLOCK", "1")
-    with patch("aikido_zen.background_process.comms.get_comms") as mock_get_comms:
-        # Create a mock comms object
-        mock_comms = MagicMock()
-        mock_get_comms.return_value = mock_comms  # Set the return value of get_comms
+    with patch("aikido_zen.background_process.ipc.IPCClient.get") as mock_get_ipc:
+        # Create a mock ipc object
+        mock_ipc = MagicMock()
+        mock_get_ipc.return_value = mock_ipc  # Set the return value of get_ipc
         with pytest.raises(AikidoSQLInjection):
             run_vulnerability_scan(
                 kind="sql_injection",

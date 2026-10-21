@@ -1,19 +1,22 @@
-"""Exports process_renew_config"""
-
 from aikido_zen.background_process.packages import PackagesStore
+from aikido_zen.helpers.ipc.command_types import Payload
+
+IDENTIFIER = "SYNC_DATA"
 
 
-def process_sync_data(connection_manager, data):
+def generate(request, timeout_in_sec=5) -> Payload:
+    return Payload(IDENTIFIER, request, timeout_in_sec)
+
+
+def process(connection_manager, request, queue):
     """
-    Synchronizes data between the thread-local cache (with a TTL of usually 1 minute) and the
-    background thread. Which data gets synced?
-    Thread -> BG Process : Routes, Hostnames, Users, Stats & middleware installed
-    BG Process -> Thread : Config (only if the worker hasn't received the current revision)
+    Application -> Background process: Routes, Hostnames, Users, Stats & middleware installed.
+    Background process -> Application: Config, only when the revision has changed.
     """
 
     # Sync routes
     routes = connection_manager.routes
-    for route in data.get("current_routes", {}).values():
+    for route in request.get("current_routes", {}).values():
         route_metadata = {"method": route["method"], "route": route["path"]}
         if not routes.get(route_metadata):
             routes.initialize_route(route_metadata)
@@ -27,11 +30,11 @@ def process_sync_data(connection_manager, data):
         routes.update_route_with_apispec(route_metadata, route["apispec"])
 
     # Save middleware installed :
-    if data.get("middleware_installed", False):
+    if request.get("middleware_installed", False):
         connection_manager.middleware_installed = True
 
     # Sync hostnames
-    for hostnames_entry in data.get("hostnames", []):
+    for hostnames_entry in request.get("hostnames", []):
         connection_manager.hostnames.add(
             hostnames_entry["hostname"],
             hostnames_entry["port"],
@@ -39,21 +42,21 @@ def process_sync_data(connection_manager, data):
         )
 
     # Sync users
-    for user_entry in data.get("users", []):
+    for user_entry in request.get("users", []):
         connection_manager.users.add_user_from_entry(user_entry)
 
     # Sync stats
-    connection_manager.statistics.import_from_record(data.get("stats", {}))
+    connection_manager.statistics.import_from_record(request.get("stats", {}))
 
     # Sync ai stats
-    connection_manager.ai_stats.import_list(data.get("ai_stats", []))
+    connection_manager.ai_stats.import_list(request.get("ai_stats", []))
 
     # Sync packages
-    PackagesStore.import_list(data.get("packages", []))
+    PackagesStore.import_list(request.get("packages", []))
 
     if (
         connection_manager.conf.last_updated_at > 0
-        and data.get("config_revision") != connection_manager.conf.revision
+        and request.get("config_revision") != connection_manager.conf.revision
     ):
         return {"config": connection_manager.conf}
     return {}

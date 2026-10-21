@@ -1,3 +1,4 @@
+import contextvars
 import multiprocessing
 import threading
 
@@ -29,7 +30,9 @@ def load_worker():
         # runs once per process rather than on every request.
         if not thread_cache.is_config_loaded():
             try:
-                thread_cache.renew()
+                # Unpickling the reply runs Zen hooks that call load_worker() again.
+                # With no request context, it returns instead of waiting on this lock.
+                contextvars.Context().run(thread_cache.renew)
             except Exception as e:
                 logger.warning("An error occurred during data synchronization: %s", e)
 

@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest_asyncio
 
 import aikido_zen.sinks.psycopg
-from aikido_zen.background_process.comms import reset_comms
+from aikido_zen.background_process.ipc import IPCClient
 
 
 @pytest.fixture
@@ -17,7 +17,7 @@ def database_conn():
 
 
 def test_cursor_execute(database_conn):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -38,7 +38,7 @@ def test_cursor_execute(database_conn):
 
 
 def test_cursor_execute_parameterized(database_conn):
-    reset_comms()
+    IPCClient.reset()
     cursor = database_conn.cursor()
     query = "SELECT * FROM dogs WHERE dog_name = %s"
     params = ("Fido",)
@@ -59,7 +59,7 @@ def test_cursor_execute_parameterized(database_conn):
 
 
 def test_cursor_executemany(database_conn):
-    reset_comms()
+    IPCClient.reset()
     cursor = database_conn.cursor()
     query = "INSERT INTO dogs (dog_name, isadmin) VALUES (%s, %s)"
     params = [("doggo1", False), ("Rex", False), ("Buddy", True)]
@@ -85,7 +85,7 @@ def test_cursor_executemany(database_conn):
 
 
 def test_cursor_copy(database_conn):
-    reset_comms()
+    IPCClient.reset()
     cursor = database_conn.cursor()
     query = "COPY dogs FROM STDIN"
 
@@ -108,7 +108,7 @@ def test_cursor_copy(database_conn):
 async def test_async_cursor_execute():
     import psycopg
 
-    reset_comms()
+    IPCClient.reset()
     async with await psycopg.AsyncConnection.connect(
         host="127.0.0.1", user="user", password="password", dbname="db"
     ) as conn:
@@ -134,7 +134,7 @@ async def test_async_cursor_execute():
 async def test_async_cursor_execute_parameterized():
     import psycopg
 
-    reset_comms()
+    IPCClient.reset()
     query = "SELECT * FROM dogs WHERE dog_name = %s"
     params = ("Fido",)
 
@@ -163,7 +163,7 @@ async def test_async_cursor_execute_parameterized():
 async def test_async_cursor_executemany():
     import psycopg
 
-    reset_comms()
+    IPCClient.reset()
     query = "INSERT INTO dogs (dog_name, isadmin) VALUES (%s, %s)"
     params = [("doggo1", False), ("Rex", False), ("Buddy", True)]
 
@@ -194,7 +194,7 @@ async def test_async_cursor_executemany():
 async def test_async_cursor_copy():
     import psycopg
 
-    reset_comms()
+    IPCClient.reset()
     query = "COPY dogs FROM STDIN"
 
     async with await psycopg.AsyncConnection.connect(
