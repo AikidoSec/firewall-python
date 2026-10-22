@@ -72,6 +72,27 @@ class MockApiInvalidRegex:
         }
 
 
+class MockApiInvalidNetwork:
+    """Mock API class to simulate a list with one network that is not valid."""
+
+    def __init__(self, invalid_network):
+        self.invalid_network = invalid_network
+
+    def fetch_firewall_lists(self, token):
+        return {
+            "success": True,
+            "blockedIPAddresses": [
+                {
+                    "source": "new",
+                    "description": "Example description",
+                    "ips": ["10.0.0.0/8", self.invalid_network],
+                }
+            ],
+            "allowedIPAddresses": [],
+            "blockedUserAgents": "NewBot",
+        }
+
+
 @pytest.fixture
 def connection_manager():
     """Fixture to create a CloudConnectionManager instance with a mock API."""
@@ -120,6 +141,24 @@ def test_update_firewall_lists_keeps_allowed_ips_when_rebuild_fails(
 
     assert not connection_manager.firewall_lists.is_allowed_ip("1.1.1.1")
     assert connection_manager.firewall_lists.is_allowed_ip("192.168.2.50")
+    assert connection_manager.firewall_lists.is_blocked_ip("192.168.1.1")
+
+
+@pytest.mark.parametrize("invalid_network", ["not-a-network", "\udc80.1.1.1"])
+def test_update_firewall_lists_skips_invalid_networks_and_logs_them(
+    connection_manager, caplog, invalid_network
+):
+    update_firewall_lists(connection_manager)
+
+    connection_manager.api = MockApiInvalidNetwork(invalid_network)
+    update_firewall_lists(connection_manager)
+
+    assert "IP list new has 1 invalid network(s)" in caplog.text
+    assert connection_manager.firewall_lists.is_blocked_ip("10.0.0.1")
+    assert not connection_manager.firewall_lists.is_blocked_ip("192.168.1.1")
+    assert connection_manager.firewall_lists.is_allowed_ip("1.1.1.1")
+    assert connection_manager.firewall_lists.is_user_agent_blocked("NewBot")
+    assert not connection_manager.firewall_lists.is_user_agent_blocked("BadBot")
 
 
 def test_update_firewall_lists_without_ip_matcher(connection_manager, monkeypatch):
@@ -129,6 +168,7 @@ def test_update_firewall_lists_without_ip_matcher(connection_manager, monkeypatc
 
     assert not connection_manager.firewall_lists.is_blocked_ip("192.168.1.1")
     assert connection_manager.firewall_lists.is_allowed_ip("1.1.1.1")
+    assert connection_manager.firewall_lists.is_user_agent_blocked("BadBot")
 
 
 def test_update_firewall_lists_no_ua(connection_manager):

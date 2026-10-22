@@ -79,11 +79,24 @@ def test_load_falls_back_to_the_musl_build_when_the_glibc_build_fails(
 
 
 def test_ip_matcher_round_trip():
-    handle = zen_internals.ip_matcher_create(b"10.0.0.0/8\n2001:db8::/32")
+    handle = zen_internals.ip_matcher_create(b"10.0.0.0/8\n2001:db8::/32\nfoobar")
     assert handle is not None
     assert zen_internals.ip_matcher_has(handle, b"10.1.2.3") is True
     assert zen_internals.ip_matcher_has(handle, b"2001:db8::1") is True
     assert zen_internals.ip_matcher_has(handle, b"8.8.8.8") is False
+    assert zen_internals.ip_matcher_rejected_count(handle) == 1
+    zen_internals.ip_matcher_free(handle)
+
+
+def test_ip_matcher_rejected_count_returns_0_when_function_is_not_loaded(
+    monkeypatch,
+):
+    handle = zen_internals.ip_matcher_create(b"foobar")
+    monkeypatch.setattr(
+        "aikido_zen.helpers.zen_internals._ip_matcher_rejected_count", None
+    )
+
+    assert zen_internals.ip_matcher_rejected_count(handle) == 0
     zen_internals.ip_matcher_free(handle)
 
 

@@ -229,6 +229,16 @@ def test_edge_cases():
     assert matcher1.has("240.0.0.0") == False
 
 
+def test_rejected_count():
+    assert IPMatcher(["192.168.0.0/24", "2001:db8::/32"]).rejected_count() == 0
+    assert (
+        IPMatcher(["192.168.0.0/24", "foobar", "", None, "\udc80"]).rejected_count()
+        == 4
+    )
+    assert IPMatcher().rejected_count() == 0
+    assert IPMatcher(ip for ip in ["192.168.0.0/24", "foobar"]).rejected_count() == 1
+
+
 def test_pickle_round_trip():
     matcher = pickle.loads(pickle.dumps(IPMatcher(["192.168.0.0/24", "2001:db8::/32"])))
     assert matcher.has("192.168.0.42") == True

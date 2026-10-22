@@ -137,6 +137,9 @@ _ip_matcher_has = _bind(
     ctypes.c_int,
 )
 _ip_matcher_free = _bind(_internals_lib, "ip_matcher_free", [ctypes.c_void_p], None)
+_ip_matcher_rejected_count = _bind(
+    _internals_lib, "ip_matcher_rejected_count", [ctypes.c_void_p], ctypes.c_size_t
+)
 
 
 def has_ip_matcher() -> bool:
@@ -162,3 +165,10 @@ def ip_matcher_has(handle, network: bytes) -> bool:
 
 def ip_matcher_free(handle) -> None:
     _ip_matcher_free(handle)
+
+
+def ip_matcher_rejected_count(handle) -> int:
+    """Returns how many networks the library could not parse, or 0 when not loaded."""
+    if _ip_matcher_rejected_count is None:
+        return 0
+    return _ip_matcher_rejected_count(handle)
