@@ -4,6 +4,9 @@ from unittest.mock import patch
 from aikido_zen.background_process.cloud_connection_manager import (
     CloudConnectionManager,
 )
+from aikido_zen.background_process.commands.check_firewall_lists import (
+    process_check_firewall_lists,
+)
 from .update_firewall_lists import update_firewall_lists
 
 
@@ -179,6 +182,28 @@ def test_update_firewall_lists_applies_blocklist_when_an_allowlist_entry_is_malf
 
     assert connection_manager.firewall_lists.is_blocked_ip("10.0.0.1")
     assert connection_manager.firewall_lists.is_user_agent_blocked("NewBot")
+
+
+@pytest.mark.parametrize(
+    "blocked_entry",
+    [
+        {"source": "new", "ips": ["10.0.0.0/8"]},
+        {"source": "new", "description": "", "ips": ["10.0.0.0/8"]},
+    ],
+)
+def test_update_firewall_lists_blocks_ips_from_a_list_without_description(
+    connection_manager, blocked_entry
+):
+    connection_manager.firewall_lists.update([blocked_entry], [], "")
+
+    result = process_check_firewall_lists(
+        connection_manager, {"ip": "10.0.0.1", "user-agent": None}
+    )
+    assert result == {
+        "blocked": True,
+        "type": "blocklist",
+        "reason": "a firewall list",
+    }
 
 
 def test_update_firewall_lists_without_ip_matcher(connection_manager, monkeypatch):

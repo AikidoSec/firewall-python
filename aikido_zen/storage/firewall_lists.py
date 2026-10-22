@@ -81,6 +81,6 @@ def parse_ip_entry(entry):
     """
     return {
         "source": entry.get("source"),
-        "description": entry.get("description", ""),
+        "description": entry.get("description") or "a firewall list",
         "iplist": IPMatcher(entry.get("ips")),
     }
