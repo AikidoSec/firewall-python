@@ -7,11 +7,12 @@ class IPMatcher:
     def __init__(self, networks=None):
         # json.loads can return lone surrogates such as "\udc80", and .encode() raises on
         # them, which would fail the whole list update. Valid networks are ASCII.
+        # The library splits on newlines, so a newline would turn one entry into two.
         networks = list(networks or [])
         self._networks = [
             network
             for network in networks
-            if isinstance(network, str) and network.isascii()
+            if isinstance(network, str) and network.isascii() and "\n" not in network
         ]
         self._skipped_count = len(networks) - len(self._networks)
         self._handle = zen_internals.ip_matcher_create(

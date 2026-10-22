@@ -61,6 +61,7 @@ def test_with_invalid_ranges():
         ",,,",
         None,
         "\udc80.1.1.1",
+        "1.2.3.4\n0.0.0.0/0",
         "192.168.0.124/32",
         "192.168.0.125/32",
         "192.168.0.170/32",
@@ -75,6 +76,7 @@ def test_with_invalid_ranges():
     assert matcher.has("192.168.0.222") == True
     assert matcher.has("192.168.0.1") == True
     assert matcher.has("10.0.0.1") == False
+    assert matcher.has("8.8.8.8") == False
     assert matcher.has("192.168.0.255") == True
     assert matcher.has("") == False
     assert matcher.has(None) == False
