@@ -107,6 +107,21 @@ def test_update_firewall_lists_success(connection_manager):
     assert not connection_manager.firewall_lists.is_user_agent_blocked(None)
 
 
+def test_update_firewall_lists_keeps_allowed_ips_when_rebuild_fails(
+    connection_manager, monkeypatch
+):
+    update_firewall_lists(connection_manager)
+    assert not connection_manager.firewall_lists.is_allowed_ip("1.1.1.1")
+
+    monkeypatch.setattr(
+        "aikido_zen.helpers.zen_internals._ip_matcher_create", lambda *args: None
+    )
+    update_firewall_lists(connection_manager)
+
+    assert not connection_manager.firewall_lists.is_allowed_ip("1.1.1.1")
+    assert connection_manager.firewall_lists.is_allowed_ip("192.168.2.50")
+
+
 def test_update_firewall_lists_without_ip_matcher(connection_manager, monkeypatch):
     monkeypatch.setattr("aikido_zen.helpers.zen_internals._ip_matcher_create", None)
 
