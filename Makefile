@@ -83,6 +83,7 @@ check_binaries:
 		echo "Directory $(CACHE_DIR) is missing or outdated. Running 'make binaries'..."; \
 		$(MAKE) binaries; \
 	fi
+	cp -r $(CACHE_DIR)/* aikido_zen/libs
 
 
 # Replace version number automatically on publish :
