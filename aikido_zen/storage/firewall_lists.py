@@ -15,7 +15,12 @@ class FirewallLists:
     def update(self, blocked_ip_entries, allowed_ip_entries, blocked_user_agents):
         """Replaces all lists together, so lists from different updates never mix."""
         blocked_ips = list(map(parse_ip_entry, blocked_ip_entries))
-        allowed_ips = list(map(parse_ip_entry, allowed_ip_entries))
+        # An allowlist without IPs would block every visitor, so it is skipped.
+        allowed_ips = [
+            entry
+            for entry in map(parse_ip_entry, allowed_ip_entries)
+            if not entry["iplist"].is_empty()
+        ]
         # Aikido only sends valid networks, so an invalid one means the data is broken.
         for entry in blocked_ips + allowed_ips:
             rejected_count = entry["iplist"].rejected_count()

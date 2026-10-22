@@ -169,9 +169,10 @@ def test_update_firewall_lists_skips_invalid_networks_and_logs_them(
     [
         {"source": "list1", "description": "Example description"},
         {"source": "list1", "description": "Example description", "ips": None},
+        {"source": "list1", "description": "Example description", "ips": []},
     ],
 )
-def test_update_firewall_lists_applies_blocklist_when_an_allowlist_entry_is_malformed(
+def test_update_firewall_lists_skips_an_allowlist_entry_without_ips(
     connection_manager, allowed_entry
 ):
     connection_manager.firewall_lists.update(
@@ -180,6 +181,7 @@ def test_update_firewall_lists_applies_blocklist_when_an_allowlist_entry_is_malf
         "NewBot",
     )
 
+    assert connection_manager.firewall_lists.is_allowed_ip("8.8.8.8")
     assert connection_manager.firewall_lists.is_blocked_ip("10.0.0.1")
     assert connection_manager.firewall_lists.is_user_agent_blocked("NewBot")
 
