@@ -80,7 +80,7 @@ def parse_ip_entry(entry):
     Converts ip entry: {"source": "example", "description": "Example description", "ips": []}
     """
     return {
-        "source": entry["source"],
-        "description": entry["description"],
-        "iplist": IPMatcher(entry["ips"]),
+        "source": entry.get("source"),
+        "description": entry.get("description", ""),
+        "iplist": IPMatcher(entry.get("ips")),
     }

@@ -161,6 +161,26 @@ def test_update_firewall_lists_skips_invalid_networks_and_logs_them(
     assert not connection_manager.firewall_lists.is_user_agent_blocked("BadBot")
 
 
+@pytest.mark.parametrize(
+    "allowed_entry",
+    [
+        {"source": "list1", "description": "Example description"},
+        {"source": "list1", "description": "Example description", "ips": None},
+    ],
+)
+def test_update_firewall_lists_applies_blocklist_when_an_allowlist_entry_is_malformed(
+    connection_manager, allowed_entry
+):
+    connection_manager.firewall_lists.update(
+        [{"source": "new", "description": "Example", "ips": ["10.0.0.0/8"]}],
+        [allowed_entry],
+        "NewBot",
+    )
+
+    assert connection_manager.firewall_lists.is_blocked_ip("10.0.0.1")
+    assert connection_manager.firewall_lists.is_user_agent_blocked("NewBot")
+
+
 def test_update_firewall_lists_without_ip_matcher(connection_manager, monkeypatch):
     monkeypatch.setattr("aikido_zen.helpers.zen_internals._ip_matcher_create", None)
 
