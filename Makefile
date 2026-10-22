@@ -66,6 +66,7 @@ FILES = \
     libzen_internals_x86_64-unknown-linux-musl.so.sha256sum
 
 binaries: binaries_make_dir $(addprefix .cache/binaries/, $(FILES))
+	echo "$(BASE_URL)" > $(CACHE_DIR)/.version
 binaries_make_dir:
 	rm -rf .cache/binaries
 	mkdir -p .cache/binaries/
@@ -73,12 +74,13 @@ binaries_make_dir:
 	@echo "Downloading $*..."
 	curl -L -o $@ $(BASE_URL)/$*
 
+# Binaries from another release may not match the Python bindings, so download them again.
 .PHONY: check_binaries
 check_binaries:
-	@if [ -d "$(CACHE_DIR)" ]; then \
-  		echo "Directory $(CACHE_DIR) exists."; \
+	@if [ "$$(cat $(CACHE_DIR)/.version 2>/dev/null)" = "$(BASE_URL)" ]; then \
+  		echo "Directory $(CACHE_DIR) has the binaries from $(BASE_URL)."; \
 	else \
-		echo "Directory $(CACHE_DIR) is empty. Running 'make binaries'..."; \
+		echo "Directory $(CACHE_DIR) is missing or outdated. Running 'make binaries'..."; \
 		$(MAKE) binaries; \
 	fi
 
