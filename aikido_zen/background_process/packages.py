@@ -1,8 +1,7 @@
 """Helper functions for packages"""
 
 import importlib.metadata as importlib_metadata
-
-from packaging.version import Version
+import re
 
 import aikido_zen.helpers.get_current_unixtime_ms as t
 from aikido_zen.helpers.logging import logger
@@ -49,9 +48,33 @@ def is_package_compatible(package=None, required_version=ANY_VERSION, packages=N
         return False  # We don't support it, since something unexpected happened in checking compatibility.
 
 
+# PEP 440 version scheme, the same one the packaging library accepts
+VERSION_PATTERN = re.compile(
+    r"v?(?:([0-9]+)!)?([0-9]+(?:\.[0-9]+)*)"
+    r"([-_.]?(?:alpha|a|beta|b|preview|pre|c|rc)[-_.]?[0-9]*)?"
+    r"(-[0-9]+|[-_.]?(?:post|rev|r)[-_.]?[0-9]*)?"
+    r"([-_.]?dev[-_.]?[0-9]*)?"
+    r"(?:\+[a-z0-9]+(?:[-_.][a-z0-9]+)*)?",
+    re.IGNORECASE,
+)
+
+
 def is_version_supported(version, required_version):
-    """Checks if the package version is supported"""
-    return Version(version) >= Version(required_version)
+    """Checks if the package version is supported, required_version is a final release (e.g. 2.8.6)"""
+    return parse_version(version) >= parse_version(required_version)
+
+
+def parse_version(version):
+    match = VERSION_PATTERN.fullmatch(version.strip())
+    if not match:
+        raise ValueError(f"Invalid version: {version}")
+    epoch, release, pre, post, dev = match.groups()
+    numbers = [int(number) for number in release.split(".")]
+    while len(numbers) > 1 and numbers[-1] == 0:
+        numbers.pop()
+    # Pre-releases (2.8.6rc1) and dev releases (2.8.6.dev0) come before 2.8.6 itself
+    is_final_release = pre is None and (dev is None or post is not None)
+    return int(epoch or 0), numbers, is_final_release
 
 
 # packages store, uses python's built in GlobalInterpreterLock (GIL)
