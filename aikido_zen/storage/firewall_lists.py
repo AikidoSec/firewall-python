@@ -1,4 +1,6 @@
+from aikido_zen.helpers import zen_internals
 from aikido_zen.helpers.ip_matcher import IPMatcher
+from aikido_zen.helpers.logging import logger
 import regex as re
 
 from aikido_zen.helpers.net.is_private_ip import is_private_ip
@@ -9,6 +11,33 @@ class FirewallLists:
         self.blocked_ips = []
         self.allowed_ips = []
         self.blocked_user_agent_regex = None
+
+    def update(self, blocked_ip_entries, allowed_ip_entries, blocked_user_agents):
+        """Replaces all lists together, so lists from different updates never mix."""
+        blocked_ips = list(map(parse_ip_entry, blocked_ip_entries))
+        # An allowlist without IPs would block every visitor, so it is skipped.
+        allowed_ips = [
+            entry
+            for entry in map(parse_ip_entry, allowed_ip_entries)
+            if not entry["iplist"].is_empty()
+        ]
+        # Aikido only sends valid networks, so an invalid one means the data is broken.
+        for entry in blocked_ips + allowed_ips:
+            rejected_count = entry["iplist"].rejected_count()
+            if rejected_count:
+                logger.error(
+                    "IP list %s has %s invalid network(s), which Zen skipped.",
+                    entry["source"],
+                    rejected_count,
+                )
+        # An allowlist that failed to build would block the visitors it should allow.
+        if not all(entry["iplist"].is_built() for entry in allowed_ips):
+            if zen_internals.has_ip_matcher():
+                return
+            allowed_ips = []
+        self.blocked_ips = blocked_ips
+        self.allowed_ips = allowed_ips
+        self.set_blocked_user_agents(blocked_user_agents)
 
     def set_blocked_ips(self, blocked_ip_entries):
         self.blocked_ips = list(map(parse_ip_entry, blocked_ip_entries))
@@ -56,7 +85,7 @@ def parse_ip_entry(entry):
     Converts ip entry: {"source": "example", "description": "Example description", "ips": []}
     """
     return {
-        "source": entry["source"],
-        "description": entry["description"],
-        "iplist": IPMatcher(entry["ips"]),
+        "source": entry.get("source"),
+        "description": entry.get("description") or "a firewall list",
+        "iplist": IPMatcher(entry.get("ips")),
     }

@@ -5,8 +5,6 @@ BUILD_DIR := dist/
 .PHONY: build
 build: check_binaries
 	@echo "Building using poetry, creates $(BUILD_DIR) folder."
-	@echo "Copying binaries from $(CACHE_DIR) folder : "
-	cp -r .cache/binaries/* aikido_zen/libs
 	poetry build
 .PHONY: clean
 clean:
@@ -46,20 +44,27 @@ benchmark:
 
 
 # Binaries cache :
-BASE_URL = https://github.com/AikidoSec/zen-internals/releases/download/v0.1.60
+BASE_URL = https://github.com/AikidoSec/zen-internals/releases/download/v0.1.75-beta.3
 FILES = \
     libzen_internals_aarch64-apple-darwin.dylib \
     libzen_internals_aarch64-apple-darwin.dylib.sha256sum \
+    libzen_internals_aarch64-pc-windows-msvc.dll \
+    libzen_internals_aarch64-pc-windows-msvc.dll.sha256sum \
     libzen_internals_aarch64-unknown-linux-gnu.so \
     libzen_internals_aarch64-unknown-linux-gnu.so.sha256sum \
+    libzen_internals_aarch64-unknown-linux-musl.so \
+    libzen_internals_aarch64-unknown-linux-musl.so.sha256sum \
     libzen_internals_x86_64-apple-darwin.dylib \
     libzen_internals_x86_64-apple-darwin.dylib.sha256sum \
     libzen_internals_x86_64-pc-windows-gnu.dll \
     libzen_internals_x86_64-pc-windows-gnu.dll.sha256sum \
     libzen_internals_x86_64-unknown-linux-gnu.so \
-    libzen_internals_x86_64-unknown-linux-gnu.so.sha256sum
+    libzen_internals_x86_64-unknown-linux-gnu.so.sha256sum \
+    libzen_internals_x86_64-unknown-linux-musl.so \
+    libzen_internals_x86_64-unknown-linux-musl.so.sha256sum
 
 binaries: binaries_make_dir $(addprefix .cache/binaries/, $(FILES))
+	echo "$(BASE_URL)" > $(CACHE_DIR)/.version
 binaries_make_dir:
 	rm -rf .cache/binaries
 	mkdir -p .cache/binaries/
@@ -67,14 +72,16 @@ binaries_make_dir:
 	@echo "Downloading $*..."
 	curl -L -o $@ $(BASE_URL)/$*
 
+# Binaries from another release may not match the Python bindings, so download them again.
 .PHONY: check_binaries
 check_binaries:
-	@if [ -d "$(CACHE_DIR)" ]; then \
-  		echo "Directory $(CACHE_DIR) exists."; \
+	@if [ "$$(cat $(CACHE_DIR)/.version 2>/dev/null)" = "$(BASE_URL)" ]; then \
+  		echo "Directory $(CACHE_DIR) has the binaries from $(BASE_URL)."; \
 	else \
-		echo "Directory $(CACHE_DIR) is empty. Running 'make binaries'..."; \
+		echo "Directory $(CACHE_DIR) is missing or outdated. Running 'make binaries'..."; \
 		$(MAKE) binaries; \
 	fi
+	cp -r $(CACHE_DIR)/* aikido_zen/libs
 
 
 # Replace version number automatically on publish :
