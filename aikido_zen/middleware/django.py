@@ -27,7 +27,9 @@ class AikidoDjangoMiddleware:
             message = "You are rate limited by Zen."
             if result["trigger"] == "ip" and result["ip"]:
                 message += " (Your IP: " + result["ip"] + ")"
-            return self.HttpResponse(message, content_type="text/plain", status=429)
+            response = self.HttpResponse(message, content_type="text/plain", status=429)
+            response["Retry-After"] = str(result["retry_after_seconds"])
+            return response
 
         if result["type"] == "blocked":
             return self.HttpResponse(
