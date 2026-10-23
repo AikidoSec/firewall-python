@@ -345,3 +345,50 @@ def test_it_prefers_specific_method_over_wildcard_second_case():
     }
 
     assert result[0] == expected
+
+
+@pytest.mark.parametrize("route", ["/api/[/*", "/api/(/*", "/api/v1+?+/*"])
+def test_invalid_wildcard_route_is_skipped(route):
+    endpoints = [
+        {"method": "POST", "route": route, "forceProtectionOff": True},
+        {"method": "POST", "route": "/api/*", "forceProtectionOff": False},
+    ]
+    assert match_endpoints(
+        sample_route_metadata(route=None, url="/api/[/x"), endpoints
+    ) == [endpoints[1]]
+
+
+def test_wildcard_route_keeps_regex_characters_that_compile():
+    endpoints = [{"method": "POST", "route": "/v1.0/*", "forceProtectionOff": False}]
+    for url in ["/v1.0/abc", "/v1x0/abc"]:
+        assert (
+            match_endpoints(sample_route_metadata(route=None, url=url), endpoints)
+            == endpoints
+        )
+
+
+def test_wildcard_route_is_compiled_once(monkeypatch):
+    endpoints = [
+        {"method": "POST", "route": "/compiled-once/*", "forceProtectionOff": False}
+    ]
+    route_metadata = sample_route_metadata(route=None, url="/compiled-once/x")
+    assert match_endpoints(route_metadata, endpoints) == endpoints
+
+    def fail_to_compile(*args):
+        raise AssertionError("compiled the route again")
+
+    monkeypatch.setattr(
+        "aikido_zen.helpers.match_endpoints.re.compile", fail_to_compile
+    )
+    for _ in range(3):
+        assert match_endpoints(route_metadata, endpoints) == endpoints
+
+
+def test_invalid_wildcard_route_is_logged_once(caplog):
+    endpoints = [{"method": "POST", "route": "/logged-once/[/*"}]
+    route_metadata = sample_route_metadata(route=None, url="/logged-once/x")
+    for _ in range(3):
+        assert match_endpoints(route_metadata, endpoints) is None
+    warnings = [r for r in caplog.records if "/logged-once/[/*" in r.getMessage()]
+    assert len(warnings) == 1
+    assert warnings[0].levelname == "WARNING"
