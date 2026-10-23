@@ -72,9 +72,11 @@ def parse_version(version):
     numbers = [int(number) for number in release.split(".")]
     while len(numbers) > 1 and numbers[-1] == 0:
         numbers.pop()
-    # Pre-releases (2.8.6rc1) and dev releases (2.8.6.dev0) come before 2.8.6 itself
-    is_final_release = pre is None and (dev is None or post is not None)
-    return int(epoch or 0), numbers, is_final_release
+    # Pre-releases (2.8.6rc1) and dev releases (2.8.6.dev0) come before 2.8.6,
+    # but a dev release of a post-release (2.8.6.post1.dev0) comes after it.
+    is_dev_release = dev is not None and post is None
+    is_before_release = pre is not None or is_dev_release
+    return int(epoch or 0), numbers, not is_before_release
 
 
 # packages store, uses python's built in GlobalInterpreterLock (GIL)
