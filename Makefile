@@ -5,8 +5,6 @@ BUILD_DIR := dist/
 .PHONY: build
 build: check_binaries
 	@echo "Building using poetry, creates $(BUILD_DIR) folder."
-	@echo "Copying binaries from $(CACHE_DIR) folder : "
-	cp -r .cache/binaries/* aikido_zen/libs
 	poetry build
 .PHONY: clean
 clean:
