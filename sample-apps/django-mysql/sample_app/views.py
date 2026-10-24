@@ -4,7 +4,9 @@ from django.template import loader
 from .models import Dogs
 from django.db import connection
 from django.views.decorators.csrf import csrf_exempt
+import io
 import json
+import xml.etree.ElementTree as ET
 import subprocess
 
 def index(request):
@@ -66,3 +68,13 @@ def json_sql(request):
             cursor.execute(query)
         return HttpResponse("OK")
     return HttpResponse("Use POST")
+
+
+@csrf_exempt
+def xml_sql(request):
+    root = ET.parse(io.BytesIO(request.body)).getroot()
+    with connection.cursor() as cursor:
+        for dog in root.iter('dog'):
+            query = 'INSERT INTO sample_app_dogs (dog_name, dog_boss) VALUES ("%s", "N/A")' % dog.text
+            cursor.execute(query)
+    return HttpResponse("OK")
