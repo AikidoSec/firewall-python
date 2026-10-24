@@ -273,6 +273,8 @@ def test_ip_blocking():
     assert not config.is_bypassed_ip("::2")
     assert not config.is_bypassed_ip("1.1.1.1")
     assert not config.is_bypassed_ip("10.1.0.0")
+    assert not config.is_bypassed_ip(None)
+    assert not config.is_bypassed_ip("")
 
 
 def test_service_config_with_empty_allowlist():
