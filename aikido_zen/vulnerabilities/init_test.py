@@ -118,6 +118,20 @@ def test_sql_injection_but_blocking_off(caplog, get_context, monkeypatch):
     assert get_cache().stats.get_record()["requests"]["attacksDetected"]["blocked"] == 0
 
 
+def test_sql_injection_with_invalid_wildcard_route(caplog, get_context, monkeypatch):
+    get_context.set_as_current_context()
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
+    get_cache().config.set_endpoints(
+        [{"method": "GET", "route": "/api/[/*", "forceProtectionOff": False}]
+    )
+    with pytest.raises(AikidoSQLInjection):
+        run_vulnerability_scan(
+            kind="sql_injection",
+            op="test_op",
+            args=("INSERT * INTO VALUES ('doggoss2', TRUE);", "mysql"),
+        )
+
+
 def test_sql_injection_with_route_params(caplog, get_context, monkeypatch):
     get_context.set_as_current_context()
     monkeypatch.setenv("AIKIDO_BLOCK", "1")
