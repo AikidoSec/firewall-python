@@ -63,7 +63,6 @@ names_without_version = set()
 class PackagesStore:
     @staticmethod
     def add_installed_package(name):
-        """Stores the package's installed version, if it has one."""
         if name in names_without_version or PackagesStore.get_package(name):
             return
         version = None
