@@ -63,7 +63,7 @@ names_without_version = set()
 class PackagesStore:
     @staticmethod
     def add_installed_package(name):
-        if name in names_without_version or PackagesStore.get_package(name):
+        if name in names_without_version or name in packages_store:
             return
         version = None
         try:
@@ -114,6 +114,6 @@ class PackagesStore:
     @staticmethod
     def import_list(imported_packages):
         for package in imported_packages:
-            if PackagesStore.get_package(package["name"]):
+            if package["name"] in packages_store:
                 continue
             packages_store[package["name"]] = package
