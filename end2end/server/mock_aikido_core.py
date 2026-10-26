@@ -33,13 +33,26 @@ responses = {
         "success": True,
         "blockedIPAddresses": [
             {
+                "key": "geoip/blocked",
                 "source": "geoip",
                 "description": "geo restrictions",
                 "ips": ["1.2.3.4"]
             }
         ],
         "allowedIPAddresses": [],
+        "monitoredIPAddresses": [
+            {
+                "key": "tor/exit_nodes",
+                "source": "tor",
+                "description": "Tor exit nodes",
+                "ips": ["1.2.3.4", "9.9.9.9"]
+            }
+        ],
         "blockedUserAgents": "",
+        "monitoredUserAgents": "MonitoredTestBot",
+        "userAgentDetails": [
+            {"key": "monitoredtestbot", "pattern": "MonitoredTestBot"}
+        ],
     },
     "configUpdatedAt": {},
 }

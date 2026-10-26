@@ -1,7 +1,7 @@
 import pytest
 import requests
 import time
-from .server.check_events_from_mock import fetch_events_from_mock, validate_started_event, filter_on_event_type
+from .server.check_events_from_mock import fetch_events_from_mock, validate_started_event, filter_on_event_type, wait_for_heartbeats
 # e2e tests for flask_mysql sample app
 base_url_fw = "http://localhost:8086"
 base_url_nofw = "http://localhost:8087"
@@ -145,3 +145,28 @@ def test_set_ip_forwarded_for():
     })
     assert res.status_code == 403
     assert res.text == "Your IP address is blocked due to geo restrictions (Your IP: 1.2.3.4)"
+
+
+def test_firewall_list_hits_in_heartbeat():
+    res = requests.get(base_url_fw + "/", headers={
+        "X-Forwarded-For": "9.9.9.9",
+        "User-Agent": "MonitoredTestBot/1.0",
+    })
+    assert res.status_code == 200
+    res = requests.get(base_url_fw + "/", headers={
+        "X-Forwarded-For": "1.2.3.4"
+    })
+    assert res.status_code == 403
+
+    def check(heartbeats):
+        ip_hits, user_agent_hits = {}, {}
+        for heartbeat in heartbeats:
+            for key, count in heartbeat["stats"]["ipAddresses"]["breakdown"].items():
+                ip_hits[key] = ip_hits.get(key, 0) + count
+            for key, count in heartbeat["stats"]["userAgents"]["breakdown"].items():
+                user_agent_hits[key] = user_agent_hits.get(key, 0) + count
+        assert ip_hits.get("tor/exit_nodes", 0) >= 2
+        assert ip_hits.get("geoip/blocked", 0) >= 1
+        assert user_agent_hits.get("monitoredtestbot", 0) >= 1
+
+    wait_for_heartbeats("http://localhost:5000", check)
