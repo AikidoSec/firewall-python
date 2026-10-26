@@ -7,14 +7,13 @@ import aikido_zen
 
 aikido_zen.protect()
 
-from aikido_zen.background_process import packages
 from aikido_zen.background_process.packages import PackagesStore
 
 
 @pytest.fixture(autouse=True)
 def run_around_tests():
     PackagesStore.clear()
-    packages.names_without_version.clear()
+    PackagesStore.clear_names_without_version()
 
 
 def test_flask_import():

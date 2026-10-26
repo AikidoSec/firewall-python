@@ -70,10 +70,7 @@ class PackagesStore:
             version = importlib_metadata.version(name)
         except importlib_metadata.PackageNotFoundError:
             pass
-        if version:
-            PackagesStore.add_package(name, version)
-        else:
-            names_without_version.add(name)
+        PackagesStore.add_package(name, version)
 
     @staticmethod
     def export():
@@ -86,6 +83,9 @@ class PackagesStore:
 
     @staticmethod
     def add_package(package, version):
+        if not version:
+            names_without_version.add(package)
+            return
         packages_store[package] = {
             "name": package,
             "version": version,
@@ -106,6 +106,10 @@ class PackagesStore:
         # But that they will not show up during an export
         for package in packages_store.values():
             package["cleared"] = True
+
+    @staticmethod
+    def clear_names_without_version():
+        names_without_version.clear()
 
     @staticmethod
     def import_list(imported_packages):
