@@ -9,6 +9,7 @@ from ...background_process.service_config import ServiceConfig
 from ...context import Context, current_context
 from ...helpers.headers import Headers
 from ...storage.firewall_lists import FirewallLists
+from ...storage.statistics import Statistics
 from ...vulnerabilities.attack_wave_detection.attack_wave_detector import (
     AttackWaveDetector,
 )
@@ -43,6 +44,7 @@ class MyMockComms:
         self.firewall_lists = FirewallLists()
         self.conn_manager = MagicMock()
         self.conn_manager.firewall_lists = self.firewall_lists
+        self.conn_manager.statistics = Statistics()
         self.conn_manager.attack_wave_detector = AttackWaveDetector()
         self.attacks = []
 
@@ -220,6 +222,8 @@ def patch_firewall_lists(func):
                 kwargs["attacks"] = comms.attacks
             if "firewall_lists" in sig.parameters:
                 kwargs["firewall_lists"] = comms.firewall_lists
+            if "statistics" in sig.parameters:
+                kwargs["statistics"] = comms.conn_manager.statistics
 
             return func(*args, **kwargs)
 
@@ -978,3 +982,163 @@ def test_attack_wave_samples_json_format(firewall_lists):
     detector = attack_wave_detector_store._get_detector()
     detector.suspicious_requests_map.clear()
     detector.sent_events_map.clear()
+
+
+def set_monitored_and_blocked_lists(firewall_lists):
+    firewall_lists.set_blocked_ips(
+        [
+            {
+                "key": "geoip/blocked",
+                "source": "geoip",
+                "description": "geo restrictions",
+                "ips": ["1.2.3.4"],
+            }
+        ]
+    )
+    firewall_lists.set_monitored_ips(
+        [
+            {
+                "key": "tor/exit_nodes",
+                "source": "tor",
+                "description": "Tor exit nodes",
+                "ips": ["1.2.3.4", "9.9.9.9"],
+            },
+            {
+                "key": "crowdsec/scanners",
+                "source": "crowdsec",
+                "description": "scanners",
+                "ips": ["9.9.9.9"],
+            },
+        ]
+    )
+    firewall_lists.set_blocked_user_agents("GPTBot")
+    firewall_lists.set_monitored_user_agents("ClaudeBot")
+    firewall_lists.set_user_agent_details(
+        [
+            {"key": "gptbot", "pattern": "GPTBot"},
+            {"key": "claudebot", "pattern": "ClaudeBot"},
+        ]
+    )
+
+
+@patch_firewall_lists
+def test_monitored_ip_is_counted_but_not_blocked(firewall_lists, statistics):
+    set_monitored_and_blocked_lists(firewall_lists)
+    set_context("9.9.9.9")
+
+    assert request_handler("pre_response") is None
+    assert statistics.get_record()["ipAddresses"] == {
+        "breakdown": {"tor/exit_nodes": 1, "crowdsec/scanners": 1}
+    }
+
+
+@patch_firewall_lists
+def test_blocked_ip_counts_monitored_and_blocked_lists(firewall_lists, statistics):
+    set_monitored_and_blocked_lists(firewall_lists)
+    set_context("1.2.3.4")
+
+    assert request_handler("pre_response") == (
+        "Your IP address is blocked due to geo restrictions (Your IP: 1.2.3.4)",
+        403,
+    )
+    assert statistics.get_record()["ipAddresses"] == {
+        "breakdown": {"tor/exit_nodes": 1, "geoip/blocked": 1}
+    }
+
+
+@patch_firewall_lists
+def test_ip_not_in_allowlist_is_not_counted(firewall_lists, statistics):
+    set_monitored_and_blocked_lists(firewall_lists)
+    firewall_lists.set_allowed_ips(
+        [{"source": "geoip", "description": "allowed", "ips": ["4.4.4.4"]}]
+    )
+    set_context("9.9.9.9")
+
+    assert request_handler("pre_response") == (
+        "Your IP address is not allowed. (Your IP: 9.9.9.9)",
+        403,
+    )
+    assert statistics.get_record()["ipAddresses"] == {"breakdown": {}}
+
+
+@patch_firewall_lists
+def test_monitored_user_agent_is_counted_but_not_blocked(firewall_lists, statistics):
+    set_monitored_and_blocked_lists(firewall_lists)
+    set_context("5.5.5.5", "Mozilla/5.0 (compatible; ClaudeBot/1.0)")
+
+    assert request_handler("pre_response") is None
+    assert statistics.get_record()["userAgents"] == {"breakdown": {"claudebot": 1}}
+
+
+@patch_firewall_lists
+def test_blocked_user_agent_is_counted(firewall_lists, statistics):
+    set_monitored_and_blocked_lists(firewall_lists)
+    set_context("5.5.5.5", "Mozilla/5.0 (compatible; GPTBot/1.0)")
+
+    assert request_handler("pre_response") == (
+        "You are not allowed to access this resource because you have been identified as a bot.",
+        403,
+    )
+    assert statistics.get_record()["userAgents"] == {"breakdown": {"gptbot": 1}}
+
+
+@patch_firewall_lists
+def test_other_user_agent_is_not_counted(firewall_lists, statistics):
+    set_monitored_and_blocked_lists(firewall_lists)
+    set_context("5.5.5.5", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0")
+
+    assert request_handler("pre_response") is None
+    assert statistics.get_record()["userAgents"] == {"breakdown": {}}
+    assert statistics.get_record()["ipAddresses"] == {"breakdown": {}}
+
+
+@patch_firewall_lists
+def test_bypassed_ip_is_not_counted(firewall_lists, statistics):
+    set_monitored_and_blocked_lists(firewall_lists)
+    get_cache().config = ServiceConfig(
+        endpoints=[],
+        last_updated_at=1,
+        blocked_uids=set(),
+        bypassed_ips=["9.9.9.9"],
+        received_any_stats=False,
+    )
+    set_context("9.9.9.9", "ClaudeBot")
+
+    assert request_handler("pre_response") is None
+    assert statistics.get_record()["ipAddresses"] == {"breakdown": {}}
+    assert statistics.get_record()["userAgents"] == {"breakdown": {}}
+
+
+@patch_firewall_lists
+def test_blocked_ip_stops_before_user_agent_is_counted(firewall_lists, statistics):
+    set_monitored_and_blocked_lists(firewall_lists)
+    set_context("1.2.3.4", "ClaudeBot/1.0")
+
+    assert request_handler("pre_response")[1] == 403
+    assert statistics.get_record()["userAgents"] == {"breakdown": {}}
+
+
+@patch_firewall_lists
+def test_ip_not_allowed_by_endpoint_is_not_counted(firewall_lists, statistics):
+    set_monitored_and_blocked_lists(firewall_lists)
+    create_service_config()
+    set_context("9.9.9.9", "ClaudeBot/1.0")
+
+    assert request_handler("pre_response") == (
+        "Your IP address is not allowed to access this resource. (Your IP: 9.9.9.9)",
+        403,
+    )
+    assert statistics.get_record()["ipAddresses"] == {"breakdown": {}}
+    assert statistics.get_record()["userAgents"] == {"breakdown": {}}
+
+
+@patch_firewall_lists
+def test_ip_and_user_agent_counted_in_one_request(firewall_lists, statistics):
+    set_monitored_and_blocked_lists(firewall_lists)
+    set_context("9.9.9.9", "ClaudeBot/1.0")
+
+    assert request_handler("pre_response") is None
+    assert statistics.get_record()["ipAddresses"] == {
+        "breakdown": {"tor/exit_nodes": 1, "crowdsec/scanners": 1}
+    }
+    assert statistics.get_record()["userAgents"] == {"breakdown": {"claudebot": 1}}

@@ -5,7 +5,8 @@ from aikido_zen.storage.statistics.operations import Operations
 class Statistics:
     """
     Stores: hits, counts of attacks (split up in detected/blocked), count of rate-limited requests,
-    statistics for operations (i.e. how many times did we see a query being executed)
+    statistics for operations (i.e. how many times did we see a query being executed),
+    and how many requests matched each IP list and user agent list
     """
 
     def __init__(self):
@@ -20,6 +21,8 @@ class Statistics:
         self.rate_limited_hits = 0
         self.started_at = t.get_unixtime_ms()
         self.operations = Operations()
+        self.ip_addresses_breakdown = {}
+        self.user_agents_breakdown = {}
 
     def clear(self):
         self.total_hits = 0
@@ -33,6 +36,8 @@ class Statistics:
         self.rate_limited_hits = 0
         self.started_at = t.get_unixtime_ms()
         self.operations.clear()
+        self.ip_addresses_breakdown = {}
+        self.user_agents_breakdown = {}
 
     def increment_total_hits(self):
         self.total_hits += 1
@@ -50,6 +55,16 @@ class Statistics:
         self.attack_waves_detected += 1
         if blocked:
             self.attack_waves_blocked += 1
+
+    def on_ip_address_matches(self, keys):
+        for key in keys:
+            self.ip_addresses_breakdown[key] = (
+                self.ip_addresses_breakdown.get(key, 0) + 1
+            )
+
+    def on_user_agent_matches(self, keys):
+        for key in keys:
+            self.user_agents_breakdown[key] = self.user_agents_breakdown.get(key, 0) + 1
 
     def get_record(self):
         current_time = t.get_unixtime_ms()
@@ -70,6 +85,8 @@ class Statistics:
                 },
             },
             "operations": dict(self.operations),
+            "userAgents": {"breakdown": dict(self.user_agents_breakdown)},
+            "ipAddresses": {"breakdown": dict(self.ip_addresses_breakdown)},
         }
 
     def import_from_record(self, record):

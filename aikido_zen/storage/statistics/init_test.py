@@ -301,3 +301,26 @@ def test_rate_limit_clear():
 
     stats.clear()
     assert stats.rate_limited_hits == 0
+
+
+def test_ip_address_and_user_agent_breakdown(stats):
+    stats.on_ip_address_matches(["tor/exit_nodes", "geoip/blocked"])
+    stats.on_ip_address_matches(["tor/exit_nodes"])
+    stats.on_ip_address_matches([])
+    stats.on_user_agent_matches(["claudebot"])
+
+    record = stats.get_record()
+    assert record["ipAddresses"] == {
+        "breakdown": {"tor/exit_nodes": 2, "geoip/blocked": 1}
+    }
+    assert record["userAgents"] == {"breakdown": {"claudebot": 1}}
+
+
+def test_breakdown_clear(stats):
+    stats.on_ip_address_matches(["tor/exit_nodes"])
+    stats.on_user_agent_matches(["claudebot"])
+    stats.clear()
+
+    record = stats.get_record()
+    assert record["ipAddresses"] == {"breakdown": {}}
+    assert record["userAgents"] == {"breakdown": {}}

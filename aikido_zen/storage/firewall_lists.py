@@ -8,7 +8,10 @@ class FirewallLists:
     def __init__(self):
         self.blocked_ips = []
         self.allowed_ips = []
+        self.monitored_ips = []
         self.blocked_user_agent_regex = None
+        self.monitored_user_agent_regex = None
+        self.user_agent_details = []
 
     def set_blocked_ips(self, blocked_ip_entries):
         self.blocked_ips = list(map(parse_ip_entry, blocked_ip_entries))
@@ -18,6 +21,15 @@ class FirewallLists:
             if entry["iplist"].has(ip):
                 return entry["description"]
         return False
+
+    def get_matching_blocked_ip_list_keys(self, ip):
+        return get_matching_ip_list_keys(self.blocked_ips, ip)
+
+    def set_monitored_ips(self, monitored_ip_entries):
+        self.monitored_ips = list(map(parse_ip_entry, monitored_ip_entries))
+
+    def get_matching_monitored_ip_list_keys(self, ip):
+        return get_matching_ip_list_keys(self.monitored_ips, ip)
 
     def set_allowed_ips(self, allowed_ip_entries):
         self.allowed_ips = list(map(parse_ip_entry, allowed_ip_entries))
@@ -50,12 +62,51 @@ class FirewallLists:
             return False
         return self.blocked_user_agent_regex.search(ua)
 
+    def set_monitored_user_agents(self, monitored_user_agents: str):
+        self.monitored_user_agent_regex = None
+        if not monitored_user_agents:
+            return
+        try:
+            self.monitored_user_agent_regex = re.compile(
+                monitored_user_agents, re.IGNORECASE
+            )
+        except re.error:
+            pass
+
+    def is_monitored_user_agent(self, ua: str):
+        if not ua:
+            return False
+        if not self.monitored_user_agent_regex:
+            return False
+        return self.monitored_user_agent_regex.search(ua)
+
+    def set_user_agent_details(self, user_agent_details):
+        self.user_agent_details = []
+        for detail in user_agent_details:
+            try:
+                pattern = re.compile(detail["pattern"], re.IGNORECASE)
+            except re.error:
+                continue
+            self.user_agent_details.append({"key": detail["key"], "pattern": pattern})
+
+    def get_matching_user_agent_keys(self, ua: str):
+        return [
+            detail["key"]
+            for detail in self.user_agent_details
+            if detail["pattern"].search(ua)
+        ]
+
+
+def get_matching_ip_list_keys(ip_lists, ip):
+    return [entry["key"] for entry in ip_lists if entry["iplist"].has(ip)]
+
 
 def parse_ip_entry(entry):
     """
-    Converts ip entry: {"source": "example", "description": "Example description", "ips": []}
+    Converts ip entry: {"key": "geoip/nl", "source": "example", "description": "Example description", "ips": []}
     """
     return {
+        "key": entry.get("key"),
         "source": entry["source"],
         "description": entry["description"],
         "iplist": IPMatcher(entry["ips"]),

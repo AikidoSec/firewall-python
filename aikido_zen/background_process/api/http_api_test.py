@@ -56,7 +56,24 @@ def test_local_gzip():
         "success": True,
         "allowedIPAddresses": [],
         "blockedIPAddresses": [
-            {"description": "geo restrictions", "ips": ["1.2.3.4"], "source": "geoip"}
+            {
+                "key": "geoip/blocked",
+                "description": "geo restrictions",
+                "ips": ["1.2.3.4"],
+                "source": "geoip",
+            }
+        ],
+        "monitoredIPAddresses": [
+            {
+                "key": "tor/exit_nodes",
+                "description": "Tor exit nodes",
+                "ips": ["1.2.3.4", "9.9.9.9"],
+                "source": "tor",
+            }
         ],
         "blockedUserAgents": "",
+        "monitoredUserAgents": "MonitoredTestBot",
+        "userAgentDetails": [
+            {"key": "monitoredtestbot", "pattern": "MonitoredTestBot"}
+        ],
     }
