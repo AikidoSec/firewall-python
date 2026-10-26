@@ -57,14 +57,10 @@ class Statistics:
             self.attack_waves_blocked += 1
 
     def on_ip_address_matches(self, keys):
-        for key in keys:
-            self.ip_addresses_breakdown[key] = (
-                self.ip_addresses_breakdown.get(key, 0) + 1
-            )
+        count_matches(self.ip_addresses_breakdown, keys)
 
     def on_user_agent_matches(self, keys):
-        for key in keys:
-            self.user_agents_breakdown[key] = self.user_agents_breakdown.get(key, 0) + 1
+        count_matches(self.user_agents_breakdown, keys)
 
     def get_record(self):
         current_time = t.get_unixtime_ms()
@@ -110,3 +106,8 @@ class Statistics:
         if len(self.operations) > 0:
             return False
         return True
+
+
+def count_matches(breakdown, keys):
+    for key in keys:
+        breakdown[key] = breakdown.get(key, 0) + 1
