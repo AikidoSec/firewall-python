@@ -42,17 +42,23 @@ def test_name_without_a_distribution_is_looked_up_once():
 def test_recursive_package_store(monkeypatch):
     """Test that recursive imports during package scanning don't cause max recursion depth errors."""
 
-    def recursive_get_package(name):
+    calls = []
+
+    def recursive_add_installed_package(name):
         """Recursively add package and its dependencies to PackagesStore."""
+        calls.append(name)
         import flask
 
     PackagesStore.clear()
-    monkeypatch.setattr(PackagesStore, "get_package", recursive_get_package)
+    monkeypatch.setattr(
+        PackagesStore, "add_installed_package", recursive_add_installed_package
+    )
 
     import flask
 
     # Restore the original method after the test
     monkeypatch.undo()
+    assert calls == ["flask"]
 
 
 def test_recursive_package_store_2(monkeypatch):
