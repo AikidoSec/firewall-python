@@ -63,15 +63,10 @@ class FirewallLists:
         return self.blocked_user_agent_regex.search(ua)
 
     def set_monitored_user_agents(self, monitored_user_agents: str):
-        self.monitored_user_agent_regex = None
         if not monitored_user_agents:
+            self.monitored_user_agent_regex = None
             return
-        try:
-            self.monitored_user_agent_regex = re.compile(
-                monitored_user_agents, re.IGNORECASE
-            )
-        except re.error:
-            pass
+        self.monitored_user_agent_regex = compile_pattern(monitored_user_agents)
 
     def is_monitored_user_agent(self, ua: str):
         if not ua:
@@ -83,11 +78,11 @@ class FirewallLists:
     def set_user_agent_details(self, user_agent_details):
         self.user_agent_details = []
         for detail in user_agent_details:
-            try:
-                pattern = re.compile(detail["pattern"], re.IGNORECASE)
-            except re.error:
-                continue
-            self.user_agent_details.append({"key": detail["key"], "pattern": pattern})
+            pattern = compile_pattern(detail["pattern"])
+            if pattern:
+                self.user_agent_details.append(
+                    {"key": detail["key"], "pattern": pattern}
+                )
 
     def get_matching_user_agent_keys(self, ua: str):
         return [
@@ -95,6 +90,13 @@ class FirewallLists:
             for detail in self.user_agent_details
             if detail["pattern"].search(ua)
         ]
+
+
+def compile_pattern(pattern):
+    try:
+        return re.compile(pattern, re.IGNORECASE)
+    except re.error:
+        return None
 
 
 def get_matching_ip_list_keys(ip_lists, ip):
