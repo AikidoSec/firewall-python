@@ -12,6 +12,7 @@ post_url_fw = "http://localhost:8112/create"
 post_url_nofw = "http://localhost:8113/create"
 sync_route_fw = "http://localhost:8112/sync_route"
 sync_route_nofw = "http://localhost:8113/sync_route"
+ratelimiting_url_fw = "http://localhost:8112/test_ratelimiting_1"
 
 
 def test_firewall_started_okay():
@@ -73,6 +74,23 @@ def test_sync_route_with_firewall():
 
 def test_sync_route_without_firewall():
     res = requests.get(sync_route_nofw)
+    assert res.status_code == 200
+
+
+def test_ratelimiting_1_route():
+    res = requests.get(ratelimiting_url_fw)
+    assert res.status_code == 200
+    assert "Retry-After" not in res.headers
+    time.sleep(2)
+    res = requests.get(ratelimiting_url_fw)
+    assert res.status_code == 200
+
+    res = requests.get(ratelimiting_url_fw)
+    assert res.status_code == 429
+    assert res.text.startswith("You are rate limited by Zen.")
+
+    time.sleep(int(res.headers["Retry-After"]))
+    res = requests.get(ratelimiting_url_fw)
     assert res.status_code == 200
 
 

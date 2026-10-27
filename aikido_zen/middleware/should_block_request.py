@@ -12,14 +12,12 @@ from aikido_zen.helpers.match_endpoints import match_endpoints
 def should_block_request():
     """
     Checks for rate-limiting and checks if the current user is blocked.
-    Returns: {
-        block: boolean,
-        data: {
-            type: "blocked" | "ratelimited",
-            trigger: "ip" | "user" | "group",
-            ip?: string
-        }
-     }
+    Returns one of:
+        {"block": False}
+        {"block": True, "type": "blocked", "trigger": "user"}
+        {"block": True, "type": "ratelimited", "trigger": "ip" | "user" | "group",
+         "ip": str | None, "retry_after_seconds": int | None}
+    retry_after_seconds is None only when an older background process answered.
     """
     try:
         context = get_current_context()
@@ -67,6 +65,9 @@ def should_block_request():
                     "type": "ratelimited",
                     "trigger": ratelimit_res["data"]["trigger"],
                     "ip": context.remote_address,
+                    "retry_after_seconds": ratelimit_res["data"].get(
+                        "retry_after_seconds"
+                    ),
                 }
     except Exception as e:
         logger.debug("Exception occurred in should_block_request: %s", e)
