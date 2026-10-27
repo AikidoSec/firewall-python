@@ -203,6 +203,28 @@ def test_sql_injection_in_a_cookie_next_to_a_rejected_cookie_is_detected():
     assert context_contains_sql_injection(query, "select", context, "sqlite")
 
 
+def test_sql_injection_in_an_earlier_cookie_header_is_detected():
+    payload = "1' OR '1'='1"
+    scope = {
+        "type": "http",
+        "method": "GET",
+        "headers": [
+            (b"cookie", f"id={payload}".encode()),
+            (b"cookie", b"sid=abc"),
+        ],
+        "query_string": b"",
+        "client": ["6.6.6.6"],
+        "server": ["192.168.0.6", 80],
+        "scheme": "http",
+        "root_path": "",
+        "path": "/users",
+    }
+    context = ZenContext(req=scope, source="starlette")
+    query = f"SELECT * FROM users WHERE id = '{payload}'"
+    assert context.cookies == {"id": payload, "sid": "abc"}
+    assert context_contains_sql_injection(query, "select", context, "sqlite")
+
+
 def test_valid_utf8_query_matches_strict_decode():
     raw = "q=café' OR 1=1 --&b=d".encode("utf-8")
     scope = {
