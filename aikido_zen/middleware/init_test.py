@@ -161,5 +161,19 @@ def test_cache_comms_with_endpoints():
             "ip": "1.1.1.1",
             "type": "ratelimited",
             "trigger": "my_trigger",
+            "retry_after_seconds": None,
         }
         assert thread_cache.stats.rate_limited_hits == 1
+
+        mock_comms.send_data_to_bg_process.return_value = {
+            "success": True,
+            "data": {"block": True, "trigger": "my_trigger", "retry_after_seconds": 7},
+        }
+        assert should_block_request() == {
+            "block": True,
+            "ip": "1.1.1.1",
+            "type": "ratelimited",
+            "trigger": "my_trigger",
+            "retry_after_seconds": 7,
+        }
+        assert thread_cache.stats.rate_limited_hits == 2

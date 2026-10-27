@@ -116,18 +116,21 @@ def test_ratelimiting_1_route():
     # First request :
     res = requests.get(base_url_fw + "/test_ratelimiting_1")
     assert res.status_code == 200
+    assert "Retry-After" not in res.headers
+    time.sleep(2)
     # Second request :
     res = requests.get(base_url_fw + "/test_ratelimiting_1")
     assert res.status_code == 200
     # Third request :
     res = requests.get(base_url_fw + "/test_ratelimiting_1")
     assert res.status_code == 429
+    assert int(res.headers["Retry-After"]) >= 1
     # Fourth request :
     res = requests.get(base_url_fw + "/test_ratelimiting_1")
     assert res.status_code == 429
 
-    time.sleep(5) # Wait until window expires
-    
+    time.sleep(int(res.headers["Retry-After"]))
+
     # Fifth request :
     res = requests.get(base_url_fw + "/test_ratelimiting_1")
     assert res.status_code == 200
