@@ -17,10 +17,8 @@ def set_asgi_attributes_on_context(context, scope):
     context.method = scope["method"]
     context.headers = normalize_asgi_headers(scope["headers"])
 
-    # A client can send several Cookie headers, and Starlette merges them all.
-    context.cookies = {}
-    for cookie_header in context.headers.get("COOKIE", []):
-        context.cookies.update(parse_cookies(cookie_header))
+    # Parse every Cookie header in both its decoded readings, so no value is missed.
+    context.cookies = parse_cookies(*context.headers.get("COOKIE", []))
 
     context.url = build_url_from_asgi(scope)
     context.query = parse_qs(scope["query_string"].decode("utf-8", errors="replace"))
