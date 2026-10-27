@@ -225,6 +225,39 @@ def test_sql_injection_in_an_earlier_cookie_header_is_detected():
     assert context_contains_sql_injection(query, "select", context, "sqlite")
 
 
+@pytest.mark.parametrize(
+    "cookie_headers, app_value",
+    [
+        ([b"id=1' OR '1'='1; id=1"], "1' OR '1'='1"),
+        ([b"id=1; id=1' OR '1'='1"], "1' OR '1'='1"),
+        ([b"id=1' OR '1'='1", b"id=1"], "1' OR '1'='1"),
+        ([b"id=1", b"id=1' OR '1'='1"], "1' OR '1'='1"),
+        (["id=café' OR '1'='1".encode()], "café' OR '1'='1"),
+        (["id=café' OR '1'='1".encode()], "cafÃ©' OR '1'='1"),
+    ],
+)
+def test_sql_injection_in_any_cookie_value_the_app_can_read_is_detected(
+    cookie_headers, app_value
+):
+    scope = {
+        "type": "http",
+        "method": "GET",
+        "headers": [(b"cookie", value) for value in cookie_headers],
+        "query_string": b"",
+        "client": ["6.6.6.6"],
+        "server": ["192.168.0.6", 80],
+        "scheme": "http",
+        "root_path": "",
+        "path": "/users",
+    }
+    context = ZenContext(req=scope, source="starlette")
+    query = f"SELECT * FROM users WHERE id = '{app_value}'"
+    assert context_contains_sql_injection(query, "select", context, "sqlite")
+    assert not context_contains_sql_injection(
+        "SELECT * FROM users WHERE id = '1'", "select", context, "sqlite"
+    )
+
+
 def test_valid_utf8_query_matches_strict_decode():
     raw = "q=café' OR 1=1 --&b=d".encode("utf-8")
     scope = {
