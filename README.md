@@ -23,6 +23,7 @@ Zen will autonomously protect your Python applications from the inside against:
 * 🛡️ [Path traversal attacks](https://www.aikido.dev/blog/path-traversal-in-2024-the-year-unpacked)
 * 🛡️ [Server-side request forgery (SSRF)](./docs/ssrf.md)
 * 🛡️ [Attack wave detection](https://help.aikido.dev/zen-firewall/zen-features/attack-wave-protection)
+* 🛡️ [Dangerous AI tool calls](./docs/ai-tool-call-blocking.md) (experimental — block host file/shell tools in AI responses)
 
 Zen operates autonomously on the same server as your Python app to:
 
