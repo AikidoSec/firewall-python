@@ -58,6 +58,8 @@ def test_parse_cookies_keeps_cookies_simplecookie_rejects(cookie_str, expected):
         (['id="a\\"b"'], {"id": 'a"b'}),
         (["name=café"], {"name": "café"}),
         (["café=1"], {"café": "1"}),
+        (["a; b"], {"": ["a", "b"]}),
+        (["a=1; flag; b=2"], {"a": "1", "": "flag", "b": "2"}),
     ],
 )
 def test_parse_cookies_keeps_every_value(cookie_strs, expected):
