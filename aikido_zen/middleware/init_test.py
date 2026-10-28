@@ -164,7 +164,7 @@ def test_cache_ipc_with_endpoints():
         }
         assert thread_cache.stats.rate_limited_hits == 1
 
-        mock_comms.send_data_to_bg_process.return_value = {
+        mock_ipc.send_message.return_value = {
             "success": True,
             "data": {"block": True, "trigger": "my_trigger", "retry_after_seconds": 7},
         }
