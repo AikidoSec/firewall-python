@@ -27,49 +27,26 @@ def should_ratelimit_request(
     max_requests = int(endpoint["rateLimiting"]["maxRequests"])
     windows_size_in_ms = int(endpoint["rateLimiting"]["windowSizeInMS"])
 
+    # Only one key is checked: a group over the user, the user over the IP.
     if group:
-        result = connection_manager.rate_limiter.check(
-            get_key_for_group(endpoint, group),
-            windows_size_in_ms,
-            max_requests,
-        )
-        if not result["allowed"]:
-            return {
-                "block": True,
-                "trigger": "group",
-                "retry_after_seconds": result["retry_after_seconds"],
-            }
-
-        # Do not check IP or user rate limit if group is set
+        key, trigger = get_key_for_group(endpoint, group), "group"
+    elif user:
+        key, trigger = get_key_for_user(endpoint, user), "user"
+    elif remote_address:
+        key, trigger = get_key_for_ip(endpoint, remote_address), "ip"
+    else:
         return {"block": False}
-    if user:
-        result = connection_manager.rate_limiter.check(
-            get_key_for_user(endpoint, user),
-            windows_size_in_ms,
-            max_requests,
-        )
-        if not result["allowed"]:
-            return {
-                "block": True,
-                "trigger": "user",
-                "retry_after_seconds": result["retry_after_seconds"],
-            }
-        # Do not check IP rate limit if user is set
-        return {"block": False}
-    if remote_address:
-        result = connection_manager.rate_limiter.check(
-            get_key_for_ip(endpoint, remote_address),
-            windows_size_in_ms,
-            max_requests,
-        )
-        if not result["allowed"]:
-            return {
-                "block": True,
-                "trigger": "ip",
-                "retry_after_seconds": result["retry_after_seconds"],
-            }
 
-    return {"block": False}
+    result = connection_manager.rate_limiter.record_request(
+        key, windows_size_in_ms, max_requests
+    )
+    if result["allowed"]:
+        return {"block": False}
+    return {
+        "block": True,
+        "trigger": trigger,
+        "retry_after_seconds": result["retry_after_seconds"],
+    }
 
 
 def get_key_for_group(endpoint, group_id):

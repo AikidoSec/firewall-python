@@ -614,3 +614,27 @@ def test_returns_retry_after_seconds(user, group, trigger):
             "trigger": trigger,
             "retry_after_seconds": 31,
         }
+
+
+def test_blocks_without_retry_after_when_max_requests_is_zero():
+    cm = create_connection_manager(
+        [
+            {
+                "method": "POST",
+                "route": "/login",
+                "forceProtectionOff": False,
+                "rateLimiting": {
+                    "enabled": True,
+                    "maxRequests": 0,
+                    "windowSizeInMS": 60_000,
+                },
+            },
+        ]
+    )
+    route_metadata = create_route_metadata()
+    for _ in range(2):
+        assert should_ratelimit_request(route_metadata, "1.2.3.4", None, cm) == {
+            "block": True,
+            "trigger": "ip",
+            "retry_after_seconds": None,
+        }
