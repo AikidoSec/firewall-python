@@ -54,8 +54,7 @@ class AikidoBackgroundProcess:
         add_exit_handlers()
 
         while True:
-            conn = listener.accept()
-            while True:
+            with listener.accept() as conn:
                 try:
                     data = conn.recv()  #  because of this no sleep needed in thread
                     logger.debug("Incoming data : %s", data)
@@ -65,12 +64,9 @@ class AikidoBackgroundProcess:
                         conn=conn,
                         queue=self.queue,
                     )
-                    conn.close()  # Sort of EOL for Python IPC
-                    break
                 except Exception as e:
                     logger.error("Exception occurred in server thread : %s", e)
                     logger.debug("Trace \n %s", traceback.format_exc())
-                    break  # Return back to listening for new connections
 
     def reporting_thread(self):
         """Reporting thread"""

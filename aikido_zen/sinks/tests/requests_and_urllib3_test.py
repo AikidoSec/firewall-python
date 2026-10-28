@@ -4,7 +4,7 @@ import pytest
 from aikido_zen.context import Context, current_context
 from aikido_zen.thread.thread_cache import ThreadCache, get_cache
 from aikido_zen.errors import AikidoSSRF
-from aikido_zen.background_process.comms import reset_comms
+from aikido_zen.background_process.ipc import IPCClient
 import aikido_zen.sinks.socket
 import aikido_zen.sinks.http_client
 import requests
@@ -50,7 +50,7 @@ def set_context_and_lifecycle(url, host=None):
 
 
 def ssrf_check(monkeypatch, url, requests_only=False):
-    reset_comms()
+    IPCClient.reset()
     set_context_and_lifecycle(url)
     monkeypatch.setenv("AIKIDO_BLOCK", "1")
     with pytest.raises(AikidoSSRF):
@@ -172,7 +172,7 @@ def test_different_capitalization_raises_ssrf(monkeypatch):
 
 def test_srrf_with_request_to_itself_urllib3(monkeypatch):
     http = urllib3.PoolManager()
-    reset_comms()
+    IPCClient.reset()
 
     set_context_and_lifecycle("http://localhost:5000/test/1", host="localhost:5000")
     monkeypatch.setenv("AIKIDO_BLOCK", "1")
@@ -211,7 +211,7 @@ def test_ssrf_imds_ip(monkeypatch):
 
 def test_zero_padded_ip(monkeypatch):
     monkeypatch.setenv("AIKIDO_BLOCK", "1")
-    reset_comms()
+    IPCClient.reset()
 
     url = "http://0127.0.0.01:5000"
     set_context_and_lifecycle(url)

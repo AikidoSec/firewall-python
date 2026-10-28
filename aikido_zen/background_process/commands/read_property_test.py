@@ -1,8 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from .read_property import (
-    process_read_property,
-)  # Replace 'your_module' with the actual module name
+from . import read_property
 from aikido_zen.helpers.logging import logger
 
 
@@ -15,17 +13,15 @@ def mock_connection_manager():
 
 
 def test_process_read_property_sends_value(mock_connection_manager):
-    """Test that process_read_property sends the value of the property."""
     data = "some_property"
 
-    process_read_property(mock_connection_manager, data)
+    read_property.process(mock_connection_manager, data, None)
 
 
 def test_process_read_property_sends_none_for_missing_property(mock_connection_manager):
-    """Test that process_read_property sends None for a missing property."""
     data = "missing_property"
 
-    process_read_property(mock_connection_manager, data)
+    read_property.process(mock_connection_manager, data, None)
 
 
 def test_process_read_property_logs_debug_for_missing_property(
@@ -35,7 +31,7 @@ def test_process_read_property_logs_debug_for_missing_property(
     data = "missing_property"
 
     with patch("aikido_zen.helpers.logging.logger.debug") as mock_debug:
-        process_read_property(mock_connection_manager, data)
+        read_property.process(mock_connection_manager, data, None)
 
         # Check that the debug log was called
         mock_debug.assert_called_once_with(

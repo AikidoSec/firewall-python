@@ -11,7 +11,7 @@ from aikido_zen.helpers.get_agent_session_id import (
     get_agent_session_id,
     set_agent_session_id,
 )
-from .comms_test import reset_comms_after_test
+from .ipc_test import reset_ipc_after_test
 
 
 @pytest.mark.parametrize("version", [(3, 8), (3, 13), (3, 14)])
@@ -149,6 +149,35 @@ assert multiprocessing.get_start_method(allow_none=True) is None
     subprocess.run([sys.executable, "-c", script], check=True)
 
 
+def test_socket_name_is_shared_by_independent_processes(monkeypatch):
+    monkeypatch.setenv("AIKIDO_TOKEN", "AIK_RUNTIME_TEST")
+    script = """
+from aikido_zen.background_process import get_socket_path
+print(get_socket_path())
+"""
+
+    for _ in range(2):
+        address = subprocess.check_output(
+            [sys.executable, "-c", script], text=True, timeout=10
+        ).strip()
+        assert address == background_process.get_socket_path()
+
+
+def test_socket_name_separates_tokens_and_agent_versions(monkeypatch):
+    monkeypatch.setenv("AIKIDO_TOKEN", "AIK_RUNTIME_TEST")
+    versions = ["1.2.37", "1.2.37b2", "1.2.37+custom.1"]
+    addresses = set()
+    for version in versions:
+        monkeypatch.setattr(background_process, "PKG_VERSION", version)
+        address = background_process.get_socket_path()
+        assert address == background_process.get_socket_path()
+        addresses.add(address)
+
+    assert len(addresses) == len(versions)
+    monkeypatch.setenv("AIKIDO_TOKEN", "AIK_RUNTIME_OTHER")
+    assert background_process.get_socket_path() not in addresses
+
+
 def test_stale_socket_removed_by_another_worker(monkeypatch, mocker):
     process = mocker.patch(
         "aikido_zen.background_process.get_process_factory"
@@ -156,11 +185,11 @@ def test_stale_socket_removed_by_another_worker(monkeypatch, mocker):
     monkeypatch.setenv("AIKIDO_TOKEN", "AIK_RUNTIME_TEST")
     monkeypatch.setattr(background_process.platform, "system", lambda: "Linux")
     monkeypatch.setattr(
-        background_process, "get_uds_filename", lambda: "/tmp/aikido.sock"
+        background_process, "get_socket_path", lambda: "/tmp/aikido.sock"
     )
     monkeypatch.setattr(background_process.os.path, "exists", lambda _path: True)
     monkeypatch.setattr(
-        background_process, "background_process_already_active", lambda _comms: False
+        background_process, "background_process_already_active", lambda _ipc: False
     )
     monkeypatch.setattr(
         background_process.os,
@@ -180,7 +209,7 @@ def test_started_process_receives_the_current_session_id(monkeypatch, mocker):
     monkeypatch.setenv("AIKIDO_TOKEN", "AIK_RUNTIME_TEST")
     monkeypatch.setattr(background_process.platform, "system", lambda: "Linux")
     monkeypatch.setattr(
-        background_process, "get_uds_filename", lambda: "/tmp/aikido-session.sock"
+        background_process, "get_socket_path", lambda: "/tmp/aikido-session.sock"
     )
     monkeypatch.setattr(background_process.os.path, "exists", lambda _path: False)
 

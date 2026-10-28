@@ -1,19 +1,20 @@
-"""Mainly exports process_read_property"""
-
+from aikido_zen.helpers.ipc.command_types import Payload
 from aikido_zen.helpers.logging import logger
 
+IDENTIFIER = "READ_PROPERTY"
 
-def process_read_property(connection_manager, data):
-    """
-    Takes in one arg : name of property on connection_manager, tries to read it.
-    Meant to get config props
-    """
+
+def generate(property_name, timeout_in_sec=0.1) -> Payload:
+    return Payload(IDENTIFIER, property_name, timeout_in_sec)
+
+
+def process(connection_manager, request, queue):
     try:
-        return connection_manager.__dict__[data]
+        return connection_manager.__dict__[request]
     except KeyError:
         logger.debug(
             "CloudConnectionManager has no attribute %s, current connection_manager: %s",
-            data,
+            request,
             connection_manager,
         )
         return None

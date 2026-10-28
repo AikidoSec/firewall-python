@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch
 import aikido_zen.sinks.sqlite3
-from aikido_zen.background_process.comms import reset_comms
+from aikido_zen.background_process.ipc import IPCClient
 
 kind = "sql_injection"
 
@@ -19,7 +19,7 @@ def database_conn():
 
 
 def test_cursor_execute(database_conn):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -41,7 +41,7 @@ def test_cursor_execute(database_conn):
 
 
 def test_cursor_execute_parameterized(database_conn):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -61,7 +61,7 @@ def test_cursor_execute_parameterized(database_conn):
 
 
 def test_cursor_execute_no_args(database_conn):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -85,7 +85,7 @@ def test_cursor_execute_no_args(database_conn):
 
 
 def test_cursor_execute_with_fstring(database_conn):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -111,7 +111,7 @@ def test_cursor_execute_with_fstring(database_conn):
 
 
 def test_cursor_executemany(database_conn):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -137,7 +137,7 @@ def test_cursor_executemany(database_conn):
 
 
 def test_cursor_executescript(database_conn):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -159,7 +159,7 @@ def test_cursor_executescript(database_conn):
 
 
 def test_connection_execute(database_conn):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -176,7 +176,7 @@ def test_connection_execute(database_conn):
 
 
 def test_connection_execute_parameterized(database_conn):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -194,7 +194,7 @@ def test_connection_execute_parameterized(database_conn):
 
 
 def test_connection_executemany(database_conn):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -220,7 +220,7 @@ def test_connection_executemany(database_conn):
 
 
 def test_connection_executescript(database_conn):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -390,7 +390,7 @@ def test_cursor_with_custom_factory(database_conn):
     class CustomCursor(sqlite3.Cursor):
         pass
 
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:

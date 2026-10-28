@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 from aikido_zen.thread.thread_cache import get_cache, ThreadCache
 from .request_handler import request_handler
-from ...background_process.commands import process_check_firewall_lists
+from ...background_process.commands import check_firewall_lists
 from ...background_process.service_config import ServiceConfig
 from ...context import Context, current_context
 from ...helpers.headers import Headers
@@ -48,10 +48,10 @@ class MyMockComms:
         self.conn_manager.attack_wave_detector = AttackWaveDetector()
         self.attacks = []
 
-    def send_data_to_bg_process(self, action, obj, receive=False, timeout_in_sec=0.1):
-        if action != "CHECK_FIREWALL_LISTS":
+    def send_message(self, message):
+        if message.identifier != "CHECK_FIREWALL_LISTS":
             return {"success": False}
-        res = process_check_firewall_lists(self.conn_manager, obj)
+        res = check_firewall_lists.process(self.conn_manager, message.request, None)
         return {
             "success": True,
             "data": res,
@@ -100,11 +100,11 @@ def test_post_response_useful_route(mock_context):
     }
 
 
-@patch("aikido_zen.background_process.get_comms")
-def test_post_response_not_useful_route(mock_get_comms, mock_context):
+@patch("aikido_zen.background_process.ipc.IPCClient.get")
+def test_post_response_not_useful_route(mock_get_ipc, mock_context):
     """Test post_response when the route is not useful."""
-    comms = MagicMock()
-    mock_get_comms.return_value = comms
+    ipc = MagicMock()
+    mock_get_ipc.return_value = ipc
 
     cache = ThreadCache()  # Creates a new cache
     assert cache.routes.routes == {}
@@ -113,14 +113,14 @@ def test_post_response_not_useful_route(mock_get_comms, mock_context):
         request_handler("post_response", status_code=500)
 
     assert cache.routes.routes == {}
-    comms.send_data_to_bg_process.assert_not_called()
+    ipc.send_message.assert_not_called()
 
 
-@patch("aikido_zen.background_process.get_comms")
-def test_post_response_no_context(mock_get_comms):
+@patch("aikido_zen.background_process.ipc.IPCClient.get")
+def test_post_response_no_context(mock_get_ipc):
     """Test post_response when there is no context."""
-    comms = MagicMock()
-    mock_get_comms.return_value = comms
+    ipc = MagicMock()
+    mock_get_ipc.return_value = ipc
 
     cache = ThreadCache()  # Creates a new cache
     assert cache.routes.routes == {}
@@ -130,7 +130,7 @@ def test_post_response_no_context(mock_get_comms):
         result = request_handler("post_response", status_code=200)
 
     assert cache.routes.routes == {}
-    comms.send_data_to_bg_process.assert_not_called()
+    ipc.send_message.assert_not_called()
 
 
 def test_bypassed_ip_no_stats_in_init():
@@ -213,17 +213,17 @@ def create_service_config():
 
 def patch_firewall_lists(func):
     def wrapper(*args, **kwargs):
-        with patch("aikido_zen.background_process.comms.get_comms") as mock_comms:
-            comms = MyMockComms()
-            mock_comms.return_value = comms
+        with patch("aikido_zen.background_process.ipc.IPCClient.get") as mock_ipc:
+            ipc = MyMockComms()
+            mock_ipc.return_value = ipc
 
             sig = inspect.signature(func)
             if "attacks" in sig.parameters:
-                kwargs["attacks"] = comms.attacks
+                kwargs["attacks"] = ipc.attacks
             if "firewall_lists" in sig.parameters:
-                kwargs["firewall_lists"] = comms.firewall_lists
+                kwargs["firewall_lists"] = ipc.firewall_lists
             if "statistics" in sig.parameters:
-                kwargs["statistics"] = comms.conn_manager.statistics
+                kwargs["statistics"] = ipc.conn_manager.statistics
 
             return func(*args, **kwargs)
 
