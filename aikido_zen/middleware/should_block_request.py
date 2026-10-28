@@ -16,7 +16,8 @@ def should_block_request():
         {"block": True, "type": "blocked", "trigger": "user"}
         {"block": True, "type": "ratelimited", "trigger": "ip" | "user" | "group",
          "ip": str | None, "retry_after_seconds": int | None}
-    retry_after_seconds is None only when an older background process answered.
+    retry_after_seconds is None when no retry can succeed,
+    or when the reply came from an older background process.
     """
     try:
         context = get_current_context()
