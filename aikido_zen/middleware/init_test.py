@@ -64,7 +64,7 @@ def test_bypassed_ip_skips_user_blocking():
     assert should_block_request() == {"block": False}
 
 
-def test_cache_comms_with_endpoints():
+def test_cache_ipc_with_endpoints():
     test_utils.generate_and_set_context(user={"id": "456"}, route="/posts/:id")
     set_rate_limit_group("my_group")
     thread_cache = get_cache()
@@ -85,19 +85,19 @@ def test_cache_comms_with_endpoints():
     assert get_current_context().executed_middleware == False
     assert thread_cache.middleware_installed == False
 
-    with patch("aikido_zen.background_process.comms.get_comms") as mock_get_comms:
-        mock_get_comms.return_value = None  # Set the return value of get_comms
+    with patch("aikido_zen.background_process.ipc.IPCClient.get") as mock_get_ipc:
+        mock_get_ipc.return_value = None  # Set the return value of get_ipc
         assert should_block_request() == {"block": False}
     assert get_current_context().executed_middleware == True
     assert thread_cache.middleware_installed == True
 
-    with patch("aikido_zen.background_process.comms.get_comms") as mock_get_comms:
-        mock_comms = MagicMock()
-        mock_get_comms.return_value = mock_comms  # Set the return value of get_comms
+    with patch("aikido_zen.background_process.ipc.IPCClient.get") as mock_get_ipc:
+        mock_ipc = MagicMock()
+        mock_get_ipc.return_value = mock_ipc  # Set the return value of get_ipc
 
         # No matching endpoints :
         assert should_block_request() == {"block": False}
-        mock_comms.send_data_to_bg_process.assert_not_called()
+        mock_ipc.send_message.assert_not_called()
 
     thread_cache.config.endpoints.append(
         {
@@ -112,46 +112,45 @@ def test_cache_comms_with_endpoints():
         }
     )
 
-    with patch("aikido_zen.background_process.comms.get_comms") as mock_get_comms:
-        mock_comms = MagicMock()
-        mock_get_comms.return_value = mock_comms  # Set the return value of get_comms
+    with patch("aikido_zen.background_process.ipc.IPCClient.get") as mock_get_ipc:
+        mock_ipc = MagicMock()
+        mock_get_ipc.return_value = mock_ipc  # Set the return value of get_ipc
 
         # Rate-limiting disabled:
         assert should_block_request() == {"block": False}
-        mock_comms.send_data_to_bg_process.assert_not_called()
+        mock_ipc.send_message.assert_not_called()
 
     # Enable ratelimiting
     thread_cache.config.endpoints[1]["rateLimiting"]["enabled"] = True
 
-    with patch("aikido_zen.background_process.comms.get_comms") as mock_get_comms:
-        mock_comms = MagicMock()
-        mock_get_comms.return_value = mock_comms  # Set the return value of get_comms
-        mock_comms.send_data_to_bg_process.return_value = {"success": False}
+    with patch("aikido_zen.background_process.ipc.IPCClient.get") as mock_get_ipc:
+        mock_ipc = MagicMock()
+        mock_get_ipc.return_value = mock_ipc  # Set the return value of get_ipc
+        mock_ipc.send_message.return_value = {"success": False}
 
         assert should_block_request() == {"block": False}
-        mock_comms.send_data_to_bg_process.assert_called_with(
-            action="SHOULD_RATELIMIT",
-            obj={
-                "route_metadata": {
-                    "method": "POST",
-                    "route": "/posts/:id",
-                    "url": "http://localhost:8080/",
-                },
-                "user": {"id": "456"},
-                "group": "my_group",
-                "remote_address": "1.1.1.1",
+        mock_ipc.send_message.assert_called()
+        (message,) = mock_ipc.send_message.call_args.args
+        assert message.identifier == "SHOULD_RATELIMIT"
+        assert message.timeout_in_sec == 0.01
+        assert message.request == {
+            "route_metadata": {
+                "method": "POST",
+                "route": "/posts/:id",
+                "url": "http://localhost:8080/",
             },
-            receive=True,
-            timeout_in_sec=0.01,
-        )
+            "user": {"id": "456"},
+            "group": "my_group",
+            "remote_address": "1.1.1.1",
+        }
 
-        mock_comms.send_data_to_bg_process.return_value = {
+        mock_ipc.send_message.return_value = {
             "success": True,
             "data": {"block": False, "trigger": "my_trigger"},
         }
         assert should_block_request() == {"block": False}
 
-        mock_comms.send_data_to_bg_process.return_value = {
+        mock_ipc.send_message.return_value = {
             "success": True,
             "data": {"block": True, "trigger": "my_trigger"},
         }

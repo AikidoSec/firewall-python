@@ -8,7 +8,7 @@ def test_postfork_instruments_imported_functions_before_starting_daemon(monkeypa
 import threading
 from unittest.mock import patch
 
-from aikido_zen.background_process import get_comms
+from aikido_zen.background_process.ipc import IPCClient
 from aikido_zen.decorators.uwsgi import postfork
 
 calls = []
@@ -22,7 +22,7 @@ with patch("aikido_zen.start_background_process", side_effect=lambda: calls.appe
     from os import system
 
     assert calls == []
-    assert get_comms() is None
+    assert IPCClient.get() is None
     assert threading.enumerate() == threads
 
     start_aikido()

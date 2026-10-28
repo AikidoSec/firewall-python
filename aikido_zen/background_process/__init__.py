@@ -3,6 +3,7 @@ Aikido background process, this will create a new process
 and listen for data sent by our sources and sinks
 """
 
+import hashlib
 import multiprocessing
 import os
 import platform
@@ -13,12 +14,10 @@ from aikido_zen.helpers.get_temp_dir import get_temp_dir
 from aikido_zen.helpers.hash_aikido_token import hash_aikido_token
 from aikido_zen.helpers.get_agent_session_id import get_agent_session_id
 from aikido_zen.helpers.logging import logger
+from aikido_zen.config import PKG_VERSION
 
-from aikido_zen.background_process.comms import (
-    AikidoIPCCommunications,
-    get_comms,
-    reset_comms,
-)
+from aikido_zen.background_process.ipc import IPCClient
+from aikido_zen.background_process.commands import ping
 from .aikido_background_process import AikidoBackgroundProcess
 
 
@@ -53,15 +52,15 @@ def start_background_process():
         )
         return
 
-    address = get_uds_filename()
+    address = get_socket_path()
     if platform.system() == "Windows":
         # Python does not support Windows UDS just yet, so we have to rely on INET
         address = ("127.0.0.1", 49156)
 
-    comms = AikidoIPCCommunications(address, secret_key_bytes)
+    ipc = IPCClient(address, secret_key_bytes)
 
     if isinstance(address, str) and os.path.exists(address):
-        if background_process_already_active(comms):
+        if background_process_already_active(ipc):
             return  # Don't start if the background process is already active
         try:
             os.remove(address)
@@ -72,23 +71,47 @@ def start_background_process():
     #  Daemon is set to True so that the process kills itself when the main process dies
     background_process = get_process_factory()(
         target=AikidoBackgroundProcess,
-        args=(comms.address, comms.key, get_agent_session_id()),
+        args=(ipc.address, ipc.key, get_agent_session_id()),
         name="zen-agent-process",
         daemon=True,
     )
     background_process.start()
 
 
-def get_uds_filename():
-    """Returns the address for UDS file"""
+def get_socket_path():
     temp_dir = get_temp_dir()
-    prefix = "aikido_python"
-    name = hash_aikido_token()
+    prefix = "aikido_zen"
+
+    # Include the package version to avoid reusing a background process from a previous release.
+    identity = f"{hash_aikido_token()}:{PKG_VERSION}"
+
+    name = hashlib.sha256(identity.encode()).hexdigest()
     return f"{temp_dir}/{prefix}_{name}.sock"
 
 
-def background_process_already_active(comms):
-    res = comms.send_data_to_bg_process(action="PING", obj=tuple(), receive=True)
+def check_socket_access():
+    """Returns true if access is possible, false if it's not."""
+    filename = get_socket_path()
+    directory = "/".join(filename.split("/")[:-1])
+
+    if platform.system() == "Windows":
+        # Python does not support Windows UDS just yet, so we have to rely on INET
+        return True
+
+    if not os.access(directory, os.R_OK) or not os.access(directory, os.W_OK):
+        # We need both read and write permissions in order to start the socket
+        logger.critical(
+            "Cannot start Zen: no read/write permissions for directory %s. "
+            + "You can change the path by setting "
+            + "the AIKIDO_TMP_DIR environment variable.",
+            directory,
+        )
+        return False
+    return True
+
+
+def background_process_already_active(ipc):
+    res = ipc.send_message(ping.generate())
     if res["success"] and res["data"] == "Received":
         # Ping is active, return.
         logger.debug(

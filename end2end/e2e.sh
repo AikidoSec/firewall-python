@@ -150,9 +150,8 @@ APP_PORT_DISABLED="${APP_PORT_DISABLED:-8081}"
 # 1. Kill any lingering processes from previous runs
 AIKIDO_SOCK=$(AIKIDO_TOKEN="AIK_secret_token" poetry run python3 -c "
 import os; os.environ['AIKIDO_TOKEN']='AIK_secret_token'
-from aikido_zen.helpers.hash_aikido_token import hash_aikido_token
-from aikido_zen.helpers.get_temp_dir import get_temp_dir
-print(f'{get_temp_dir()}/aikido_python_{hash_aikido_token()}.sock')
+from aikido_zen.background_process import get_socket_path
+print(get_socket_path())
 " 2>/dev/null)
 if [[ -n "$AIKIDO_SOCK" ]]; then
   rm -f "$AIKIDO_SOCK"

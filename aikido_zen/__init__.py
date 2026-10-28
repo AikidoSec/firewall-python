@@ -4,8 +4,6 @@ Aggregates from the different modules
 
 import os
 
-from aikido_zen.background_process.test_uds_file_access import test_uds_file_access
-
 # Re-export functions :
 from aikido_zen.context.users import set_user
 from aikido_zen.context.track import track
@@ -19,7 +17,7 @@ from aikido_zen.middleware.set_rate_limit_group import set_rate_limit_group
 from aikido_zen.helpers.logging import logger
 
 # Import background process
-from aikido_zen.background_process import start_background_process
+from aikido_zen.background_process import check_socket_access, start_background_process
 
 # Load environment variables and constants
 from aikido_zen.config import PKG_VERSION
@@ -41,7 +39,7 @@ def protect(mode="daemon", token=""):
         return
     if gil_not_enabled():
         return
-    if not test_uds_file_access():
+    if not check_socket_access():
         return  # Unable to start background process
     if check_gevent():
         return  # gevent is not compatible with zen.
