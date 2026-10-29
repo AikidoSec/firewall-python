@@ -156,9 +156,11 @@ def parse_ip_entry(entry):
     """
     Converts ip entry: {"key": "geoip/nl", "source": "example", "description": "Example description", "ips": []}
     """
+    ips = entry.get("ips")
     return {
         "key": entry.get("key"),
         "source": entry.get("source"),
         "description": entry.get("description") or "a firewall list",
-        "iplist": IPMatcher(entry.get("ips")),
+        # A string or object would be read as single characters or keys, not networks.
+        "iplist": IPMatcher(ips if isinstance(ips, list) else []),
     }

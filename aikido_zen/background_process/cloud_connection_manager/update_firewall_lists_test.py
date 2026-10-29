@@ -186,6 +186,10 @@ def test_update_firewall_lists_skips_invalid_networks_and_logs_them(
         {"source": "list1", "description": "Example description"},
         {"source": "list1", "description": "Example description", "ips": None},
         {"source": "list1", "description": "Example description", "ips": []},
+        {"source": "list1", "description": "Example description", "ips": "5.6.7.8"},
+        {"source": "list1", "description": "Example description", "ips": {"a": 1}},
+        {"source": "list1", "description": "Example description", "ips": 5},
+        {"source": "list1", "description": "Example description", "ips": True},
     ],
 )
 def test_update_firewall_lists_skips_an_allowlist_entry_without_ips(
