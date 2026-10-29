@@ -30,10 +30,17 @@ class FirewallLists:
                     entry["source"],
                     rejected_count,
                 )
-        # An allowlist that failed to build would block the visitors it should allow.
-        if not all(entry["iplist"].is_built() for entry in allowed_ips):
+        # A list that failed to build matches no IP, so the current lists stay in place.
+        failed = [e for e in blocked_ips + allowed_ips if not e["iplist"].is_built()]
+        if failed:
             if zen_internals.has_ip_matcher():
+                logger.error(
+                    "Zen failed to update the firewall lists: "
+                    "IP list %s could not be built.",
+                    failed[0]["source"],
+                )
                 return
+            # Without the library no list builds, and an allowlist would block everyone.
             allowed_ips = []
         self.blocked_ips = blocked_ips
         self.allowed_ips = allowed_ips

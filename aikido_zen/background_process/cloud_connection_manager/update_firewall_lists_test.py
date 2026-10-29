@@ -147,6 +147,23 @@ def test_update_firewall_lists_keeps_allowed_ips_when_rebuild_fails(
     assert connection_manager.firewall_lists.is_blocked_ip("192.168.1.1")
 
 
+def test_update_firewall_lists_keeps_all_lists_when_a_blocklist_rebuild_fails(
+    connection_manager, monkeypatch, caplog
+):
+    update_firewall_lists(connection_manager)
+    assert connection_manager.firewall_lists.is_blocked_ip("192.168.1.1")
+
+    monkeypatch.setattr(
+        "aikido_zen.helpers.zen_internals._ip_matcher_create", lambda *args: None
+    )
+    connection_manager.api = MockApiNoUA()
+    update_firewall_lists(connection_manager)
+
+    assert "IP list example could not be built" in caplog.text
+    assert connection_manager.firewall_lists.is_blocked_ip("192.168.1.1")
+    assert connection_manager.firewall_lists.is_user_agent_blocked("BadBot")
+
+
 @pytest.mark.parametrize("invalid_network", ["not-a-network", "\udc80.1.1.1"])
 def test_update_firewall_lists_skips_invalid_networks_and_logs_them(
     connection_manager, caplog, invalid_network
