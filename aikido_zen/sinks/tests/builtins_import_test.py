@@ -75,3 +75,20 @@ def test_recursive_package_store_2(monkeypatch):
 
     # Restore the original method after the test
     monkeypatch.undo()
+
+
+def test_imports_during_scan_do_not_start_nested_scans():
+    original_version = importlib.metadata.version
+
+    def version_that_imports(name):
+        import csv
+        import email
+
+        return original_version(name)
+
+    with patch(
+        "importlib.metadata.version", side_effect=version_that_imports
+    ) as version:
+        import json
+
+    assert [c.args for c in version.call_args_list] == [("json",)]
