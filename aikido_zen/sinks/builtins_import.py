@@ -1,7 +1,5 @@
 from aikido_zen.sinks import on_import, patch_function, after
 import contextvars
-import importlib.metadata
-from importlib.metadata import PackageNotFoundError
 from aikido_zen.background_process.packages import PackagesStore
 
 running_import_scan = contextvars.ContextVar("running_import_scan", default=False)
@@ -30,16 +28,7 @@ def _import(func, instance, args, kwargs, return_value):
             # Avoid circular dependencies, this is a double safety-check for if contextvar check fails.
             return
 
-        if PackagesStore.get_package(name):
-            return
-
-        version = None
-        try:
-            version = importlib.metadata.version(name)
-        except PackageNotFoundError:
-            pass
-        if version:
-            PackagesStore.add_package(name, version)
+        PackagesStore.add_installed_package(name)
     finally:
         running_import_scan.set(False)
 

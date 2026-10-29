@@ -10,19 +10,32 @@ class FirewallLists:
     def __init__(self):
         self.blocked_ips = []
         self.allowed_ips = []
+        self.monitored_ips = []
         self.blocked_user_agent_regex = None
+        self.monitored_user_agent_regex = None
+        self.user_agent_details = []
 
-    def update(self, blocked_ip_entries, allowed_ip_entries, blocked_user_agents):
+    def update(
+        self,
+        blocked_ip_entries,
+        allowed_ip_entries,
+        blocked_user_agents,
+        monitored_ip_entries,
+        monitored_user_agents,
+        user_agent_details,
+    ):
         """Replaces all lists together, so lists from different updates never mix."""
         blocked_ips = list(map(parse_ip_entry, blocked_ip_entries))
+        monitored_ips = list(map(parse_ip_entry, monitored_ip_entries))
         # An allowlist without IPs would block every visitor, so it is skipped.
         allowed_ips = [
             entry
             for entry in map(parse_ip_entry, allowed_ip_entries)
             if not entry["iplist"].is_empty()
         ]
+        ip_lists = blocked_ips + monitored_ips + allowed_ips
         # Aikido only sends valid networks, so an invalid one means the data is broken.
-        for entry in blocked_ips + allowed_ips:
+        for entry in ip_lists:
             rejected_count = entry["iplist"].rejected_count()
             if rejected_count:
                 logger.error(
@@ -31,7 +44,7 @@ class FirewallLists:
                     rejected_count,
                 )
         # A list that failed to build matches no IP, so the current lists stay in place.
-        failed = [e for e in blocked_ips + allowed_ips if not e["iplist"].is_built()]
+        failed = [e for e in ip_lists if not e["iplist"].is_built()]
         if failed:
             if zen_internals.has_ip_matcher():
                 logger.error(
@@ -44,7 +57,10 @@ class FirewallLists:
             allowed_ips = []
         self.blocked_ips = blocked_ips
         self.allowed_ips = allowed_ips
+        self.monitored_ips = monitored_ips
         self.set_blocked_user_agents(blocked_user_agents)
+        self.set_monitored_user_agents(monitored_user_agents)
+        self.set_user_agent_details(user_agent_details)
 
     def set_blocked_ips(self, blocked_ip_entries):
         self.blocked_ips = list(map(parse_ip_entry, blocked_ip_entries))
@@ -54,6 +70,15 @@ class FirewallLists:
             if entry["iplist"].has(ip):
                 return entry["description"]
         return False
+
+    def get_matching_blocked_ip_list_keys(self, ip):
+        return get_matching_ip_list_keys(self.blocked_ips, ip)
+
+    def set_monitored_ips(self, monitored_ip_entries):
+        self.monitored_ips = list(map(parse_ip_entry, monitored_ip_entries))
+
+    def get_matching_monitored_ip_list_keys(self, ip):
+        return get_matching_ip_list_keys(self.monitored_ips, ip)
 
     def set_allowed_ips(self, allowed_ip_entries):
         self.allowed_ips = list(map(parse_ip_entry, allowed_ip_entries))
@@ -86,12 +111,53 @@ class FirewallLists:
             return False
         return self.blocked_user_agent_regex.search(ua)
 
+    def set_monitored_user_agents(self, monitored_user_agents: str):
+        if not monitored_user_agents:
+            self.monitored_user_agent_regex = None
+            return
+        self.monitored_user_agent_regex = compile_pattern(monitored_user_agents)
+
+    def is_monitored_user_agent(self, ua: str):
+        if not ua:
+            return False
+        if not self.monitored_user_agent_regex:
+            return False
+        return self.monitored_user_agent_regex.search(ua)
+
+    def set_user_agent_details(self, user_agent_details):
+        self.user_agent_details = []
+        for detail in user_agent_details:
+            pattern = compile_pattern(detail["pattern"])
+            if pattern:
+                self.user_agent_details.append(
+                    {"key": detail["key"], "pattern": pattern}
+                )
+
+    def get_matching_user_agent_keys(self, ua: str):
+        return [
+            detail["key"]
+            for detail in self.user_agent_details
+            if detail["pattern"].search(ua)
+        ]
+
+
+def compile_pattern(pattern):
+    try:
+        return re.compile(pattern, re.IGNORECASE)
+    except re.error:
+        return None
+
+
+def get_matching_ip_list_keys(ip_lists, ip):
+    return [entry["key"] for entry in ip_lists if entry["iplist"].has(ip)]
+
 
 def parse_ip_entry(entry):
     """
-    Converts ip entry: {"source": "example", "description": "Example description", "ips": []}
+    Converts ip entry: {"key": "geoip/nl", "source": "example", "description": "Example description", "ips": []}
     """
     return {
+        "key": entry.get("key"),
         "source": entry.get("source"),
         "description": entry.get("description") or "a firewall list",
         "iplist": IPMatcher(entry.get("ips")),

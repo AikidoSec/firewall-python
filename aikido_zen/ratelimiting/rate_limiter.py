@@ -16,10 +16,16 @@ class RateLimiter:
         self.time_to_live_in_ms = time_to_live_in_ms
         self.rate_limited_items = LRUCache(max_items, time_to_live_in_ms)
 
-    def is_allowed(self, key, window_size_in_ms, max_requests):
+    def record_request(self, key, window_size_in_ms, max_requests):
         """
-        Checks if the request is allowed given the history
+        Records a request for this key and checks it against the limit.
+        Returns {"allowed": True}, or {"allowed": False, "retry_after_seconds": n},
+        where n is None when no retry can succeed.
         """
+        # Core accepts a maxRequests below 1, which blocks every request forever.
+        if max_requests < 1:
+            return {"allowed": False, "retry_after_seconds": None}
+
         current_time = get_unixtime_ms()
         request_timestamps = self.rate_limited_items.get(key) or []
 
@@ -40,4 +46,12 @@ class RateLimiter:
         self.rate_limited_items.set(key, request_timestamps)
 
         # if the total amount of requests in the current window exceeds max requests, we rate-limit
-        return len(request_timestamps) <= max_requests
+        if len(request_timestamps) <= max_requests:
+            return {"allowed": True}
+
+        # Blocked requests are stored too: wait for this one to leave, not the oldest.
+        blocking_timestamp = request_timestamps[-max_requests]
+
+        # A timestamp exactly one window old still counts, so the wait must be longer.
+        retry_after_ms = blocking_timestamp + window_size_in_ms - current_time
+        return {"allowed": False, "retry_after_seconds": retry_after_ms // 1000 + 1}

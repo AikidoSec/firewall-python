@@ -56,9 +56,22 @@ def is_version_supported(version, required_version):
 
 # packages store, uses python's built in GlobalInterpreterLock (GIL)
 packages_store = {}
+# version() scans all of sys.path, so names it cannot find (re, json) are looked up once.
+names_without_version = set()
 
 
 class PackagesStore:
+    @staticmethod
+    def add_installed_package(name):
+        if name in names_without_version or name in packages_store:
+            return
+        version = None
+        try:
+            version = importlib_metadata.version(name)
+        except importlib_metadata.PackageNotFoundError:
+            pass
+        PackagesStore.add_package(name, version)
+
     @staticmethod
     def export():
         result = []
@@ -70,6 +83,9 @@ class PackagesStore:
 
     @staticmethod
     def add_package(package, version):
+        if not version:
+            names_without_version.add(package)
+            return
         packages_store[package] = {
             "name": package,
             "version": version,
@@ -92,8 +108,12 @@ class PackagesStore:
             package["cleared"] = True
 
     @staticmethod
+    def clear_names_without_version():
+        names_without_version.clear()
+
+    @staticmethod
     def import_list(imported_packages):
         for package in imported_packages:
-            if PackagesStore.get_package(package["name"]):
+            if package["name"] in packages_store:
                 continue
             packages_store[package["name"]] = package

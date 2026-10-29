@@ -7,9 +7,8 @@ from aikido_zen.helpers.logging import logger
 from aikido_zen.helpers.create_attack_wave_event import create_attack_wave_event
 from aikido_zen.thread.thread_cache import get_cache
 from .ip_allowed_to_access_route import ip_allowed_to_access_route
-import aikido_zen.background_process.comms as c
-from ...background_process.commands import PutEventCommand
-from ...helpers.ipc.send_payload import send_payload
+from aikido_zen.background_process.ipc import IPCClient
+from aikido_zen.background_process.commands import check_firewall_lists, put_event
 from ...helpers.serialize_to_json import serialize_to_json
 from ...storage.attack_wave_detector_store import attack_wave_detector_store
 
@@ -64,15 +63,11 @@ def pre_response():
     # Do a check on firewall lists, this happens in background because of the heavy data.
     # For the timeout we notice the request during heavy loads usually takes 2ms - 2.5ms, we set timeout at 10ms.
     # That way we have a very small timeout with very little risk of not blocking ips.
-    comms = c.get_comms()
-    check_fw_lists_res = comms.send_data_to_bg_process(
-        action="CHECK_FIREWALL_LISTS",
-        obj={
-            "ip": context.remote_address,
-            "user-agent": context.get_user_agent(),
-        },
-        receive=True,
-        timeout_in_sec=(10 / 1000),
+    ipc = IPCClient.get()
+    check_fw_lists_res = ipc.send_message(
+        check_firewall_lists.generate(
+            ip=context.remote_address, user_agent=context.get_user_agent()
+        ),
     )
     if not check_fw_lists_res["success"] or not check_fw_lists_res["data"]["blocked"]:
         return
@@ -115,9 +110,9 @@ def post_response(status_code):
         event = create_attack_wave_event(context)
         logger.debug("Attack wave: %s", serialize_to_json(event)[:5000])
 
-        # Report in background to core (send event over IPC)
-        if c.get_comms() and event:
-            send_payload(c.get_comms(), PutEventCommand.generate(event))
+        ipc = IPCClient.get()
+        if ipc and event:
+            ipc.send_message_async(put_event.generate(event))
 
     # Check if the current route is useful for API discovery
     is_curr_route_useful = is_useful_route(

@@ -1,3 +1,4 @@
+import threading
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -54,7 +55,9 @@ def load_worker_times(n, renew=None):
 
 
 def test_startup_sync_runs_on_the_first_request():
-    assert load_worker_times(1) == 1
+    renew = MagicMock()
+    assert load_worker_times(1, renew=renew) == 1
+    renew.assert_called_once_with()
 
 
 def test_startup_sync_is_attempted_only_once_per_process():
@@ -86,3 +89,54 @@ def test_a_failed_sync_is_not_retried_on_the_request_path():
     renew = MagicMock(side_effect=Exception("IPC down"))
 
     assert load_worker_times(20, renew=renew) == 1
+
+
+def test_load_worker_called_again_during_the_startup_sync_does_not_deadlock():
+    renew = MagicMock(side_effect=loader.load_worker)
+
+    def first_request():
+        set_context()
+        loader.load_worker()
+
+    request = threading.Thread(target=first_request, daemon=True)
+    with patch.object(loader, "_load_worker_lock", threading.Lock()), patch(
+        "aikido_zen.thread.thread_cache.renew", renew
+    ), patch("threading.enumerate", return_value=[]), patch("threading.Thread"):
+        request.start()
+        request.join(timeout=5)
+
+    assert not request.is_alive()
+    assert renew.call_count == 1
+
+
+def test_failed_sync_logging_does_not_reenter_worker_startup():
+    renew = MagicMock(side_effect=Exception("IPC down"))
+
+    with patch.object(loader, "_load_worker_lock") as lock, patch.object(
+        loader.logger, "warning", side_effect=lambda *_args: loader.load_worker()
+    ) as warning:
+        lock.__enter__.side_effect = [
+            None,
+            AssertionError("recursive lock acquisition"),
+        ]
+
+        assert load_worker_times(1, renew=renew) == 1
+
+    lock.__enter__.assert_called_once()
+    warning.assert_called_once()
+
+
+def test_load_worker_can_retry_after_thread_start_fails():
+    set_context()
+    thread = MagicMock()
+    thread.start.side_effect = [RuntimeError("thread start failed"), None]
+
+    with patch.object(thread_cache, "renew"), patch.object(
+        loader.threading, "Thread", return_value=thread
+    ), patch.object(loader.threading, "enumerate", return_value=[]):
+        with pytest.raises(RuntimeError, match="thread start failed"):
+            loader.load_worker()
+
+        loader.load_worker()
+
+    assert thread.start.call_count == 2

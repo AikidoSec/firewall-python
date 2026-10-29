@@ -1,27 +1,18 @@
-from aikido_zen.helpers.ipc.command_types import Command, CommandContext, Payload
+from aikido_zen.helpers.ipc.command_types import Payload
+
+IDENTIFIER = "PUT_EVENT"
 
 
+def generate(event, timeout_in_sec=5) -> Payload:
+    return Payload(IDENTIFIER, PutEventReq(event), timeout_in_sec)
+
+
+def process(connection_manager, request, queue):
+    queue.put(request.event)
+
+
+# IPC uses pickle, so this request class must keep its import path.
 class PutEventReq:
     def __init__(self, event):
-        # Event is a dictionary containing data that is going to be reported to core
-        # The CloudConnectionManager adds the "agent" field
+        # The CloudConnectionManager adds the "agent" field.
         self.event = event
-
-
-class PutEventCommand(Command):
-    @classmethod
-    def identifier(cls) -> str:
-        return "put_event"
-
-    @classmethod
-    def returns_data(cls) -> bool:
-        return False
-
-    @classmethod
-    def run(cls, context: CommandContext, request: PutEventReq):
-        #  Events sent here get put in the event queue so that they are processed in the background
-        context.queue.put(request.event)
-
-    @classmethod
-    def generate(cls, request) -> Payload:
-        return Payload(cls, PutEventReq(request))

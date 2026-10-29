@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch
 import aikido_zen.sinks.pymongo
-from aikido_zen.background_process.comms import reset_comms
+from aikido_zen.background_process.ipc import IPCClient
 import pymongo.errors as mongo_errs
 from collections import defaultdict, OrderedDict, ChainMap
 
@@ -15,7 +15,7 @@ def db():
 
 
 def test_replace_one(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -30,7 +30,7 @@ def test_replace_one(db):
 
 
 def test_replace_one_with_chainmap(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -46,7 +46,7 @@ def test_replace_one_with_chainmap(db):
 
 
 def test_update_one(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -61,7 +61,7 @@ def test_update_one(db):
 
 
 def test_update_many(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -76,7 +76,7 @@ def test_update_many(db):
 
 
 def test_delete_one(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -91,7 +91,7 @@ def test_delete_one(db):
 
 
 def test_delete_many(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -106,7 +106,7 @@ def test_delete_many(db):
 
 
 def test_find_one(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -122,7 +122,7 @@ def test_find_one(db):
 
 
 def test_count_documents(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -138,7 +138,7 @@ def test_count_documents(db):
 
 
 def test_find_one_and_delete(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -154,7 +154,7 @@ def test_find_one_and_delete(db):
 
 
 def test_find_one_and_replace(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -170,7 +170,7 @@ def test_find_one_and_replace(db):
 
 
 def test_find_one_and_update(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -186,7 +186,7 @@ def test_find_one_and_update(db):
 
 
 def test_find_empty(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -196,7 +196,7 @@ def test_find_empty(db):
 
 
 def test_find_not_empty(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -212,7 +212,7 @@ def test_find_not_empty(db):
 
 
 def test_find_raw_batches(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -228,7 +228,7 @@ def test_find_raw_batches(db):
 
 
 def test_distinct(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -244,7 +244,7 @@ def test_distinct(db):
 
 
 def test_distinct_kwargs(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -260,7 +260,7 @@ def test_distinct_kwargs(db):
 
 
 def test_distinct_empty(db):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:

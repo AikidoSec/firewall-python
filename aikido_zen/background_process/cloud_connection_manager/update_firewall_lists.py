@@ -15,6 +15,10 @@ def update_firewall_lists(connection_manager):
         blocked_ips = res.get("blockedIPAddresses")
         allowed_ips = res.get("allowedIPAddresses")
         blocked_user_agents = res.get("blockedUserAgents")
+        # Only used for heartbeat stats, so these may be missing.
+        monitored_ips = res.get("monitoredIPAddresses") or []
+        monitored_user_agents = res.get("monitoredUserAgents")
+        user_agent_details = res.get("userAgentDetails") or []
 
         # Validate response
         if not res.get("success"):
@@ -25,7 +29,12 @@ def update_firewall_lists(connection_manager):
             return
 
         connection_manager.firewall_lists.update(
-            blocked_ips, allowed_ips, blocked_user_agents
+            blocked_ips,
+            allowed_ips,
+            blocked_user_agents,
+            monitored_ips,
+            monitored_user_agents,
+            user_agent_details,
         )
 
     except Exception as e:
