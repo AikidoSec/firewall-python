@@ -10,6 +10,7 @@ from flask import (
     Response,
     copy_current_request_context,
     request,
+    send_file,
     stream_with_context,
 )
 from werkzeug.exceptions import HTTPException, NotFound
@@ -366,8 +367,9 @@ def test_custom_flask_error_override_keeps_body_and_releases_request(app, withou
 
 
 @pytest.mark.parametrize("finish_stream", [False, True])
+@pytest.mark.parametrize("direct_passthrough", [False, True])
 def test_streamed_error_response_keeps_body_until_stream_closes(
-    app, without_gc, finish_stream
+    app, without_gc, finish_stream, direct_passthrough
 ):
     refs = []
     stages = []
@@ -390,7 +392,7 @@ def test_streamed_error_response_keeps_body_until_stream_closes(
                 assert get_current_context().body == payload
                 assert request.get_json() == payload
 
-        return Response(generate(), status=404)
+        return Response(generate(), status=404, direct_passthrough=direct_passthrough)
 
     response = app.test_client().post("/missing", json=payload, buffered=False)
     assert response.status_code == 404
@@ -401,6 +403,27 @@ def test_streamed_error_response_keeps_body_until_stream_closes(
     del response
 
     assert stages == ([b"first", b"second"] if finish_stream else [b"first"])
+    assert refs[0]() is None
+
+
+def test_file_error_response_releases_request_and_closes_file(app, without_gc):
+    refs = []
+    file = BytesIO(b"not found")
+    payload = {"name": "value"}
+
+    @app.errorhandler(404)
+    def handler(error):
+        refs.append(weakref.ref(request._get_current_object()))
+        assert request.get_json() == payload
+        return send_file(file, mimetype="text/plain"), 404
+
+    response = app.test_client().post("/missing", json=payload)
+    assert response.status_code == 404
+    assert response.data == b"not found"
+    response.close()
+    del response
+
+    assert file.closed
     assert refs[0]() is None
 
 

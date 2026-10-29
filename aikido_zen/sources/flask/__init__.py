@@ -26,6 +26,7 @@ def _full_dispatch_request_before(func, instance, args, kwargs):
 @after
 def _full_dispatch_request_after(func, instance, args, kwargs, return_value):
     from flask.globals import request_ctx
+    from werkzeug.wsgi import ClosingIterator
 
     if not hasattr(return_value, "status_code"):
         return
@@ -46,7 +47,12 @@ def _full_dispatch_request_after(func, instance, args, kwargs, return_value):
             error.__context__ = None
             error.__cause__ = None
 
-    return_value.call_on_close(release_routing_exception)
+    if return_value.direct_passthrough:
+        return_value.response = ClosingIterator(
+            return_value.response, release_routing_exception
+        )
+    else:
+        return_value.call_on_close(release_routing_exception)
 
 
 @before_modify_return
