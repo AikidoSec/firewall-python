@@ -1,16 +1,11 @@
-from aikido_zen.context import get_current_context
 from aikido_zen.helpers.logging import logger
 
 
-def extract_form_data_from_flask_request_and_save_data(req):
-    """Extract form data from flask request"""
-    context = get_current_context()
+def extract_body_from_flask_request(req):
     try:
-        if context:
-            if req.form:
-                context.set_body(req.form)
-            else:
-                context.set_body(req.data)
-            context.set_as_current_context()
+        if req.form:
+            return req.form
+        return req.data
     except Exception as e:
         logger.debug("Exception occurred whilst extracting flask body data: %s", e)
+    return None

@@ -1,8 +1,19 @@
-from aikido_zen.context import Context
+from functools import partial
+from contextvars import copy_context
+from weakref import proxy, ref
+
+from aikido_zen.context import Context, get_current_context
 from aikido_zen.helpers.get_argument import get_argument
-from aikido_zen.sinks import on_import, patch_function, before_modify_return, after
+from aikido_zen.helpers.lazy_body_stream import LazyBodyStream
+from aikido_zen.sinks import (
+    on_import,
+    patch_function,
+    before_modify_return,
+    before,
+    after,
+)
 from .extract_cookies import extract_cookies_from_flask_request_and_save_data
-from .extract_form_data import extract_form_data_from_flask_request_and_save_data
+from .extract_form_data import extract_body_from_flask_request
 from .extract_query import extract_query_from_flask_request_and_save_data
 from .extract_view_args import extract_view_args_from_flask_request_and_save_data
 import aikido_zen.sources.functions.request_handler as funcs
@@ -15,57 +26,70 @@ def _full_dispatch_request_before(func, instance, args, kwargs):
 
     req = request_ctx.request
     extract_cookies_from_flask_request_and_save_data(req)
-    if _should_capture_body(instance, req):
-        extract_form_data_from_flask_request_and_save_data(req)
     extract_view_args_from_flask_request_and_save_data(req)
     extract_query_from_flask_request_and_save_data(req)
-
-
-def _should_capture_body(app, request):
-    error = request.routing_exception
-    if (
-        error is None
-        or error.code not in (404, 405)
-        or request.blueprints
-        or app.trap_http_exception(error)
+    context = get_current_context()
+    if context is not None and (
+        req.content_length or req.environ.get("wsgi.input_terminated")
     ):
-        return True
-
-    # Routing errors can still reach application hooks and error handlers.
-    if any(
-        (
-            app.before_request_funcs,
-            app.url_value_preprocessors,
-            app.after_request_funcs,
-            app.teardown_request_funcs,
-            app.teardown_appcontext_funcs,
+        context.set_body_loader(partial(extract_body_from_flask_request, proxy(req)))
+        req.environ["aikido_zen.body_context"] = ref(context)
+        req.environ["wsgi.input"] = LazyBodyStream(
+            req.environ["wsgi.input"], context.load_body
         )
-    ):
-        return True
-
-    from flask import signals
-
-    if getattr(signals, "signals_available", True) and any(
-        signal.has_receivers_for(app)
-        for signal in (
-            signals.request_started,
-            signals.request_finished,
-            signals.request_tearing_down,
-            signals.appcontext_tearing_down,
-            signals.appcontext_popped,
-        )
-    ):
-        return True
-
-    handlers = app.error_handler_spec.get(None, {})
-    return isinstance(error, (*handlers.get(error.code, {}), *handlers.get(None, {})))
+        req.__dict__["stream"] = LazyBodyStream(req.stream, context.load_body)
 
 
 @after
 def _full_dispatch_request_after(func, instance, args, kwargs, return_value):
     if not hasattr(return_value, "status_code"):
         return
+    context = get_current_context()
+    if context is not None and "_body_loader" in context.__dict__:
+        from flask import has_request_context
+        from flask.globals import request_ctx
+        from werkzeug.wsgi import ClosingIterator
+
+        # Response generators can need these bindings after Flask pops them.
+        saved_context = copy_context()
+        request_ref = ref(request_ctx.request)
+        loader = context.__dict__["_body_loader"]
+
+        def load_body():
+            try:
+                if saved_context is not None:
+                    return saved_context.run(loader)
+                return loader()
+            finally:
+                # Deferred parsing can open uploads after Flask's request cleanup.
+                if (
+                    not has_request_context()
+                    or request_ctx.request is not request_ref()
+                ):
+                    req = request_ref()
+                    if req is not None:
+                        req.close()
+
+        def release_request_context():
+            nonlocal saved_context
+            saved_context = None
+
+        context.set_body_loader(load_body)
+        if return_value.direct_passthrough:
+            return_value.response = ClosingIterator(
+                return_value.response, release_request_context
+            )
+        else:
+            return_value.call_on_close(release_request_context)
     funcs.request_handler(stage="post_response", status_code=return_value.status_code)
+
+
+@before
+def _read_body_before(func, instance, args, kwargs):
+    context_ref = instance.environ.get("aikido_zen.body_context")
+    context = context_ref() if context_ref is not None else None
+    if context is not None:
+        context.load_body()
 
 
 @before_modify_return
@@ -102,3 +126,9 @@ def patch(m):
     patch_function(m, "Flask.__call__", _call)
     patch_function(m, "Flask.full_dispatch_request", _full_dispatch_request_before)
     patch_function(m, "Flask.full_dispatch_request", _full_dispatch_request_after)
+
+
+@on_import("flask.wrappers", "flask", version_requirement="2.2.4")
+def patch_request(m):
+    patch_function(m, "Request.get_data", _read_body_before)
+    patch_function(m, "Request._load_form_data", _read_body_before)

@@ -6,6 +6,7 @@ import contextvars
 import json
 from json import JSONDecodeError
 from time import sleep
+from threading import RLock
 from typing import Dict
 from urllib.parse import parse_qs
 
@@ -107,6 +108,36 @@ class Context:
 
     def set_cookies(self, cookies):
         self.cookies = cookies
+
+    @property
+    def body(self):
+        self.load_body()
+        return self.__dict__.get("body")
+
+    @body.setter
+    def body(self, value):
+        self.__dict__.pop("_body_loader", None)
+        self.__dict__["body"] = value
+
+    def set_body_loader(self, loader):
+        self.__dict__["body"] = None
+        self.__dict__["_body_loader"] = loader
+        self.__dict__["_body_lock"] = RLock()
+
+    def load_body(self):
+        lock = self.__dict__.get("_body_lock")
+        if lock is None:
+            return
+        with lock:
+            # The loader can read through hooks that access this property again.
+            loader = self.__dict__.pop("_body_loader", None)
+            if loader is not None:
+                try:
+                    self.set_body(loader())
+                except Exception as e:
+                    logger.debug("Exception occurred whilst loading body: %s", e)
+                finally:
+                    self.__dict__.pop("_body_lock", None)
 
     def set_body(self, body):
         try:
