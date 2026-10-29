@@ -1,20 +1,10 @@
-import gc
-import signal
-import weakref
-from io import BytesIO
-from unittest.mock import patch
-
 import pytest
-from flask import (
-    Flask,
-    Response,
-    copy_current_request_context,
-    request,
-    send_file,
-    stream_with_context,
-)
-from werkzeug.exceptions import HTTPException, NotFound
+import signal
+from io import BytesIO
 
+from flask import Flask, request, signals
+from werkzeug.exceptions import HTTPException
+from unittest.mock import patch
 import aikido_zen.sources.flask as source
 from aikido_zen.background_process.ipc import IPCClient
 from aikido_zen.context import current_context, get_current_context
@@ -250,6 +240,18 @@ def test_startup_flask():
         pass
 
 
+class CountingInput(BytesIO):
+    reads = 0
+
+    def read(self, *args, **kwargs):
+        self.reads += 1
+        return super().read(*args, **kwargs)
+
+    def readinto(self, *args, **kwargs):
+        self.reads += 1
+        return super().readinto(*args, **kwargs)
+
+
 @pytest.fixture
 def app(monkeypatch):
     monkeypatch.setattr(source, "should_block", lambda: None)
@@ -259,61 +261,101 @@ def app(monkeypatch):
     current_context.set(None)
 
 
-@pytest.fixture
-def without_gc():
-    enabled = gc.isenabled()
-    gc.collect()
-    gc.disable()
-    try:
-        yield
-    finally:
-        if enabled:
-            gc.enable()
-        gc.collect()
-
-
-@pytest.mark.parametrize("status", [404, 405, 308])
-@pytest.mark.parametrize("custom_handler", [False, True])
-def test_routing_requests_release_cached_bodies_without_gc(
-    app, without_gc, status, custom_handler
-):
-    refs = []
-    app.add_url_rule("/known", endpoint="known", view_func=lambda: "ok")
-    app.add_url_rule(
-        "/slash/", endpoint="slash", view_func=lambda: "ok", methods=["POST"]
+@pytest.mark.parametrize("status", [404, 405])
+def test_default_routing_rejection_does_not_read_body(app, status, monkeypatch):
+    stages = []
+    monkeypatch.setattr(
+        source.funcs, "request_handler", lambda **kwargs: stages.append(kwargs)
     )
-    if custom_handler:
-        app.register_error_handler(HTTPException, lambda error: ("handled", error.code))
+    app.add_url_rule("/known", view_func=lambda: "ok")
+    stream = CountingInput(b"x" * 24 * 1024 * 1024)
+    path = "/missing" if status == 404 else "/known"
+    response = app.test_client(use_cookies=False).post(
+        path + "?name=value",
+        input_stream=stream,
+        content_type="application/octet-stream",
+        headers={"Cookie": "name=value"},
+    )
+    assert response.status_code == status
+    assert stream.reads == 0
+    context = get_current_context()
+    assert context.body is None
+    assert context.query == {"name": ["value"]}
+    assert context.cookies == {"name": "value"}
+    assert context.method == "POST"
+    assert stages == [
+        {"stage": "init"},
+        {"stage": "post_response", "status_code": status},
+    ]
+    response.close()
 
-    @app.before_request
-    def capture():
-        refs.append(weakref.ref(request._get_current_object()))
-        assert get_current_context().body == "x" * 1024 * 1024
 
-    path = {404: "/missing", 405: "/known", 308: "/slash"}[status]
+def test_matched_route_still_captures_body_before_application_reads(app):
+    @app.post("/body")
+    def view():
+        assert get_current_context().body == {"name": "value"}
+        assert request.get_json() == {"name": "value"}
+        return "ok"
+
+    response = app.test_client().post("/body", json={"name": "value"})
+    assert response.status_code == 200
+    response.close()
+
+
+def test_skipping_unused_body_keeps_attack_wave_detection(app, monkeypatch):
+    from aikido_zen.vulnerabilities.attack_wave_detection.attack_wave_detector import (
+        AttackWaveDetector,
+    )
+
+    detector = AttackWaveDetector(attack_wave_threshold=2)
+    results = []
+
+    def handle(stage, status_code=0):
+        if stage == "post_response":
+            results.append(detector.is_attack_wave(get_current_context(), status_code))
+
+    monkeypatch.setattr(source.funcs, "request_handler", handle)
     client = app.test_client()
-    for _ in range(3):
-        response = client.post(
-            path, data=b"x" * 1024 * 1024, content_type="application/octet-stream"
-        )
-        assert response.status_code == status
+    for _ in range(2):
+        response = client.post("/.env", data=b"body")
+        assert response.status_code == 404
+        assert get_current_context().body is None
         response.close()
-        del response
+    assert results == [False, True]
 
-    assert all(ref() is None for ref in refs)
+
+@pytest.mark.parametrize(
+    "hook",
+    [
+        "before_request",
+        "url_value_preprocessor",
+        "after_request",
+        "teardown_request",
+        "teardown_appcontext",
+    ],
+)
+def test_routing_rejections_keep_body_available_to_application_hooks(app, hook):
+    captured = []
+
+    def callback(*args):
+        captured.append(get_current_context().body)
+        if hook == "after_request":
+            return args[0]
+
+    getattr(app, hook)(callback)
+    response = app.test_client().post("/missing", json={"name": "value"})
+    assert response.status_code == 404
+    response.close()
+    assert captured == [{"name": "value"}]
 
 
 @pytest.mark.parametrize("status", [404, 405])
-def test_custom_handlers_and_teardown_keep_body_inspection(app, without_gc, status):
+@pytest.mark.parametrize("handler_type", ["code", "http_exception", "exception"])
+def test_custom_routing_error_handler_keeps_body_inspection(app, status, handler_type):
     attack = "Malicious Pet', 'Gru from the Minions') --"
-    payload = {"name": attack}
-    refs = []
-    stages = []
     app.add_url_rule("/known", view_func=lambda: "ok")
 
-    def inspect_body():
-        assert get_current_context().body == payload
-        assert request.get_json() == payload
+    def handler(error):
         result = context_contains_sql_injection(
             sql=f"INSERT INTO pets(name) VALUES ('{attack}')",
             operation="psycopg2.Cursor.execute",
@@ -322,178 +364,125 @@ def test_custom_handlers_and_teardown_keep_body_inspection(app, without_gc, stat
         )
         assert result["source"] == "body"
         assert result["payload"] == attack
-        assert request.routing_exception.__traceback__ is not None
-
-    @app.errorhandler(HTTPException)
-    def handler(error):
-        refs.append(weakref.ref(request._get_current_object()))
-        inspect_body()
-        stages.append("handler")
+        assert request.get_json() == {"name": attack}
         return "handled", error.code
 
-    @app.teardown_request
-    def teardown(error):
-        inspect_body()
-        stages.append("teardown")
-
-    response = app.test_client().post(
-        "/missing" if status == 404 else "/known", json=payload
-    )
+    error = {"code": status, "http_exception": HTTPException, "exception": Exception}[
+        handler_type
+    ]
+    app.register_error_handler(error, handler)
+    path = "/missing" if status == 404 else "/known"
+    response = app.test_client().post(path, json={"name": attack})
     assert response.status_code == status
     assert response.data == b"handled"
     response.close()
-    del response
-
-    assert stages == ["handler", "teardown"]
-    assert refs[0]() is None
 
 
-def test_custom_flask_error_override_keeps_body_and_releases_request(app, without_gc):
-    refs = []
-    payload = {"name": "value"}
-
-    class CustomFlask(Flask):
-        def handle_http_exception(self, error):
-            refs.append(weakref.ref(request._get_current_object()))
-            assert get_current_context().body == payload
-            assert request.get_json() == payload
-            return self.make_response(("handled", error.code))
-
-    response = CustomFlask(__name__).test_client().post("/missing", json=payload)
+def test_unrelated_error_handlers_do_not_force_body_capture(app):
+    app.register_error_handler(500, lambda error: ("server error", 500))
+    app.register_error_handler(ValueError, lambda error: ("value error", 400))
+    stream = CountingInput(b"body")
+    response = app.test_client().post("/missing", input_stream=stream)
     assert response.status_code == 404
+    assert stream.reads == 0
+    assert get_current_context().body is None
     response.close()
-    del response
-    assert refs[0]() is None
 
 
-@pytest.mark.parametrize("finish_stream", [False, True])
-@pytest.mark.parametrize("direct_passthrough", [False, True])
-def test_streamed_error_response_keeps_body_until_stream_closes(
-    app, without_gc, finish_stream, direct_passthrough
-):
-    refs = []
-    stages = []
-    payload = {"name": "value"}
+def test_trapped_routing_error_keeps_body_for_server_error_handler(app):
+    app.config["TRAP_HTTP_EXCEPTIONS"] = True
+    captured = []
 
-    @app.errorhandler(404)
     def handler(error):
-        refs.append(weakref.ref(request._get_current_object()))
+        captured.append(get_current_context().body)
+        return "handled", 500
 
-        @stream_with_context
-        def generate():
-            try:
-                for part in (b"first", b"second"):
-                    assert get_current_context().body == payload
-                    assert request.get_json() == payload
-                    assert error.__traceback__ is not None
-                    stages.append(part)
-                    yield part
-            finally:
-                assert get_current_context().body == payload
-                assert request.get_json() == payload
-
-        return Response(generate(), status=404, direct_passthrough=direct_passthrough)
-
-    response = app.test_client().post("/missing", json=payload, buffered=False)
-    assert response.status_code == 404
-    assert refs[0]() is not None
-    if finish_stream:
-        assert b"".join(response.response) == b"firstsecond"
+    app.register_error_handler(500, handler)
+    response = app.test_client().post("/missing", json={"name": "value"})
+    assert response.status_code == 500
+    assert response.data == b"handled"
+    assert captured == [{"name": "value"}]
     response.close()
-    del response
-
-    assert stages == ([b"first", b"second"] if finish_stream else [b"first"])
-    assert refs[0]() is None
 
 
-def test_file_error_response_releases_request_and_closes_file(app, without_gc):
-    refs = []
-    file = BytesIO(b"not found")
-    payload = {"name": "value"}
-
-    @app.errorhandler(404)
-    def handler(error):
-        refs.append(weakref.ref(request._get_current_object()))
-        assert request.get_json() == payload
-        return send_file(file, mimetype="text/plain"), 404
-
-    response = app.test_client().post("/missing", json=payload)
-    assert response.status_code == 404
-    assert response.data == b"not found"
-    response.close()
-    del response
-
-    assert file.closed
-    assert refs[0]() is None
-
-
-def test_routing_exception_raised_by_stream_keeps_its_diagnostic_chain(app):
-    @app.errorhandler(404)
-    def handler(error):
-        def generate():
-            yield b"first"
-            raise error
-
-        return Response(generate(), status=404)
+def test_before_request_can_handle_unmatched_request_with_body(app):
+    @app.before_request
+    def handle():
+        assert get_current_context().body == {"name": "value"}
+        assert request.get_json() == {"name": "value"}
+        return "handled"
 
     response = app.test_client().post("/missing", json={"name": "value"})
-    with pytest.raises(NotFound) as raised:
-        try:
-            b"".join(response.response)
-        finally:
-            response.close()
-    assert raised.value.__traceback__ is not None
-    assert raised.value.__context__ is not None
-
-
-def test_copied_request_context_can_read_body_after_original_request_closes(app):
-    callbacks = []
-    payload = {"name": "value"}
-
-    @app.errorhandler(404)
-    def handler(error):
-        @copy_current_request_context
-        def later():
-            return request.get_json()
-
-        callbacks.append(later)
-        return "handled", 404
-
-    response = app.test_client().post("/missing", json=payload)
+    assert response.status_code == 200
+    assert response.data == b"handled"
     response.close()
-    assert callbacks.pop()() == payload
 
 
-def test_propagating_routing_exception_keeps_its_diagnostic_chain(app):
-    app.config.update(TESTING=True, TRAP_HTTP_EXCEPTIONS=True)
+@pytest.mark.parametrize(
+    "name",
+    [
+        "request_started",
+        "request_finished",
+        "request_tearing_down",
+        "appcontext_tearing_down",
+        "appcontext_popped",
+    ],
+)
+def test_routing_rejections_keep_body_available_to_signal_receivers(app, name):
+    pytest.importorskip("blinker")
+    captured = []
 
-    with pytest.raises(NotFound) as raised:
-        app.test_client().post("/missing", json={"name": "value"})
+    def receiver(sender, **kwargs):
+        captured.append(get_current_context().body)
 
-    assert raised.value.__context__ is not None
-    functions = []
-    trace = raised.value.__traceback__
-    while trace is not None:
-        functions.append(trace.tb_frame.f_code.co_name)
-        trace = trace.tb_next
-    assert "dispatch_request" in functions
-    assert "match_request" in functions
+    signal = getattr(signals, name)
+    with signal.connected_to(receiver, app):
+        response = app.test_client().post("/missing", json={"name": "value"})
+        assert response.status_code == 404
+        response.close()
+    assert captured == [{"name": "value"}]
 
 
-def test_request_close_still_closes_uploaded_files(app):
-    files = []
+def test_matched_route_returning_404_keeps_existing_body_capture(app):
+    @app.post("/body")
+    def view():
+        assert get_current_context().body == {"name": "value"}
+        return "missing", 404
 
+    response = app.test_client().post("/body", json={"name": "value"})
+    assert response.status_code == 404
+    response.close()
+
+
+def test_custom_error_handler_keeps_multipart_files_and_fields(app):
     @app.errorhandler(404)
     def handler(error):
         assert get_current_context().body.getlist("name") == ["upload"]
-        files.append(request.files["file"])
-        assert files[0].read() == b"x" * 1024 * 1024
+        assert len(request.files["file"].read()) == 10 * 1024 * 1024
         return "handled", 404
 
     response = app.test_client().post(
         "/missing",
-        data={"name": "upload", "file": (BytesIO(b"x" * 1024 * 1024), "file.bin")},
+        data={"name": "upload", "file": (BytesIO(b"x" * 10 * 1024 * 1024), "file.bin")},
     )
     assert response.status_code == 404
+    assert response.data == b"handled"
     response.close()
-    assert files[0].closed
+
+
+def test_routing_exception_traceback_is_preserved_after_response_closes(app):
+    errors = []
+
+    @app.errorhandler(404)
+    def missing(error):
+        errors.append(error)
+        return "missing", 404
+
+    response = app.test_client().post("/missing", json={"name": "value"})
+    error = errors[0]
+    traceback, context, cause = error.__traceback__, error.__context__, error.__cause__
+    assert traceback is not None
+    response.close()
+    assert error.__traceback__ is traceback
+    assert error.__context__ is context
+    assert error.__cause__ is cause

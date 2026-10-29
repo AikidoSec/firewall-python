@@ -1,6 +1,3 @@
-from sys import exc_info
-from weakref import ref
-
 from aikido_zen.context import Context
 from aikido_zen.helpers.get_argument import get_argument
 from aikido_zen.sinks import on_import, patch_function, before_modify_return, after
@@ -18,41 +15,57 @@ def _full_dispatch_request_before(func, instance, args, kwargs):
 
     req = request_ctx.request
     extract_cookies_from_flask_request_and_save_data(req)
-    extract_form_data_from_flask_request_and_save_data(req)
+    if _should_capture_body(instance, req):
+        extract_form_data_from_flask_request_and_save_data(req)
     extract_view_args_from_flask_request_and_save_data(req)
     extract_query_from_flask_request_and_save_data(req)
 
 
+def _should_capture_body(app, request):
+    error = request.routing_exception
+    if (
+        error is None
+        or error.code not in (404, 405)
+        or request.blueprints
+        or app.trap_http_exception(error)
+    ):
+        return True
+
+    # Routing errors can still reach application hooks and error handlers.
+    if any(
+        (
+            app.before_request_funcs,
+            app.url_value_preprocessors,
+            app.after_request_funcs,
+            app.teardown_request_funcs,
+            app.teardown_appcontext_funcs,
+        )
+    ):
+        return True
+
+    from flask import signals
+
+    if getattr(signals, "signals_available", True) and any(
+        signal.has_receivers_for(app)
+        for signal in (
+            signals.request_started,
+            signals.request_finished,
+            signals.request_tearing_down,
+            signals.appcontext_tearing_down,
+            signals.appcontext_popped,
+        )
+    ):
+        return True
+
+    handlers = app.error_handler_spec.get(None, {})
+    return isinstance(error, (*handlers.get(error.code, {}), *handlers.get(None, {})))
+
+
 @after
 def _full_dispatch_request_after(func, instance, args, kwargs, return_value):
-    from flask.globals import request_ctx
-    from werkzeug.wsgi import ClosingIterator
-
     if not hasattr(return_value, "status_code"):
         return
     funcs.request_handler(stage="post_response", status_code=return_value.status_code)
-
-    if request_ctx.request.routing_exception is None:
-        return
-    request_ref = ref(request_ctx.request)
-
-    def release_routing_exception():
-        req = request_ref()
-        if req is None or exc_info()[0] is not None:
-            return
-        error = req.routing_exception
-        if error is not None:
-            # The request stores the routing error, whose tracebacks retain the request.
-            error.__traceback__ = None
-            error.__context__ = None
-            error.__cause__ = None
-
-    if return_value.direct_passthrough:
-        return_value.response = ClosingIterator(
-            return_value.response, release_routing_exception
-        )
-    else:
-        return_value.call_on_close(release_routing_exception)
 
 
 @before_modify_return
