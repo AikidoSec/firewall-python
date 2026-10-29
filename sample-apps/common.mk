@@ -29,6 +29,9 @@ AIKIDO_ENV_BENCHMARK = \
 AIKIDO_ENV_DISABLED = \
 	AIKIDO_DISABLE=1
 
+# "ddtrace-run" when ddtrace is installed, else empty: ddtrace has no Python 3.15 release.
+DDTRACE_RUN = $(shell poetry run python -c "import importlib.util; print('ddtrace-run' if importlib.util.find_spec('ddtrace') else '')")
+
 # Common target definitions
 .PHONY: install
 install:

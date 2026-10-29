@@ -7,7 +7,7 @@ PORT_DISABLED = 8095
 run: install
 	@echo "Running sample app flask-mongo with Zen on port $(PORT)"
 	$(AIKIDO_ENV_COMMON) \
-	poetry run ddtrace-run flask --app app.py run --host=0.0.0.0 --port=$(PORT) --no-reload
+	poetry run $(DDTRACE_RUN) flask --app app.py run --host=0.0.0.0 --port=$(PORT) --no-reload
 
 .PHONY: runZenDisabled
 runZenDisabled: install

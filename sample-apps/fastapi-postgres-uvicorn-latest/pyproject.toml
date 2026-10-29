@@ -2,7 +2,7 @@
 name = "fastapi-postgres-uvicorn-latest"
 version = "0.1.0"
 description = "Sample FastAPI app with Postgres (latest FastAPI version)"
-requires-python = ">3.10,<3.15"
+requires-python = ">3.10,<3.16"
 dependencies = [
   "aikido_zen",
   "fastapi (>=0.135.0,<0.136.0)",

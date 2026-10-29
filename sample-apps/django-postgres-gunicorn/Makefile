@@ -9,7 +9,7 @@ run: install
 	poetry run python manage.py migrate || true
 
 	$(AIKIDO_ENV_COMMON) \
-	poetry run ddtrace-run gunicorn -c gunicorn_config.py --workers 4 --threads 2 --log-level debug --access-logfile '-' --error-logfile '-' --bind 0.0.0.0:$(PORT) sample-django-postgres-gunicorn-app.wsgi
+	poetry run $(DDTRACE_RUN) gunicorn -c gunicorn_config.py --workers 4 --threads 2 --log-level debug --access-logfile '-' --error-logfile '-' --bind 0.0.0.0:$(PORT) sample-django-postgres-gunicorn-app.wsgi
 
 .PHONY: runZenDisabled
 runZenDisabled: install
