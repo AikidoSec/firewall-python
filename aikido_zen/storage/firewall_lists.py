@@ -25,6 +25,15 @@ class FirewallLists:
         user_agent_details,
     ):
         """Replaces all lists together, so lists from different updates never mix."""
+        # Data that is not a list of IPs is broken, so the current lists stay in place.
+        for entry in blocked_ip_entries + allowed_ip_entries:
+            if entry.get("ips") is not None and not isinstance(entry.get("ips"), list):
+                logger.error(
+                    "Zen failed to update the firewall lists: "
+                    "IP list %s has no list of IPs.",
+                    entry.get("source"),
+                )
+                return
         blocked_ips = list(map(parse_ip_entry, blocked_ip_entries))
         monitored_ips = list(map(parse_ip_entry, monitored_ip_entries))
         # An allowlist without IPs would block every visitor, so it is skipped.

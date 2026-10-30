@@ -186,10 +186,6 @@ def test_update_firewall_lists_skips_invalid_networks_and_logs_them(
         {"source": "list1", "description": "Example description"},
         {"source": "list1", "description": "Example description", "ips": None},
         {"source": "list1", "description": "Example description", "ips": []},
-        {"source": "list1", "description": "Example description", "ips": "5.6.7.8"},
-        {"source": "list1", "description": "Example description", "ips": {"a": 1}},
-        {"source": "list1", "description": "Example description", "ips": 5},
-        {"source": "list1", "description": "Example description", "ips": True},
     ],
 )
 def test_update_firewall_lists_skips_an_allowlist_entry_without_ips(
@@ -207,6 +203,33 @@ def test_update_firewall_lists_skips_an_allowlist_entry_without_ips(
     assert connection_manager.firewall_lists.is_allowed_ip("8.8.8.8")
     assert connection_manager.firewall_lists.is_blocked_ip("10.0.0.1")
     assert connection_manager.firewall_lists.is_user_agent_blocked("NewBot")
+
+
+@pytest.mark.parametrize("ips", ["5.6.7.8", {"a": 1}, 5, True])
+@pytest.mark.parametrize("list_type", ["blocked", "allowed"])
+def test_update_firewall_lists_keeps_all_lists_when_ips_is_not_a_list(
+    connection_manager, caplog, ips, list_type
+):
+    update_firewall_lists(connection_manager)
+
+    malformed = {"source": "broken", "description": "Example", "ips": ips}
+    new_blocked = [{"source": "new", "description": "Example", "ips": ["10.0.0.0/8"]}]
+    connection_manager.firewall_lists.update(
+        new_blocked + [malformed] if list_type == "blocked" else new_blocked,
+        [malformed] if list_type == "allowed" else [],
+        "NewBot",
+        [],
+        "",
+        [],
+    )
+
+    assert "IP list broken has no list of IPs" in caplog.text
+    assert connection_manager.firewall_lists.is_blocked_ip("192.168.1.1")
+    assert not connection_manager.firewall_lists.is_blocked_ip("10.0.0.1")
+    assert connection_manager.firewall_lists.is_allowed_ip("192.168.2.50")
+    assert not connection_manager.firewall_lists.is_allowed_ip("8.8.8.8")
+    assert connection_manager.firewall_lists.is_user_agent_blocked("BadBot")
+    assert not connection_manager.firewall_lists.is_user_agent_blocked("NewBot")
 
 
 @pytest.mark.parametrize(
