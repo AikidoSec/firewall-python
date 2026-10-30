@@ -61,7 +61,11 @@ class ServiceConfig:
                 #  Skip empty allowlist
                 continue
 
-            endpoint["allowedIPAddresses"] = IPMatcher(endpoint["allowedIPAddresses"])
+            allowed_ips = IPMatcher(endpoint["allowedIPAddresses"])
+            if not allowed_ips.is_built():
+                # An allowlist that failed to build would block the visitors it should allow.
+                continue
+            endpoint["allowedIPAddresses"] = allowed_ips
 
     def get_endpoints(self, route_metadata):
         """

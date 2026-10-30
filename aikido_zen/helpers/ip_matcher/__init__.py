@@ -1,64 +1,45 @@
-import ipaddress
+import weakref
 
-try:
-    import pytricia
-
-    PYTRICIA_AVAILABLE = True
-except ImportError:
-    PYTRICIA_AVAILABLE = False
-    from aikido_zen.helpers.logging import logger
-
-    logger.warning(
-        "pytricia is not available. This happens on windows devices where pytricia is not supported yet."
-        "Using fallback, this may result in slower performance."
-        "You can try to install pytricia for better performance: pip install pytricia"
-    )
+from aikido_zen.helpers import zen_internals
 
 
-def preparse(network: str) -> str:
-    # Remove the brackets around IPv6 addresses if they are there.
-    network = network.strip("[]")
-    try:
-        ip = ipaddress.IPv6Address(network)
-        if ip.ipv4_mapped:
-            return str(ip.ipv4_mapped)
-    except ValueError:
-        pass
-    return network
+class IPMatcher:
+    def __init__(self, networks=None):
+        # json.loads can return lone surrogates such as "\udc80", and .encode() raises on
+        # them, which would fail the whole list update. Valid networks are ASCII.
+        # The library splits on newlines, so a newline would turn one entry into two.
+        networks = list(networks or [])
+        self._networks = [
+            network
+            for network in networks
+            if isinstance(network, str) and network.isascii() and "\n" not in network
+        ]
+        self._skipped_count = len(networks) - len(self._networks)
+        self._handle = zen_internals.ip_matcher_create(
+            "\n".join(self._networks).encode()
+        )
+        if self._handle is not None:
+            weakref.finalize(self, zen_internals.ip_matcher_free, self._handle)
 
+    def is_built(self):
+        return self._handle is not None
 
-if PYTRICIA_AVAILABLE:
+    def rejected_count(self):
+        if self._handle is None:
+            return self._skipped_count
+        return self._skipped_count + zen_internals.ip_matcher_rejected_count(
+            self._handle
+        )
 
-    class IPMatcher:
-        def __init__(self, networks=None):
-            self.trie = pytricia.PyTricia(128)
-            if networks is not None:
-                for s in networks:
-                    self._add(s)
-            # We freeze in constructor ensuring that after initialization the IPMatcher is always frozen.
-            self.trie.freeze()
+    def has(self, network):
+        if self._handle is None:
+            return False
+        if not isinstance(network, str) or not network.isascii():
+            return False
+        return zen_internals.ip_matcher_has(self._handle, network.encode())
 
-        def has(self, network):
-            try:
-                return self.trie.get(preparse(network)) is not None
-            except ValueError:
-                return False
+    def is_empty(self):
+        return len(self._networks) == 0
 
-        def _add(self, network):
-            try:
-                self.trie[preparse(network)] = True
-            except ValueError:
-                pass
-            except SystemError:
-                # SystemError's have been known to occur in the PyTricia library (see issue #34 e.g.),
-                # best to play it safe and catch these errors.
-                pass
-            return self
-
-        def is_empty(self):
-            return len(self.trie) == 0
-
-else:
-    # Fallback to pure Python implementation - this happens on windows machines since pytricia is not
-    # fully supported there.
-    from aikido_zen.helpers.ip_matcher_fallback import IPMatcher  # noqa: F401
+    def __reduce__(self):
+        return self.__class__, (self._networks,)
