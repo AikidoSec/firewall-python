@@ -64,7 +64,7 @@ Zen instruments the following AI SDKs to track which models are used and how man
 * ✅ [`boto3`](https://pypi.org/project/boto3) (AWS Bedrock)
 * ✅ [`groq`](https://pypi.org/project/groq)
 
-Zen is compatible with Python 3.8-3.14 and can run on Windows, Linux, and Mac OS X.
+Zen is compatible with Python 3.8-3.15 and can run on Linux, Mac OS X, and Windows.
 
 ## Installation
 

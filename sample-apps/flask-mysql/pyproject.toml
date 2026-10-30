@@ -2,7 +2,7 @@
 name = "flask-mysql-app"
 version = "0.1.0"
 description = "Sample app Flask MySQL"
-requires-python = ">3.9.1,<4.0"
+requires-python = ">3.9.1,<3.16"
 dependencies = [
     "flask (>=3.1.0,<4.0.0)",
     "flask-mysql (>=1.6.0,<2.0.0)",
