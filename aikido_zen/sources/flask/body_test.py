@@ -281,10 +281,12 @@ def test_direct_passthrough_response_keeps_body_available(app):
 def test_file_error_leaves_unused_body_unread(app, tmp_path):
     path = tmp_path / "missing.txt"
     path.write_bytes(b"missing")
+    # File I/O during the request legitimately triggers body inspection.
+    file = path.open("rb")
 
     @app.errorhandler(404)
     def missing(error):
-        return send_file(path), 404
+        return send_file(file, download_name=path.name, mimetype="text/plain"), 404
 
     stream = CountingInput(b"x" * 1024 * 1024)
     response = app.test_client().post("/missing", input_stream=stream)
@@ -292,6 +294,7 @@ def test_file_error_leaves_unused_body_unread(app, tmp_path):
     assert response.data == b"missing"
     response.close()
     assert stream.reads == 0
+    assert file.closed
 
 
 def test_routing_exception_traceback_is_preserved_after_response_close(app):

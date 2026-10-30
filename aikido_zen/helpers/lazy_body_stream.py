@@ -1,3 +1,6 @@
+# Proxy members are supplied by wrapt's C extension.
+# pylint: disable=abstract-method,no-member
+
 from wrapt import ObjectProxy
 
 

@@ -29,15 +29,16 @@ def _full_dispatch_request_before(func, instance, args, kwargs):
     extract_view_args_from_flask_request_and_save_data(req)
     extract_query_from_flask_request_and_save_data(req)
     context = get_current_context()
-    if context is not None and (
+    if context is None or not (
         req.content_length or req.environ.get("wsgi.input_terminated")
     ):
-        context.set_body_loader(partial(extract_body_from_flask_request, proxy(req)))
-        req.environ["aikido_zen.body_context"] = ref(context)
-        req.environ["wsgi.input"] = LazyBodyStream(
-            req.environ["wsgi.input"], context.load_body
-        )
-        req.__dict__["stream"] = LazyBodyStream(req.stream, context.load_body)
+        return
+    context.set_body_loader(partial(extract_body_from_flask_request, proxy(req)))
+    req.environ["aikido_zen.body_context"] = ref(context)
+    req.environ["wsgi.input"] = LazyBodyStream(
+        req.environ["wsgi.input"], context.load_body
+    )
+    req.__dict__["stream"] = LazyBodyStream(req.stream, context.load_body)
 
 
 @after
