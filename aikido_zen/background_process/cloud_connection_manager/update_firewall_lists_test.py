@@ -389,8 +389,8 @@ def test_update_firewall_lists_invalid_monitored_user_agents(connection_manager)
     assert firewall_lists.is_user_agent_blocked("GPTBot/1.0")
 
 
-def test_update_firewall_lists_keeps_all_lists_when_a_monitored_list_rebuild_fails(
-    connection_manager, monkeypatch, caplog
+def test_update_firewall_lists_drops_a_monitored_list_that_fails_to_build(
+    connection_manager, monkeypatch
 ):
     update_firewall_lists(connection_manager)
 
@@ -404,13 +404,16 @@ def test_update_firewall_lists_keeps_all_lists_when_a_monitored_list_rebuild_fai
     connection_manager.api = MockApiMonitoredLists()
     update_firewall_lists(connection_manager)
 
-    assert "IP list tor could not be built" in caplog.text
     firewall_lists = connection_manager.firewall_lists
-    assert firewall_lists.is_blocked_ip("192.168.1.1")
-    assert not firewall_lists.is_blocked_ip("1.2.3.4")
+    assert firewall_lists.is_blocked_ip("1.2.3.4")
+    assert not firewall_lists.is_blocked_ip("192.168.1.1")
+    assert firewall_lists.is_user_agent_blocked("GPTBot")
     assert firewall_lists.monitored_ips == []
-    assert firewall_lists.is_user_agent_blocked("BadBot")
-    assert firewall_lists.user_agent_details == []
+    assert firewall_lists.get_matching_monitored_ip_list_keys("9.9.9.9") == []
+    assert [d["key"] for d in firewall_lists.user_agent_details] == [
+        "gptbot",
+        "claudebot",
+    ]
 
 
 def test_update_firewall_lists_skips_invalid_monitored_networks(
