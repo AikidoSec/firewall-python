@@ -1,6 +1,7 @@
 import os
 import pytest
-import aikido_zen.sinks.groq
+import aikido_zen.sinks.httpx
+import aikido_zen.sinks.httpx2
 from groq import Groq, AsyncGroq
 import asyncio
 
@@ -38,9 +39,9 @@ def test_groq_messages_create():
     )
     print(chat_completion.choices[0].message.content)
 
-    assert get_ai_stats()[0]["model"] == "gpt-oss-20b"
+    assert get_ai_stats()[0]["model"] == "openai/gpt-oss-20b"
     assert get_ai_stats()[0]["calls"] == 1
-    assert get_ai_stats()[0]["provider"] == "openai"
+    assert get_ai_stats()[0]["provider"] == "groq"
     assert get_ai_stats()[0]["tokens"]["input"] == 87
     assert get_ai_stats()[0]["tokens"]["output"] == 20
     assert get_ai_stats()[0]["tokens"]["total"] == 107
@@ -62,9 +63,9 @@ async def test_groq_messages_create_async():
     )
     print(chat_completion.choices[0].message.content)
 
-    assert get_ai_stats()[0]["model"] == "llama-4-scout-17b-16e-instruct"
+    assert get_ai_stats()[0]["model"] == "meta-llama/llama-4-scout-17b-16e-instruct"
     assert get_ai_stats()[0]["calls"] == 1
-    assert get_ai_stats()[0]["provider"] == "meta-llama"
+    assert get_ai_stats()[0]["provider"] == "groq"
     assert get_ai_stats()[0]["tokens"]["input"] == 22
     assert get_ai_stats()[0]["tokens"]["output"] == 20
     assert get_ai_stats()[0]["tokens"]["total"] == 42

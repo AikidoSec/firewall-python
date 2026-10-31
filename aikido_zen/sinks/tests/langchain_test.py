@@ -36,12 +36,10 @@ def setup():
 def test_langchain_report_tokens_invoke_anthropic():
     from langchain.chat_models import init_chat_model
 
-    llm = init_chat_model(
-        "claude-3-7-sonnet-20250219", model_provider="anthropic", max_tokens=15
-    )
+    llm = init_chat_model("claude-haiku-4-5", model_provider="anthropic", max_tokens=15)
     llm.invoke("Whatsthemattaa").pretty_print()
 
-    assert get_ai_stats()[0]["model"] == "claude-3-7-sonnet-20250219"
+    assert get_ai_stats()[0]["model"] == "claude-haiku-4-5-20251001"
     assert get_ai_stats()[0]["calls"] == 1
     assert get_ai_stats()[0]["provider"] == "anthropic"
     assert get_ai_stats()[0]["tokens"]["input"] == 14
@@ -58,8 +56,9 @@ def test_langchain_report_tokens_invoke_mistral():
     )
     llm.invoke("What is heavier, 10kg of bricks or 10kgs of feathers?").pretty_print()
 
-    # The langchain mistral implementation calls the Mistral API itself, we currently do not support this.
-    assert get_ai_stats()[0]["calls"] == 0
+    assert get_ai_stats()[0]["model"].startswith("mistral-large")
+    assert get_ai_stats()[0]["calls"] == 1
+    assert get_ai_stats()[0]["provider"] == "mistral"
 
 
 @skip_no_openai_key

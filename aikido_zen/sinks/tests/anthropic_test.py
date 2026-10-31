@@ -2,6 +2,8 @@ import os
 
 import pytest
 import aikido_zen.sinks.anthropic
+import aikido_zen.sinks.httpx
+import aikido_zen.sinks.httpx2
 import anthropic
 import asyncio
 
@@ -28,7 +30,7 @@ def get_ai_stats():
 def test_anthropic_messages_create():
     client = anthropic.Anthropic()
     response = client.messages.create(
-        model="claude-sonnet-4-20250514",
+        model="claude-haiku-4-5",
         max_tokens=20,
         messages=[
             {
@@ -39,7 +41,7 @@ def test_anthropic_messages_create():
     )
     print(response)
 
-    assert get_ai_stats()[0]["model"] == "claude-sonnet-4-20250514"
+    assert get_ai_stats()[0]["model"] == "claude-haiku-4-5-20251001"
     assert get_ai_stats()[0]["calls"] == 1
     assert get_ai_stats()[0]["provider"] == "anthropic"
     assert get_ai_stats()[0]["tokens"]["input"] == 21
@@ -52,7 +54,7 @@ def test_anthropic_messages_create():
 async def test_anthropic_messages_create_async():
     client = anthropic.AsyncAnthropic()
     response = await client.messages.create(
-        model="claude-sonnet-4-20250514",
+        model="claude-haiku-4-5",
         max_tokens=20,
         messages=[
             {
@@ -63,7 +65,7 @@ async def test_anthropic_messages_create_async():
     )
     print(response)
 
-    assert get_ai_stats()[0]["model"] == "claude-sonnet-4-20250514"
+    assert get_ai_stats()[0]["model"] == "claude-haiku-4-5-20251001"
     assert get_ai_stats()[0]["calls"] == 1
     assert get_ai_stats()[0]["provider"] == "anthropic"
     assert get_ai_stats()[0]["tokens"]["input"] == 21
