@@ -95,9 +95,11 @@ def match_ai_request(method, host, path):
         return get_ai_provider(host, "openai_compatible"), RESPONSES, None
     if path.endswith("/v1/messages"):
         return get_ai_provider(host, "anthropic_compatible"), ANTHROPIC_MESSAGES, None
+    # endswith first, so that most paths skip the regex search
     gemini = GEMINI_PATH.search(path) if path.endswith(":generateContent") else None
     if gemini:
         return get_ai_provider(host, "gemini_compatible"), GEMINI, gemini.group(1)
+    # Path first, so that most requests skip the host lookup
     if path in MISTRAL_PATHS:
         provider = get_ai_provider(host, None)
         if provider in ("mistral", "codestral"):
