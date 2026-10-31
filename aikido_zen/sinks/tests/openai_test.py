@@ -2,6 +2,8 @@ import os
 
 import pytest
 import aikido_zen.sinks.openai
+import aikido_zen.sinks.httpx
+import aikido_zen.sinks.httpx2
 
 from aikido_zen.thread.thread_cache import get_cache
 

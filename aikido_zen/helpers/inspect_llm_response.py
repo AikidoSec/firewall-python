@@ -1,15 +1,19 @@
 """
-Shared by the HTTP client sinks (httpx, httpx2, requests, urllib3) that see
-finished responses. As in firewall-node, a POST whose path ends like an AI API
-is an AI call on any host, and the host only names the provider. The body is
-parsed only after the method and path match.
+Counts LLM calls from the provider's response. The HTTP client sinks (httpx,
+httpx2, requests, urllib3) count a POST whose path ends like an AI API, on any
+host, as in firewall-node; the host only names the provider, and the body is
+parsed only after the method and path match. The AI SDK sinks wrap their method
+with `sdk_ai_call` and count only the calls no HTTP client sink counted.
 """
 
+import contextvars
 import json
 import re
+import threading
 from collections import namedtuple
 
 from aikido_zen.helpers.ai_provider_hosts import get_ai_provider
+from aikido_zen.helpers.logging import logger
 from aikido_zen.helpers.on_ai_call import on_ai_call
 from aikido_zen.helpers.register_call import register_call
 
@@ -47,6 +51,35 @@ MISTRAL_PATHS = {
 
 # A redirect makes requests and urllib3 pass the final response through twice.
 SEEN_ATTR = "_aikido_llm_seen"
+
+
+class SdkCall:
+    """One AI SDK method call. `counted_from_http` turns True when an HTTP client
+    sink counts a response while it runs."""
+
+    __slots__ = ("counted_from_http", "thread")
+
+    def __init__(self):
+        self.counted_from_http = False
+        self.thread = threading.get_ident()
+
+
+# The SDK call running in this context, or None. Copies of the context (a task, or
+# `asyncio.to_thread`, started inside the call) share the object, so an HTTP request
+# the SDK sends from there marks the same call. Each SDK call gets its own object.
+_sdk_call = contextvars.ContextVar("aikido_llm_sdk_call", default=None)
+
+
+def current_sdk_call():
+    """
+    The SDK call running in this thread, or None. A thread started during an SDK call
+    can inherit its context (free-threaded 3.14 does), and must not treat its own
+    later SDK calls as part of that one.
+    """
+    call = _sdk_call.get()
+    if call is None or call.thread != threading.get_ident():
+        return None
+    return call
 
 
 def match_ai_request(method, host, path):
@@ -89,6 +122,52 @@ def get_tokens(body, ai_format):
     )
 
 
+def sdk_ai_call(on_response, is_async=False):
+    """
+    Wraps an AI SDK method. The HTTP client sinks see the provider's response during
+    the method, so `on_response` (which counts it) runs only when none of them did.
+    A wrapped SDK method that calls another wrapped one sees the same response, so
+    only the outer one decides and the call is counted once.
+    Errors in `on_response` are logged and never reach the app, as with `after`.
+    """
+
+    def inspect(func, instance, call, return_value):
+        if call.counted_from_http:
+            return
+        try:
+            on_response(instance, return_value)
+        except Exception as e:
+            logger.debug(
+                "%s:%s ai sdk sink error: %s", func.__module__, func.__name__, e
+            )
+
+    def decorator(func, instance, args, kwargs):
+        if current_sdk_call() is not None:
+            return func(*args, **kwargs)
+        call = SdkCall()
+        token = _sdk_call.set(call)
+        try:
+            return_value = func(*args, **kwargs)
+        finally:
+            _sdk_call.reset(token)
+        inspect(func, instance, call, return_value)
+        return return_value
+
+    async def decorator_async(func, instance, args, kwargs):
+        if current_sdk_call() is not None:
+            return await func(*args, **kwargs)
+        call = SdkCall()
+        token = _sdk_call.set(call)
+        try:
+            return_value = await func(*args, **kwargs)
+        finally:
+            _sdk_call.reset(token)
+        inspect(func, instance, call, return_value)
+        return return_value
+
+    return decorator_async if is_async else decorator
+
+
 def inspect_llm_response(response, *, method, host, path, status, body, operation):
     """
     Records usage for a finished AI API response. `body` must be the decoded
@@ -120,3 +199,6 @@ def inspect_llm_response(response, *, method, host, path, status, body, operatio
         input_tokens=tokens[0],
         output_tokens=tokens[1],
     )
+    call = _sdk_call.get()
+    if call is not None:
+        call.counted_from_http = True

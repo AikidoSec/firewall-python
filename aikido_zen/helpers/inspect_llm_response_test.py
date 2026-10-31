@@ -1,3 +1,7 @@
+import asyncio
+import contextvars
+import json
+import threading
 from types import SimpleNamespace
 
 import pytest
@@ -11,6 +15,7 @@ from .inspect_llm_response import (
     RESPONSES,
     inspect_llm_response,
     match_ai_request,
+    sdk_ai_call,
 )
 
 
@@ -19,6 +24,29 @@ def setup():
     get_cache().reset()
     yield
     get_cache().reset()
+
+
+def count_response(response_id, host="api.openai.com", model="gpt-4o-mini"):
+    body = {
+        "model": model,
+        "choices": [],
+        "usage": {"prompt_tokens": 1, "completion_tokens": 2},
+    }
+    if response_id is not None:
+        body["id"] = response_id
+    inspect_llm_response(
+        SimpleNamespace(),
+        method="POST",
+        host=host,
+        path="/v1/chat/completions",
+        status=200,
+        body=json.dumps(body).encode(),
+        operation="httpx.Client.send",
+    )
+
+
+def sdk_response(response_id, model="gpt-4o-mini"):
+    return SimpleNamespace(id=response_id, model=model)
 
 
 def get_ai_stats():
@@ -102,6 +130,72 @@ def test_uncounted_response_does_not_match():
     assert get_ai_stats() == []
 
 
+def sdk_method(host_counts):
+    def method():
+        if host_counts:
+            count_response("chatcmpl-a")
+        return sdk_response("chatcmpl-a")
+
+    return method
+
+
+def on_sdk_response(instance, response):
+    get_cache().ai_stats.on_ai_call("sdk", response.model, 1, 2)
+
+
+@pytest.mark.parametrize(
+    "http_counts, expected", [(True, ["openai"]), (False, ["sdk"])]
+)
+def test_sdk_sink_counts_only_what_the_http_sinks_did_not(http_counts, expected):
+    wrapped = sdk_ai_call(on_sdk_response)
+    wrapped(sdk_method(http_counts), None, (), {})
+    assert [s["provider"] for s in get_ai_stats()] == expected
+
+
+def test_http_count_outside_an_sdk_call_does_not_hide_the_next_one():
+    count_response("chatcmpl-a")
+    sdk_ai_call(on_sdk_response)(sdk_method(False), None, (), {})
+    assert [s["provider"] for s in get_ai_stats()] == ["openai", "sdk"]
+
+
+def test_http_count_in_a_task_started_by_the_sdk_call_counts_once():
+    async def send():
+        count_response("chatcmpl-a")
+
+    async def method():
+        await asyncio.ensure_future(send())
+        return sdk_response("chatcmpl-a")
+
+    asyncio.run(sdk_ai_call(on_sdk_response, is_async=True)(method, None, (), {}))
+    assert [s["provider"] for s in get_ai_stats()] == ["openai"]
+
+
+def test_http_count_in_a_worker_thread_that_has_the_call_context_counts_once():
+    async def method():
+        context = contextvars.copy_context()
+        await asyncio.get_running_loop().run_in_executor(
+            None, context.run, count_response, "chatcmpl-a"
+        )
+        return sdk_response("chatcmpl-a")
+
+    asyncio.run(sdk_ai_call(on_sdk_response, is_async=True)(method, None, (), {}))
+    assert [s["provider"] for s in get_ai_stats()] == ["openai"]
+
+
+def test_http_count_in_another_sdk_call_does_not_hide_this_one():
+    def other_call():
+        sdk_ai_call(on_sdk_response)(sdk_method(True), None, (), {})
+
+    def method():
+        thread = threading.Thread(target=other_call)
+        thread.start()
+        thread.join()
+        return sdk_response("chatcmpl-b")
+
+    sdk_ai_call(on_sdk_response)(method, None, (), {})
+    assert sorted(s["provider"] for s in get_ai_stats()) == ["openai", "sdk"]
+
+
 @pytest.mark.parametrize(
     "status, counted", [(199, 0), (200, 1), (201, 1), (299, 1), (300, 0), (500, 0)]
 )
@@ -116,3 +210,10 @@ def test_only_2xx_responses_are_counted(status, counted):
         operation="httpx.Client.send",
     )
     assert sum(s["calls"] for s in get_ai_stats()) == counted
+
+
+def test_sdk_sink_error_does_not_reach_the_app():
+    def broken(instance, response):
+        raise ValueError("boom")
+
+    assert sdk_ai_call(broken)(sdk_method(False), None, (), {}).id == "chatcmpl-a"

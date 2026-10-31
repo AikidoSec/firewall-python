@@ -56,13 +56,17 @@ Zen for Python 3 is compatible with:
 * ✅ [`clickhouse-driver`](https://pypi.org/project/clickhouse-driver)
 * ✅ [`sqlite3`](https://docs.python.org/3/library/sqlite3.html)
 
-### AI SDKs
-Zen instruments the following AI SDKs to track which models are used and how many tokens are consumed, allowing you to monitor your AI usage and costs:
-* ✅ [`openai`](https://pypi.org/project/openai) ^1.0
-* ✅ [`anthropic`](https://pypi.org/project/anthropic/)
-* ✅ [`mistralai`](https://pypi.org/project/mistralai) ^1.0.0
+### AI providers
+Zen tracks which models are used and how many tokens are consumed, allowing you to monitor your AI usage and costs. It reads the response in the HTTP client (`httpx`, `httpx2`, `requests`, `urllib3`), so calls through any SDK, a framework like LangChain or a direct HTTP request are covered, on any host:
+* ✅ OpenAI Chat Completions and Responses API, and APIs compatible with them (Azure OpenAI, Mistral, Groq, gateways, local model servers)
+* ✅ Anthropic Messages API
+* ✅ Google Gemini `generateContent`
+* ✅ Mistral agents, FIM and embeddings (`api.mistral.ai`)
 * ✅ [`boto3`](https://pypi.org/project/boto3) (AWS Bedrock)
-* ✅ [`groq`](https://pypi.org/project/groq)
+
+Calls are named after the provider's host (for example `openai`, `azure`, `mistral`, `groq`), or `openai_compatible`, `anthropic_compatible` or `gemini_compatible` for other hosts. Streamed responses are not counted yet.
+
+The [`openai`](https://pypi.org/project/openai) ^1.0, [`anthropic`](https://pypi.org/project/anthropic/) and [`mistralai`](https://pypi.org/project/mistralai) ^1.0.0 SDKs are also instrumented directly, so their calls are counted when the HTTP client does not see them. Each call is counted once.
 
 Zen is compatible with Python 3.8-3.14 and can run on Windows, Linux, and Mac OS X.
 
