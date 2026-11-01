@@ -36,17 +36,22 @@ def test_protect_does_not_start_without_gil(monkeypatch):
     start_background_process.assert_not_called()
 
 
+class FakeLazyImports:
+    def __init__(self, current_filter):
+        self.current_filter = current_filter
+
+    def get_lazy_imports_filter(self):
+        return self.current_filter
+
+    def set_lazy_imports_filter(self, func):
+        self.current_filter = func
+
+
 def install_zen_lazy_imports_filter(monkeypatch, app_filter):
-    installed = []
-    monkeypatch.setattr(
-        "aikido_zen.sys",
-        SimpleNamespace(
-            get_lazy_imports_filter=lambda: app_filter,
-            set_lazy_imports_filter=installed.append,
-        ),
-    )
+    lazy_imports = FakeLazyImports(app_filter)
+    monkeypatch.setattr("aikido_zen.sys", lazy_imports)
     aikido_zen._keep_zen_imports_eager()
-    return installed[0]
+    return lazy_imports.current_filter
 
 
 def test_zen_imports_stay_eager_and_others_go_to_the_app_filter(monkeypatch):
@@ -74,21 +79,43 @@ def test_imports_stay_lazy_without_an_app_filter(monkeypatch):
     assert zen_filter("aikido_zen.context", "json", None) is False
 
 
+def test_zen_filter_is_installed_once(monkeypatch):
+    lazy_imports = FakeLazyImports(None)
+    monkeypatch.setattr("aikido_zen.sys", lazy_imports)
+
+    aikido_zen._keep_zen_imports_eager()
+    zen_filter = lazy_imports.current_filter
+    aikido_zen._keep_zen_imports_eager()
+
+    assert lazy_imports.current_filter is zen_filter
+
+
+def test_zen_filter_wraps_a_filter_the_app_set_later(monkeypatch):
+    lazy_imports = FakeLazyImports(None)
+    monkeypatch.setattr("aikido_zen.sys", lazy_imports)
+    aikido_zen._keep_zen_imports_eager()
+
+    lazy_imports.current_filter = lambda importer, name, fromlist: name != "eager"
+    aikido_zen._keep_zen_imports_eager()
+    zen_filter = lazy_imports.current_filter
+
+    assert zen_filter("aikido_zen.sinks.os", "os", None) is False
+    assert zen_filter("app", "eager", None) is False
+    assert zen_filter("app", "json", None) is True
+
+
 def test_no_filter_on_python_without_lazy_imports(monkeypatch):
     monkeypatch.setattr("aikido_zen.sys", SimpleNamespace())
 
     aikido_zen._keep_zen_imports_eager()
 
 
-@pytest.mark.skipif(
-    not hasattr(sys, "set_lazy_imports_filter"),
-    reason="lazy imports were added in Python 3.15",
-)
-def test_attacks_are_blocked_when_every_import_is_lazy():
+def attack_results_with_every_import_lazy(before_protect=""):
     script = (
         "import os\n"
         "os.environ['AIKIDO_BLOCK'] = 'true'\n"
         "import aikido_zen\n"
+        f"{before_protect}"
         "aikido_zen.protect('daemon_disabled')\n"
         "import sqlite3\n"
         "from flask import Flask, request\n"
@@ -110,5 +137,45 @@ def test_attacks_are_blocked_when_every_import_is_lazy():
         text=True,
         check=True,
     )
+    return result.stdout.splitlines()[-1]
 
-    assert result.stdout.splitlines()[-1] == str(["AikidoSQLInjection"] * 3)
+
+lazy_imports_only = pytest.mark.skipif(
+    not hasattr(sys, "set_lazy_imports_filter"),
+    reason="lazy imports were added in Python 3.15",
+)
+
+
+@lazy_imports_only
+def test_zen_modules_load_eagerly_without_protect():
+    script = (
+        "import types\n"
+        "import aikido_zen.background_process.routes as routes\n"
+        "print(any(isinstance(v, types.LazyImportType) for v in vars(routes).values()))\n"
+    )
+    result = subprocess.run(
+        [sys.executable, "-P", "-X", "lazy_imports=all", "-c", script],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    assert result.stdout.splitlines()[-1] == "False"
+
+
+@lazy_imports_only
+def test_attacks_are_blocked_when_every_import_is_lazy():
+    assert attack_results_with_every_import_lazy() == str(["AikidoSQLInjection"] * 3)
+
+
+@lazy_imports_only
+def test_attacks_are_blocked_when_the_app_replaces_the_filter_before_protect():
+    replace_filter = (
+        "aikido_zen.__name__\n"
+        "import sys\n"
+        "sys.set_lazy_imports_filter(lambda importer, name, fromlist: True)\n"
+    )
+
+    assert attack_results_with_every_import_lazy(replace_filter) == str(
+        ["AikidoSQLInjection"] * 3
+    )

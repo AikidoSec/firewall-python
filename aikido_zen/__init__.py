@@ -15,6 +15,8 @@ def _keep_zen_imports_eager():
     if not hasattr(sys, "set_lazy_imports_filter"):
         return
     app_filter = sys.get_lazy_imports_filter()  # pylint: disable=no-member
+    if getattr(app_filter, "keeps_zen_imports_eager", False):
+        return
 
     def lazy_imports_filter(importer, name, fromlist):
         if importer and (
@@ -23,6 +25,7 @@ def _keep_zen_imports_eager():
             return False
         return app_filter is None or app_filter(importer, name, fromlist)
 
+    lazy_imports_filter.keeps_zen_imports_eager = True
     sys.set_lazy_imports_filter(lazy_imports_filter)  # pylint: disable=no-member
 
 
@@ -70,6 +73,9 @@ def protect(mode="daemon", token=""):
         return  # Unable to start background process
     if check_gevent():
         return  # gevent is not compatible with zen.
+
+    # The app can have replaced Zen's lazy imports filter since aikido_zen was imported.
+    _keep_zen_imports_eager()
 
     if token:
         os.environ["AIKIDO_TOKEN"] = token
