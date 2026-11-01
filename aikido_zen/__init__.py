@@ -2,6 +2,33 @@
 Aggregates from the different modules
 """
 
+# pylint: disable=wrong-import-position
+import sys
+
+
+def _keep_zen_imports_eager():
+    """
+    Python 3.15 can make every import lazy (PYTHON_LAZY_IMPORTS=all), and Zen then
+    stops protecting requests after the first one. Keep Zen's own imports eager;
+    all other imports still follow the app's lazy imports filter.
+    """
+    if not hasattr(sys, "set_lazy_imports_filter"):
+        return
+    app_filter = sys.get_lazy_imports_filter()  # pylint: disable=no-member
+
+    def lazy_imports_filter(importer, name, fromlist):
+        if importer and (
+            importer == "aikido_zen" or importer.startswith("aikido_zen.")
+        ):
+            return False
+        return app_filter is None or app_filter(importer, name, fromlist)
+
+    sys.set_lazy_imports_filter(lazy_imports_filter)  # pylint: disable=no-member
+
+
+# Runs before the imports below, so that they are already eager.
+_keep_zen_imports_eager()
+
 import os
 
 # Re-export functions :
