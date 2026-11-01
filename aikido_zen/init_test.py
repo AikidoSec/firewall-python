@@ -1,3 +1,4 @@
+import functools
 import subprocess
 import sys
 from types import SimpleNamespace
@@ -47,9 +48,15 @@ class FakeLazyImports:
         self.current_filter = func
 
 
-def install_zen_lazy_imports_filter(monkeypatch, app_filter):
-    lazy_imports = FakeLazyImports(app_filter)
+def use_fake_lazy_imports(monkeypatch, current_filter):
+    lazy_imports = FakeLazyImports(current_filter)
     monkeypatch.setattr("aikido_zen.sys", lazy_imports)
+    monkeypatch.setattr("aikido_zen._zen_lazy_imports_filter", None)
+    return lazy_imports
+
+
+def install_zen_lazy_imports_filter(monkeypatch, app_filter):
+    lazy_imports = use_fake_lazy_imports(monkeypatch, app_filter)
     aikido_zen._keep_zen_imports_eager()
     return lazy_imports.current_filter
 
@@ -80,8 +87,7 @@ def test_imports_stay_lazy_without_an_app_filter(monkeypatch):
 
 
 def test_zen_filter_is_installed_once(monkeypatch):
-    lazy_imports = FakeLazyImports(None)
-    monkeypatch.setattr("aikido_zen.sys", lazy_imports)
+    lazy_imports = use_fake_lazy_imports(monkeypatch, None)
 
     aikido_zen._keep_zen_imports_eager()
     zen_filter = lazy_imports.current_filter
@@ -90,9 +96,22 @@ def test_zen_filter_is_installed_once(monkeypatch):
     assert lazy_imports.current_filter is zen_filter
 
 
+def test_zen_filter_is_installed_again_over_a_wrapper_of_it(monkeypatch):
+    lazy_imports = use_fake_lazy_imports(monkeypatch, None)
+    aikido_zen._keep_zen_imports_eager()
+
+    @functools.wraps(lazy_imports.current_filter)
+    def app_filter(importer, name, fromlist):
+        return True
+
+    lazy_imports.current_filter = app_filter
+    aikido_zen._keep_zen_imports_eager()
+
+    assert lazy_imports.current_filter("aikido_zen.sinks.os", "os", None) is False
+
+
 def test_zen_filter_wraps_a_filter_the_app_set_later(monkeypatch):
-    lazy_imports = FakeLazyImports(None)
-    monkeypatch.setattr("aikido_zen.sys", lazy_imports)
+    lazy_imports = use_fake_lazy_imports(monkeypatch, None)
     aikido_zen._keep_zen_imports_eager()
 
     lazy_imports.current_filter = lambda importer, name, fromlist: name != "eager"

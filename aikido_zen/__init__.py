@@ -5,6 +5,8 @@ Aggregates from the different modules
 # pylint: disable=wrong-import-position
 import sys
 
+_zen_lazy_imports_filter = None
+
 
 def _keep_zen_imports_eager():
     """
@@ -12,10 +14,11 @@ def _keep_zen_imports_eager():
     stops protecting requests after the first one. Keep Zen's own imports eager;
     all other imports still follow the app's lazy imports filter.
     """
+    global _zen_lazy_imports_filter  # pylint: disable=global-statement
     if not hasattr(sys, "set_lazy_imports_filter"):
         return
     app_filter = sys.get_lazy_imports_filter()  # pylint: disable=no-member
-    if getattr(app_filter, "keeps_zen_imports_eager", False):
+    if app_filter is not None and app_filter is _zen_lazy_imports_filter:
         return
 
     def lazy_imports_filter(importer, name, fromlist):
@@ -25,7 +28,7 @@ def _keep_zen_imports_eager():
             return False
         return app_filter is None or app_filter(importer, name, fromlist)
 
-    lazy_imports_filter.keeps_zen_imports_eager = True
+    _zen_lazy_imports_filter = lazy_imports_filter
     sys.set_lazy_imports_filter(lazy_imports_filter)  # pylint: disable=no-member
 
 
