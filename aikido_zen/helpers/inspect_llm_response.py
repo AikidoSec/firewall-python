@@ -1,9 +1,9 @@
 """
 Counts LLM calls from the provider's response. The HTTP client sinks (httpx,
 httpx2, requests, urllib3) count a POST whose path ends like an AI API, on any
-host, as in firewall-node; the host only names the provider, and the body is
-parsed only after the method and path match. The AI SDK sinks wrap their method
-with `sdk_ai_call` and count only the calls no HTTP client sink counted.
+host; the host only names the provider, and the body is parsed only after the
+method and path match. The AI SDK sinks wrap their method with `sdk_ai_call`
+and count only the calls no HTTP client sink counted.
 """
 
 import contextvars
@@ -64,17 +64,15 @@ class SdkCall:
         self.thread = threading.get_ident()
 
 
-# The SDK call running in this context, or None. Copies of the context (a task, or
-# `asyncio.to_thread`, started inside the call) share the object, so an HTTP request
-# the SDK sends from there marks the same call. Each SDK call gets its own object.
+# The SDK call running in this context. A task or `asyncio.to_thread` started inside
+# the call shares the object, so its HTTP request still marks the right call.
 _sdk_call = contextvars.ContextVar("aikido_llm_sdk_call", default=None)
 
 
 def current_sdk_call():
     """
-    The SDK call running in this thread, or None. A thread started during an SDK call
-    can inherit its context (free-threaded 3.14 does), and must not treat its own
-    later SDK calls as part of that one.
+    The SDK call running in this thread, or None. A new thread can inherit the
+    context (free-threaded 3.14 does), but its later SDK calls are its own.
     """
     call = _sdk_call.get()
     if call is None or call.thread != threading.get_ident():
@@ -126,11 +124,9 @@ def get_tokens(body, ai_format):
 
 def sdk_ai_call(on_response, is_async=False):
     """
-    Wraps an AI SDK method. The HTTP client sinks see the provider's response during
-    the method, so `on_response` (which counts it) runs only when none of them did.
-    A wrapped SDK method that calls another wrapped one sees the same response, so
-    only the outer one decides and the call is counted once.
-    Errors in `on_response` are logged and never reach the app, as with `after`.
+    Wraps an AI SDK method. `on_response` counts the call only when no HTTP client
+    sink counted it during the method. Nested wrapped methods count once, in the
+    outer one. Errors in `on_response` are logged, as with `after`.
     """
 
     def inspect(func, instance, call, return_value):
@@ -172,14 +168,13 @@ def sdk_ai_call(on_response, is_async=False):
 
 def inspect_llm_response(response, *, method, host, path, status, body, operation):
     """
-    Records usage for a finished AI API response. `body` must be the decoded
-    bytes, or None when the client has not read the response (streaming): then
-    nothing is inspected.
+    Records usage for a finished AI API response. `body` is the decoded bytes, or
+    None for a streamed response, which is not inspected.
     """
     if body is None or getattr(response, SEEN_ATTR, False):
         return
     match = match_ai_request(method, host, path)
-    # As in firewall-node: only a successful response is a finished call.
+    # Only a successful response is a finished call.
     if match is None or not 200 <= status < 300:
         return
     setattr(response, SEEN_ATTR, True)

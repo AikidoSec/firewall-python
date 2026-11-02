@@ -1,11 +1,10 @@
 """
 Provider names for AI API hosts, used only to name a call; the call is counted on
-any host. They are LiteLLM's names where LiteLLM has one, which Core uses to price
-calls.
+any host. The names are the provider names Core uses to price calls.
 """
 
-# Copied from firewall-node (library/sinks/ai-provider-traffic/aiProviderHosts.ts), which
-# takes it from zen-proxy. Keep it a plain copy, so an update is a plain replace.
+# The same list as the other Zen agents use. Keep it a plain copy, so an update is a
+# plain replace; hosts only Python has go in EXTRA_AI_PROVIDER_HOSTS.
 # A leading * matches the start of the first DNS label, or all of it.
 AI_PROVIDER_HOSTS = (
     ("agentrouter.org", "agentrouter"),
@@ -184,9 +183,8 @@ AI_PROVIDER_HOSTS = (
     ("*-aiplatform.googleapis.com", "vertex_ai"),
 )
 
-# Hosts that Node's list does not have yet, so they are not named *_compatible. Names
-# come from LiteLLM's host map (litellm_core_utils/get_llm_provider_logic.py) when it
-# has the host, else from models.dev, as in endpoint protection's provider list.
+# Hosts the shared list does not have yet, so that their calls are not named
+# *_compatible.
 EXTRA_AI_PROVIDER_HOSTS = (
     # mistralai's built-in EU and US servers, and its Codestral endpoint
     ("api.eu.mistral.ai", "mistral"),
@@ -204,7 +202,7 @@ EXTRA_AI_PROVIDER_HOSTS = (
     ("api.individual.githubcopilot.com", "github_copilot"),
     ("api.business.githubcopilot.com", "github_copilot"),
     ("api.enterprise.githubcopilot.com", "github_copilot"),
-    # From endpoint protection's list (models.dev ids, LiteLLM has no name for them)
+    # Providers Core has no price name for yet
     ("api.kimi.ai", "kimi-code-plan-global"),
     ("api.engy.ai", "engy"),
     ("api.inco.ai", "inco"),
