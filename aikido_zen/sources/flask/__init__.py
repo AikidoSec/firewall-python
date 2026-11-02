@@ -1,4 +1,4 @@
-from aikido_zen.context import Context, get_current_context
+from aikido_zen.context import Context
 from aikido_zen.helpers.get_argument import get_argument
 from aikido_zen.sinks import on_import, patch_function, before_modify_return, after
 from .extract_cookies import extract_cookies_from_flask_request_and_save_data
