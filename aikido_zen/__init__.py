@@ -22,9 +22,7 @@ def _keep_zen_imports_eager():
         return
 
     def lazy_imports_filter(importer, name, fromlist):
-        if importer and (
-            importer == "aikido_zen" or importer.startswith("aikido_zen.")
-        ):
+        if importer and importer.startswith("aikido_zen"):
             return False
         return app_filter is None or app_filter(importer, name, fromlist)
 

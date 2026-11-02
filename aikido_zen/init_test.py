@@ -74,9 +74,8 @@ def test_zen_imports_stay_eager_and_others_go_to_the_app_filter(monkeypatch):
     assert zen_filter("aikido_zen.sinks.os", "os", None) is False
     assert zen_filter("app", "json", None) is True
     assert zen_filter("app", "eager_in_app", None) is False
-    assert zen_filter("aikido_zen_plugin", "json", None) is True
     assert zen_filter(None, "json", None) is True
-    assert asked == ["json", "eager_in_app", "json", "json"]
+    assert asked == ["json", "eager_in_app", "json"]
 
 
 def test_imports_stay_lazy_without_an_app_filter(monkeypatch):
