@@ -5,7 +5,6 @@ from aikido_zen.helpers.get_argument import get_argument
 from aikido_zen.sinks import (
     after,
     before,
-    before_modify_return,
     on_import,
     patch_function,
 )
@@ -35,16 +34,19 @@ def _plain_wsgi(start_response, message, status_code):
     return [body]
 
 
-@before_modify_return
 def _call(func, instance, args, kwargs):
     environ = get_argument(args, kwargs, 0, "environ")
     start_response = get_argument(args, kwargs, 1, "start_response")
 
-    context = Context(req=environ, source="odoo")
-    context.set_as_current_context()
-    funcs.request_handler(stage="init")
+    try:
+        context = Context(req=environ, source="odoo")
+        context.set_as_current_context()
+        funcs.request_handler(stage="init")
+        blocked = should_block()
+    except Exception as e:
+        logger.debug("Exception occurred in init stage (Odoo): %s", e)
+        return func(*args, **kwargs)
 
-    blocked = should_block()
     if blocked is not None:
         message, status_code = blocked
         return _plain_wsgi(start_response, message, status_code)
