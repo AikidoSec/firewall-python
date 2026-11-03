@@ -43,7 +43,7 @@ def test_anthropic_messages_create():
 
     assert get_ai_stats()[0]["model"] == "claude-haiku-4-5-20251001"
     assert get_ai_stats()[0]["calls"] == 1
-    assert get_ai_stats()[0]["provider"] == "anthropic"
+    assert get_ai_stats()[0]["provider"] == "https://api.anthropic.com/v1/messages"
     assert get_ai_stats()[0]["tokens"]["input"] == 21
     assert get_ai_stats()[0]["tokens"]["output"] == 20
     assert get_ai_stats()[0]["tokens"]["total"] == 41
@@ -67,7 +67,7 @@ async def test_anthropic_messages_create_async():
 
     assert get_ai_stats()[0]["model"] == "claude-haiku-4-5-20251001"
     assert get_ai_stats()[0]["calls"] == 1
-    assert get_ai_stats()[0]["provider"] == "anthropic"
+    assert get_ai_stats()[0]["provider"] == "https://api.anthropic.com/v1/messages"
     assert get_ai_stats()[0]["tokens"]["input"] == 21
     assert get_ai_stats()[0]["tokens"]["output"] == 20
     assert get_ai_stats()[0]["tokens"]["total"] == 41

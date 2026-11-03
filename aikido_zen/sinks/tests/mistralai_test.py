@@ -47,7 +47,7 @@ def test_mistralai_chat_complete(mistral):
 
     assert get_ai_stats()[0]["model"] == "mistral-small-latest"
     assert get_ai_stats()[0]["calls"] == 1
-    assert get_ai_stats()[0]["provider"] == "mistral"
+    assert get_ai_stats()[0]["provider"] == "https://api.mistral.ai/v1/chat/completions"
     assert get_ai_stats()[0]["tokens"]["input"] == 17
     assert get_ai_stats()[0]["tokens"]["output"] == 20
     assert get_ai_stats()[0]["tokens"]["total"] == 37
@@ -69,7 +69,9 @@ def test_mistralai_agents_complete(mistral):
 
     assert get_ai_stats()[0]["model"] == "mistral-medium-latest"
     assert get_ai_stats()[0]["calls"] == 1
-    assert get_ai_stats()[0]["provider"] == "mistral"
+    assert (
+        get_ai_stats()[0]["provider"] == "https://api.mistral.ai/v1/agents/completions"
+    )
     assert get_ai_stats()[0]["tokens"]["input"] == 16
     assert get_ai_stats()[0]["tokens"]["output"] == 11
     assert get_ai_stats()[0]["tokens"]["total"] == 27
@@ -88,7 +90,7 @@ def test_mistralai_embeddings_create(mistral):
 
     assert get_ai_stats()[0]["model"] == "mistral-embed"
     assert get_ai_stats()[0]["calls"] == 1
-    assert get_ai_stats()[0]["provider"] == "mistral"
+    assert get_ai_stats()[0]["provider"] == "https://api.mistral.ai/v1/embeddings"
     assert get_ai_stats()[0]["tokens"]["input"] == 15
     assert get_ai_stats()[0]["tokens"]["output"] == 0  # Double-checked this
     assert get_ai_stats()[0]["tokens"]["total"] == 15
@@ -103,7 +105,7 @@ def test_mistralai_fim_complete(mistral):
 
     assert get_ai_stats()[0]["model"] == "codestral-2405"
     assert get_ai_stats()[0]["calls"] == 1
-    assert get_ai_stats()[0]["provider"] == "mistral"
+    assert get_ai_stats()[0]["provider"] == "https://api.mistral.ai/v1/fim/completions"
     assert get_ai_stats()[0]["tokens"]["input"] == 8
     assert get_ai_stats()[0]["tokens"]["output"] == 6
     assert get_ai_stats()[0]["tokens"]["total"] == 14

@@ -3,7 +3,7 @@ import itertools
 import json
 import threading
 import time
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, unquote
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from types import SimpleNamespace
 
@@ -22,7 +22,6 @@ import aikido_zen.sinks.httpx2
 import aikido_zen.sinks.requests
 import aikido_zen.sinks.urllib3
 import aikido_zen.helpers.inspect_llm_response
-from aikido_zen.helpers.ai_provider_hosts import PROVIDER_BY_HOST
 from aikido_zen.thread.thread_cache import get_cache
 
 skip_no_httpx2 = pytest.mark.skipif(httpx2 is None, reason="httpx2 not installed")
@@ -124,6 +123,9 @@ EMBEDDINGS = {
     "usage": {"prompt_tokens": 15, "completion_tokens": 0, "total_tokens": 15},
 }
 
+BEDROCK_MODEL = "anthropic.claude-haiku-4-5-20251001-v1:0"
+VERTEX_PATH = "/v1/projects/p/locations/us-east5/publishers/anthropic/models/"
+
 RESPONSE_IDS = itertools.count()
 FAILED_ONCE = set()
 
@@ -141,6 +143,9 @@ BODIES = {
     "/anthropic/v1/messages": MESSAGE,
     "/v1beta/models/gemini-2.5-flash:generateContent": GEMINI,
     "/v1/messages/count_tokens": MESSAGE,
+    "/model/" + BEDROCK_MODEL + "/invoke": MESSAGE,
+    VERTEX_PATH + "claude-sonnet-4@20250514:rawPredict": MESSAGE,
+    VERTEX_PATH + "count-tokens:rawPredict": {"input_tokens": 12},
     "/v1/plain": CHAT_COMPLETION,
 }
 
@@ -156,6 +161,7 @@ class ProviderHandler(BaseHTTPRequestHandler):
         length = int(self.headers.get("Content-Length") or 0)
         request = json.loads(self.rfile.read(length) or b"{}")
         path, _, query = self.path.partition("?")
+        path = unquote(path)
         options = parse_qs(query, keep_blank_values=True)
 
         if "delay" in options:
@@ -220,8 +226,7 @@ def provider():
 
 
 @pytest.fixture(autouse=True)
-def setup(monkeypatch, provider):
-    monkeypatch.setitem(PROVIDER_BY_HOST, "127.0.0.1", "openai")
+def setup(provider):
     get_cache().reset()
     yield
     get_cache().reset()
@@ -236,10 +241,10 @@ def get_ai_operations():
     return sorted(op for op, stats in operations.items() if stats["kind"] == "ai_op")
 
 
-def assert_counted_once(model, input_tokens, output_tokens, provider_name="openai"):
+def assert_counted_once(url, model, input_tokens, output_tokens):
     stats = get_ai_stats()
     assert len(stats) == 1
-    assert stats[0]["provider"] == provider_name
+    assert stats[0]["provider"] == url
     assert stats[0]["model"] == model
     assert stats[0]["calls"] == 1
     assert stats[0]["tokens"]["input"] == input_tokens
@@ -249,7 +254,9 @@ def assert_counted_once(model, input_tokens, output_tokens, provider_name="opena
 def test_requests_counts_once_and_body_stays_readable(provider):
     response = requests.post(provider + "/v1/chat/completions", json={})
     assert response.json()["model"] == "gpt-4o-mini-2024-07-18"
-    assert_counted_once("gpt-4o-mini-2024-07-18", 11, 7)
+    assert_counted_once(
+        provider + "/v1/chat/completions", "gpt-4o-mini-2024-07-18", 11, 7
+    )
     assert get_ai_operations() == ["requests.Session.send"]
 
 
@@ -257,23 +264,24 @@ def test_requests_gzip_body_is_parsed(provider):
     response = requests.post(provider + "/v1/chat/completions?gzip", json={})
     assert response.headers["Content-Encoding"] == "gzip"
     assert response.json()["model"] == "gpt-4o-mini-2024-07-18"
-    assert_counted_once("gpt-4o-mini-2024-07-18", 11, 7)
+    assert_counted_once(
+        provider + "/v1/chat/completions", "gpt-4o-mini-2024-07-18", 11, 7
+    )
 
 
 def test_httpx_counts_once_and_body_stays_readable(provider):
     with httpx.Client() as client:
         response = client.post(provider + "/v1/responses", json={})
     assert response.json()["model"] == "gpt-4o-2024-08-06"
-    assert_counted_once("gpt-4o-2024-08-06", 20, 9)
+    assert_counted_once(provider + "/v1/responses", "gpt-4o-2024-08-06", 20, 9)
 
 
 @skip_no_httpx2
-def test_httpx2_counts_once_and_body_stays_readable(provider, monkeypatch):
-    monkeypatch.setitem(PROVIDER_BY_HOST, "127.0.0.1", "anthropic")
+def test_httpx2_counts_once_and_body_stays_readable(provider):
     with httpx2.Client() as client:
         response = client.post(provider + "/v1/messages", json={})
     assert response.json()["model"] == "claude-sonnet-4-20250514"
-    assert_counted_once("claude-sonnet-4-20250514", 21, 12, "anthropic")
+    assert_counted_once(provider + "/v1/messages", "claude-sonnet-4-20250514", 21, 12)
     assert get_ai_operations() == ["httpx2.Client.send"]
 
 
@@ -285,61 +293,53 @@ def test_httpx2_counts_once_and_body_stays_readable(provider, monkeypatch):
         ("/v1/embeddings", ("mistral-embed", 15, 0)),
     ],
 )
-def test_mistral_paths_count_on_mistral_host_only(
-    provider, monkeypatch, path, expected
-):
+def test_mistral_paths_count_on_any_host(provider, path, expected):
     requests.post(provider + path, json={})
-    assert get_ai_stats() == []
-    monkeypatch.setitem(PROVIDER_BY_HOST, "127.0.0.1", "mistral")
-    requests.post(provider + path, json={})
-    assert_counted_once(*expected, "mistral")
+    assert_counted_once(provider + path, *expected)
 
 
 @pytest.mark.parametrize(
     "path, expected",
     [
-        (
-            "/v1/chat/completions",
-            ("gpt-4o-mini-2024-07-18", 11, 7, "openai_compatible"),
-        ),
-        (
-            "/openai/v1/chat/completions",
-            ("gpt-4o-mini-2024-07-18", 11, 7, "openai_compatible"),
-        ),
-        ("/openai/v1/responses", ("gpt-4o-2024-08-06", 20, 9, "openai_compatible")),
+        ("/openai/v1/chat/completions", ("gpt-4o-mini-2024-07-18", 11, 7)),
+        ("/openai/v1/responses", ("gpt-4o-2024-08-06", 20, 9)),
         (
             "/openai/deployments/gpt-4o-mini/chat/completions?api-version=2024-10-21",
-            ("gpt-4o-mini-2024-07-18", 11, 7, "openai_compatible"),
+            ("gpt-4o-mini-2024-07-18", 11, 7),
         ),
-        (
-            "/anthropic/v1/messages",
-            ("claude-sonnet-4-20250514", 21, 12, "anthropic_compatible"),
-        ),
+        ("/anthropic/v1/messages", ("claude-sonnet-4-20250514", 21, 12)),
         (
             "/v1beta/models/gemini-2.5-flash:generateContent?key=secret",
-            ("gemini-2.5-flash-001", 100, 508, "gemini_compatible"),
+            ("gemini-2.5-flash-001", 100, 508),
+        ),
+        ("/model/" + BEDROCK_MODEL + "/invoke", (BEDROCK_MODEL, 21, 12)),
+        (
+            VERTEX_PATH + "claude-sonnet-4@20250514:rawPredict",
+            ("claude-sonnet-4-20250514", 21, 12),
         ),
     ],
 )
-def test_ai_path_on_any_host_is_counted(provider, monkeypatch, path, expected):
-    monkeypatch.delitem(PROVIDER_BY_HOST, "127.0.0.1")
+def test_ai_path_is_counted_under_its_url_without_the_query(provider, path, expected):
     requests.post(provider + path, json={})
-    assert_counted_once(*expected)
+    assert_counted_once(provider + path.partition("?")[0], *expected)
 
 
-@pytest.mark.parametrize(
-    "host, provider_name",
-    [
-        ("api.groq.com", "groq"),
-        ("api.mistral.ai", "mistral"),
-        ("api.anthropic.com", "anthropic"),
-        ("generativelanguage.googleapis.com", "gemini"),
-    ],
-)
-def test_known_host_names_the_provider(provider, monkeypatch, host, provider_name):
-    monkeypatch.setitem(PROVIDER_BY_HOST, "127.0.0.1", PROVIDER_BY_HOST[host])
-    requests.post(provider + "/openai/v1/responses", json={})
-    assert_counted_once("gpt-4o-2024-08-06", 20, 9, provider_name)
+def test_reported_url_has_no_user_info_query_or_fragment(provider):
+    url = provider.replace("http://", "http://user:secret@")
+    requests.post(url + "/v1/chat/completions?key=secret#top", json={})
+    with httpx.Client() as client:
+        client.post(url + "/v1/chat/completions?key=secret", json={})
+    assert [(s["provider"], s["calls"]) for s in get_ai_stats()] == [
+        (provider + "/v1/chat/completions", 2)
+    ]
+
+
+def test_vertex_count_tokens_is_not_counted(provider):
+    response = requests.post(
+        provider + VERTEX_PATH + "count-tokens:rawPredict", json={}
+    )
+    assert response.json() == {"input_tokens": 12}
+    assert get_ai_stats() == []
 
 
 def test_gemini_model_falls_back_to_the_path(provider, monkeypatch):
@@ -348,8 +348,9 @@ def test_gemini_model_falls_back_to_the_path(provider, monkeypatch):
         "/v1beta/models/gemini-2.5-flash:generateContent",
         {k: v for k, v in GEMINI.items() if k != "modelVersion"},
     )
-    requests.post(provider + "/v1beta/models/gemini-2.5-flash:generateContent", json={})
-    assert_counted_once("gemini-2.5-flash", 100, 508)
+    path = "/v1beta/models/gemini-2.5-flash:generateContent"
+    requests.post(provider + path, json={})
+    assert_counted_once(provider + path, "gemini-2.5-flash", 100, 508)
 
 
 @pytest.mark.parametrize(
@@ -357,7 +358,6 @@ def test_gemini_model_falls_back_to_the_path(provider, monkeypatch):
     [
         ("GET", "/v1/responses"),
         ("POST", "/v1/messages/count_tokens"),
-        ("POST", "/v1/embeddings"),
         ("POST", "/v1/plain"),
     ],
 )
@@ -380,7 +380,9 @@ def test_urllib3_counts_once_and_body_stays_readable(provider):
     )
     assert response.headers["Content-Encoding"] == "gzip"
     assert json.loads(response.data)["model"] == "gpt-4o-mini-2024-07-18"
-    assert_counted_once("gpt-4o-mini-2024-07-18", 11, 7)
+    assert_counted_once(
+        provider + "/v1/chat/completions", "gpt-4o-mini-2024-07-18", 11, 7
+    )
     assert get_ai_operations() == ["urllib3.HTTPConnectionPool.urlopen"]
 
 
@@ -389,7 +391,9 @@ async def test_httpx_async_counts_once(provider):
     async with httpx.AsyncClient() as client:
         response = await client.post(provider + "/v1/chat/completions", json={})
     assert response.json()["model"] == "gpt-4o-mini-2024-07-18"
-    assert_counted_once("gpt-4o-mini-2024-07-18", 11, 7)
+    assert_counted_once(
+        provider + "/v1/chat/completions", "gpt-4o-mini-2024-07-18", 11, 7
+    )
 
 
 @skip_no_httpx2
@@ -398,7 +402,9 @@ async def test_httpx2_async_counts_once(provider):
     async with httpx2.AsyncClient() as client:
         response = await client.post(provider + "/v1/chat/completions", json={})
     assert response.json()["model"] == "gpt-4o-mini-2024-07-18"
-    assert_counted_once("gpt-4o-mini-2024-07-18", 11, 7)
+    assert_counted_once(
+        provider + "/v1/chat/completions", "gpt-4o-mini-2024-07-18", 11, 7
+    )
 
 
 def test_redirected_response_counts_once(provider):
@@ -454,7 +460,7 @@ def test_body_is_only_parsed_after_method_and_path_match(provider, monkeypatch):
         SimpleNamespace(loads=lambda body: parsed.append(body)),
     )
     with httpx.Client() as client:
-        client.post(provider + "/v1/embeddings", json={})
+        client.post(provider + "/v1/plain", json={})
         client.get(provider + "/v1/chat/completions")
         assert parsed == []
         client.post(provider + "/v1/chat/completions", json={})
@@ -463,9 +469,28 @@ def test_body_is_only_parsed_after_method_and_path_match(provider, monkeypatch):
     assert len(parsed) == 1
 
 
+def test_requests_only_parses_the_url_of_a_read_post(provider, monkeypatch):
+    split = []
+    real_urlsplit = aikido_zen.sinks.requests.urlsplit
+    monkeypatch.setattr(
+        aikido_zen.sinks.requests,
+        "urlsplit",
+        lambda url: split.append(url) or real_urlsplit(url),
+    )
+    requests.get(provider + "/v1/chat/completions")
+    requests.post(
+        provider + "/v1/chat/completions", json={"stream": True}, stream=True
+    ).close()
+    assert split == []
+    requests.post(provider + "/v1/chat/completions", json={})
+    assert split == [provider + "/v1/chat/completions"]
+
+
 def test_large_response_is_counted(provider):
     requests.post(provider + "/v1/chat/completions?pad=9000000", json={})
-    assert_counted_once("gpt-4o-mini-2024-07-18", 11, 7)
+    assert_counted_once(
+        provider + "/v1/chat/completions", "gpt-4o-mini-2024-07-18", 11, 7
+    )
 
 
 def test_error_status_with_a_valid_body_is_not_counted(provider):
@@ -495,14 +520,16 @@ def test_invalid_json_is_swallowed(provider):
     assert get_ai_stats() == []
 
 
-def test_body_without_the_api_shape_is_not_counted(provider, monkeypatch):
+def test_any_body_with_a_model_is_counted(provider, monkeypatch):
     monkeypatch.setitem(BODIES, "/v1/responses", CHAT_COMPLETION)
     requests.post(provider + "/v1/responses", json={})
-    assert get_ai_stats() == []
+    assert_counted_once(provider + "/v1/responses", "gpt-4o-mini-2024-07-18", 0, 0)
 
 
-def test_body_without_usage_is_not_counted(provider):
+def test_body_without_usage_counts_with_zero_tokens(provider):
     response = requests.post(provider + "/v1/chat/completions?no-usage", json={})
     assert response.json()["model"] == "gpt-4o-mini-2024-07-18"
-    assert get_ai_stats() == []
-    assert get_ai_operations() == []
+    assert_counted_once(
+        provider + "/v1/chat/completions", "gpt-4o-mini-2024-07-18", 0, 0
+    )
+    assert get_ai_operations() == ["requests.Session.send"]

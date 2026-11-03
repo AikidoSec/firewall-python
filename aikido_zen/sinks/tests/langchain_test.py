@@ -41,7 +41,7 @@ def test_langchain_report_tokens_invoke_anthropic():
 
     assert get_ai_stats()[0]["model"] == "claude-haiku-4-5-20251001"
     assert get_ai_stats()[0]["calls"] == 1
-    assert get_ai_stats()[0]["provider"] == "anthropic"
+    assert get_ai_stats()[0]["provider"] == "https://api.anthropic.com/v1/messages"
     assert get_ai_stats()[0]["tokens"]["input"] == 14
     assert get_ai_stats()[0]["tokens"]["output"] == 15
     assert get_ai_stats()[0]["tokens"]["total"] == 29
@@ -58,7 +58,7 @@ def test_langchain_report_tokens_invoke_mistral():
 
     assert get_ai_stats()[0]["model"].startswith("mistral-large")
     assert get_ai_stats()[0]["calls"] == 1
-    assert get_ai_stats()[0]["provider"] == "mistral"
+    assert get_ai_stats()[0]["provider"] == "https://api.mistral.ai/v1/chat/completions"
 
 
 @skip_no_openai_key
@@ -70,7 +70,7 @@ def test_langchain_report_tokens_invoke_openai():
 
     assert get_ai_stats()[0]["model"] == "gpt-4o-mini-2024-07-18"
     assert get_ai_stats()[0]["calls"] == 1
-    assert get_ai_stats()[0]["provider"] == "openai"
+    assert get_ai_stats()[0]["provider"] == "https://api.openai.com/v1/chat/completions"
     assert get_ai_stats()[0]["tokens"]["input"] == 11
     assert get_ai_stats()[0]["tokens"]["output"] == 20
     assert get_ai_stats()[0]["tokens"]["total"] == 31

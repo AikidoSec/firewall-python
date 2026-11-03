@@ -430,3 +430,73 @@ def test_import_list_with_overlapping_and_new_entries(stats):
             "total": 450,  # 150 + 300
         },
     }
+
+
+def test_cache_tokens_are_only_sent_once_reported(stats):
+    stats.on_ai_call(
+        provider="anthropic", model="claude-3", input_tokens=100, output_tokens=10
+    )
+    assert stats.get_stats()[0]["tokens"] == {"input": 100, "output": 10, "total": 110}
+
+    stats.on_ai_call(
+        provider="anthropic",
+        model="claude-3",
+        input_tokens=100,
+        output_tokens=10,
+        cache_read=40,
+        cache_write=5,
+    )
+    stats.on_ai_call(
+        provider="anthropic",
+        model="claude-3",
+        input_tokens=50,
+        output_tokens=10,
+        cache_read=20,
+    )
+    assert stats.get_stats()[0]["tokens"] == {
+        "input": 250,
+        "output": 30,
+        "total": 280,
+        "cacheRead": 60,
+        "cacheWrite": 5,
+    }
+
+
+def test_import_list_adds_cache_tokens(stats):
+    stats.on_ai_call(
+        provider="openai",
+        model="gpt-4",
+        input_tokens=100,
+        output_tokens=50,
+        cache_read=40,
+    )
+    stats.import_list(
+        [
+            {
+                "provider": "openai",
+                "model": "gpt-4",
+                "calls": 2,
+                "tokens": {"input": 30, "output": 20, "total": 50, "cacheWrite": 7},
+            },
+            {
+                "provider": "openai",
+                "model": "gpt-4",
+                "calls": 1,
+                "tokens": {"input": 10, "output": 5, "total": 15, "cacheRead": 4},
+            },
+        ]
+    )
+    assert stats.get_stats() == [
+        {
+            "provider": "openai",
+            "model": "gpt-4",
+            "calls": 4,
+            "tokens": {
+                "input": 140,
+                "output": 75,
+                "total": 215,
+                "cacheRead": 44,
+                "cacheWrite": 7,
+            },
+        }
+    ]

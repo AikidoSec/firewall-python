@@ -9,11 +9,14 @@ from aikido_zen.sinks import on_import, patch_function, after, after_async
 
 def inspect_send(response, operation):
     # No _content means a streamed response, which only the app may read.
+    url = response.request.url
     inspect_llm_response(
         response,
         method=response.request.method,
-        host=response.request.url.host,
-        path=response.request.url.path,
+        scheme=url.scheme,
+        host=url.host,
+        port=url.port,
+        path=url.path,
         status=response.status_code,
         body=getattr(response, "_content", None),
         operation=operation,

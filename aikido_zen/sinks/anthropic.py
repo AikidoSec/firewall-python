@@ -1,5 +1,4 @@
-from aikido_zen.helpers.ai_provider_hosts import get_ai_provider
-from aikido_zen.helpers.inspect_llm_response import sdk_ai_call
+from aikido_zen.helpers.inspect_llm_response import sdk_ai_call, sdk_endpoint_url
 from aikido_zen.helpers.on_ai_call import on_ai_call
 from aikido_zen.helpers.register_call import register_call
 from aikido_zen.sinks import on_import, patch_function
@@ -8,13 +7,18 @@ from aikido_zen.sinks import on_import, patch_function
 def on_message(instance, message):
     # The SDK keeps its base URL only on the private client.
     base_url = getattr(getattr(instance, "_client", None), "base_url", None)
-    host = getattr(base_url, "host", None)
+    usage = message.usage
+    # The input tokens include the cached ones, which Anthropic reports apart.
+    cache_read = getattr(usage, "cache_read_input_tokens", None) or 0
+    cache_write = getattr(usage, "cache_creation_input_tokens", None) or 0
     register_call("anthropic.resources.messages.messages.Messages.create", "ai_op")
     on_ai_call(
-        provider=get_ai_provider(host, "anthropic_compatible") if host else "anthropic",
+        provider=sdk_endpoint_url(base_url, "/v1/messages"),
         model=message.model,
-        input_tokens=message.usage.input_tokens,
-        output_tokens=message.usage.output_tokens,
+        input_tokens=usage.input_tokens + cache_read + cache_write,
+        output_tokens=usage.output_tokens,
+        cache_read=cache_read,
+        cache_write=cache_write,
     )
 
 

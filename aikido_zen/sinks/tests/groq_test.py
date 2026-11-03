@@ -41,7 +41,10 @@ def test_groq_messages_create():
 
     assert get_ai_stats()[0]["model"] == "openai/gpt-oss-20b"
     assert get_ai_stats()[0]["calls"] == 1
-    assert get_ai_stats()[0]["provider"] == "groq"
+    assert (
+        get_ai_stats()[0]["provider"]
+        == "https://api.groq.com/openai/v1/chat/completions"
+    )
     assert get_ai_stats()[0]["tokens"]["input"] == 87
     assert get_ai_stats()[0]["tokens"]["output"] == 20
     assert get_ai_stats()[0]["tokens"]["total"] == 107
@@ -65,7 +68,10 @@ async def test_groq_messages_create_async():
 
     assert get_ai_stats()[0]["model"] == "meta-llama/llama-4-scout-17b-16e-instruct"
     assert get_ai_stats()[0]["calls"] == 1
-    assert get_ai_stats()[0]["provider"] == "groq"
+    assert (
+        get_ai_stats()[0]["provider"]
+        == "https://api.groq.com/openai/v1/chat/completions"
+    )
     assert get_ai_stats()[0]["tokens"]["input"] == 22
     assert get_ai_stats()[0]["tokens"]["output"] == 20
     assert get_ai_stats()[0]["tokens"]["total"] == 42

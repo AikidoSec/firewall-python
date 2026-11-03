@@ -59,14 +59,14 @@ Zen for Python 3 is compatible with:
 ### AI providers
 Zen tracks which models are used and how many tokens are consumed, allowing you to monitor your AI usage and costs. It reads the response in the HTTP client (`httpx`, `httpx2`, `requests`, `urllib3`), so calls through any SDK, a framework like LangChain or a direct HTTP request are covered, on any host:
 * ✅ OpenAI Chat Completions and Responses API, and APIs compatible with them (Azure OpenAI, Mistral, Groq, gateways, local model servers)
-* ✅ Anthropic Messages API
+* ✅ Anthropic Messages API, also through AWS Bedrock and Google Vertex AI
 * ✅ Google Gemini `generateContent`
-* ✅ Mistral agents, FIM and embeddings (`api.mistral.ai`)
+* ✅ Embeddings, and Mistral agents and FIM
 * ✅ [`boto3`](https://pypi.org/project/boto3) (AWS Bedrock)
 
-Calls are named after the provider's host (for example `openai`, `azure`, `mistral`, `groq`), or `openai_compatible`, `anthropic_compatible` or `gemini_compatible` for other hosts. Streamed responses are not counted yet.
+Calls are reported under the endpoint URL (for example `https://api.openai.com/v1/responses`), without credentials or query string, and Aikido names the provider. Cached input tokens are reported when the provider returns them. Streamed responses are not counted yet.
 
-The [`openai`](https://pypi.org/project/openai) ^1.0, [`anthropic`](https://pypi.org/project/anthropic/) and [`mistralai`](https://pypi.org/project/mistralai) ^1.0.0 SDKs are also instrumented directly, so their calls are counted when the HTTP client does not see them. Each call is counted once.
+With `AIKIDO_FEATURE_AI_SDK_FALLBACK=true`, the [`openai`](https://pypi.org/project/openai) ^1.0, [`anthropic`](https://pypi.org/project/anthropic/) and [`mistralai`](https://pypi.org/project/mistralai) ^1.0.0 SDKs are also instrumented directly, so their calls are counted when the HTTP client does not see them. Each call is counted once.
 
 Zen is compatible with Python 3.8-3.14 and can run on Windows, Linux, and Mac OS X.
 

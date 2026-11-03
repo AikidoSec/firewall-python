@@ -53,7 +53,7 @@ def test_openai_responses_create_with_vision(client):
 
     assert get_ai_stats()[0]["model"] == "gpt-4o-mini-2024-07-18"
     assert get_ai_stats()[0]["calls"] == 1
-    assert get_ai_stats()[0]["provider"] == "openai"
+    assert get_ai_stats()[0]["provider"] == "https://api.openai.com/v1/responses"
     assert get_ai_stats()[0]["tokens"]["input"] == 36848
     assert get_ai_stats()[0]["tokens"]["output"] == 25
     assert get_ai_stats()[0]["tokens"]["total"] == 36873
@@ -77,7 +77,7 @@ def test_openai_chat_complete(client):
 
     assert get_ai_stats()[0]["model"] == "gpt-4o-2024-08-06"
     assert get_ai_stats()[0]["calls"] == 1
-    assert get_ai_stats()[0]["provider"] == "openai"
+    assert get_ai_stats()[0]["provider"] == "https://api.openai.com/v1/chat/completions"
     assert get_ai_stats()[0]["tokens"]["input"] == 29
     assert get_ai_stats()[0]["tokens"]["output"] == 15
     assert get_ai_stats()[0]["tokens"]["total"] == 44
@@ -95,7 +95,7 @@ def test_openai_responses_create(client):
 
     assert get_ai_stats()[0]["model"] == "gpt-4o-2024-08-06"
     assert get_ai_stats()[0]["calls"] == 1
-    assert get_ai_stats()[0]["provider"] == "openai"
+    assert get_ai_stats()[0]["provider"] == "https://api.openai.com/v1/responses"
     assert get_ai_stats()[0]["tokens"]["input"] == 37
     assert get_ai_stats()[0]["tokens"]["output"] == 18
     assert get_ai_stats()[0]["tokens"]["total"] == 55

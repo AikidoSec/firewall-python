@@ -1,12 +1,12 @@
 """
 patching module openai
 - patches create(...) and parse(...) on Responses, to inspect response
-- patches create(...), update(...) and parse(...) on chat Completions, to inspect response
-- each also on its async class; counts only what no HTTP client sink counted
+- patches create(...) and parse(...) on chat Completions, to inspect response
+- each also on its async class; with AIKIDO_FEATURE_AI_SDK_FALLBACK, counts what
+  no HTTP client sink counted
 """
 
-from aikido_zen.helpers.ai_provider_hosts import get_ai_provider
-from aikido_zen.helpers.inspect_llm_response import sdk_ai_call
+from aikido_zen.helpers.inspect_llm_response import sdk_ai_call, sdk_endpoint_url
 from aikido_zen.helpers.on_ai_call import on_ai_call
 from aikido_zen.helpers.register_call import register_call
 from aikido_zen.sinks import on_import, patch_function
@@ -21,11 +21,10 @@ def ensure_parsed_response(return_value):
     return return_value
 
 
-def get_provider(instance):
+def get_provider(instance, path):
     # The SDK keeps its base URL only on the private client.
     base_url = getattr(getattr(instance, "_client", None), "base_url", None)
-    host = getattr(base_url, "host", None)
-    return get_ai_provider(host, "openai_compatible") if host else "openai"
+    return sdk_endpoint_url(base_url, path)
 
 
 def on_response(func_name):
@@ -35,7 +34,7 @@ def on_response(func_name):
             f"openai.resources.responses.responses.Responses.{func_name}", "ai_op"
         )
         on_ai_call(
-            provider=get_provider(instance),
+            provider=get_provider(instance, "/responses"),
             model=res.model,
             input_tokens=res.usage.input_tokens,
             output_tokens=res.usage.output_tokens,
@@ -52,7 +51,7 @@ def on_completion(func_name):
             "ai_op",
         )
         on_ai_call(
-            provider=get_provider(instance),
+            provider=get_provider(instance, "/chat/completions"),
             model=res.model,
             input_tokens=res.usage.prompt_tokens,
             output_tokens=res.usage.completion_tokens,
@@ -76,17 +75,11 @@ def patch_responses(m):
 @on_import("openai.resources.chat.completions.completions", "openai", "1.0")
 def patch_chat_completions(m):
     patch_function(m, "Completions.create", sdk_ai_call(on_completion("create")))
-    patch_function(m, "Completions.update", sdk_ai_call(on_completion("update")))
     patch_function(m, "Completions.parse", sdk_ai_call(on_completion("parse")))
     patch_function(
         m,
         "AsyncCompletions.create",
         sdk_ai_call(on_completion("create"), is_async=True),
-    )
-    patch_function(
-        m,
-        "AsyncCompletions.update",
-        sdk_ai_call(on_completion("update"), is_async=True),
     )
     patch_function(
         m,
