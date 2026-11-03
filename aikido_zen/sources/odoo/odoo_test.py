@@ -273,6 +273,24 @@ def test_no_hook_is_patched_when_one_is_missing(caplog):
     assert "Request.get_json_data" in caplog.text
 
 
+def test_request_runs_once_when_odoo_raises(context, monkeypatch):
+    calls = []
+
+    def odoo_call(self, environ, start_response):
+        calls.append(environ)
+        raise RuntimeError("database connection lost")
+
+    module = _odoo_http()
+    module.Application.__call__ = odoo_call
+    odoo_source.patch_odoo_http(module)
+    monkeypatch.setattr(odoo_source, "should_block", lambda: None)
+
+    with pytest.raises(RuntimeError, match="database connection lost"):
+        module.Application()(ENVIRON, lambda *args: None)
+
+    assert len(calls) == 1
+
+
 def test_odoo_http_import_hook_is_registered():
     import aikido_zen.sources.odoo
     from wrapt.importer import _post_import_hooks
