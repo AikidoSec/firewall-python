@@ -50,6 +50,16 @@ RECORDED_ANTHROPIC_CACHE_READ = {
     "cache_creation_input_tokens": 0,
     "cache_read_input_tokens": 9601,
 }
+DOCUMENTED_ANTHROPIC_MIXED_TTL_USAGE = {
+    "input_tokens": 2048,
+    "cache_read_input_tokens": 1800,
+    "cache_creation_input_tokens": 248,
+    "output_tokens": 503,
+    "cache_creation": {
+        "ephemeral_5m_input_tokens": 148,
+        "ephemeral_1h_input_tokens": 100,
+    },
+}
 DOCUMENTED_BEDROCK_CONVERSE = {
     "output": {
         "message": {
@@ -303,6 +313,7 @@ def test_parse_ai_response(path, body, expected):
         ("/v1/chat/completions", RECORDED_OPENAI_CACHE_HIT, (8413, 5, 8320, 0)),
         ("/v1/messages", RECORDED_ANTHROPIC_CACHE_WRITE, (8, 5, 0, 9601)),
         ("/v1/messages", RECORDED_ANTHROPIC_CACHE_READ, (8, 5, 9601, 0)),
+        ("/v1/messages", DOCUMENTED_ANTHROPIC_MIXED_TTL_USAGE, (2048, 503, 1800, 248)),
         (
             "/v1/chat/completions",
             {
