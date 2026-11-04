@@ -1,0 +1,17 @@
+name: 📦 Install without build toolchain
+on: [push]
+permissions:
+  contents: read
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install dependencies in a container without a build toolchain
+        run: docker build -f .github/workflows/Dockerfile.install-toolchain-free -t aikido-zen-install-toolchain-free .

@@ -1,0 +1,9 @@
+# Verifies that `pip install` for this package resolves purely to prebuilt
+# wheels, with no source build required. Mirrors restricted runtimes such as
+# the AWS Lambda Python base images, which don't ship a C toolchain.
+FROM python:3.14-slim
+
+WORKDIR /app
+COPY . .
+
+RUN pip install --no-cache-dir --only-binary=:all: .
