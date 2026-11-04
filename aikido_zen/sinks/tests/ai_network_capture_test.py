@@ -113,7 +113,7 @@ class ProviderHandler(BaseHTTPRequestHandler):
 
         if query == "not-json":
             return self.send_json_bytes(b"not json {")
-        if path == "/v1/redirect":
+        if path in ("/v1/redirect", "/redirect/v1/chat/completions"):
             self.send_response(307)
             self.send_header("Location", "/v1/chat/completions")
             self.end_headers()
@@ -372,7 +372,10 @@ def test_redirected_response_counts_once(provider):
     with httpx.Client(follow_redirects=True) as client:
         response = client.post(provider + "/v1/redirect", json={})
     assert response.json()["model"] == "gpt-4o-mini-2024-07-18"
-    assert get_ai_stats()[0]["calls"] == 2
+    pool = urllib3.HTTPConnectionPool("127.0.0.1", int(provider.rsplit(":", 1)[1]))
+    response = pool.urlopen("POST", "/redirect/v1/chat/completions", body=b"{}")
+    assert json.loads(response.data)["model"] == "gpt-4o-mini-2024-07-18"
+    assert get_ai_stats()[0]["calls"] == 3
 
 
 def test_requests_stream_is_not_read_and_not_counted(provider):

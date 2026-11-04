@@ -63,7 +63,8 @@ BEDROCK_PATH = re.compile(r"/model/([^/]+)/(converse|invoke)$")
 
 DEFAULT_PORTS = {"http": 80, "https": 443}
 
-# A redirect makes requests and urllib3 pass the final response through twice.
+# On a redirect, Session.send (requests) and a pool's urlopen (urllib3) return the
+# same final response more than once.
 SEEN_ATTR = "_aikido_ai_seen"
 
 # Parsing makes a second, larger copy of the body inside the app's request.
