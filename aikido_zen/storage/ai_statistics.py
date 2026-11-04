@@ -17,6 +17,8 @@ class AIStatistics:
                     "input": 0,
                     "output": 0,
                     "total": 0,
+                    "cacheRead": 0,
+                    "cacheWrite": 0,
                 },
             }
 
@@ -33,7 +35,8 @@ class AIStatistics:
         provider_stats["tokens"]["input"] += input_tokens
         provider_stats["tokens"]["output"] += output_tokens
         provider_stats["tokens"]["total"] += input_tokens + output_tokens
-        add_cache_tokens(provider_stats["tokens"], cache_read, cache_write)
+        provider_stats["tokens"]["cacheRead"] += cache_read
+        provider_stats["tokens"]["cacheWrite"] += cache_write
 
     def get_stats(self):
         return [copy.deepcopy(stats) for stats in self.calls.values()]
@@ -44,14 +47,8 @@ class AIStatistics:
                 new_entry["provider"], new_entry["model"]
             )
             existing_entry["calls"] += new_entry["calls"]
-            existing_entry["tokens"]["input"] += new_entry["tokens"]["input"]
-            existing_entry["tokens"]["output"] += new_entry["tokens"]["output"]
-            existing_entry["tokens"]["total"] += new_entry["tokens"]["total"]
-            add_cache_tokens(
-                existing_entry["tokens"],
-                new_entry["tokens"].get("cacheRead", 0),
-                new_entry["tokens"].get("cacheWrite", 0),
-            )
+            for field in existing_entry["tokens"]:
+                existing_entry["tokens"][field] += new_entry["tokens"].get(field, 0)
 
     def clear(self):
         self.calls.clear()
@@ -62,12 +59,3 @@ class AIStatistics:
 
 def get_provider_key(provider, model):
     return f"{provider}:{model}"
-
-
-def add_cache_tokens(tokens, cache_read, cache_write):
-    # Not every caller reports cached tokens (the SDK sinks do not), so the keys are
-    # only added once some were reported.
-    if cache_read:
-        tokens["cacheRead"] = tokens.get("cacheRead", 0) + cache_read
-    if cache_write:
-        tokens["cacheWrite"] = tokens.get("cacheWrite", 0) + cache_write

@@ -198,6 +198,8 @@ def stats_row(url, model, input_tokens, output_tokens):
             "input": input_tokens,
             "output": output_tokens,
             "total": input_tokens + output_tokens,
+            "cacheRead": 0,
+            "cacheWrite": 0,
         },
     }
 

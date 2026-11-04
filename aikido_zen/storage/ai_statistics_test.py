@@ -27,6 +27,8 @@ def test_tracks_basic_ai_calls(stats):
             "input": 100,
             "output": 50,
             "total": 150,
+            "cacheRead": 0,
+            "cacheWrite": 0,
         },
     }
 
@@ -52,6 +54,8 @@ def test_tracks_multiple_calls_to_same_provider_model(stats):
             "input": 300,
             "output": 125,
             "total": 425,
+            "cacheRead": 0,
+            "cacheWrite": 0,
         },
     }
 
@@ -83,6 +87,8 @@ def test_tracks_different_provider_model_combinations_separately(stats):
             "input": 120,
             "output": 60,
             "total": 180,
+            "cacheRead": 0,
+            "cacheWrite": 0,
         },
     }
 
@@ -94,6 +100,8 @@ def test_tracks_different_provider_model_combinations_separately(stats):
             "input": 80,
             "output": 40,
             "total": 120,
+            "cacheRead": 0,
+            "cacheWrite": 0,
         },
     }
 
@@ -105,6 +113,8 @@ def test_tracks_different_provider_model_combinations_separately(stats):
             "input": 100,
             "output": 50,
             "total": 150,
+            "cacheRead": 0,
+            "cacheWrite": 0,
         },
     }
 
@@ -136,6 +146,8 @@ def test_handles_zero_token_inputs(stats):
         "input": 0,
         "output": 0,
         "total": 0,
+        "cacheRead": 0,
+        "cacheWrite": 0,
     }
 
 
@@ -185,6 +197,8 @@ def test_get_stats_returns_new_list(stats):
                 "input": 100,
                 "output": 50,
                 "total": 150,
+                "cacheRead": 0,
+                "cacheWrite": 0,
             },
         }
     ]
@@ -229,6 +243,8 @@ def test_get_stats_consistency_after_multiple_calls(stats):
                 "input": 100,
                 "output": 50,
                 "total": 150,
+                "cacheRead": 0,
+                "cacheWrite": 0,
             },
         },
         {
@@ -239,6 +255,8 @@ def test_get_stats_consistency_after_multiple_calls(stats):
                 "input": 120,
                 "output": 60,
                 "total": 180,
+                "cacheRead": 0,
+                "cacheWrite": 0,
             },
         },
     ]
@@ -256,6 +274,8 @@ def test_import_list_with_empty_stats(stats):
                     "input": 100,
                     "output": 50,
                     "total": 150,
+                    "cacheRead": 0,
+                    "cacheWrite": 0,
                 },
             },
             {
@@ -266,6 +286,8 @@ def test_import_list_with_empty_stats(stats):
                     "input": 120,
                     "output": 60,
                     "total": 180,
+                    "cacheRead": 0,
+                    "cacheWrite": 0,
                 },
             },
         ]
@@ -281,6 +303,8 @@ def test_import_list_with_empty_stats(stats):
             "input": 100,
             "output": 50,
             "total": 150,
+            "cacheRead": 0,
+            "cacheWrite": 0,
         },
     }
     assert result[1] == {
@@ -291,6 +315,8 @@ def test_import_list_with_empty_stats(stats):
             "input": 120,
             "output": 60,
             "total": 180,
+            "cacheRead": 0,
+            "cacheWrite": 0,
         },
     }
 
@@ -312,6 +338,8 @@ def test_import_list_with_existing_stats(stats):
                     "input": 200,
                     "output": 100,
                     "total": 300,
+                    "cacheRead": 0,
+                    "cacheWrite": 0,
                 },
             },
             {
@@ -322,6 +350,8 @@ def test_import_list_with_existing_stats(stats):
                     "input": 120,
                     "output": 60,
                     "total": 180,
+                    "cacheRead": 0,
+                    "cacheWrite": 0,
                 },
             },
         ]
@@ -337,6 +367,8 @@ def test_import_list_with_existing_stats(stats):
             "input": 300,  # 100 + 200
             "output": 150,  # 50 + 100
             "total": 450,  # 150 + 300
+            "cacheRead": 0,
+            "cacheWrite": 0,
         },
     }
     assert result[1] == {
@@ -347,6 +379,8 @@ def test_import_list_with_existing_stats(stats):
             "input": 120,
             "output": 60,
             "total": 180,
+            "cacheRead": 0,
+            "cacheWrite": 0,
         },
     }
 
@@ -371,6 +405,8 @@ def test_import_list_with_overlapping_and_new_entries(stats):
                     "input": 200,
                     "output": 100,
                     "total": 300,
+                    "cacheRead": 0,
+                    "cacheWrite": 0,
                 },
             },
             {
@@ -381,6 +417,8 @@ def test_import_list_with_overlapping_and_new_entries(stats):
                     "input": 120,
                     "output": 60,
                     "total": 180,
+                    "cacheRead": 0,
+                    "cacheWrite": 0,
                 },
             },
             {
@@ -391,6 +429,8 @@ def test_import_list_with_overlapping_and_new_entries(stats):
                     "input": 150,
                     "output": 75,
                     "total": 225,
+                    "cacheRead": 0,
+                    "cacheWrite": 0,
                 },
             },
         ]
@@ -408,6 +448,8 @@ def test_import_list_with_overlapping_and_new_entries(stats):
             "input": 240,  # 120 + 120
             "output": 120,  # 60 + 60
             "total": 360,  # 180 + 180
+            "cacheRead": 0,
+            "cacheWrite": 0,
         },
     }
     assert result[1] == {
@@ -418,6 +460,8 @@ def test_import_list_with_overlapping_and_new_entries(stats):
             "input": 150,
             "output": 75,
             "total": 225,
+            "cacheRead": 0,
+            "cacheWrite": 0,
         },
     }
     assert result[2] == {
@@ -428,15 +472,23 @@ def test_import_list_with_overlapping_and_new_entries(stats):
             "input": 300,  # 100 + 200
             "output": 150,  # 50 + 100
             "total": 450,  # 150 + 300
+            "cacheRead": 0,
+            "cacheWrite": 0,
         },
     }
 
 
-def test_cache_tokens_are_only_sent_once_reported(stats):
+def test_tracks_cache_tokens(stats):
     stats.on_ai_call(
         provider="anthropic", model="claude-3", input_tokens=100, output_tokens=10
     )
-    assert stats.get_stats()[0]["tokens"] == {"input": 100, "output": 10, "total": 110}
+    assert stats.get_stats()[0]["tokens"] == {
+        "input": 100,
+        "output": 10,
+        "total": 110,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+    }
 
     stats.on_ai_call(
         provider="anthropic",

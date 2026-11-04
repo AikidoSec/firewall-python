@@ -426,6 +426,7 @@ def test_cache_tokens_are_reported_when_the_provider_has_them():
         "output": 300,
         "total": 320,
         "cacheRead": 50000,
+        "cacheWrite": 0,
     }
 
 
@@ -456,7 +457,13 @@ def test_response_is_reported_under_its_endpoint_url():
             "provider": OPENAI_URL,
             "model": "gpt-4o-mini",
             "calls": 1,
-            "tokens": {"input": 1, "output": 2, "total": 3},
+            "tokens": {
+                "input": 1,
+                "output": 2,
+                "total": 3,
+                "cacheRead": 0,
+                "cacheWrite": 0,
+            },
         }
     ]
 
