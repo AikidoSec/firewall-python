@@ -3,6 +3,7 @@ import itertools
 import json
 import os
 import pathlib
+import socket
 import subprocess
 import sys
 import threading
@@ -80,7 +81,9 @@ SSE_BODY = (
     b'"choices":[{"index":0,"delta":{"content":"Hi"}}]}\n\n'
     b"data: [DONE]\n\n"
 )
+ORDER = {"order": 1, "items": ["a", "b"]}
 BODIES = {
+    "/api/orders": ORDER,
     "/v1/chat/completions": CHAT_COMPLETION,
     "/v1/responses": RESPONSE,
     "/v1/messages": MESSAGE,
@@ -305,6 +308,49 @@ def test_reported_url_has_no_user_info_query_or_fragment(provider):
     assert [(s["provider"], s["calls"]) for s in get_ai_stats()] == [
         (provider + "/v1/chat/completions", 2)
     ]
+
+
+def test_plain_http_calls_are_unchanged(provider):
+    url = provider + "/api/orders"
+    for response in (requests.get(url), requests.post(url, json={"order": 1})):
+        assert response.status_code == 200
+        assert response.headers["Content-Type"] == "application/json"
+        assert response.json() == ORDER
+    clients = [httpx.Client()] + ([httpx2.Client()] if httpx2 else [])
+    for client in clients:
+        with client:
+            assert client.get(url).json() == ORDER
+            assert client.post(url, json={"order": 1}).json() == ORDER
+    response = urllib3.PoolManager().request("POST", url, body=b"{}")
+    assert (response.status, json.loads(response.data)) == (200, ORDER)
+    assert get_ai_stats() == []
+
+
+@pytest.mark.asyncio
+async def test_plain_async_http_calls_are_unchanged(provider):
+    url = provider + "/api/orders"
+    clients = [httpx.AsyncClient()] + ([httpx2.AsyncClient()] if httpx2 else [])
+    for client in clients:
+        async with client:
+            assert (await client.get(url)).json() == ORDER
+            assert (await client.post(url, json={"order": 1})).json() == ORDER
+    assert get_ai_stats() == []
+
+
+def test_http_client_errors_still_reach_the_app():
+    with socket.socket() as unused:
+        unused.bind(("127.0.0.1", 0))
+        url = "http://127.0.0.1:%d/v1/chat/completions" % unused.getsockname()[1]
+    with pytest.raises(requests.ConnectionError):
+        requests.post(url, json={})
+    with pytest.raises(httpx.ConnectError):
+        httpx.post(url, json={})
+    if httpx2 is not None:
+        with pytest.raises(httpx2.ConnectError):
+            httpx2.post(url, json={})
+    with pytest.raises(urllib3.exceptions.HTTPError):
+        urllib3.PoolManager().request("POST", url, body=b"{}", retries=False)
+    assert get_ai_stats() == []
 
 
 @pytest.mark.parametrize(
