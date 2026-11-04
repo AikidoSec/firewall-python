@@ -54,3 +54,6 @@ Overview :
   - it runs 4 processes, called workers, (**multi-process**) which handles requests using ASGI protocol
   - This application uses **ASGI** (Asynchronous Server Gateway Interface)
   - Runs on 8114. Without Aikido runs on 8115
+- `odoo-jsonrpc/` is a WSGI stand-in for Odoo's JSON-RPC call and psycopg2 cursor. It is not the Odoo product.
+  - It runs **single-threaded**
+  - Runs on 8120. Without Aikido runs on 8121
