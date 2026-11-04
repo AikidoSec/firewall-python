@@ -29,5 +29,5 @@ class ReportingApiHTTPRatelimited(http_api.ReportingApiHTTP):
             if len(self.events) >= self.max_events_per_interval:
                 return {"success": False, "error": "max_attacks_reached"}
 
-            self.events.append(event)
+            self.events.append({"time": event["time"]})
         return super().report(token, event, timeout_in_sec)
