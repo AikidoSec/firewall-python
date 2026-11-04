@@ -1,4 +1,5 @@
 import pytest
+import weakref
 import aikido_zen.test_utils as test_utils
 from unittest.mock import patch
 from aikido_zen.background_process.api.http_api import ReportingApiHTTP
@@ -184,3 +185,20 @@ def test_report_no_events(reporting_api):
             assert response == {"success": True}
             assert len(reporting_api.events) == 1  # Should add the first event
             mock_report.assert_called_once_with("token", event, 5)
+
+
+def test_report_does_not_retain_attack_payload(reporting_api, monkeypatch):
+    class Event(dict):
+        pass
+
+    monkeypatch.setattr(
+        ReportingApiHTTP, "report", lambda *args, **kwargs: {"success": True}
+    )
+    event = Event(type="detected_attack", time=1000, request={"body": "attack"})
+    event_ref = weakref.ref(event)
+
+    with test_utils.patch_time(time_s=2):
+        reporting_api.report(token="token", event=event, timeout_in_sec=5)
+
+    del event
+    assert event_ref() is None
