@@ -5,7 +5,7 @@ from aikido_zen.helpers.get_current_unixtime_ms import get_unixtime_ms
 
 
 def on_start(connection_manager):
-    event = {"type": "started"}
+    event = {"type": "started", "time": get_unixtime_ms()}
     res = connection_manager.report_api_event(event)
 
     if not res.get("success", True):

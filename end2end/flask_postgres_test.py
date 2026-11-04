@@ -144,3 +144,25 @@ def test_track_sends_no_event_without_firewall():
     time.sleep(5)  # Wait, in case an event would be reported
     events = fetch_events_from_mock("http://localhost:5000")
     assert filter_on_event_type(events, "custom") == []
+
+
+def test_every_event_carries_the_agent_headers():
+    clear_events_from_mock("http://localhost:5000")
+    res = requests.get(track_url_fw, headers={"User-Agent": "e2e-test"})
+    assert res.status_code == 200
+
+    time.sleep(5)  # Wait for the event to be reported
+    captured = fetch_events_from_mock("http://localhost:5000", include_headers=True)
+
+    assert len(captured) > 0
+    for entry in captured:
+        headers = entry["requestHeaders"]
+        assert headers["x-agent-platform"] == "python"
+        assert headers["x-agent-library"] == "firewall-python"
+        assert headers["x-agent-version"] == "1.0-REPLACE-VERSION"
+        assert headers["x-agent-hostname"]
+        assert headers["x-agent-ip-address"]
+
+    session_ids = {entry["requestHeaders"]["x-agent-session-id"] for entry in captured}
+    assert len(session_ids) == 1
+    assert session_ids.pop()

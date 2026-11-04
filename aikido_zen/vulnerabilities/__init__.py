@@ -12,7 +12,7 @@ from aikido_zen.errors import (
     AikidoPathTraversal,
     AikidoSSRF,
 )
-import aikido_zen.background_process.comms as comm
+from aikido_zen.background_process.ipc import IPCClient
 from aikido_zen.helpers.logging import logger
 from aikido_zen.helpers.get_clean_stacktrace import get_clean_stacktrace
 from aikido_zen.helpers.blocking_enabled import is_blocking_enabled
@@ -29,9 +29,8 @@ from .shell_injection.check_context_for_shell_injection import (
 from .path_traversal.check_context_for_path_traversal import (
     check_context_for_path_traversal,
 )
-from ..background_process.commands import PutEventCommand
+from ..background_process.commands import put_event
 from ..helpers.create_detected_attack_api_event import create_detected_attack_api_event
-from ..helpers.ipc.send_payload import send_payload
 
 
 def run_vulnerability_scan(kind, op, args):
@@ -44,7 +43,7 @@ def run_vulnerability_scan(kind, op, args):
     if is_protection_forced_off_cached(context):
         return
 
-    comms = comm.get_comms()
+    ipc = IPCClient.get()
     thread_cache = get_cache()
     if not context and kind != "ssrf":
         # Make a special exception for SSRF, which checks itself if context is set.
@@ -107,7 +106,7 @@ def run_vulnerability_scan(kind, op, args):
             injection_results, context, blocked, stack
         )
         logger.debug("Attack: %s", serialize_to_json(event)[:5000])
-        if comms and event:
-            send_payload(comms, PutEventCommand.generate(event))
+        if ipc and event:
+            ipc.send_message_async(put_event.generate(event))
         if blocked:
             raise error_type(*error_args)

@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import ANY, MagicMock, patch
 from aikido_zen.background_process.service_config import ServiceConfig
 from aikido_zen.ratelimiting.rate_limiter import RateLimiter
 from . import should_ratelimit_request
@@ -63,6 +63,7 @@ def test_rate_limits_by_ip():
     assert should_ratelimit_request(route_metadata, "1.2.3.4", None, cm) == {
         "block": True,
         "trigger": "ip",
+        "retry_after_seconds": ANY,
     }
 
 
@@ -129,6 +130,7 @@ def test_rate_limiting_by_user(user):
     assert should_ratelimit_request(route_metadata, "1.2.3.7", user, cm) == {
         "block": True,
         "trigger": "user",
+        "retry_after_seconds": ANY,
     }
 
 
@@ -162,7 +164,7 @@ def test_rate_limiting_with_wildcard():
     # This request should trigger the rate limit
     assert should_ratelimit_request(
         create_route_metadata(route="/api/login"), "1.2.3.4", None, cm
-    ) == {"block": True, "trigger": "ip"}
+    ) == {"block": True, "trigger": "ip", "retry_after_seconds": ANY}
 
 
 def test_rate_limiting_with_wildcard2():
@@ -196,6 +198,7 @@ def test_rate_limiting_with_wildcard2():
     assert should_ratelimit_request(metadata, "1.2.3.4", None, cm) == {
         "block": True,
         "trigger": "ip",
+        "retry_after_seconds": ANY,
     }
 
 
@@ -231,6 +234,7 @@ def test_rate_limiting_by_user_with_same_ip():
     assert should_ratelimit_request(metadata, "1.2.3.4", {"id": "123"}, cm) == {
         "block": True,
         "trigger": "user",
+        "retry_after_seconds": ANY,
     }
 
 
@@ -270,6 +274,7 @@ def test_rate_limiting_by_user_with_different_ips():
     assert should_ratelimit_request(metadata, "4.3.2.1", {"id": "123"}, cm) == {
         "block": True,
         "trigger": "user",
+        "retry_after_seconds": ANY,
     }
 
 
@@ -388,6 +393,7 @@ def test_rate_limits_by_user_with_different_ips():
     assert should_ratelimit_request(route_metadata, "4.3.2.1", user, cm, "group1") == {
         "block": True,
         "trigger": "group",
+        "retry_after_seconds": ANY,
     }
 
 
@@ -425,6 +431,7 @@ def test_rate_limits_different_users_in_same_group():
     ) == {
         "block": True,
         "trigger": "group",
+        "retry_after_seconds": ANY,
     }
 
 
@@ -462,6 +469,7 @@ def test_works_with_multiple_rate_limit_groups_and_different_users():
     ) == {
         "block": True,
         "trigger": "group",
+        "retry_after_seconds": ANY,
     }
     # This request should also trigger the rate limit for group1
     assert should_ratelimit_request(
@@ -469,6 +477,7 @@ def test_works_with_multiple_rate_limit_groups_and_different_users():
     ) == {
         "block": True,
         "trigger": "group",
+        "retry_after_seconds": ANY,
     }
     # First request from user 953, group2
     assert should_ratelimit_request(
@@ -480,6 +489,7 @@ def test_works_with_multiple_rate_limit_groups_and_different_users():
     ) == {
         "block": True,
         "trigger": "group",
+        "retry_after_seconds": ANY,
     }
 
 
@@ -515,6 +525,7 @@ def test_rate_limits_by_group_if_user_is_not_set():
     assert should_ratelimit_request(route_metadata, "4.3.2.1", None, cm, "group1") == {
         "block": True,
         "trigger": "group",
+        "retry_after_seconds": ANY,
     }
 
 
@@ -564,3 +575,66 @@ def test_does_not_rate_limit_excluded_users_in_group():
         assert should_ratelimit_request(
             route_metadata, "1.2.3.4", excluded_user, cm, "group1"
         ) == {"block": False}
+
+
+@pytest.mark.parametrize(
+    "user, group, trigger",
+    [
+        (None, None, "ip"),
+        ({"id": "123"}, None, "user"),
+        ({"id": "123"}, "group1", "group"),
+    ],
+)
+def test_returns_retry_after_seconds(user, group, trigger):
+    cm = create_connection_manager(
+        [
+            {
+                "method": "POST",
+                "route": "/login",
+                "forceProtectionOff": False,
+                "rateLimiting": {
+                    "enabled": True,
+                    "maxRequests": 3,
+                    "windowSizeInMS": 60_000,
+                },
+            },
+        ]
+    )
+    route_metadata = create_route_metadata()
+    with patch("aikido_zen.ratelimiting.rate_limiter.get_unixtime_ms") as clock:
+        for time_in_ms in [0, 20_000, 40_000]:
+            clock.return_value = time_in_ms
+            assert should_ratelimit_request(
+                route_metadata, "1.2.3.4", user, cm, group
+            ) == {"block": False}
+
+        clock.return_value = 50_000
+        assert should_ratelimit_request(route_metadata, "1.2.3.4", user, cm, group) == {
+            "block": True,
+            "trigger": trigger,
+            "retry_after_seconds": 31,
+        }
+
+
+def test_blocks_without_retry_after_when_max_requests_is_zero():
+    cm = create_connection_manager(
+        [
+            {
+                "method": "POST",
+                "route": "/login",
+                "forceProtectionOff": False,
+                "rateLimiting": {
+                    "enabled": True,
+                    "maxRequests": 0,
+                    "windowSizeInMS": 60_000,
+                },
+            },
+        ]
+    )
+    route_metadata = create_route_metadata()
+    for _ in range(2):
+        assert should_ratelimit_request(route_metadata, "1.2.3.4", None, cm) == {
+            "block": True,
+            "trigger": "ip",
+            "retry_after_seconds": None,
+        }

@@ -1,13 +1,14 @@
-"""Exports process_check_firewall_lists"""
+from aikido_zen.helpers.ipc.command_types import Payload
+
+IDENTIFIER = "CHECK_FIREWALL_LISTS"
 
 
-def process_check_firewall_lists(connection_manager, data):
-    """
-    Checks whether an IP is blocked
-    data: {"ip": string, "user-agent": string}
-    returns -> {"blocked": boolean, "type": string, "reason": string}
-    """
-    ip = data["ip"]
+def generate(ip, user_agent, timeout_in_sec=0.01) -> Payload:
+    return Payload(IDENTIFIER, {"ip": ip, "user-agent": user_agent}, timeout_in_sec)
+
+
+def process(connection_manager, request, queue):
+    ip = request["ip"]
     if ip is not None and isinstance(ip, str):
         # Global IP Allowlist (e.g. for geofencing)
         if not connection_manager.firewall_lists.is_allowed_ip(ip):
@@ -15,17 +16,34 @@ def process_check_firewall_lists(connection_manager, data):
 
         # Global IP Blocklist (e.g. blocking known threat actors)
         reason = connection_manager.firewall_lists.is_blocked_ip(ip)
+
+        connection_manager.statistics.on_ip_address_matches(
+            connection_manager.firewall_lists.get_matching_monitored_ip_list_keys(ip)
+        )
         if reason:
+            connection_manager.statistics.on_ip_address_matches(
+                connection_manager.firewall_lists.get_matching_blocked_ip_list_keys(ip)
+            )
             return {
                 "blocked": True,
                 "type": "blocklist",
                 "reason": reason,
             }
 
-    user_agent = data["user-agent"]
+    user_agent = request["user-agent"]
     if user_agent is not None and isinstance(user_agent, str):
         # User agent blocking (e.g. blocking AI scrapers)
-        if connection_manager.firewall_lists.is_user_agent_blocked(user_agent):
+        is_blocked = connection_manager.firewall_lists.is_user_agent_blocked(user_agent)
+        is_monitored = connection_manager.firewall_lists.is_monitored_user_agent(
+            user_agent
+        )
+
+        if is_blocked or is_monitored:
+            keys = connection_manager.firewall_lists.get_matching_user_agent_keys(
+                user_agent
+            )
+            connection_manager.statistics.on_user_agent_matches(keys)
+        if is_blocked:
             return {
                 "blocked": True,
                 "type": "bot-blocking",

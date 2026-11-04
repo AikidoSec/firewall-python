@@ -1,6 +1,10 @@
 import pytest
 from urllib.parse import parse_qs
+from aikido_zen.context import Context as ZenContext
 from aikido_zen.context.asgi import set_asgi_attributes_on_context
+from aikido_zen.vulnerabilities.sql_injection.context_contains_sql_injection import (
+    context_contains_sql_injection,
+)
 
 
 class Context:
@@ -178,6 +182,80 @@ def test_asgi_scope_invalid_utf8():
     }
     assert context5.cookies == {"session": "abc123"}
     assert context5.url == "http://192.168.0.5:80/search"
+
+
+def test_sql_injection_in_a_cookie_next_to_a_rejected_cookie_is_detected():
+    payload = "1' OR '1'='1"
+    scope = {
+        "type": "http",
+        "method": "GET",
+        "headers": [(b"cookie", f"id={payload}; ,2=2".encode())],
+        "query_string": b"",
+        "client": ["6.6.6.6"],
+        "server": ["192.168.0.6", 80],
+        "scheme": "http",
+        "root_path": "",
+        "path": "/users",
+    }
+    context = ZenContext(req=scope, source="starlette")
+    query = f"SELECT * FROM users WHERE id = '{payload}'"
+    assert context.cookies == {"id": payload, ",2": "2"}
+    assert context_contains_sql_injection(query, "select", context, "sqlite")
+
+
+def test_sql_injection_in_an_earlier_cookie_header_is_detected():
+    payload = "1' OR '1'='1"
+    scope = {
+        "type": "http",
+        "method": "GET",
+        "headers": [
+            (b"cookie", f"id={payload}".encode()),
+            (b"cookie", b"sid=abc"),
+        ],
+        "query_string": b"",
+        "client": ["6.6.6.6"],
+        "server": ["192.168.0.6", 80],
+        "scheme": "http",
+        "root_path": "",
+        "path": "/users",
+    }
+    context = ZenContext(req=scope, source="starlette")
+    query = f"SELECT * FROM users WHERE id = '{payload}'"
+    assert context.cookies == {"id": payload, "sid": "abc"}
+    assert context_contains_sql_injection(query, "select", context, "sqlite")
+
+
+@pytest.mark.parametrize(
+    "cookie_headers, app_value",
+    [
+        ([b"id=1' OR '1'='1; id=1"], "1' OR '1'='1"),
+        ([b"id=1; id=1' OR '1'='1"], "1' OR '1'='1"),
+        ([b"id=1' OR '1'='1", b"id=1"], "1' OR '1'='1"),
+        ([b"id=1", b"id=1' OR '1'='1"], "1' OR '1'='1"),
+        (["id=café' OR '1'='1".encode()], "café' OR '1'='1"),
+        (["id=café' OR '1'='1".encode()], "cafÃ©' OR '1'='1"),
+    ],
+)
+def test_sql_injection_in_any_cookie_value_the_app_can_read_is_detected(
+    cookie_headers, app_value
+):
+    scope = {
+        "type": "http",
+        "method": "GET",
+        "headers": [(b"cookie", value) for value in cookie_headers],
+        "query_string": b"",
+        "client": ["6.6.6.6"],
+        "server": ["192.168.0.6", 80],
+        "scheme": "http",
+        "root_path": "",
+        "path": "/users",
+    }
+    context = ZenContext(req=scope, source="starlette")
+    query = f"SELECT * FROM users WHERE id = '{app_value}'"
+    assert context_contains_sql_injection(query, "select", context, "sqlite")
+    assert not context_contains_sql_injection(
+        "SELECT * FROM users WHERE id = '1'", "select", context, "sqlite"
+    )
 
 
 def test_valid_utf8_query_matches_strict_decode():

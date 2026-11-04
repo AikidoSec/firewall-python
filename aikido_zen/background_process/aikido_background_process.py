@@ -11,6 +11,7 @@ import sys
 import platform
 from threading import Thread
 from queue import Queue
+from aikido_zen.helpers.get_agent_session_id import set_agent_session_id
 from aikido_zen.helpers.logging import logger
 from aikido_zen.background_process.cloud_connection_manager import (
     CloudConnectionManager,
@@ -33,7 +34,9 @@ class AikidoBackgroundProcess:
     - (spawned) reporting thread which collects IPC data and send it to a CloudConnectionManager
     """
 
-    def __init__(self, address, key):
+    def __init__(self, address, key, session_id):
+        # Spawn re-imports this module and would otherwise create another session id.
+        set_agent_session_id(session_id)
         try:
             listener = con.Listener(address, authkey=None)
         except OSError:
@@ -51,8 +54,7 @@ class AikidoBackgroundProcess:
         add_exit_handlers()
 
         while True:
-            conn = listener.accept()
-            while True:
+            with listener.accept() as conn:
                 try:
                     data = conn.recv()  #  because of this no sleep needed in thread
                     logger.debug("Incoming data : %s", data)
@@ -62,12 +64,9 @@ class AikidoBackgroundProcess:
                         conn=conn,
                         queue=self.queue,
                     )
-                    conn.close()  # Sort of EOL for Python IPC
-                    break
                 except Exception as e:
                     logger.error("Exception occurred in server thread : %s", e)
                     logger.debug("Trace \n %s", traceback.format_exc())
-                    break  # Return back to listening for new connections
 
     def reporting_thread(self):
         """Reporting thread"""

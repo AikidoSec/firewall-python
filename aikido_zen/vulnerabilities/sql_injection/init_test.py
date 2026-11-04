@@ -1,9 +1,11 @@
 import os
 import pytest
+from aikido_zen.helpers import zen_internals
 from aikido_zen.vulnerabilities.sql_injection import (
     detect_sql_injection,
     should_return_early,
 )
+from .map_dialect_to_rust_int import map_dialect_to_rust_int
 
 """Removed tests :
 -> `I'm writting you` : Invalid SQL
@@ -84,6 +86,17 @@ def is_not_sql_injection(sql, input, dialect="all"):
             assert (
                 result == False
             ), f"Expected no SQL injection for SQL: {sql} and input: {input} in {current} dialect"
+
+
+def is_tokenize_error(sql, input, dialect):
+    result = zen_internals.detect_sql_injection(
+        sql.lower().encode(),
+        input.lower().strip().encode(),
+        map_dialect_to_rust_int(dialect),
+    )
+    assert (
+        result == 3
+    ), f"Expected tokenize error for SQL: {sql} and input: {input} in {dialect} dialect"
 
 
 def test_should_return_early():
@@ -218,7 +231,7 @@ def test_check_string_safely_escaped():
     )
     # Positive example of same query :
     is_sql_injection(
-        "SELECT * FROM comments WHERE comment = 'I'm writting you--'",
+        "SELECT * FROM comments WHERE comment = 'I'm writting you-- '",
         "I'm writting you--",
     )
     is_sql_injection(
@@ -415,9 +428,27 @@ def test_function_calls_as_sql_injections():
 
 def test_trimmed_user_input_bypass():
     is_sql_injection(
-        "INSERT INTO pets (name, owner) VALUES ('x', 'dummy'), ('injected', 'hacker'); --', 'owner')",
+        "INSERT INTO pets (name, owner) VALUES ('x', 'dummy'), ('injected', 'hacker'); -- ', 'owner')",
         "x', 'dummy'), ('injected', 'hacker'); --    ",
     )
+
+
+def test_mysql_does_not_detect_dash_dash_without_space():
+    for sql, input in [
+        (
+            "SELECT * FROM comments WHERE comment = 'I'm writting you--'",
+            "I'm writting you--",
+        ),
+        (
+            "INSERT INTO pets (name, owner) VALUES ('x', 'dummy'), ('injected', 'hacker'); --', 'owner')",
+            "x', 'dummy'), ('injected', 'hacker'); --    ",
+        ),
+    ]:
+        is_tokenize_error(sql, input, "mysql")
+        is_not_sql_injection(sql, input, "mysql")
+        is_sql_injection(sql, input, "generic")
+        is_sql_injection(sql, input, "postgres")
+        is_sql_injection(sql, input, "sqlite")
 
 
 def test_returns_false_when_library_cannot_be_loaded(monkeypatch):

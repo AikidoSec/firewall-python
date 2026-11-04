@@ -1,13 +1,13 @@
 import aikido_zen.sinks.clickhouse_driver
 import pytest
-from aikido_zen.background_process import reset_comms
+from aikido_zen.background_process.ipc import IPCClient
 from aikido_zen.errors import AikidoSQLInjection
 import aikido_zen.test_utils as test_utils
 
 
 @pytest.fixture(autouse=True)
 def setup(monkeypatch):
-    reset_comms()
+    IPCClient.reset()
     monkeypatch.setenv("AIKIDO_BLOCK", "1")
 
 

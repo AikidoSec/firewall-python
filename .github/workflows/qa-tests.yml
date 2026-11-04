@@ -7,7 +7,7 @@ on:
 
 jobs:
   qa-tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - name: Checkout firewall-python
@@ -53,4 +53,4 @@ jobs:
           dockerfile_path: ./zen-demo-python/Dockerfile
           app_port: 8080
           config_propagation_delay: 15
-          skip_tests: test-path-traversal,test-outbound-domain-blocking,test-wave-attack,test-rate-limiting-retry-after
+          skip_tests: test-path-traversal,test-outbound-domain-blocking,test-wave-attack

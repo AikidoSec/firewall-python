@@ -1,16 +1,16 @@
 import pytest
 from unittest.mock import Mock, patch
-from .should_ratelimit import process_should_ratelimit
+from . import should_ratelimit
 
 
 @pytest.mark.parametrize(
-    "should_ratelimit, expected_call",
+    "rate_limited, expected_call",
     [
         (True, True),
         (False, False),
     ],
 )
-def test_process_should_ratelimit(should_ratelimit, expected_call):
+def test_process_should_ratelimit(rate_limited, expected_call):
     """Test rate limiting behavior based on different return values."""
     # Arrange
     connection_manager = Mock()
@@ -27,10 +27,10 @@ def test_process_should_ratelimit(should_ratelimit, expected_call):
 
     with patch(
         "aikido_zen.ratelimiting.should_ratelimit_request",
-        return_value=should_ratelimit,
+        return_value=rate_limited,
     ) as mock_should_ratelimit:
         # Act
-        process_should_ratelimit(connection_manager, data)
+        should_ratelimit.process(connection_manager, data, None)
 
     # Assert
     mock_should_ratelimit.assert_called_once_with(
@@ -43,7 +43,6 @@ def test_process_should_ratelimit(should_ratelimit, expected_call):
 
 
 def test_process_should_ratelimit_no_connection_manager():
-    """Test that process_should_ratelimit does nothing when connection_manager is not present."""
     # Arrange
     data = {
         "route_metadata": {
@@ -57,14 +56,13 @@ def test_process_should_ratelimit_no_connection_manager():
     }
 
     # Act
-    result = process_should_ratelimit(None, data)  # No connection_manager
+    result = should_ratelimit.process(None, data, None)  # No connection_manager
 
     # Assert
     assert result is False  # Ensure the function returns False
 
 
 def test_process_should_ratelimit_multiple_calls():
-    """Test multiple calls to process_should_ratelimit."""
     # Arrange
     connection_manager = Mock()
     data = {
@@ -83,8 +81,8 @@ def test_process_should_ratelimit_multiple_calls():
         side_effect=[True, False],
     ) as mock_should_ratelimit:
         # Act
-        process_should_ratelimit(connection_manager, data)  # First call
-        process_should_ratelimit(connection_manager, data)  # Second call
+        should_ratelimit.process(connection_manager, data, None)  # First call
+        should_ratelimit.process(connection_manager, data, None)  # Second call
 
     # Assert
     mock_should_ratelimit.assert_any_call(
@@ -116,8 +114,8 @@ def test_process_should_ratelimit_with_different_connection_manager():
         "aikido_zen.ratelimiting.should_ratelimit_request", return_value=True
     ) as mock_should_ratelimit:
         # Act
-        process_should_ratelimit(connection_manager1, data)
-        process_should_ratelimit(connection_manager2, data)
+        should_ratelimit.process(connection_manager1, data, None)
+        should_ratelimit.process(connection_manager2, data, None)
 
     # Assert
     assert mock_should_ratelimit.call_count == 2

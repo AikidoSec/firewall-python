@@ -1,6 +1,11 @@
-"""exports `process_ping`"""
+from aikido_zen.helpers.ipc.command_types import Payload
+
+IDENTIFIER = "PING"
 
 
-def process_ping(connection_manager, data):
-    """when main process quits , or during testing etc"""
+def generate(timeout_in_sec=0.1) -> Payload:
+    return Payload(IDENTIFIER, (), timeout_in_sec)
+
+
+def process(connection_manager, request, queue):
     return "Received"

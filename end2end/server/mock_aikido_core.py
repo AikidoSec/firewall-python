@@ -33,18 +33,31 @@ responses = {
         "success": True,
         "blockedIPAddresses": [
             {
+                "key": "geoip/blocked",
                 "source": "geoip",
                 "description": "geo restrictions",
                 "ips": ["1.2.3.4"]
             }
         ],
         "allowedIPAddresses": [],
+        "monitoredIPAddresses": [
+            {
+                "key": "tor/exit_nodes",
+                "source": "tor",
+                "description": "Tor exit nodes",
+                "ips": ["1.2.3.4", "9.9.9.9"]
+            }
+        ],
         "blockedUserAgents": "",
+        "monitoredUserAgents": "MonitoredTestBot",
+        "userAgentDetails": [
+            {"key": "monitoredtestbot", "pattern": "MonitoredTestBot"}
+        ],
     },
     "configUpdatedAt": {},
 }
 
-events = []
+events = []  # [{ 'event': ..., 'requestHeaders': ... }]
 
 
 @app.route('/config', methods=['GET'])
@@ -76,7 +89,13 @@ def get_fw_lists():
 def post_events():
     print("Got event: ", request.get_json())
     if request.get_json():
-        events.append(request.get_json())
+        # The WSGI environ loses the original casing, so store them lowercase.
+        events.append({
+            "event": request.get_json(),
+            "requestHeaders": {
+                name.lower(): value for name, value in request.headers.items()
+            },
+        })
     return jsonify(responses["config"])
 
 
@@ -91,7 +110,9 @@ def mock_set_config():
 
 @app.route('/mock/events', methods=['GET'])
 def mock_get_events():
-    return jsonify(events)
+    if request.args.get('includeHeaders') == 'true':
+        return jsonify(events)
+    return jsonify([captured["event"] for captured in events])
 
 @app.route('/timeout5/api/runtime/events', methods=['POST'])
 def mock_timeout_5_secs():

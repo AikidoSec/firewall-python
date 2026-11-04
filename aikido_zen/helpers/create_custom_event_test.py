@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from .create_custom_event import (
     create_custom_event,
     extract_request_if_possible,
@@ -16,6 +16,18 @@ def test_create_custom_event_success():
     assert event["type"] == "custom"
     assert event["name"] == "user.login_failed"
     assert event["request"] is not None
+
+
+@patch(
+    "aikido_zen.helpers.create_custom_event.get_unixtime_ms",
+    return_value=111,
+)
+def test_create_custom_event_sets_the_time(mock_time):
+    context = test_utils.generate_context()
+
+    event = create_custom_event("user.login_failed", context)
+
+    assert event["time"] == 111
 
 
 def test_create_custom_event_with_user():

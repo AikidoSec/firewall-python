@@ -10,6 +10,9 @@ import threading
 import time
 from unittest.mock import patch
 
+from aikido_zen.background_process.get_common_agent_headers import (
+    get_common_agent_headers,
+)
 from aikido_zen.helpers.token import Token
 from . import _connect, _reconnect_loop
 
@@ -65,6 +68,9 @@ def test_happy_path_receives_events_with_auth_header():
         captured["cache"] = handler.headers.get("Cache-Control")
         captured["x-agent-platform"] = handler.headers.get("X-Agent-Platform")
         captured["x-agent-version"] = handler.headers.get("X-Agent-Version")
+        captured["x-agent-hostname"] = handler.headers.get("X-Agent-Hostname")
+        captured["x-agent-ip-address"] = handler.headers.get("X-Agent-IP-Address")
+        captured["x-agent-session-id"] = handler.headers.get("X-Agent-Session-Id")
         handler.send_response(200)
         handler.send_header("Content-Type", "text/event-stream")
         handler.send_header("Cache-Control", "no-cache")
@@ -81,6 +87,7 @@ def test_happy_path_receives_events_with_auth_header():
         handler.wfile.flush()
 
     server, url = start_server(make_handler(do_get))
+    expected_headers = get_common_agent_headers()
     try:
         with patch(REALTIME_URL_PATCH_TARGET, return_value=url):
             outcome, status_code = _connect(
@@ -96,6 +103,9 @@ def test_happy_path_receives_events_with_auth_header():
     assert captured["cache"] == "no-cache"
     assert captured["x-agent-platform"] == "python"
     assert captured["x-agent-version"] == "1.0-REPLACE-VERSION"
+    assert captured["x-agent-hostname"] == expected_headers["X-Agent-Hostname"]
+    assert captured["x-agent-ip-address"] == expected_headers["X-Agent-IP-Address"]
+    assert captured["x-agent-session-id"] == expected_headers["X-Agent-Session-Id"]
     assert len(events) == 2
     assert events[0].event == "config-updated"
     assert json.loads(events[0].data) == {"configUpdatedAt": 100}

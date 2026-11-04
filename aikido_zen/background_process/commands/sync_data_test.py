@@ -2,7 +2,7 @@ from multiprocessing.forkserver import connect_to_new_process
 
 import pytest
 from unittest.mock import MagicMock
-from .sync_data import process_sync_data
+from . import sync_data
 from aikido_zen.background_process.routes import Routes
 from ..packages import PackagesStore
 from ...helpers.ip_matcher import IPMatcher
@@ -72,7 +72,7 @@ def test_process_sync_data_initialization(setup_connection_manager):
         ],
     }
 
-    result = process_sync_data(connection_manager, data)
+    result = sync_data.process(connection_manager, data, None)
 
     # Check that routes were initialized correctly
     assert len(connection_manager.routes) == 2
@@ -147,7 +147,7 @@ def test_process_sync_data_with_last_updated_at_below_zero(setup_connection_mana
         "middleware_installed": True,
     }
 
-    result = process_sync_data(connection_manager, data)
+    result = sync_data.process(connection_manager, data, None)
 
     # Check that routes were initialized correctly
     assert len(connection_manager.routes) == 2
@@ -215,7 +215,7 @@ def test_process_sync_data_existing_route_and_hostnames(setup_connection_manager
     }
 
     # First call to initialize the route
-    process_sync_data(connection_manager, data)
+    sync_data.process(connection_manager, data, None)
 
     # Second call to update the existing route
     data_update = {
@@ -242,7 +242,7 @@ def test_process_sync_data_existing_route_and_hostnames(setup_connection_manager
         },
     }
 
-    result = process_sync_data(connection_manager, data_update)
+    result = sync_data.process(connection_manager, data_update, None)
 
     # Check that the hit count was updated correctly
     assert (
@@ -277,7 +277,7 @@ def test_process_sync_data_no_routes(setup_connection_manager):
     connection_manager = setup_connection_manager
     data = {"current_routes": {}, "reqs": 0}  # No requests to add
 
-    result = process_sync_data(connection_manager, data)
+    result = sync_data.process(connection_manager, data, None)
 
     # Check that no routes were initialized
     assert len(connection_manager.routes) == 0

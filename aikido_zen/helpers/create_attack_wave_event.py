@@ -1,4 +1,5 @@
 import json
+from aikido_zen.helpers.get_current_unixtime_ms import get_unixtime_ms
 from aikido_zen.helpers.limit_length_metadata import limit_length_metadata
 from aikido_zen.helpers.logging import logger
 from aikido_zen.storage.attack_wave_detector_store import attack_wave_detector_store
@@ -22,6 +23,7 @@ def create_attack_wave_event(context):
                 "metadata": limit_length_metadata(metadata, 4096),
             },
             "request": extract_request_if_possible(context),
+            "time": get_unixtime_ms(),
         }
     except Exception as e:
         logger.error("Failed to create detected_attack_wave API event: %s", str(e))

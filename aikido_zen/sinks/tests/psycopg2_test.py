@@ -3,7 +3,7 @@ import sys
 import pytest
 from unittest.mock import patch
 import aikido_zen.sinks.psycopg2
-from aikido_zen.background_process.comms import reset_comms
+from aikido_zen.background_process.ipc import IPCClient
 
 kind = "sql_injection"
 op = "pymysql.connections.query"
@@ -54,7 +54,7 @@ def database_conn_empty_cursor():
 
 @pytest.mark.skipif(skip_python_3_13, reason="Skipping test on Python 3.13")
 def test_cursor_execute(database_conn):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -75,7 +75,7 @@ def test_cursor_execute(database_conn):
 
 @pytest.mark.skipif(skip_python_3_13, reason="Skipping test on Python 3.13")
 def test_cursor_execute2(database_conn_empty_cursor):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -95,7 +95,7 @@ def test_cursor_execute2(database_conn_empty_cursor):
 
 @pytest.mark.skipif(skip_python_3_13, reason="Skipping test on Python 3.13")
 def test_cursor_execute3(database_conn_immutable_cursor):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -115,7 +115,7 @@ def test_cursor_execute3(database_conn_immutable_cursor):
 
 @pytest.mark.skipif(skip_python_3_13, reason="Skipping test on Python 3.13")
 def test_cursor_execute_parameterized(database_conn):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -132,7 +132,7 @@ def test_cursor_execute_parameterized(database_conn):
 
 @pytest.mark.skipif(skip_python_3_13, reason="Skipping test on Python 3.13")
 def test_cursor_execute_parameterized2(database_conn_empty_cursor):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -152,7 +152,7 @@ def test_cursor_execute_parameterized2(database_conn_empty_cursor):
 
 @pytest.mark.skipif(skip_python_3_13, reason="Skipping test on Python 3.13")
 def test_cursor_executemany(database_conn):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -177,7 +177,7 @@ def test_cursor_executemany(database_conn):
 
 @pytest.mark.skipif(skip_python_3_13, reason="Skipping test on Python 3.13")
 def test_cursor_executemany2(database_conn_empty_cursor):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -204,7 +204,7 @@ def test_cursor_executemany2(database_conn_empty_cursor):
 
 @pytest.mark.skipif(skip_python_3_13, reason="Skipping test on Python 3.13")
 def test_cursor_executemany3(database_conn_immutable_cursor):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:

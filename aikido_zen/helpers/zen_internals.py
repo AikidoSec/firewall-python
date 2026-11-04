@@ -6,30 +6,74 @@ this module is imported, and every feature that uses it goes through these funct
 import ctypes
 import os
 import platform
+import sysconfig
 
-from aikido_zen.helpers.get_lib_path import get_binary_path
 from aikido_zen.helpers.logging import logger
 
 
+_TARGET = f"{platform.system().lower()}-{platform.machine().lower()}"
+
+
+def _binary_path():
+    os_name = platform.system().lower()
+    machine = platform.machine().lower()
+    is_arm = "arm64" in machine or "aarch64" in machine
+    file_name = "libzen_internals_"
+
+    # On macOS, platform.machine() returns "arm64" for Apple Silicon
+    # On Linux, platform.machine() returns "aarch64" for ARM64
+    if is_arm:
+        file_name += "aarch64-"
+    # On macOS, platform.machine() returns "x86_64" for Intel
+    # On Linux, platform.machine() returns "x86_64" for AMD64
+    elif "x86_64" in machine or "amd64" in machine:
+        file_name += "x86_64-"
+
+    if os_name == "windows":
+        file_name += "pc-windows-msvc.dll" if is_arm else "pc-windows-gnu.dll"
+    elif os_name == "darwin":
+        file_name += "apple-darwin.dylib"
+    elif os_name in ["linux", "linux2"]:
+        # The library must use the same libc as this Python, which records it at build
+        # time (for example "x86_64-pc-linux-musl"). platform.libc_ver() and files under
+        # /lib describe the system, which can have both glibc and musl installed.
+        host = sysconfig.get_config_var("HOST_GNU_TYPE") or ""
+        libc = "musl" if "musl" in host else "gnu"
+        file_name += f"unknown-linux-{libc}.so"
+
+    return os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "../libs", file_name
+    )
+
+
 def _load():
-    binary_path = get_binary_path()
-    target = f"{platform.system().lower()}-{platform.machine().lower()}"
+    binary_path = _binary_path()
     if not os.path.exists(binary_path):
         logger.warning(
-            "Zen will NOT block SQL injection attacks. Cannot find the zen-internals library for %s. "
+            "Cannot find the zen-internals library for %s. "
             "Request support: https://github.com/AikidoSec/firewall-python/issues",
-            target,
+            _TARGET,
         )
         return None
     try:
         return ctypes.CDLL(binary_path)
     except OSError as e:
-        logger.warning(
-            "Zen will NOT block SQL injection attacks. Failed to load the zen-internals library for %s: %s",
-            target,
-            e,
-        )
-        return None
+        error = e
+    # A musl Python built without HOST_GNU_TYPE picks the glibc build, which musl
+    # cannot load.
+    musl_path = os.path.join(
+        os.path.dirname(binary_path),
+        os.path.basename(binary_path).replace("-gnu.so", "-musl.so"),
+    )
+    if musl_path != binary_path and os.path.exists(musl_path):
+        try:
+            return ctypes.CDLL(musl_path)
+        except OSError:
+            pass
+    logger.warning(
+        "Failed to load the zen-internals library for %s: %s", _TARGET, error
+    )
+    return None
 
 
 def _bind(internals_lib, name, argtypes, restype):
@@ -39,7 +83,9 @@ def _bind(internals_lib, name, argtypes, restype):
     try:
         function = getattr(internals_lib, name)
     except AttributeError:
-        logger.debug("The zen-internals library has no function %s", name)
+        logger.warning(
+            "The zen-internals library for %s has no %s function.", _TARGET, name
+        )
         return None
     function.argtypes = argtypes
     function.restype = restype
@@ -60,6 +106,8 @@ _detect_sql_injection = _bind(
     ],
     ctypes.c_int,
 )
+if _detect_sql_injection is None:
+    logger.warning("Zen will NOT block SQL injection attacks.")
 
 
 def detect_sql_injection(query: bytes, user_input: bytes, dialect: int) -> int:

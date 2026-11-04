@@ -35,7 +35,10 @@ class ReportingApiHTTP(ReportingApi):
         If successful the current API returns :
         - `allowedIPAddresses` : An array with iplist entries which are the only ones allowed
         - `blockedIPAddresses` : An array with iplist entries that are blocked
+        - `monitoredIPAddresses` : An array with iplist entries that are counted but not blocked
         - `blockedUserAgents` : A string with a simple regex to match user agents with
+        - `monitoredUserAgents` : A string with a simple regex to match monitored user agents with
+        - `userAgentDetails` : An array of {key, pattern}, to report which user agent matched
         """
         try:
             res = requests.get(

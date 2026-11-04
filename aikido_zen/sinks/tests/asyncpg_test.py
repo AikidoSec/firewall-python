@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import patch
 import aikido_zen.sinks.asyncpg
 import aikido_zen.sinks.os
-from aikido_zen.background_process.comms import reset_comms
+from aikido_zen.background_process.ipc import IPCClient
 
 kind = "sql_injection"
 op = "MySQLdb.connections.query"
@@ -20,7 +20,7 @@ async def database_conn():
 
 @pytest.mark.asyncio
 async def test_conn_execute(database_conn):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -41,7 +41,7 @@ async def test_conn_execute(database_conn):
 
 @pytest.mark.asyncio
 async def test_conn_fetchrow(database_conn):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -58,7 +58,7 @@ async def test_conn_fetchrow(database_conn):
 
 @pytest.mark.asyncio
 async def test_conn_fetch(database_conn):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -75,7 +75,7 @@ async def test_conn_fetch(database_conn):
 
 @pytest.mark.asyncio
 async def test_conn_fetchval(database_conn):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -92,7 +92,7 @@ async def test_conn_fetchval(database_conn):
 
 @pytest.mark.asyncio
 async def test_conn_execute_parameterized(database_conn):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -113,7 +113,7 @@ async def test_conn_execute_parameterized(database_conn):
 
 @pytest.mark.asyncio
 async def test_conn_transaction(database_conn):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:
@@ -138,7 +138,7 @@ async def test_conn_transaction(database_conn):
 
 @pytest.mark.asyncio
 async def test_conn_cursor(database_conn):
-    reset_comms()
+    IPCClient.reset()
     with patch(
         "aikido_zen.vulnerabilities.run_vulnerability_scan"
     ) as mock_run_vulnerability_scan:

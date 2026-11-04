@@ -28,6 +28,8 @@ class AikidoFlaskMiddleware:
             if result["trigger"] == "ip" and result["ip"]:
                 message += " (Your IP: " + result["ip"] + ")"
             res = self.Response(message, mimetype="text/plain", status=429)
+            if result["retry_after_seconds"]:
+                res.headers["Retry-After"] = str(result["retry_after_seconds"])
             return res(environ, start_response)
 
         if result["type"] == "blocked":

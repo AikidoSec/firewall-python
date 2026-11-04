@@ -4,7 +4,7 @@ import pytest
 
 import aikido_zen
 from aikido_zen import protect
-from aikido_zen.background_process import get_comms, reset_comms
+from aikido_zen.background_process.ipc import IPCClient
 from aikido_zen.helpers.token import get_token_from_env
 
 
@@ -12,8 +12,8 @@ def test_protect_with_django(monkeypatch, caplog):
     protect()
 
     assert "starting" in caplog.text
-    reset_comms()
-    assert get_comms() == None
+    IPCClient.reset()
+    assert IPCClient.get() == None
 
 
 def test_protect_sets_token():
@@ -24,10 +24,10 @@ def test_protect_sets_token():
 def test_protect_does_not_start_without_gil(monkeypatch):
     monkeypatch.setattr("aikido_zen.gil_not_enabled", lambda: True)
 
-    with patch("aikido_zen.test_uds_file_access") as test_uds_file_access, patch(
+    with patch("aikido_zen.check_socket_access") as check_socket_access, patch(
         "aikido_zen.start_background_process"
     ) as start_background_process:
         protect()
 
-    test_uds_file_access.assert_not_called()
+    check_socket_access.assert_not_called()
     start_background_process.assert_not_called()

@@ -2,7 +2,7 @@ import pytest
 import signal
 from unittest.mock import patch
 import aikido_zen.sources.flask
-from aikido_zen.background_process.comms import reset_comms
+from aikido_zen.background_process.ipc import IPCClient
 from aikido_zen.context import current_context, get_current_context
 
 sample_environ = {
@@ -80,7 +80,7 @@ def test_flask_all_3_func_with_view_args_and_invalid_json_body():
     with patch(
         "aikido_zen.sources.functions.request_handler.request_handler"
     ) as mock_request_handler:
-        reset_comms()
+        IPCClient.reset()
         current_context.set(None)
         mock_request_handler.return_value = None
 
@@ -125,7 +125,7 @@ def test_flask_all_3_func_with_malformed_cookie():
     with patch(
         "aikido_zen.sources.functions.request_handler.request_handler"
     ) as mock_request_handler:
-        reset_comms()
+        IPCClient.reset()
         current_context.set(None)
         mock_request_handler.return_value = None
 
@@ -156,7 +156,7 @@ def test_flask_all_3_func_with_invalid_body():
     with patch(
         "aikido_zen.sources.functions.request_handler.request_handler"
     ) as mock_request_handler:
-        reset_comms()
+        IPCClient.reset()
         current_context.set(None)
         mock_request_handler.return_value = None
 
@@ -192,7 +192,7 @@ def test_flask_all_3_func():
     with patch(
         "aikido_zen.sources.functions.request_handler.request_handler"
     ) as mock_request_handler:
-        reset_comms()
+        IPCClient.reset()
         current_context.set(None)
         mock_request_handler.return_value = None
 
@@ -222,7 +222,7 @@ def test_flask_all_3_func():
 
 
 def test_startup_flask():
-    reset_comms()
+    IPCClient.reset()
     from flask import Flask
 
     app = Flask(__name__)

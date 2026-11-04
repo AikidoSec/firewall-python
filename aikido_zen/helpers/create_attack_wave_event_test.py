@@ -28,6 +28,23 @@ def test_create_attack_wave_event_success():
         assert event["request"] is not None
 
 
+@patch(
+    "aikido_zen.helpers.create_attack_wave_event.get_unixtime_ms",
+    return_value=111,
+)
+def test_create_attack_wave_event_sets_the_time(mock_time):
+    context = test_utils.generate_context()
+
+    with patch.object(
+        attack_wave_detector_store, "get_samples_for_ip", return_value=None
+    ), patch.object(
+        attack_wave_detector_store, "clear_samples_for_ip", return_value=None
+    ):
+        event = create_attack_wave_event(context)
+
+    assert event["time"] == 111
+
+
 def test_create_attack_wave_event_with_samples():
     """Test attack wave event creation with samples from store"""
     context = test_utils.generate_context()
