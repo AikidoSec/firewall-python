@@ -381,11 +381,11 @@ def test_requests_only_parses_the_url_of_a_read_post(provider, monkeypatch):
     assert split == [provider + "/v1/chat/completions"]
 
 
-def test_large_response_is_counted(provider):
-    requests.post(provider + "/v1/chat/completions?pad=9000000", json={})
-    assert_counted_once(
-        provider + "/v1/chat/completions", "gpt-4o-mini-2024-07-18", 11, 7
-    )
+@pytest.mark.parametrize("pad, counted", [(2_000_000, 1), (2_100_000, 0)])
+def test_only_a_response_up_to_the_size_limit_is_counted(provider, pad, counted):
+    response = requests.post(provider + f"/v1/chat/completions?pad={pad}", json={})
+    assert response.json()["model"] == "gpt-4o-mini-2024-07-18"
+    assert sum(s["calls"] for s in get_ai_stats()) == counted
 
 
 def test_error_responses_are_not_counted(provider):

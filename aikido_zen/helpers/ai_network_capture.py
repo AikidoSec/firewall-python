@@ -66,6 +66,9 @@ DEFAULT_PORTS = {"http": 80, "https": 443}
 # A redirect makes requests and urllib3 pass the final response through twice.
 SEEN_ATTR = "_aikido_ai_seen"
 
+# Parsing makes a second, larger copy of the body inside the app's request.
+MAX_BODY_BYTES = 2 * 1024 * 1024
+
 
 def is_ai_network_capture_enabled():
     return is_feature_enabled("ai_network_capture")
@@ -145,6 +148,8 @@ def inspect_ai_response(response, *, method, scheme, host, port, path, status, b
         return
     # Only a successful response is a finished call.
     if method != "POST" or not is_ai_request_path(path) or not 200 <= status < 300:
+        return
+    if len(body) > MAX_BODY_BYTES:
         return
     setattr(response, SEEN_ATTR, True)
     call = parse_ai_response(path, json.loads(body))

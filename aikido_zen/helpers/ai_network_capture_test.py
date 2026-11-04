@@ -6,6 +6,7 @@ import pytest
 
 from aikido_zen.thread.thread_cache import get_cache
 from .ai_network_capture import (
+    MAX_BODY_BYTES,
     endpoint_url,
     inspect_ai_response,
     is_ai_request_path,
@@ -69,6 +70,8 @@ def get_ai_stats():
 
 
 def inspect(body, path="/v1/chat/completions", method="POST", status=200, **kwargs):
+    if isinstance(body, (dict, list)):
+        body = json.dumps(body).encode()
     inspect_ai_response(
         kwargs.get("response", SimpleNamespace()),
         method=method,
@@ -77,7 +80,7 @@ def inspect(body, path="/v1/chat/completions", method="POST", status=200, **kwar
         port=None,
         path=path,
         status=status,
-        body=json.dumps(body).encode() if body is not None else None,
+        body=body,
     )
 
 
@@ -343,6 +346,14 @@ def test_other_requests_are_not_counted(kwargs):
 def test_streamed_response_is_not_counted():
     inspect(None)
     assert get_ai_stats() == []
+
+
+@pytest.mark.parametrize(
+    "size, counted", [(MAX_BODY_BYTES, 1), (MAX_BODY_BYTES + 1, 0)]
+)
+def test_body_over_the_size_limit_is_not_counted(size, counted):
+    inspect(b'{"model": "m"}'.ljust(size))
+    assert sum(s["calls"] for s in get_ai_stats()) == counted
 
 
 def test_same_response_is_counted_once():
