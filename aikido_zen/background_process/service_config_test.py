@@ -1,6 +1,9 @@
 import pytest
 from .service_config import ServiceConfig
 from aikido_zen.helpers.ip_matcher import IPMatcher
+from aikido_zen.sources.functions.ip_allowed_to_access_route import (
+    ip_allowed_to_access_route,
+)
 
 
 def test_service_config_outbound_blocking_initialization():
@@ -319,6 +322,30 @@ def test_service_config_with_empty_allowlist():
     assert admin_endpoint["route"] == "/admin"
     assert isinstance(admin_endpoint["allowedIPAddresses"], list)
     assert len(admin_endpoint["allowedIPAddresses"]) == 0
+
+
+def test_service_config_skips_allowlist_that_failed_to_build(monkeypatch):
+    monkeypatch.setattr("aikido_zen.helpers.zen_internals._ip_matcher_create", None)
+    endpoints = [
+        {
+            "graphql": False,
+            "method": "GET",
+            "route": "/admin",
+            "rate_limiting": {
+                "enabled": False,
+                "max_requests": 10,
+                "window_size_in_ms": 1000,
+            },
+            "allowedIPAddresses": ["1.2.3.4"],
+            "force_protection_off": False,
+        },
+    ]
+    service_config = ServiceConfig(endpoints, "2023-10-01", [], [], True)
+
+    route_metadata = {"method": "GET", "route": "/admin", "url": "/admin"}
+    admin_endpoints = service_config.get_endpoints(route_metadata)
+    assert admin_endpoints[0]["allowedIPAddresses"] == ["1.2.3.4"]
+    assert ip_allowed_to_access_route("8.8.8.8", route_metadata, admin_endpoints)
 
 
 def test_service_config_enabled_features():

@@ -71,7 +71,6 @@ wrapt = [
     { version = "^1.17.2", python = "<3.13" },
     { version = "^2.4.0", python = ">=3.13" },
 ]
-pytricia = { version = "^1.3.0", markers = "sys_platform != 'win32'" }
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"
