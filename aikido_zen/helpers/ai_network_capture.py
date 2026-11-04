@@ -132,11 +132,10 @@ def count_tokens(usage, fields):
 
 def endpoint_url(scheme, host, port, path):
     """The URL a call is reported under: no user info, query or fragment."""
-    if ":" in host:
-        host = f"[{host}]"
+    netloc = f"[{host}]" if ":" in host else host
     if port and port != DEFAULT_PORTS.get(scheme):
-        host = f"{host}:{port}"
-    return f"{scheme}://{host}{path}"
+        netloc = f"{netloc}:{port}"
+    return f"{scheme}://{netloc}{path}"
 
 
 def inspect_ai_response(response, *, method, scheme, host, port, path, status, body):
