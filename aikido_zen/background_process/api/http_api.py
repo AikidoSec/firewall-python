@@ -5,35 +5,16 @@ Exports the HTTP API class
 import aikido_zen.background_process.requests as requests
 from aikido_zen.background_process.api import ReportingApi
 from aikido_zen.background_process.requests.errors import TimeoutExceeded
-from aikido_zen.helpers.get_current_unixtime_ms import get_unixtime_ms
 from aikido_zen.helpers.logging import logger
 
 
 class ReportingApiHTTP(ReportingApi):
     """HTTP Reporting API"""
 
-    def __init__(
-        self, reporting_url, max_events_per_interval=100, interval_in_ms=60 * 60 * 1000
-    ):
+    def __init__(self, reporting_url):
         self.reporting_url = reporting_url
-        self.max_events_per_interval = max_events_per_interval
-        self.interval_in_ms = interval_in_ms
-        self.attack_times = []
 
     def report(self, token, event, timeout_in_sec):
-        if event.get("type") == "detected_attack":
-            window_start = get_unixtime_ms() - self.interval_in_ms
-            self.attack_times = [
-                attack_time
-                for attack_time in self.attack_times
-                if attack_time > window_start
-            ]
-
-            if len(self.attack_times) >= self.max_events_per_interval:
-                return {"success": False, "error": "max_attacks_reached"}
-
-            self.attack_times.append(event["time"])
-
         try:
             res = requests.post(
                 self.reporting_url + "api/runtime/events",

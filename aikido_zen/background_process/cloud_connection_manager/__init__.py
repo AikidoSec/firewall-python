@@ -4,6 +4,7 @@ from aikido_zen.background_process.heartbeats import start_heartbeats
 from aikido_zen.background_process.routes import Routes
 from aikido_zen.ratelimiting.rate_limiter import RateLimiter
 from aikido_zen.helpers.logging import logger
+from aikido_zen.helpers.get_current_unixtime_ms import get_unixtime_ms
 from .update_firewall_lists import update_firewall_lists
 from ..api.http_api import ReportingApiHTTP
 from ..service_config import ServiceConfig
@@ -28,11 +29,14 @@ class CloudConnectionManager:
 
     timeout_in_sec = 30  # Timeout of API calls to Aikido Server
     heartbeat_secs = 600  # Heartbeat every 10 minutes
+    max_attack_reports = 100
+    attack_report_window_ms = 60 * 60 * 1000
 
     def __init__(self, block, api, token, serverless):
         self.block = block
         self.api: ReportingApiHTTP = api
         self.token = token  # Should be instance of the Token class!
+        self.attack_times = []
         self.routes = Routes(200)
         self.hostnames = Hostnames(200)
         self.conf = ServiceConfig(
@@ -89,6 +93,23 @@ class CloudConnectionManager:
         try:
             payload = {"agent": get_manager_info(self)}
             payload.update(event)  # Merge default fields with event fields
+
+            if payload.get("type") == "detected_attack":
+                window_start = get_unixtime_ms() - self.attack_report_window_ms
+                self.attack_times = [
+                    attack_time
+                    for attack_time in self.attack_times
+                    if attack_time > window_start
+                ]
+
+                if len(self.attack_times) >= self.max_attack_reports:
+                    logger.error(
+                        "CloudConnectionManager: Reporting to api failed, error=%s",
+                        "max_attacks_reached",
+                    )
+                    return {"success": False, "error": "max_attacks_reached"}
+
+                self.attack_times.append(payload["time"])
 
             result = self.api.report(self.token, payload, self.timeout_in_sec)
             if not result.get("success", True):
