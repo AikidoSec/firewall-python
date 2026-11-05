@@ -71,7 +71,7 @@ class BufferedWsgiInput:
             raise AttributeError(name)
         # Attributes come from the server's stream, so one it lacks stays missing as
         # without Zen. Every read method loads the body first, and after the first
-        # read seek, tell and peek use the copy.
+        # read seek and tell use the copy.
         attribute = getattr(self._stream, name)
         if name == "read1":
             return lambda *args: self._load().read1(*args)
@@ -80,11 +80,10 @@ class BufferedWsgiInput:
         if name == "readall":
             # io.BytesIO has no readall, and read() returns the same rest of the body.
             return lambda: self._load().read()
-        if self._source is not None:
-            if name == "peek":
-                return lambda *args: peek(self._source, *args)
-            if name in ("seek", "tell"):
-                return getattr(self._source, name)
+        if name == "peek":
+            return lambda *args: peek(self._load(), *args)
+        if name in ("seek", "tell") and self._source is not None:
+            return getattr(self._source, name)
         return attribute
 
     def _load(self):
@@ -125,7 +124,8 @@ def peek(stream, size=0):
     """Returns the next bytes without consuming them, like BufferedReader.peek"""
     if hasattr(stream, "peek"):
         return stream.peek(size)
-    data = stream.read(max(size, 1))
+    # BufferedReader.peek returns its whole buffer, whatever size is asked for.
+    data = stream.read(io.DEFAULT_BUFFER_SIZE)
     stream.seek(-len(data), io.SEEK_CUR)
     return data
 

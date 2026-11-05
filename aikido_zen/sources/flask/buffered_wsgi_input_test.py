@@ -137,6 +137,14 @@ def test_seek_and_tell_stay_missing_when_the_server_stream_has_none():
     assert not hasattr(stream, "tell")
 
 
+def test_peek_records_the_body_without_consuming_it():
+    context = FakeContext()
+    stream = BufferedWsgiInput(BufferedReader(BytesIO(BODY)), context, len(BODY), False)
+    assert stream.peek() == BODY
+    assert context.bodies_set == [BODY]
+    assert stream.read() == BODY
+
+
 @pytest.mark.parametrize("limit", [buffered.MAX_BUFFERED_BODY_SIZE, 8])
 def test_peek_after_a_read_returns_the_next_bytes(monkeypatch, limit):
     monkeypatch.setattr(buffered, "MAX_BUFFERED_BODY_SIZE", limit)
