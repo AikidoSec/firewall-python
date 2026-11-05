@@ -61,18 +61,30 @@ class BufferedWsgiInput:
     def __iter__(self):
         return iter(self._load())
 
+    def __next__(self):
+        return next(self._load())
+
     def __getattr__(self, name):
         # Copying looks up _stream before __init__ ran, which would recurse forever,
         # and on Python 3.10 and older would take __getstate__ from the server's stream.
         if name in ("_stream", "_source") or name.startswith("__"):
             raise AttributeError(name)
-        # Attributes come from the server's stream, so a missing seek or read1 stays
-        # missing as without Zen. After the first read, seek and tell use the copy.
+        # Attributes come from the server's stream, so one it lacks stays missing as
+        # without Zen. Every read method loads the body first, and after the first
+        # read seek, tell and peek use the copy.
         attribute = getattr(self._stream, name)
         if name == "read1":
             return lambda *args: self._load().read1(*args)
-        if name in ("seek", "tell") and self._source is not None:
-            return getattr(self._source, name)
+        if name == "readinto1":
+            return lambda *args: self._load().readinto1(*args)
+        if name == "readall":
+            # io.BytesIO has no readall, and read() returns the same rest of the body.
+            return lambda: self._load().read()
+        if self._source is not None:
+            if name == "peek":
+                return lambda *args: peek(self._source, *args)
+            if name in ("seek", "tell"):
+                return getattr(self._source, name)
         return attribute
 
     def _load(self):
@@ -107,6 +119,15 @@ class BufferedWsgiInput:
         if body and self._context.body is None:
             self._context.set_body(body)
         return io.BytesIO(body)
+
+
+def peek(stream, size=0):
+    """Returns the next bytes without consuming them, like BufferedReader.peek"""
+    if hasattr(stream, "peek"):
+        return stream.peek(size)
+    data = stream.read(max(size, 1))
+    stream.seek(-len(data), io.SEEK_CUR)
+    return data
 
 
 def read_up_to(stream, size):
