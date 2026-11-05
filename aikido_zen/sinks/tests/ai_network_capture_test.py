@@ -1,7 +1,7 @@
 import gzip
+import importlib
 import itertools
 import json
-import os
 import pathlib
 import socket
 import subprocess
@@ -15,7 +15,6 @@ import pytest
 import httpx
 import requests
 import urllib3
-import urllib3.connectionpool
 
 try:
     import httpx2
@@ -32,9 +31,14 @@ import aikido_zen.sinks.openai
 import aikido_zen.sinks.anthropic
 import aikido_zen.sinks.botocore
 from aikido_zen.helpers.ai_network_capture import is_ai_network_capture_enabled
-from aikido_zen.sinks import patch_function
 from aikido_zen.thread.thread_cache import get_cache
 
+CAPTURE_SINKS = (
+    aikido_zen.sinks.httpx,
+    aikido_zen.sinks.httpx2,
+    aikido_zen.sinks.requests,
+    aikido_zen.sinks.urllib3,
+)
 skip_no_httpx2 = pytest.mark.skipif(httpx2 is None, reason="httpx2 not installed")
 
 HELLO = [{"role": "user", "content": "Hi"}]
@@ -157,17 +161,13 @@ class ProviderHandler(BaseHTTPRequestHandler):
 
 
 @pytest.fixture(scope="module", autouse=True)
-def patch_http_clients_without_the_flag():
-    if not is_ai_network_capture_enabled():
-        aikido_zen.sinks.httpx.patch_client(httpx)
-        if httpx2 is not None:
-            aikido_zen.sinks.httpx.patch_client(httpx2)
-        patch_function(requests, "Session.send", aikido_zen.sinks.requests._send)
-        patch_function(
-            urllib3.connectionpool,
-            "HTTPConnectionPool.urlopen",
-            aikido_zen.sinks.urllib3._urlopen,
-        )
+def enable_the_flag():
+    if is_ai_network_capture_enabled():
+        return
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        monkeypatch.setenv("AIKIDO_FEATURE_AI_NETWORK_CAPTURE", "true")
+        for sink in CAPTURE_SINKS:
+            importlib.reload(sink)
 
 
 @pytest.fixture(scope="module")
@@ -355,6 +355,24 @@ def test_http_client_errors_still_reach_the_app():
     assert get_ai_stats() == []
 
 
+@pytest.mark.asyncio
+async def test_reporting_errors_do_not_break_http_calls(provider, monkeypatch):
+    def fail(**kwargs):
+        raise RuntimeError("reporting failed")
+
+    monkeypatch.setattr(aikido_zen.helpers.ai_network_capture, "on_ai_call", fail)
+    url = provider + "/v1/chat/completions"
+    bodies = [
+        requests.post(url, json={}).content,
+        urllib3.PoolManager().request("POST", url, body=b"{}").data,
+    ]
+    for client_module in [httpx] + ([httpx2] if httpx2 else []):
+        bodies.append(client_module.post(url, json={}).content)
+        async with client_module.AsyncClient() as client:
+            bodies.append((await client.post(url, json={})).content)
+    assert {json.loads(body)["model"] for body in bodies} == {"gpt-4o-mini-2024-07-18"}
+
+
 @pytest.mark.parametrize(
     "method, path", [("GET", "/v1/responses"), ("POST", "/v1/plain")]
 )
@@ -395,6 +413,29 @@ def test_httpx_stream_is_not_read_and_not_counted(provider):
             with pytest.raises(httpx.ResponseNotRead):
                 response.content
             assert b"[DONE]" in b"".join(response.iter_bytes())
+    assert get_ai_stats() == []
+
+
+@pytest.mark.asyncio
+async def test_httpx_async_stream_is_not_read_and_not_counted(provider):
+    async with httpx.AsyncClient() as client:
+        async with client.stream(
+            "POST", provider + "/v1/chat/completions", json={"stream": True}
+        ) as response:
+            with pytest.raises(httpx.ResponseNotRead):
+                response.content
+            assert b"[DONE]" in b"".join([c async for c in response.aiter_bytes()])
+    assert get_ai_stats() == []
+
+
+def test_urllib3_stream_is_not_read_and_not_counted(provider):
+    response = urllib3.PoolManager().request(
+        "POST",
+        provider + "/v1/chat/completions",
+        body=json.dumps({"stream": True}),
+        preload_content=False,
+    )
+    assert b"[DONE]" in b"".join(response.stream(1024))
     assert get_ai_stats() == []
 
 
@@ -502,26 +543,55 @@ def test_boto3_bedrock_call_is_counted_by_the_botocore_sink_only(provider):
 
 
 @pytest.mark.parametrize("flag, patched", [(None, False), ("true", True)])
-def test_http_clients_are_only_patched_with_the_flag(flag, patched):
-    env = {
-        k: v for k, v in os.environ.items() if k != "AIKIDO_FEATURE_AI_NETWORK_CAPTURE"
-    }
+def test_http_clients_are_only_patched_and_counted_with_the_flag(
+    provider, monkeypatch, flag, patched
+):
+    monkeypatch.delenv("AIKIDO_FEATURE_AI_NETWORK_CAPTURE", raising=False)
     if flag:
-        env["AIKIDO_FEATURE_AI_NETWORK_CAPTURE"] = flag
-    env["PYTHONPATH"] = str(pathlib.Path(aikido_zen.__file__).parents[1])
-    code = (
-        "import httpx, requests, urllib3.connectionpool\n"
-        "import aikido_zen.sinks.httpx, aikido_zen.sinks.requests\n"
-        "import aikido_zen.sinks.urllib3\n"
-        "targets = [httpx.Client.send, httpx.AsyncClient.send, requests.Session.send,\n"
-        "           urllib3.connectionpool.HTTPConnectionPool.urlopen]\n"
-        "print([hasattr(t, '__wrapped__') for t in targets])\n"
-    )
+        monkeypatch.setenv("AIKIDO_FEATURE_AI_NETWORK_CAPTURE", flag)
+    monkeypatch.setenv("PYTHONPATH", str(pathlib.Path(aikido_zen.__file__).parents[1]))
+    script = """
+import aikido_zen
+
+aikido_zen.protect("daemon_disabled")
+
+import json, sys
+import httpx, requests, urllib3.connectionpool
+from aikido_zen.thread.thread_cache import get_cache
+
+try:
+    import httpx2
+except ImportError:
+    httpx2 = None
+
+url = sys.argv[1]
+methods = [
+    httpx.Client.send,
+    httpx.AsyncClient.send,
+    requests.Session.send,
+    urllib3.connectionpool.HTTPConnectionPool.urlopen,
+]
+bodies = [
+    requests.post(url, json={}).content,
+    httpx.post(url, json={}).content,
+    urllib3.PoolManager().request("POST", url, body=b"{}").data,
+]
+if httpx2:
+    methods += [httpx2.Client.send, httpx2.AsyncClient.send]
+    bodies.append(httpx2.post(url, json={}).content)
+print(json.dumps({
+    "wrapped": [hasattr(method, "__wrapped__") for method in methods],
+    "models": [json.loads(body)["model"] for body in bodies],
+    "calls": [stats["calls"] for stats in get_cache().ai_stats.get_stats()],
+}))
+"""
     result = subprocess.run(
-        [sys.executable, "-c", code],
-        env=env,
+        [sys.executable, "-c", script, provider + "/v1/chat/completions"],
         capture_output=True,
         text=True,
         check=True,
     )
-    assert result.stdout.strip() == str([patched] * 4)
+    output = json.loads(result.stdout.splitlines()[-1])
+    assert set(output["wrapped"]) == {patched}
+    assert set(output["models"]) == {"gpt-4o-mini-2024-07-18"}
+    assert output["calls"] == ([len(output["models"])] if patched else [])
