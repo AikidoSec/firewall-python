@@ -34,6 +34,7 @@ async def _handle_request_before(func, instance, args, kwargs):
         data = await request.data
         context.set_body(data)
     context.cookies = request.cookies.to_dict()
+    context.set_framework_query(request.args.to_dict(flat=False))
     context.set_as_current_context()
 
 
