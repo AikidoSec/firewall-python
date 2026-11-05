@@ -108,6 +108,16 @@ class Context:
     def set_cookies(self, cookies):
         self.cookies = cookies
 
+    def set_framework_query(self, query):
+        # Werkzeug keeps an invalid %ff as is, while parse_qs turns it into U+FFFD.
+        # An app can read the query either way, so both readings are kept.
+        for key, raw_values in self.query.items():
+            values = query.setdefault(key, [])
+            if values != raw_values:
+                seen = set(values)
+                values.extend(value for value in raw_values if value not in seen)
+        self.query = query
+
     def set_body(self, body):
         try:
             self.set_body_internal(body)
