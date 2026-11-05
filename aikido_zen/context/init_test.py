@@ -1,7 +1,12 @@
 import pytest
 import pickle
 import json
+import time
+from urllib.parse import parse_qs
 from aikido_zen.context import Context, get_current_context, current_context
+from aikido_zen.vulnerabilities.shell_injection.check_context_for_shell_injection import (
+    check_context_for_shell_injection,
+)
 
 basic_wsgi_req = {
     "REQUEST_METHOD": "GET",
@@ -320,3 +325,46 @@ def test_set_bytes_json_with_surrogate_bytes():
     context = Context(req=basic_wsgi_req, body=body, source="flask")
     assert isinstance(context.body, dict)
     assert context.body.get("username") == {"$regex": ".*"}
+
+
+def context_with_query(query_string):
+    return Context(req={**basic_wsgi_req, "QUERY_STRING": query_string}, source="flask")
+
+
+@pytest.mark.parametrize(
+    "command, path",
+    [
+        ("echo Hello 1%FF;echo injected", ".username.[0]"),
+        ("echo Hello 1\ufffd;echo injected", ".username.[1]"),
+    ],
+)
+def test_set_framework_query_scans_both_readings_of_an_invalid_escape(command, path):
+    context = context_with_query("username=1%ff;echo%20injected")
+    context.set_framework_query({"username": ["1%FF;echo injected"]})
+    attack = check_context_for_shell_injection(command, "subprocess.Popen", context)
+    assert attack["source"] == "query"
+    assert attack["pathToPayload"] == path
+
+
+def test_set_framework_query_adds_nothing_when_both_readings_agree():
+    context = context_with_query("a=1&a=2&b=")
+    context.set_framework_query({"a": ["1", "2"], "b": [""]})
+    assert context.query == {"a": ["1", "2"], "b": [""]}
+
+
+def test_set_framework_query_costs_less_than_parsing_the_query():
+    query_string = "&".join(f"a=%ff{i}" for i in range(5000))
+    context = context_with_query(query_string)
+    raw_query = context.query
+    merge_time = parse_time = float("inf")
+    for _ in range(5):
+        context.query = raw_query
+        framework_query = {"a": [f"%FF{i}" for i in range(5000)]}
+        start = time.perf_counter()
+        context.set_framework_query(framework_query)
+        merge_time = min(merge_time, time.perf_counter() - start)
+        start = time.perf_counter()
+        parse_qs(query_string)
+        parse_time = min(parse_time, time.perf_counter() - start)
+    assert len(context.query["a"]) == 10000
+    assert merge_time < parse_time
