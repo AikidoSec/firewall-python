@@ -1,5 +1,5 @@
 import copy
-from io import BytesIO
+from io import BufferedReader, BytesIO, RawIOBase
 
 import pytest
 
@@ -45,6 +45,28 @@ class ServerStream(ReadOnlyStream):
         self.closed_count += 1
 
 
+class RawStream(RawIOBase):
+    def __init__(self, data):
+        super().__init__()
+        self._stream = BytesIO(data)
+
+    def readable(self):
+        return True
+
+    def readinto(self, buffer):
+        return self._stream.readinto(buffer)
+
+
+class SizeRecordingStream(BytesIO):
+    def __init__(self, data):
+        super().__init__(data)
+        self.sizes = []
+
+    def read(self, size=-1):
+        self.sizes.append(size)
+        return super().read(size)
+
+
 def read_all(stream, reader):
     if reader == "read":
         return stream.read()
@@ -58,9 +80,16 @@ def read_all(stream, reader):
         return b"".join(stream.readlines())
     if reader == "iterate":
         return b"".join(stream)
+    if reader == "read1":
+        return b"".join(iter(lambda: stream.read1(4), b""))
+    if reader == "readall":
+        return stream.readall()
+    if reader == "next":
+        return b"".join(iter(lambda: next(stream, b""), b""))
+    readinto = stream.readinto1 if reader == "readinto1" else stream.readinto
     buffer = bytearray(4)
     data = b""
-    while size := stream.readinto(buffer):
+    while size := readinto(buffer):
         data += bytes(buffer[:size])
     return data
 
@@ -74,6 +103,7 @@ def read_all(stream, reader):
         "readline",
         "readlines",
         "iterate",
+        "next",
         "readinto",
     ],
 )
@@ -107,25 +137,41 @@ def test_seek_and_tell_stay_missing_when_the_server_stream_has_none():
     assert not hasattr(stream, "tell")
 
 
+@pytest.mark.parametrize("limit", [buffered.MAX_BUFFERED_BODY_SIZE, 8])
+def test_peek_after_a_read_returns_the_next_bytes(monkeypatch, limit):
+    monkeypatch.setattr(buffered, "MAX_BUFFERED_BODY_SIZE", limit)
+    original = BufferedReader(BytesIO(BODY))
+    stream = BufferedWsgiInput(original, FakeContext(), len(BODY), False)
+    assert stream.read(5) == BODY[:5]
+    assert stream.peek(1)[:1] == BODY[5:6]
+    assert stream.read() == BODY[5:]
+
+
 def test_fileno_and_close_reach_the_server_stream():
     original = ServerStream(BODY)
     stream = BufferedWsgiInput(original, FakeContext(), len(BODY), False)
+    assert stream.fileno() == 7
     stream.read(1)
     assert stream.fileno() == 7
     stream.close()
     assert original.closed_count == 1
 
 
-def test_read1_records_the_body():
+@pytest.mark.parametrize(
+    "reader, server_stream",
+    [("read1", BytesIO), ("readinto1", BytesIO), ("readall", RawStream)],
+)
+def test_other_read_methods_record_the_body(reader, server_stream):
     context = FakeContext()
-    stream = BufferedWsgiInput(BytesIO(BODY), context, len(BODY), False)
-    assert stream.read1() == BODY
+    stream = BufferedWsgiInput(server_stream(BODY), context, len(BODY), False)
+    assert read_all(stream, reader) == BODY
     assert context.bodies_set == [BODY]
 
 
-def test_read1_stays_missing_when_the_server_stream_has_none():
+@pytest.mark.parametrize("name", ["read1", "readinto1", "readall", "peek"])
+def test_read_method_stays_missing_when_the_server_stream_has_none(name):
     stream = BufferedWsgiInput(ReadOnlyStream(BODY), FakeContext(), len(BODY), False)
-    assert not hasattr(stream, "read1")
+    assert not hasattr(stream, name)
 
 
 def test_unknown_length_on_an_unterminated_stream_is_not_read_ahead():
@@ -185,6 +231,16 @@ def test_terminated_stream_over_the_limit_is_not_read_ahead(monkeypatch):
     assert context.bodies_set == []
 
 
+@pytest.mark.parametrize(
+    "content_length, terminated", [(None, True), (1024 * 1024, False)]
+)
+def test_stream_is_read_in_pieces(content_length, terminated):
+    original = SizeRecordingStream(BODY)
+    stream = BufferedWsgiInput(original, FakeContext(), content_length, terminated)
+    assert stream.read(5) == BODY[:5]
+    assert max(original.sizes) <= buffered.READ_CHUNK_SIZE
+
+
 def test_stream_without_readinto_is_recorded():
     context = FakeContext()
     stream = BufferedWsgiInput(ReadOnlyStream(BODY), context, len(BODY), False)
@@ -196,24 +252,6 @@ def test_stream_without_readinto_is_recorded():
 def test_stream_can_be_copied(copier):
     stream = BufferedWsgiInput(BytesIO(BODY), FakeContext(), len(BODY), False)
     assert copier(stream).read() == BODY
-
-
-@pytest.mark.parametrize(
-    "content_length, terminated", [(None, True), (1024 * 1024, False)]
-)
-def test_stream_is_read_in_pieces(content_length, terminated):
-    sizes = []
-
-    class SizeRecordingStream(BytesIO):
-        def read(self, size=-1):
-            sizes.append(size)
-            return super().read(size)
-
-    stream = BufferedWsgiInput(
-        SizeRecordingStream(BODY), FakeContext(), content_length, terminated
-    )
-    assert stream.read(5) == BODY[:5]
-    assert max(sizes) <= buffered.READ_CHUNK_SIZE
 
 
 def test_partial_read_records_the_whole_body():
