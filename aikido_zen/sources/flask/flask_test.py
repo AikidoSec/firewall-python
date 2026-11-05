@@ -363,10 +363,7 @@ def test_body_readers_preserve_application_data(body_app, reader):
             assert result == payload.decode()
         else:
             assert result == payload
-        if reader in ("stream", "chunks", "input_stream", "wsgi_input"):
-            assert get_current_context().body is None
-        else:
-            assert get_current_context().body == data
+        assert get_current_context().body == data
         return "ok"
 
     response = body_app.test_client().post(
@@ -485,3 +482,43 @@ def test_custom_request_body_reader_is_inspected(body_app, reader):
     assert response.status_code == 200
     response.close()
     assert CustomRequest.__dict__["get_data"] is wrapped
+
+
+@pytest.mark.parametrize(
+    "reader", ["stream", "chunks", "lines", "input_stream", "wsgi_input"]
+)
+def test_body_read_from_raw_stream_is_inspected(body_app, reader):
+    import json
+    from flask import request
+    from aikido_zen.vulnerabilities.sql_injection.context_contains_sql_injection import (
+        context_contains_sql_injection,
+    )
+
+    attack = "Malicious Pet', 'Gru from the Minions') --"
+
+    @body_app.post("/body")
+    def view():
+        if reader == "stream":
+            raw = request.stream.read()
+        elif reader == "chunks":
+            raw = request.stream.read(3) + request.stream.read()
+        elif reader == "lines":
+            raw = b"".join(request.stream)
+        elif reader == "input_stream":
+            raw = request.input_stream.read()
+        else:
+            raw = request.environ["wsgi.input"].read()
+        name = json.loads(raw)["name"]
+        result = context_contains_sql_injection(
+            sql=f"INSERT INTO pets(name) VALUES ('{name}')",
+            operation="psycopg2.Cursor.execute",
+            context=get_current_context(),
+            dialect="postgres",
+        )
+        assert result["source"] == "body"
+        assert result["payload"] == attack
+        return "ok"
+
+    response = body_app.test_client().post("/body", json={"name": attack})
+    assert response.status_code == 200
+    response.close()
