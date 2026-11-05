@@ -1,8 +1,3 @@
-"""
-Counts AI API calls from the responses that the HTTP client sinks see, when
-AIKIDO_FEATURE_AI_NETWORK_CAPTURE is on. Each call is reported under its endpoint URL.
-"""
-
 import json
 import re
 from collections import namedtuple
@@ -63,8 +58,8 @@ BEDROCK_PATH = re.compile(r"/model/([^/]+)/(converse|invoke)$")
 
 DEFAULT_PORTS = {"http": 80, "https": 443}
 
-# On a redirect, Session.send (requests) and a pool's urlopen (urllib3) return the
-# same final response more than once.
+# On a redirect or a retry, Session.send (requests) and a pool's urlopen (urllib3)
+# return the same final response more than once.
 SEEN_ATTR = "_aikido_ai_seen"
 
 # Parsing makes a second, larger copy of the body inside the app's request.

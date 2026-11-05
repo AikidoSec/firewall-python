@@ -1,8 +1,3 @@
-"""
-patching module requests, when AIKIDO_FEATURE_AI_NETWORK_CAPTURE is on
-- patches Session.send, to inspect finished AI API responses
-"""
-
 from urllib.parse import urlsplit
 
 from aikido_zen.helpers.ai_network_capture import (
@@ -14,9 +9,8 @@ from aikido_zen.sinks import on_import, patch_function, after
 
 @after
 def _send(func, instance, args, kwargs, return_value):
-    # _content holds the decoded body, or False when the response is streamed.
+    # _content is False for a streamed response.
     body = getattr(return_value, "_content", None)
-    # Only a read POST response can be counted, so the others skip the URL parsing.
     if not isinstance(body, bytes) or return_value.request.method != "POST":
         return
     url = urlsplit(return_value.url)

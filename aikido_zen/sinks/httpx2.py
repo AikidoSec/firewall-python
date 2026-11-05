@@ -1,9 +1,3 @@
-"""
-patching module httpx2, which newer AI SDKs use instead of httpx, when
-AIKIDO_FEATURE_AI_NETWORK_CAPTURE is on
-- patches Client.send and AsyncClient.send, same as httpx
-"""
-
 from aikido_zen.helpers.ai_network_capture import is_ai_network_capture_enabled
 from aikido_zen.sinks import on_import
 from aikido_zen.sinks.httpx import patch_client

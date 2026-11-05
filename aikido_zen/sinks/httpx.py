@@ -1,8 +1,3 @@
-"""
-patching module httpx, when AIKIDO_FEATURE_AI_NETWORK_CAPTURE is on
-- patches Client.send and AsyncClient.send, to inspect finished AI API responses
-"""
-
 from aikido_zen.helpers.ai_network_capture import (
     inspect_ai_response,
     is_ai_network_capture_enabled,
@@ -37,13 +32,11 @@ async def _async_send(func, instance, args, kwargs, return_value):
 
 
 def patch_client(m):
-    """Patches the sync and async clients of httpx, or of httpx2 (same API)"""
     patch_function(m, "Client.send", _send)
     patch_function(m, "AsyncClient.send", _async_send)
 
 
 @on_import("httpx")
 def patch(m):
-    # Without the flag nothing is patched, so HTTP calls cost nothing extra.
     if is_ai_network_capture_enabled():
         patch_client(m)

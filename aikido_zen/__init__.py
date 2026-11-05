@@ -95,7 +95,7 @@ def protect(mode="daemon", token=""):
     import aikido_zen.sinks.mistralai
     import aikido_zen.sinks.botocore
 
-    # Import HTTP client sinks that see AI API responses
+    # Import HTTP client sinks
     import aikido_zen.sinks.httpx
     import aikido_zen.sinks.httpx2
     import aikido_zen.sinks.requests

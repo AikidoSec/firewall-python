@@ -1,8 +1,3 @@
-"""
-patching module urllib3, when AIKIDO_FEATURE_AI_NETWORK_CAPTURE is on
-- patches HTTPConnectionPool.urlopen, to inspect finished AI API responses
-"""
-
 from urllib.parse import urlsplit
 
 from aikido_zen.helpers.ai_network_capture import (
