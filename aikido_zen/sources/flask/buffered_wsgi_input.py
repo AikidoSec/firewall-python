@@ -3,6 +3,10 @@ import io
 # Bigger bodies pass through unscanned, so large uploads the app streams aren't copied.
 MAX_BUFFERED_BODY_SIZE = 20 * 1024 * 1024
 
+# Some servers' streams reserve the full requested size before any data arrives, so
+# read in pieces and let memory grow only with the bytes the client sent.
+READ_CHUNK_SIZE = 64 * 1024
+
 # Flask parses these itself and the form hook stores the parsed fields. Copying them
 # here as well would also copy every uploaded file.
 FORM_CONTENT_TYPES = ("multipart/form-data", "application/x-www-form-urlencoded")
@@ -108,7 +112,7 @@ class BufferedWsgiInput:
 def read_up_to(stream, size):
     chunks = []
     while size > 0:
-        chunk = stream.read(size)
+        chunk = stream.read(min(size, READ_CHUNK_SIZE))
         if not chunk:
             break
         chunks.append(chunk)

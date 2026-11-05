@@ -198,6 +198,24 @@ def test_stream_can_be_copied(copier):
     assert copier(stream).read() == BODY
 
 
+@pytest.mark.parametrize(
+    "content_length, terminated", [(None, True), (1024 * 1024, False)]
+)
+def test_stream_is_read_in_pieces(content_length, terminated):
+    sizes = []
+
+    class SizeRecordingStream(BytesIO):
+        def read(self, size=-1):
+            sizes.append(size)
+            return super().read(size)
+
+    stream = BufferedWsgiInput(
+        SizeRecordingStream(BODY), FakeContext(), content_length, terminated
+    )
+    assert stream.read(5) == BODY[:5]
+    assert max(sizes) <= buffered.READ_CHUNK_SIZE
+
+
 def test_partial_read_records_the_whole_body():
     context = FakeContext()
     stream = BufferedWsgiInput(BytesIO(BODY), context, len(BODY), False)
