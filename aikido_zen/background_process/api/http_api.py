@@ -18,21 +18,21 @@ class ReportingApiHTTP(ReportingApi):
         self.reporting_url = reporting_url
         self.max_events_per_interval = max_events_per_interval
         self.interval_in_ms = interval_in_ms
-        self.report_times = []
+        self.attack_times = []
 
     def report(self, token, event, timeout_in_sec):
         if event.get("type") == "detected_attack":
             window_start = get_unixtime_ms() - self.interval_in_ms
-            self.report_times = [
-                report_time
-                for report_time in self.report_times
-                if report_time > window_start
+            self.attack_times = [
+                attack_time
+                for attack_time in self.attack_times
+                if attack_time > window_start
             ]
 
-            if len(self.report_times) >= self.max_events_per_interval:
+            if len(self.attack_times) >= self.max_events_per_interval:
                 return {"success": False, "error": "max_attacks_reached"}
 
-            self.report_times.append(event["time"])
+            self.attack_times.append(event["time"])
 
         try:
             res = requests.post(
