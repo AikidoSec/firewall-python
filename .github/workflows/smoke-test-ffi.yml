@@ -8,10 +8,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # macos-14 is ARM-based
-        # macos-14-large is x86-based
+        # macos-26 is ARM-based
+        # macos-26-intel is x86-based
         # ubuntu-24.04 (x86) is not included because the full test suite runs on it
-        os: [windows-latest, macos-14, macos-14-large, ubuntu-22.04-arm]
+        os: [windows-latest, macos-26, macos-26-intel, ubuntu-22.04-arm]
 
     # Allows all jobs to run even if one fails
     continue-on-error: true
