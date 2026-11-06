@@ -13,9 +13,10 @@ def _import(func, instance, args, kwargs, return_value):
     if not hasattr(return_value, "__package__"):
         return
 
+    if running_import_scan.get():
+        return  # Outside the try: its finally would reset the outer scan's flag
+
     try:
-        if running_import_scan.get():
-            return
         running_import_scan.set(True)
 
         name = getattr(return_value, "__package__")

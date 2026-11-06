@@ -8,7 +8,7 @@ def python_version_not_supported() -> bool:
     if major != 3:
         logger.error("This version of Zen only supports Python 3")
         return True
-    if minor > 14:
-        logger.error("This version of Zen doesn't support versions above Python 3.14")
+    if minor > 15:
+        logger.error("This version of Zen doesn't support versions above Python 3.15")
         return True
     return False
