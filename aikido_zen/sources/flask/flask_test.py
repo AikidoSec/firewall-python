@@ -540,3 +540,105 @@ def test_custom_request_body_reader_is_inspected(body_app, reader):
     assert response.status_code == 200
     response.close()
     assert CustomRequest.__dict__["get_data"] is wrapped
+
+
+@pytest.mark.parametrize("status", [200, 400, 404, 500])
+def test_retained_request_does_not_keep_previous_agent_context(body_app, status):
+    from weakref import ref
+    from flask import abort, request
+
+    body_app.config["PROPAGATE_EXCEPTIONS"] = False
+    requests = []
+
+    @body_app.post("/body")
+    def view():
+        request.get_data()
+        assert get_current_context().body == "original"
+        requests.append((request._get_current_object(), ref(get_current_context())))
+        if status != 200:
+            abort(status)
+        return "ok"
+
+    @body_app.get("/next")
+    def next_request():
+        return "ok"
+
+    client = body_app.test_client()
+    client.post("/body", data=b"original").close()
+    previous_request, context_ref = requests[0]
+    assert context_ref() is not None
+
+    client.get("/next").close()
+    assert context_ref() is None
+    assert previous_request.get_data() == b"original"
+    assert get_current_context().body is None
+
+
+def test_reading_a_retained_request_does_not_change_the_next_context(body_app):
+    from flask import request
+
+    requests = []
+
+    @body_app.post("/ignore")
+    def ignore():
+        requests.append(request._get_current_object())
+        return "ok"
+
+    @body_app.get("/next")
+    def next_request():
+        return "ok"
+
+    client = body_app.test_client()
+    client.post("/ignore", data=b"original").close()
+    client.get("/next").close()
+
+    assert requests[0].get_data() == b"original"
+    assert get_current_context().body is None
+
+
+def test_copied_context_before_flask_dispatch_keeps_its_data(body_app, monkeypatch):
+    from contextvars import copy_context
+    from flask import request
+
+    copies = []
+
+    def record_init(stage, **kwargs):
+        if stage == "init" and not copies:
+            copies.append(copy_context())
+
+    monkeypatch.setattr(aikido_zen.sources.flask.funcs, "request_handler", record_init)
+
+    @body_app.post("/body")
+    def view():
+        request.get_data()
+        return "ok"
+
+    @body_app.get("/next")
+    def next_request():
+        return "ok"
+
+    response = body_app.test_client().post("/body", data=b"original")
+    response.close()
+    response = body_app.test_client().get("/next")
+    response.close()
+
+    assert get_current_context().body is None
+    assert copies[0].run(lambda: get_current_context().body) == "original"
+
+
+def test_streaming_response_can_still_capture_body_reads(body_app):
+    from flask import request, stream_with_context
+
+    @body_app.post("/stream")
+    def view():
+        @stream_with_context
+        def stream():
+            data = request.get_data()
+            assert get_current_context().body == "original"
+            yield data
+
+        return body_app.response_class(stream())
+
+    response = body_app.test_client().post("/stream", data=b"original")
+    assert response.get_data() == b"original"
+    response.close()
