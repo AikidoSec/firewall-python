@@ -60,9 +60,13 @@ def _call(func, instance, args, kwargs):
         from flask import Response
 
         msg, status_code = should_block_current_request
-        return Response(msg, status=status_code, mimetype="text/plain")(
-            environ, start_response
-        )
+        try:
+            return Response(msg, status=status_code, mimetype="text/plain")(
+                environ, start_response
+            )
+        finally:
+            # Match Flask's teardown because blocked requests never enter Flask.
+            environ["werkzeug.request"] = None
 
 
 @on_import("flask.app", "flask", version_requirement="2.2.4")

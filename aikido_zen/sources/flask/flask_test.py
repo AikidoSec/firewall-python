@@ -288,6 +288,61 @@ def body_app(monkeypatch):
     current_context.set(None)
 
 
+def test_blocked_before_flask_releases_outer_request(body_app, monkeypatch):
+    from weakref import ref
+    from werkzeug.test import create_environ
+    from werkzeug.wrappers import Request
+
+    monkeypatch.setattr(
+        aikido_zen.sources.flask, "should_block", lambda: ("blocked", 403)
+    )
+
+    @body_app.get("/")
+    def view():
+        pytest.fail("Blocked request reached Flask")
+
+    environ = create_environ("/")
+    environ["REMOTE_ADDR"] = "127.0.0.1"
+    outer_request = Request(environ)
+    request_ref = ref(outer_request)
+    del outer_request
+    captured = {}
+
+    def start_response(status, headers):
+        captured["status"] = status
+        assert environ["werkzeug.request"] is not None
+
+    response = body_app(environ, start_response)
+    try:
+        assert b"".join(response) == b"blocked"
+    finally:
+        response.close()
+
+    assert captured["status"] == "403 FORBIDDEN"
+    assert environ["werkzeug.request"] is None
+    assert request_ref() is None
+
+
+def test_streaming_response_keeps_flask_context_and_body(body_app):
+    from flask import request, stream_with_context
+
+    @body_app.post("/stream")
+    def view():
+        @stream_with_context
+        def stream():
+            assert request.path == "/stream"
+            yield request.get_data()
+
+        return body_app.response_class(stream())
+
+    response = body_app.test_client().post("/stream", data=b"original", buffered=False)
+    try:
+        assert response.status_code == 200
+        assert response.get_data() == b"original"
+    finally:
+        response.close()
+
+
 @pytest.mark.parametrize("status", [200, 404, 405, 308])
 @pytest.mark.parametrize("hooks", [False, True])
 def test_unused_body_is_not_read(body_app, status, hooks):
