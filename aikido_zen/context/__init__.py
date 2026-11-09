@@ -129,7 +129,7 @@ class Context:
                 if parsed_body:
                     self.body = parsed_body
                     return
-            except (JSONDecodeError, ValueError):
+            except (JSONDecodeError, ValueError, RecursionError):
                 pass
             # Use errors="replace" so invalid bytes become � instead of raising.
             # A strict decode would let attackers bypass detection by prepending a

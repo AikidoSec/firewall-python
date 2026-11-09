@@ -1,6 +1,7 @@
 from aikido_zen.context import Context, get_current_context
 from .functions.request_handler import request_handler
 from ..helpers.get_argument import get_argument
+from ..helpers.logging import logger
 from ..sinks import on_import, patch_function, before, before_async
 
 
@@ -25,14 +26,19 @@ async def _handle_request_before(func, instance, args, kwargs):
     if not request:
         return
 
-    form = await request.form
-    if request.is_json:
-        context.set_body(await request.get_json())
-    elif form:
-        context.set_body(form)
-    else:
-        data = await request.data
-        context.set_body(data)
+    try:
+        form = await request.form
+        if request.is_json:
+            context.set_body(await request.get_json())
+        elif form:
+            context.set_body(form)
+        else:
+            data = await request.data
+            context.set_body(data)
+    except Exception as e:
+        # A body Quart cannot parse must not skip the steps below, so use the raw body.
+        logger.debug("Exception occurred whilst reading quart body : %s", e)
+        context.set_body(await request.get_data())
     context.cookies = request.cookies.to_dict()
     context.set_as_current_context()
 
