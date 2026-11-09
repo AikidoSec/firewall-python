@@ -31,7 +31,11 @@ def aik_route_func_wrapper(func):
             req = args[0]
             if not req:
                 return
-            await extract_data_from_request(req)
+            try:
+                await extract_data_from_request(req)
+            except Exception as e:
+                # A body that cannot be read must not skip the IP and bot checks.
+                logger.debug("Exception occurred whilst reading starlette body : %s", e)
             pre_response_results = request_handler(stage="pre_response")
             if pre_response_results:
                 response = create_starlette_response(pre_response_results)

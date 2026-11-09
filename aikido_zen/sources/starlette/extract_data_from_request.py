@@ -12,8 +12,8 @@ async def extract_data_from_request(request):
     # Parse data
     try:
         context.set_body(await request.json())
-    except ValueError:
-        # Throws error if the body is not json
+    except (ValueError, RecursionError):
+        # Not JSON, or nested too deep to parse: the form and raw body are still read
         pass
     if not context.body:
         form_data = await request.form()
