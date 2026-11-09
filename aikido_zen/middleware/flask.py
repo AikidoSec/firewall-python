@@ -30,13 +30,16 @@ class AikidoFlaskMiddleware:
             res = self.Response(message, mimetype="text/plain", status=429)
             if result["retry_after_seconds"]:
                 res.headers["Retry-After"] = str(result["retry_after_seconds"])
-            return res(environ, start_response)
-
-        if result["type"] == "blocked":
+        elif result["type"] == "blocked":
             res = self.Response(
                 "You are blocked by Zen.", mimetype="text/plain", status=403
             )
-            return res(environ, start_response)
+        else:
+            logger.debug("Unknown type for blocking request: %s", result["type"])
+            return self.app(environ, start_response)
 
-        logger.debug("Unknown type for blocking request: %s", result["type"])
-        return self.app(environ, start_response)
+        try:
+            return res(environ, start_response)
+        finally:
+            # Match Flask's teardown because blocked requests never enter Flask.
+            environ["werkzeug.request"] = None
