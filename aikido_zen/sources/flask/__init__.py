@@ -1,3 +1,4 @@
+from weakref import ref
 from aikido_zen.context import Context
 from aikido_zen.helpers.get_argument import get_argument
 from aikido_zen.sinks import on_import, patch_function, before_modify_return, after
@@ -27,7 +28,8 @@ def _full_dispatch_request_after(func, instance, args, kwargs, return_value):
 
 @after
 def _body_read_after(func, instance, args, kwargs, return_value):
-    context = instance.environ.get("aikido_zen.context")
+    context_ref = instance.environ.get("aikido_zen.context")
+    context = context_ref() if context_ref is not None else None
     if context is None:
         return
     form = instance.__dict__.get("form")
@@ -50,7 +52,8 @@ def _call(func, instance, args, kwargs):
         setattr(request_class, "_aikido_body_hooks_installed", True)
 
     context1 = Context(req=environ, source="flask")
-    environ["aikido_zen.context"] = context1
+    # Old requests may outlive their response; avoid retaining our captured data.
+    environ["aikido_zen.context"] = ref(context1)
     context1.set_as_current_context()
     funcs.request_handler(stage="init")
 
