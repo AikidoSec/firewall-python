@@ -15,9 +15,9 @@ def find_hostname_in_context(hostname, context: Context, port):
         # Validate hostname and port input
         return None
 
-    # We don't want to block outgoing requests to the same host as the server
-    # (often happens that we have a match on headers like `Host`, `Origin`, `Referer`, etc.)
-    if is_request_to_itself(context.url, hostname, port):
+    # We don't want to block outgoing requests to hostnames the operator has
+    # declared as their own server via AIKIDO_TRUSTED_HOSTNAMES.
+    if is_request_to_itself(hostname):
         return None
 
     # Gets the different hostname options: with/without punycode, with/without brackets for IPv6
