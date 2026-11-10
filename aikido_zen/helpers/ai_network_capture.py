@@ -129,12 +129,12 @@ def count_tokens(usage, fields):
     return total
 
 
-def endpoint_url(scheme, host, port, path):
-    """The URL a call is reported under: no user info, query or fragment."""
+def request_origin(scheme, host, port):
+    """`scheme://host[:port]`, with the port only when it is not the scheme's default."""
     netloc = f"[{host}]" if ":" in host else host
     if port and port != DEFAULT_PORTS.get(scheme):
         netloc = f"{netloc}:{port}"
-    return f"{scheme}://{netloc}{path}"
+    return f"{scheme}://{netloc}"
 
 
 def inspect_ai_response(response, *, method, scheme, host, port, path, status, body):
@@ -152,7 +152,7 @@ def inspect_ai_response(response, *, method, scheme, host, port, path, status, b
     if call is None:
         return
     on_ai_call(
-        provider=endpoint_url(scheme, host, port, path),
+        provider=request_origin(scheme, host, port),
         model=call.model,
         input_tokens=call.input_tokens,
         output_tokens=call.output_tokens,

@@ -7,13 +7,13 @@ import pytest
 from aikido_zen.thread.thread_cache import get_cache
 from .ai_network_capture import (
     MAX_BODY_BYTES,
-    endpoint_url,
+    request_origin,
     inspect_ai_response,
     is_ai_request_path,
     parse_ai_response,
 )
 
-OPENAI_URL = "https://api.openai.com/v1/chat/completions"
+OPENAI_ORIGIN = "https://api.openai.com"
 VERTEX_PATH = "/v1/projects/p/locations/us-east5/publishers/anthropic/models/"
 BEDROCK_MODEL = "anthropic.claude-haiku-4-5-20251001-v1:0"
 INFERENCE_PROFILE_ARN = (
@@ -433,19 +433,19 @@ def test_cache_tokens_are_reported_when_the_provider_has_them():
 @pytest.mark.parametrize(
     "scheme, host, port, expected",
     [
-        ("https", "api.openai.com", None, "https://api.openai.com/v1/responses"),
-        ("https", "api.openai.com", 443, "https://api.openai.com/v1/responses"),
-        ("http", "127.0.0.1", 80, "http://127.0.0.1/v1/responses"),
-        ("http", "localhost", 11434, "http://localhost:11434/v1/responses"),
-        ("https", "gw.example.com", 80, "https://gw.example.com:80/v1/responses"),
-        ("http", "::1", 8080, "http://[::1]:8080/v1/responses"),
+        ("https", "api.openai.com", None, "https://api.openai.com"),
+        ("https", "api.openai.com", 443, "https://api.openai.com"),
+        ("http", "127.0.0.1", 80, "http://127.0.0.1"),
+        ("http", "localhost", 11434, "http://localhost:11434"),
+        ("https", "gw.example.com", 80, "https://gw.example.com:80"),
+        ("http", "::1", 8080, "http://[::1]:8080"),
     ],
 )
-def test_endpoint_url(scheme, host, port, expected):
-    assert endpoint_url(scheme, host, port, "/v1/responses") == expected
+def test_request_origin(scheme, host, port, expected):
+    assert request_origin(scheme, host, port) == expected
 
 
-def test_response_is_reported_under_its_endpoint_url():
+def test_response_is_reported_under_its_origin():
     inspect(
         {
             "model": "gpt-4o-mini",
@@ -454,7 +454,7 @@ def test_response_is_reported_under_its_endpoint_url():
     )
     assert get_ai_stats() == [
         {
-            "provider": OPENAI_URL,
+            "provider": OPENAI_ORIGIN,
             "model": "gpt-4o-mini",
             "calls": 1,
             "tokens": {

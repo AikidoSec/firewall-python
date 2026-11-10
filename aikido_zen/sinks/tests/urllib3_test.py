@@ -40,9 +40,7 @@ def test_urllib3_counts_once_and_body_stays_readable(provider):
         "POST", provider + "/v1/chat/completions", body=b"{}"
     )
     assert json.loads(response.data)["model"] == "gpt-4o-mini-2024-07-18"
-    assert_counted_once(
-        provider + "/v1/chat/completions", "gpt-4o-mini-2024-07-18", 11, 7
-    )
+    assert_counted_once(provider, "gpt-4o-mini-2024-07-18", 11, 7)
 
 
 def test_urllib3_gzip_body_is_parsed(provider):
@@ -51,9 +49,7 @@ def test_urllib3_gzip_body_is_parsed(provider):
     )
     assert response.headers["Content-Encoding"] == "gzip"
     assert json.loads(response.data)["model"] == "gpt-4o-mini-2024-07-18"
-    assert_counted_once(
-        provider + "/v1/chat/completions", "gpt-4o-mini-2024-07-18", 11, 7
-    )
+    assert_counted_once(provider, "gpt-4o-mini-2024-07-18", 11, 7)
 
 
 def test_plain_urllib3_calls_are_unchanged(provider):
@@ -84,18 +80,14 @@ def test_urllib3_redirect_counts_once(provider):
         "POST", provider + "/redirect/v1/chat/completions", body=b"{}"
     )
     assert json.loads(response.data)["model"] == "gpt-4o-mini-2024-07-18"
-    assert_counted_once(
-        provider + "/v1/chat/completions", "gpt-4o-mini-2024-07-18", 11, 7
-    )
+    assert_counted_once(provider, "gpt-4o-mini-2024-07-18", 11, 7)
 
 
 def test_urllib3_pool_redirect_counts_once(provider):
     pool = urllib3.connection_from_url(provider)
     response = pool.urlopen("POST", "/redirect/v1/chat/completions", body=b"{}")
     assert json.loads(response.data)["model"] == "gpt-4o-mini-2024-07-18"
-    assert_counted_once(
-        provider + "/v1/chat/completions", "gpt-4o-mini-2024-07-18", 11, 7
-    )
+    assert_counted_once(provider, "gpt-4o-mini-2024-07-18", 11, 7)
 
 
 def test_urllib3_retry_counts_once(provider):
@@ -105,9 +97,7 @@ def test_urllib3_retry_counts_once(provider):
     )
     assert [error.status for error in response.retries.history] == [503]
     assert response.status == 200
-    assert_counted_once(
-        provider + "/v1/chat/completions", "gpt-4o-mini-2024-07-18", 11, 7
-    )
+    assert_counted_once(provider, "gpt-4o-mini-2024-07-18", 11, 7)
 
 
 def test_urllib3_errors_still_reach_the_app():

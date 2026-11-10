@@ -71,31 +71,29 @@ def setup():
         ),
     ],
 )
-def test_ai_path_is_counted_under_its_url_without_the_query(provider, path, expected):
+def test_ai_path_is_counted_under_the_origin(provider, path, expected):
     requests.post(provider + path, json={})
-    assert_counted_once(provider + path.partition("?")[0], *expected)
+    assert_counted_once(provider, *expected)
 
 
-def test_http_clients_report_the_same_url_for_an_encoded_path(provider):
+def test_http_clients_count_a_call_on_an_encoded_path_the_same_way(provider):
     path = "/model/" + quote(INFERENCE_PROFILE_ARN, safe="") + "/invoke"
     requests.post(provider + path, json={})
     httpx.post(provider + path, json={})
     urllib3.PoolManager().request("POST", provider + path, body=b"{}")
     assert [(s["provider"], s["model"], s["calls"]) for s in get_ai_stats()] == [
-        (provider + path, "claude-sonnet-4-20250514", 3)
+        (provider, "claude-sonnet-4-20250514", 3)
     ]
 
 
-def test_reported_url_has_no_user_info_query_or_fragment(provider):
+def test_reported_origin_has_no_user_info(provider):
     url = provider.replace("http://", "http://user:secret@")
     requests.post(url + "/v1/chat/completions?key=secret#top", json={})
     httpx.post(url + "/v1/chat/completions?key=secret", json={})
     urllib3.PoolManager().request(
         "POST", url + "/v1/chat/completions?key=secret", body=b"{}"
     )
-    assert [(s["provider"], s["calls"]) for s in get_ai_stats()] == [
-        (provider + "/v1/chat/completions", 3)
-    ]
+    assert [(s["provider"], s["calls"]) for s in get_ai_stats()] == [(provider, 3)]
 
 
 @pytest.mark.parametrize(
@@ -155,7 +153,7 @@ def test_openai_sdk_call_is_counted_by_http_alongside_the_sdk_sink(provider):
     client = openai.OpenAI(api_key="test", base_url=provider + "/v1", max_retries=0)
     client.chat.completions.create(model="gpt-4o-mini", messages=HELLO)
     assert get_ai_stats() == [
-        stats_row(provider + "/v1/chat/completions", "gpt-4o-mini-2024-07-18", 11, 7),
+        stats_row(provider, "gpt-4o-mini-2024-07-18", 11, 7),
         stats_row("openai", "gpt-4o-mini-2024-07-18", 11, 7),
     ]
 
@@ -164,7 +162,7 @@ def test_anthropic_sdk_call_is_counted_by_http_alongside_the_sdk_sink(provider):
     client = anthropic.Anthropic(api_key="test", base_url=provider, max_retries=0)
     client.messages.create(model="claude-sonnet-4", max_tokens=5, messages=HELLO)
     assert get_ai_stats() == [
-        stats_row(provider + "/v1/messages", "claude-sonnet-4-20250514", 21, 12),
+        stats_row(provider, "claude-sonnet-4-20250514", 21, 12),
         stats_row("anthropic", "claude-sonnet-4-20250514", 21, 12),
     ]
 

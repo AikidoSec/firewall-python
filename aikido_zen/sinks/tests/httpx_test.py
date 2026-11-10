@@ -36,7 +36,7 @@ def test_httpx_counts_once_and_body_stays_readable(provider):
     with httpx.Client() as client:
         response = client.post(provider + "/v1/responses", json={})
     assert response.json()["model"] == "gpt-4o-2024-08-06"
-    assert_counted_once(provider + "/v1/responses", "gpt-4o-2024-08-06", 20, 9)
+    assert_counted_once(provider, "gpt-4o-2024-08-06", 20, 9)
 
 
 @pytest.mark.asyncio
@@ -44,18 +44,14 @@ async def test_httpx_async_counts_once(provider):
     async with httpx.AsyncClient() as client:
         response = await client.post(provider + "/v1/chat/completions", json={})
     assert response.json()["model"] == "gpt-4o-mini-2024-07-18"
-    assert_counted_once(
-        provider + "/v1/chat/completions", "gpt-4o-mini-2024-07-18", 11, 7
-    )
+    assert_counted_once(provider, "gpt-4o-mini-2024-07-18", 11, 7)
 
 
 def test_httpx_gzip_body_is_parsed(provider):
     response = httpx.post(provider + "/v1/chat/completions?gzip", json={})
     assert response.headers["Content-Encoding"] == "gzip"
     assert response.json()["model"] == "gpt-4o-mini-2024-07-18"
-    assert_counted_once(
-        provider + "/v1/chat/completions", "gpt-4o-mini-2024-07-18", 11, 7
-    )
+    assert_counted_once(provider, "gpt-4o-mini-2024-07-18", 11, 7)
 
 
 @pytest.mark.asyncio
@@ -98,9 +94,7 @@ def test_httpx_redirect_counts_once(provider):
         response = client.post(provider + "/redirect/v1/chat/completions", json={})
     assert response.history[0].status_code == 307
     assert response.json()["model"] == "gpt-4o-mini-2024-07-18"
-    assert_counted_once(
-        provider + "/v1/chat/completions", "gpt-4o-mini-2024-07-18", 11, 7
-    )
+    assert_counted_once(provider, "gpt-4o-mini-2024-07-18", 11, 7)
 
 
 @pytest.mark.asyncio

@@ -41,7 +41,7 @@ def test_httpx2_counts_once_and_body_stays_readable(provider):
     with httpx2.Client() as client:
         response = client.post(provider + "/v1/messages", json={})
     assert response.json()["model"] == "claude-sonnet-4-20250514"
-    assert_counted_once(provider + "/v1/messages", "claude-sonnet-4-20250514", 21, 12)
+    assert_counted_once(provider, "claude-sonnet-4-20250514", 21, 12)
 
 
 @pytest.mark.asyncio
@@ -49,18 +49,14 @@ async def test_httpx2_async_counts_once(provider):
     async with httpx2.AsyncClient() as client:
         response = await client.post(provider + "/v1/chat/completions", json={})
     assert response.json()["model"] == "gpt-4o-mini-2024-07-18"
-    assert_counted_once(
-        provider + "/v1/chat/completions", "gpt-4o-mini-2024-07-18", 11, 7
-    )
+    assert_counted_once(provider, "gpt-4o-mini-2024-07-18", 11, 7)
 
 
 def test_httpx2_gzip_body_is_parsed(provider):
     response = httpx2.post(provider + "/v1/chat/completions?gzip", json={})
     assert response.headers["Content-Encoding"] == "gzip"
     assert response.json()["model"] == "gpt-4o-mini-2024-07-18"
-    assert_counted_once(
-        provider + "/v1/chat/completions", "gpt-4o-mini-2024-07-18", 11, 7
-    )
+    assert_counted_once(provider, "gpt-4o-mini-2024-07-18", 11, 7)
 
 
 @pytest.mark.asyncio
@@ -98,13 +94,11 @@ async def test_httpx2_async_stream_is_not_read_and_not_counted(provider):
     assert get_ai_stats() == []
 
 
-def test_httpx2_reports_the_encoded_path_without_user_info_or_query(provider):
+def test_httpx2_reports_the_origin_without_user_info(provider):
     path = "/model/" + quote(INFERENCE_PROFILE_ARN, safe="") + "/invoke"
     url = provider.replace("http://", "http://user:secret@") + path + "?key=secret"
     httpx2.post(url, json={})
-    assert [(s["provider"], s["calls"]) for s in get_ai_stats()] == [
-        (provider + path, 1)
-    ]
+    assert [(s["provider"], s["calls"]) for s in get_ai_stats()] == [(provider, 1)]
 
 
 def test_httpx2_redirect_counts_once(provider):
@@ -112,9 +106,7 @@ def test_httpx2_redirect_counts_once(provider):
         response = client.post(provider + "/redirect/v1/chat/completions", json={})
     assert response.history[0].status_code == 307
     assert response.json()["model"] == "gpt-4o-mini-2024-07-18"
-    assert_counted_once(
-        provider + "/v1/chat/completions", "gpt-4o-mini-2024-07-18", 11, 7
-    )
+    assert_counted_once(provider, "gpt-4o-mini-2024-07-18", 11, 7)
 
 
 @pytest.mark.asyncio
