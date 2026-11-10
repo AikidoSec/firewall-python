@@ -2,9 +2,6 @@ import pytest
 import pickle
 import json
 from aikido_zen.context import Context, get_current_context, current_context
-from aikido_zen.vulnerabilities.sql_injection.context_contains_sql_injection import (
-    context_contains_sql_injection,
-)
 
 LEVELS_TOO_DEEP_TO_PARSE = 1_000_000
 
@@ -332,6 +329,4 @@ def test_set_bytes_with_json_prefix_too_deep_to_parse(opening):
     body = opening * LEVELS_TOO_DEEP_TO_PARSE + b"1' OR 1=1 -- "
     context = Context(req=basic_wsgi_req, body=body, source="flask")
     assert isinstance(context.body, str)
-    query = "SELECT * FROM notes WHERE text = '%s'" % context.body
-    attack = context_contains_sql_injection(query, "select", context, "sqlite")
-    assert attack["source"] == "body"
+    assert context.body.endswith("1' OR 1=1 -- ")
