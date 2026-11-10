@@ -17,12 +17,16 @@ class AIStatistics:
                     "input": 0,
                     "output": 0,
                     "total": 0,
+                    "cacheRead": 0,
+                    "cacheWrite": 0,
                 },
             }
 
         return self.calls[key]
 
-    def on_ai_call(self, provider, model, input_tokens, output_tokens):
+    def on_ai_call(
+        self, provider, model, input_tokens, output_tokens, cache_read=0, cache_write=0
+    ):
         if not provider or not model:
             return
 
@@ -31,6 +35,8 @@ class AIStatistics:
         provider_stats["tokens"]["input"] += input_tokens
         provider_stats["tokens"]["output"] += output_tokens
         provider_stats["tokens"]["total"] += input_tokens + output_tokens
+        provider_stats["tokens"]["cacheRead"] += cache_read
+        provider_stats["tokens"]["cacheWrite"] += cache_write
 
     def get_stats(self):
         return [copy.deepcopy(stats) for stats in self.calls.values()]
@@ -41,9 +47,8 @@ class AIStatistics:
                 new_entry["provider"], new_entry["model"]
             )
             existing_entry["calls"] += new_entry["calls"]
-            existing_entry["tokens"]["input"] += new_entry["tokens"]["input"]
-            existing_entry["tokens"]["output"] += new_entry["tokens"]["output"]
-            existing_entry["tokens"]["total"] += new_entry["tokens"]["total"]
+            for field in existing_entry["tokens"]:
+                existing_entry["tokens"][field] += new_entry["tokens"].get(field, 0)
 
     def clear(self):
         self.calls.clear()

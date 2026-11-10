@@ -129,4 +129,10 @@ def protect(mode="daemon", token=""):
     import aikido_zen.sinks.mistralai
     import aikido_zen.sinks.botocore
 
+    # Import HTTP client sinks
+    import aikido_zen.sinks.httpx
+    import aikido_zen.sinks.httpx2
+    import aikido_zen.sinks.requests
+    import aikido_zen.sinks.urllib3
+
     logger.info("Zen by Aikido v%s starting.", PKG_VERSION)
