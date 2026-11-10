@@ -27,6 +27,11 @@ class FormRequest:
         return self._body
 
 
+class UnparsableFormRequest(FormRequest):
+    async def form(self):
+        raise ValueError("Invalid multipart data.")
+
+
 @pytest.fixture(autouse=True)
 def run_around_tests():
     yield
@@ -48,3 +53,12 @@ async def test_deeply_nested_json_body_does_not_hide_injection(opening):
     attack = context_contains_sql_injection(query, "execute", context, "postgres")
     assert attack["source"] == "body"
     assert attack["pathToPayload"] == ".dog_name"
+
+
+@pytest.mark.asyncio
+async def test_form_that_cannot_be_parsed_is_kept_as_the_raw_body():
+    context = test_utils.generate_and_set_context()
+
+    await extract_data_from_request(UnparsableFormRequest(b"x' OR 1=1 -- ", None))
+
+    assert context.body == "x' OR 1=1 -- "

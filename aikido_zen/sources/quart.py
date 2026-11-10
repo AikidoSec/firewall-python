@@ -36,7 +36,7 @@ async def _handle_request_before(func, instance, args, kwargs):
             data = await request.data
             context.set_body(data)
     except Exception as e:
-        # A body Quart cannot parse must not skip the steps below, so use the raw body.
+        # A body Quart cannot parse must not skip the steps below.
         logger.debug("Exception occurred whilst reading quart body : %s", e)
         context.set_body(await request.get_data())
     context.cookies = request.cookies.to_dict()
