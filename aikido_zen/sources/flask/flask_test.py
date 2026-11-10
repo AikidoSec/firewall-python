@@ -231,3 +231,414 @@ def test_startup_flask():
         app.run()
     except TimeoutException:
         pass
+
+
+@pytest.mark.parametrize("inspect_raw_first", [False, True])
+def test_form_body_after_raw_read_is_inspected(monkeypatch, inspect_raw_first):
+    from flask import Flask, request
+    from aikido_zen.helpers.extract_strings_from_context import (
+        extract_strings_from_context,
+    )
+    from aikido_zen.vulnerabilities.sql_injection.context_contains_sql_injection import (
+        context_contains_sql_injection,
+    )
+
+    monkeypatch.setattr(aikido_zen.sources.flask, "should_block", lambda: None)
+    monkeypatch.setattr(
+        aikido_zen.sources.flask.funcs, "request_handler", lambda **kwargs: None
+    )
+    app = Flask(__name__)
+    attack = "Malicious Pet', 'Gru from the Minions') --"
+
+    @app.post("/body")
+    def view():
+        request.get_data()
+        context = get_current_context()
+        if inspect_raw_first:
+            extract_strings_from_context(context)
+        name = request.form["name"]
+        result = context_contains_sql_injection(
+            sql=f"INSERT INTO pets(name) VALUES ('{name}')",
+            operation="psycopg2.Cursor.execute",
+            context=context,
+            dialect="postgres",
+        )
+        assert result["source"] == "body"
+        assert result["payload"] == attack
+        return "ok"
+
+    try:
+        response = app.test_client().post("/body", data={"name": attack})
+        assert response.status_code == 200
+        response.close()
+    finally:
+        current_context.set(None)
+
+
+@pytest.fixture
+def body_app(monkeypatch):
+    from flask import Flask
+
+    monkeypatch.setattr(aikido_zen.sources.flask, "should_block", lambda: None)
+    monkeypatch.setattr(
+        aikido_zen.sources.flask.funcs, "request_handler", lambda **kwargs: None
+    )
+    current_context.set(None)
+    yield Flask(__name__)
+    current_context.set(None)
+
+
+def test_blocked_before_flask_releases_outer_request(body_app, monkeypatch):
+    from weakref import ref
+    from werkzeug.test import create_environ
+    from werkzeug.wrappers import Request
+
+    monkeypatch.setattr(
+        aikido_zen.sources.flask, "should_block", lambda: ("blocked", 403)
+    )
+
+    @body_app.get("/")
+    def view():
+        pytest.fail("Blocked request reached Flask")
+
+    environ = create_environ("/")
+    environ["REMOTE_ADDR"] = "127.0.0.1"
+    outer_request = Request(environ)
+    request_ref = ref(outer_request)
+    del outer_request
+    captured = {}
+
+    def start_response(status, headers):
+        captured["status"] = status
+        assert environ["werkzeug.request"] is not None
+
+    response = body_app(environ, start_response)
+    try:
+        assert b"".join(response) == b"blocked"
+    finally:
+        response.close()
+
+    assert captured["status"] == "403 FORBIDDEN"
+    assert environ["werkzeug.request"] is None
+    assert request_ref() is None
+
+
+def test_streaming_response_keeps_flask_context_and_body(body_app):
+    from flask import request, stream_with_context
+
+    @body_app.post("/stream")
+    def view():
+        @stream_with_context
+        def stream():
+            assert request.path == "/stream"
+            yield request.get_data()
+
+        return body_app.response_class(stream())
+
+    response = body_app.test_client().post("/stream", data=b"original", buffered=False)
+    try:
+        assert response.status_code == 200
+        assert response.get_data() == b"original"
+    finally:
+        response.close()
+
+
+@pytest.mark.parametrize("status", [200, 404, 405, 308])
+@pytest.mark.parametrize("hooks", [False, True])
+def test_unused_body_is_not_read(body_app, status, hooks):
+    from io import BytesIO
+
+    body_app.add_url_rule("/known", endpoint="known", view_func=lambda: "ok")
+    body_app.add_url_rule(
+        "/ignored", endpoint="ignored", view_func=lambda: "ok", methods=["POST"]
+    )
+    body_app.add_url_rule(
+        "/redirect/", endpoint="redirect", view_func=lambda: "ok", methods=["POST"]
+    )
+    if hooks:
+        body_app.before_request(lambda: None)
+        body_app.after_request(lambda response: response)
+        body_app.register_error_handler(404, lambda error: ("missing", 404))
+    stream = BytesIO(b"x" * 1024 * 1024)
+    path = {200: "/ignored", 404: "/missing", 405: "/known", 308: "/redirect"}[status]
+    with patch.object(stream, "read", wraps=stream.read) as read, patch.object(
+        stream, "readinto", wraps=stream.readinto
+    ) as readinto:
+        response = body_app.test_client().post(path, input_stream=stream)
+        assert response.status_code == status
+        read.assert_not_called()
+        readinto.assert_not_called()
+        assert get_current_context().body is None
+        response.close()
+
+
+@pytest.mark.parametrize(
+    "reader",
+    [
+        "stream",
+        "chunks",
+        "input_stream",
+        "wsgi_input",
+        "data",
+        "get_data",
+        "get_data_text",
+        "get_data_no_cache",
+        "get_json",
+        "json",
+    ],
+)
+def test_body_readers_preserve_application_data(body_app, reader):
+    import json
+    from flask import request
+
+    data = {"name": "original"}
+    payload = json.dumps(data).encode()
+
+    @body_app.post("/body")
+    def view():
+        if reader == "stream":
+            result = request.stream.read()
+        elif reader == "chunks":
+            result = request.stream.read(3) + request.stream.read()
+        elif reader == "input_stream":
+            result = request.input_stream.read()
+        elif reader == "wsgi_input":
+            result = request.environ["wsgi.input"].read()
+        elif reader == "get_data_text":
+            result = request.get_data(as_text=True)
+        elif reader == "get_data_no_cache":
+            result = request.get_data(cache=False)
+        elif reader in ("data", "json"):
+            result = getattr(request, reader)
+        else:
+            result = getattr(request, reader)()
+        if reader in ("get_json", "json"):
+            assert result == data
+        elif reader == "get_data_text":
+            assert result == payload.decode()
+        else:
+            assert result == payload
+        if reader in ("stream", "chunks", "input_stream", "wsgi_input"):
+            assert get_current_context().body is None
+        else:
+            assert get_current_context().body == data
+        return "ok"
+
+    response = body_app.test_client().post(
+        "/body", data=payload, content_type="application/json"
+    )
+    assert response.status_code == 200
+    response.close()
+
+
+def test_large_upload_remains_available_and_only_form_fields_are_captured(body_app):
+    from io import BytesIO
+    from flask import request
+
+    @body_app.post("/body")
+    def view():
+        assert len(request.files["file"].read()) == 10 * 1024 * 1024
+        assert get_current_context().body.getlist("name") == ["upload"]
+        assert "file" not in get_current_context().body
+        return "ok"
+
+    response = body_app.test_client().post(
+        "/body",
+        data={"name": "upload", "file": (BytesIO(b"x" * 10 * 1024 * 1024), "x.bin")},
+    )
+    assert response.status_code == 200
+    response.close()
+
+
+@pytest.mark.parametrize("reader", ["json", "form", "data"])
+def test_body_read_during_session_setup_is_inspected(body_app, reader):
+    import json
+    from flask import session
+    from flask.sessions import SecureCookieSession, SecureCookieSessionInterface
+    from aikido_zen.vulnerabilities.sql_injection.context_contains_sql_injection import (
+        context_contains_sql_injection,
+    )
+
+    attack = "Malicious Pet', 'Gru from the Minions') --"
+
+    class BodySession(SecureCookieSessionInterface):
+        def open_session(self, app, req):
+            if reader == "json":
+                data = req.get_json()
+            elif reader == "form":
+                data = req.form
+            else:
+                data = json.loads(req.get_data())
+            return SecureCookieSession({"name": data["name"]})
+
+    body_app.secret_key = "test-key"
+    body_app.session_interface = BodySession()
+
+    @body_app.post("/body")
+    def view():
+        name = session["name"]
+        result = context_contains_sql_injection(
+            sql=f"INSERT INTO pets(name) VALUES ('{name}')",
+            operation="psycopg2.Cursor.execute",
+            context=get_current_context(),
+            dialect="postgres",
+        )
+        assert result["source"] == "body"
+        assert result["payload"] == attack
+        return "ok"
+
+    data = (
+        {"data": {"name": attack}} if reader == "form" else {"json": {"name": attack}}
+    )
+    response = body_app.test_client().post("/body", **data)
+    assert response.status_code == 200
+    response.close()
+
+
+@pytest.mark.parametrize("reader", ["json", "data", "get_data"])
+def test_custom_request_body_reader_is_inspected(body_app, reader):
+    import json
+    from flask import Request, request
+    from werkzeug.wrappers import Request as WerkzeugRequest
+    from aikido_zen.vulnerabilities.sql_injection.context_contains_sql_injection import (
+        context_contains_sql_injection,
+    )
+
+    attack = "Malicious Pet', 'Gru from the Minions') --"
+
+    class CustomRequest(Request):
+        def get_data(self, *args, **kwargs):
+            return WerkzeugRequest.get_data(self, *args, **kwargs)
+
+    @body_app.post("/body")
+    def view():
+        if reader == "json":
+            name = request.get_json()["name"]
+        else:
+            data = request.data if reader == "data" else request.get_data()
+            name = json.loads(data)["name"]
+        result = context_contains_sql_injection(
+            sql=f"INSERT INTO pets(name) VALUES ('{name}')",
+            operation="psycopg2.Cursor.execute",
+            context=get_current_context(),
+            dialect="postgres",
+        )
+        assert result["source"] == "body"
+        assert result["payload"] == attack
+        return "ok"
+
+    client = body_app.test_client()
+    response = client.post("/body", json={"name": attack})
+    assert response.status_code == 200
+    response.close()
+    body_app.request_class = CustomRequest
+    response = client.post("/body", json={"name": attack})
+    assert response.status_code == 200
+    response.close()
+    wrapped = CustomRequest.__dict__["get_data"]
+    response = client.post("/body", json={"name": attack})
+    assert response.status_code == 200
+    response.close()
+    assert CustomRequest.__dict__["get_data"] is wrapped
+
+
+@pytest.mark.parametrize("status", [200, 400, 404, 500])
+def test_retained_request_does_not_keep_previous_agent_context(body_app, status):
+    from weakref import ref
+    from flask import abort, request
+
+    body_app.config["PROPAGATE_EXCEPTIONS"] = False
+    requests = []
+
+    @body_app.post("/body")
+    def view():
+        request.get_data()
+        assert get_current_context().body == "original"
+        requests.append((request._get_current_object(), ref(get_current_context())))
+        if status != 200:
+            abort(status)
+        return "ok"
+
+    @body_app.get("/next")
+    def next_request():
+        return "ok"
+
+    client = body_app.test_client()
+    client.post("/body", data=b"original").close()
+    previous_request, context_ref = requests[0]
+    assert context_ref() is not None
+
+    client.get("/next").close()
+    assert context_ref() is None
+    assert previous_request.get_data() == b"original"
+    assert get_current_context().body is None
+
+
+def test_reading_a_retained_request_does_not_change_the_next_context(body_app):
+    from flask import request
+
+    requests = []
+
+    @body_app.post("/ignore")
+    def ignore():
+        requests.append(request._get_current_object())
+        return "ok"
+
+    @body_app.get("/next")
+    def next_request():
+        return "ok"
+
+    client = body_app.test_client()
+    client.post("/ignore", data=b"original").close()
+    client.get("/next").close()
+
+    assert requests[0].get_data() == b"original"
+    assert get_current_context().body is None
+
+
+def test_copied_context_before_flask_dispatch_keeps_its_data(body_app, monkeypatch):
+    from contextvars import copy_context
+    from flask import request
+
+    copies = []
+
+    def record_init(stage, **kwargs):
+        if stage == "init" and not copies:
+            copies.append(copy_context())
+
+    monkeypatch.setattr(aikido_zen.sources.flask.funcs, "request_handler", record_init)
+
+    @body_app.post("/body")
+    def view():
+        request.get_data()
+        return "ok"
+
+    @body_app.get("/next")
+    def next_request():
+        return "ok"
+
+    response = body_app.test_client().post("/body", data=b"original")
+    response.close()
+    response = body_app.test_client().get("/next")
+    response.close()
+
+    assert get_current_context().body is None
+    assert copies[0].run(lambda: get_current_context().body) == "original"
+
+
+def test_streaming_response_can_still_capture_body_reads(body_app):
+    from flask import request, stream_with_context
+
+    @body_app.post("/stream")
+    def view():
+        @stream_with_context
+        def stream():
+            data = request.get_data()
+            assert get_current_context().body == "original"
+            yield data
+
+        return body_app.response_class(stream())
+
+    response = body_app.test_client().post("/stream", data=b"original")
+    assert response.get_data() == b"original"
+    response.close()

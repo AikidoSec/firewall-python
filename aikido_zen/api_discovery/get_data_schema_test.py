@@ -212,3 +212,18 @@ def test_max_properties():
     obj3 = generate_object_with_properties(120)
     schema3 = get_data_schema(obj3)
     assert len(schema3["properties"]) == 100
+
+
+def test_get_data_schema_of_xml_body():
+    assert get_data_schema({"name": {"bob"}, "city": {"Brussels"}}) == {
+        "type": "object",
+        "properties": {
+            "name": {"type": "string"},
+            "city": {"type": "string"},
+        },
+    }
+
+
+def test_get_data_schema_never_returns_a_python_type_name():
+    for value in ({"bob"}, frozenset(["bob"]), b"bob", bytearray(b"bob")):
+        assert get_data_schema(value) == {"type": "string"}

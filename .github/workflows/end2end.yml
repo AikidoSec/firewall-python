@@ -43,7 +43,14 @@ jobs:
           - { name: fastapi-postgres-uvicorn, testfile: end2end/fastapi_postgres_uvicorn_test.py }
           - { name: fastapi-postgres-uvicorn-latest, testfile: end2end/fastapi_postgres_uvicorn_latest_test.py }
           - { name: fastapi-postgres-uvicorn-old, testfile: end2end/fastapi_postgres_uvicorn_old_test.py }
-        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14", "3.15"]
+        include:
+          - app: { name: flask-mysql, testfile: end2end/flask_mysql_test.py, lazy-imports: all }
+            python-version: "3.15"
+          - app: { name: django-mysql-gunicorn, testfile: end2end/django_mysql_gunicorn_test.py, lazy-imports: all }
+            python-version: "3.15"
+          - app: { name: starlette-postgres-uvicorn, testfile: end2end/starlette_postgres_uvicorn_test.py, lazy-imports: all }
+            python-version: "3.15"
     steps:
       - name: Install packages
         run: sudo apt update && sudo apt install python3-dev libmysqlclient-dev
@@ -74,6 +81,8 @@ jobs:
 
       - name: Start application
         working-directory: ./sample-apps/${{ matrix.app.name }}
+        env:
+          PYTHON_LAZY_IMPORTS: ${{ matrix.app.lazy-imports || 'normal' }}
         run: |
           nohup make runZenDisabled &
           sleep 20

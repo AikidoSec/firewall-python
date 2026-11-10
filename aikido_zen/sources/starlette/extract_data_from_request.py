@@ -12,11 +12,14 @@ async def extract_data_from_request(request):
     # Parse data
     try:
         context.set_body(await request.json())
-    except ValueError:
-        # Throws error if the body is not json
+    except (ValueError, RecursionError):
+        # Not JSON, or nested too deep to parse
         pass
     if not context.body:
-        form_data = await request.form()
+        try:
+            form_data = await request.form()
+        except Exception:
+            form_data = None
         if form_data:
             # Convert to dict object :
             context.set_body(dict(form_data.items()))

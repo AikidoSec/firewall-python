@@ -29,6 +29,9 @@ AIKIDO_ENV_BENCHMARK = \
 AIKIDO_ENV_DISABLED = \
 	AIKIDO_DISABLE=1
 
+# Empty on Python 3.15+, where pyproject.toml doesn't install ddtrace: ddtrace has no 3.15 release.
+DDTRACE_RUN = $(shell poetry run python -c "import sys; print('' if sys.version_info >= (3, 15) else 'ddtrace-run')")
+
 # Common target definitions
 .PHONY: install
 install:
