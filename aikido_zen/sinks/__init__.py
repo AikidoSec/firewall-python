@@ -22,6 +22,7 @@ def on_import(name, package="", version_requirement=ANY_VERSION):
 
         # Register the function to be called on import
         when_imported(name)(check_pkg_wrapper(func))
+        return func
 
     return decorator
 

@@ -16,21 +16,26 @@ def _chat_completions_response(func, instance, args, kwargs, return_value):
     )
 
 
+# mistralai 2.0.0 moved these modules into mistralai.client.
 @on_import("mistralai.agents", "mistralai", "1.0.0")
+@on_import("mistralai.client.agents", "mistralai", "2.0.0")
 def patch_agents(m):
     patch_function(m, "Agents.complete", _chat_completions_response)
 
 
 @on_import("mistralai.chat", "mistralai", "1.0.0")
+@on_import("mistralai.client.chat", "mistralai", "2.0.0")
 def patch_chat(m):
     patch_function(m, "Chat.complete", _chat_completions_response)
 
 
 @on_import("mistralai.embeddings", "mistralai", "1.0.0")
+@on_import("mistralai.client.embeddings", "mistralai", "2.0.0")
 def patch_embeddings(m):
     patch_function(m, "Embeddings.create", _chat_completions_response)
 
 
 @on_import("mistralai.fim", "mistralai", "1.0.0")
+@on_import("mistralai.client.fim", "mistralai", "2.0.0")
 def patch_fim(m):
     patch_function(m, "Fim.complete", _chat_completions_response)
