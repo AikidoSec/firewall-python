@@ -1,6 +1,7 @@
 """Exports function extract_data_from_request"""
 
 from aikido_zen.context import get_current_context
+from aikido_zen.helpers.add_json_reading import add_json_reading
 
 
 async def extract_data_from_request(request):
@@ -15,15 +16,22 @@ async def extract_data_from_request(request):
     except (ValueError, RecursionError):
         # Not JSON, or nested too deep to parse
         pass
-    if not context.body:
+    if not context.body or _is_form_urlencoded(request):
         try:
             form_data = await request.form()
         except Exception:
             form_data = None
         if form_data:
             # Convert to dict object :
-            context.set_body(dict(form_data.items()))
+            form = dict(form_data.items())
+            context.set_body(add_json_reading(form, await request.body()))
     if not context.body:
         context.set_body(await request.body())
 
     context.set_as_current_context()
+
+
+def _is_form_urlencoded(request):
+    # Lowercased and without parameters, like Starlette when it picks the form parser.
+    content_type = request.headers.get("content-type", "").split(";")[0]
+    return content_type.strip().lower() == "application/x-www-form-urlencoded"

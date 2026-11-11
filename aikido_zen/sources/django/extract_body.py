@@ -1,4 +1,5 @@
 import json
+from aikido_zen.helpers.add_json_reading import add_json_reading
 from aikido_zen.helpers.logging import logger
 
 
@@ -7,6 +8,9 @@ def extract_body_from_django_request(request):
         # Check for request.POST (MultiValueDict)
         form_values = _try_extract_from_multi_value_dict(request)
         if form_values is not None:
+            # request.body raises for a multipart body once request.POST has read it.
+            if request.content_type == "application/x-www-form-urlencoded":
+                return add_json_reading(form_values, request.body)
             return form_values
 
         # If we weren't able to extract the form values, try parsing JSON ourselves.

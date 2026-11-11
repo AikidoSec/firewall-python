@@ -1,6 +1,7 @@
 import aikido_zen  # Aikido package import
 aikido_zen.protect()
 
+import json
 import asyncpg
 from quart import Quart, render_template, request, jsonify
 from aikido_zen.middleware import AikidoQuartMiddleware
@@ -79,6 +80,21 @@ async def create_dog_many():
         await conn.close()
 
     return jsonify({"message": f'{dog_name} created successfully'}), 201
+
+@app.route("/create/via_json", methods=['POST'])
+async def create_dog_via_json():
+    dog_name = json.loads(await request.get_data()).get('dog_name')
+
+    if not dog_name:
+        return jsonify({"error": "dog_name is required"}), 400
+
+    conn = await get_db_connection()
+    try:
+        await conn.execute(f"INSERT INTO dogs (dog_name, isAdmin) VALUES ('%s', FALSE)" % (dog_name))
+    finally:
+        await conn.close()
+
+    return jsonify({"message": f'Dog {dog_name} created successfully'}), 201
 
 
 if __name__ == '__main__':
