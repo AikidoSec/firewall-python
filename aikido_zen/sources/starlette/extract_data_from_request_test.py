@@ -32,6 +32,10 @@ class UnparsableFormRequest(FormRequest):
         raise ValueError("Invalid multipart data.")
 
 
+class UrlencodedFormRequest(FormRequest):
+    headers = {"content-type": "application/x-www-form-urlencoded"}
+
+
 @pytest.fixture(autouse=True)
 def run_around_tests():
     yield
@@ -62,3 +66,17 @@ async def test_form_that_cannot_be_parsed_is_kept_as_the_raw_body():
     await extract_data_from_request(UnparsableFormRequest(b"x' OR 1=1 -- ", None))
 
     assert context.body == "x' OR 1=1 -- "
+
+
+@pytest.mark.asyncio
+async def test_json_body_sent_as_form_is_parsed_once(mocker):
+    loads = mocker.spy(json, "loads")
+    form = {'{"a":"': "", "id": "1' OR 1=1 -- \"}"}
+    context = test_utils.generate_and_set_context()
+
+    await extract_data_from_request(
+        UrlencodedFormRequest(b'{"a":"&id=1\' OR 1=1 -- "}', form)
+    )
+
+    assert loads.call_count == 1
+    assert context.body == [{"a": "&id=1' OR 1=1 -- "}, form]
