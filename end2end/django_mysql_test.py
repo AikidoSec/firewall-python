@@ -154,3 +154,19 @@ def test_bypass_surrogate_bytes_sql_injection():
     assert attacks[3]["attack"]["kind"] == "sql_injection"
     assert attacks[3]["attack"]["blocked"] is True
     assert attacks[3]["attack"]["source"] == "body"
+
+
+def test_json_body_sent_as_form_sql_injection():
+    body = '{"dog_name": "Dangerous bobby\\", 1); -- "}'
+    res = requests.post(base_url_fw + "/json-sql", data=body, headers={"Content-Type": "application/x-www-form-urlencoded"})
+    assert res.status_code == 500
+
+    time.sleep(5)
+    events = fetch_events_from_mock("http://localhost:5000")
+    attacks = filter_on_event_type(events, "detected_attack")
+
+    assert len(attacks) == 5
+    assert attacks[4]["attack"]["kind"] == "sql_injection"
+    assert attacks[4]["attack"]["blocked"] is True
+    assert attacks[4]["attack"]["source"] == "body"
+    assert attacks[4]["attack"]["pathToPayload"] == ".[0].dog_name"
