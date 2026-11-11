@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, PropertyMock
 
 from django.utils.datastructures import MultiValueDict
 
@@ -115,6 +115,29 @@ def test_run_init_stage_with_the_multi_value_dict_complex(mock_request):
     # Assertions
     context: Context = get_current_context()
     assert {"a": ["test", "test4"], "b": ["test2"]} == context.body
+
+
+def test_run_init_stage_with_json_body_sent_as_form(mock_request):
+    raw_body = b'{"username": {"$regex": ".*"}}'
+    mock_request.content_type = "application/x-www-form-urlencoded"
+    mock_request.body = raw_body
+    mock_request.POST = MultiValueDict({raw_body.decode(): [""]})
+    run_init_stage(mock_request)
+
+    context: Context = get_current_context()
+    assert [{"username": {"$regex": ".*"}}, {raw_body.decode(): [""]}] == context.body
+
+
+def test_run_init_stage_with_multipart_form_does_not_read_the_body(mock_request):
+    mock_request.content_type = "multipart/form-data"
+    type(mock_request).body = PropertyMock(
+        side_effect=Exception("You cannot access body after reading from request")
+    )
+    mock_request.POST = MultiValueDict({"a": ["test"]})
+    run_init_stage(mock_request)
+
+    context: Context = get_current_context()
+    assert {"a": ["test"]} == context.body
 
 
 def test_run_init_stage_with_invalid_post_body(mock_request):

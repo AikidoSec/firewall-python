@@ -1,5 +1,6 @@
 from aikido_zen.context import Context, get_current_context
 from .functions.request_handler import request_handler
+from ..helpers.add_json_reading import add_json_reading
 from ..helpers.get_argument import get_argument
 from ..helpers.logging import logger
 from ..sinks import on_import, patch_function, before, before_async
@@ -31,7 +32,7 @@ async def _handle_request_before(func, instance, args, kwargs):
         if request.is_json:
             context.set_body(await request.get_json())
         elif form:
-            context.set_body(form)
+            context.set_body(add_json_reading(form, await request.get_data()))
         else:
             data = await request.data
             context.set_body(data)
