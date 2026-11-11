@@ -1,7 +1,6 @@
 """Exports function extract_data_from_request"""
 
 from aikido_zen.context import get_current_context
-from aikido_zen.helpers.add_json_reading import add_json_reading
 
 
 async def extract_data_from_request(request):
@@ -24,7 +23,7 @@ async def extract_data_from_request(request):
         if form_data:
             # Convert to dict object :
             form = dict(form_data.items())
-            context.set_body(add_json_reading(form, await request.body()))
+            context.set_body([context.body, form] if context.body else form)
     if not context.body:
         context.set_body(await request.body())
 
