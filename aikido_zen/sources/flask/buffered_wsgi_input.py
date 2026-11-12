@@ -1,4 +1,5 @@
 import io
+from weakref import ref
 
 # Bigger bodies pass through unscanned, so large uploads the app streams aren't copied.
 MAX_BUFFERED_BODY_SIZE = 20 * 1024 * 1024
@@ -35,7 +36,7 @@ class BufferedWsgiInput:
 
     def __init__(self, stream, context, content_length, terminated):
         self._stream = stream
-        self._context = context
+        self._context = ref(context)
         self._content_length = content_length
         self._terminated = terminated
         self._source = None
@@ -115,8 +116,9 @@ class BufferedWsgiInput:
             # ahead could block. Werkzeug gives the app an empty body here too.
             return self._stream
         # The get_data and form hooks may already have stored the parsed body.
-        if body and self._context.body is None:
-            self._context.set_body(body)
+        context = self._context()
+        if body and context is not None and context.body is None:
+            context.set_body(body)
         return io.BytesIO(body)
 
 
