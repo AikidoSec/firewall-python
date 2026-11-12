@@ -82,6 +82,7 @@ class ThreadCache:
             "users": self.users.as_array(),
             "stats": self.stats.get_record(),
             "ai_stats": self.ai_stats.get_stats(),
+            "ai_tools": self.ai_stats.get_tool_stats(),
             "packages": PackagesStore.export(),
         }
         self._clear_synced_deltas()

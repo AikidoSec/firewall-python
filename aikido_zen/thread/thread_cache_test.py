@@ -377,6 +377,9 @@ def test_renew_called_with_correct_args(mock_get_ipc, thread_cache: ThreadCache)
     thread_cache.ai_stats.on_ai_call("openai", "gpt-4o2", 424, 235)
     thread_cache.ai_stats.on_ai_call("openai", "gpt-4o2", 232, 932)
     thread_cache.ai_stats.on_ai_call("openai", "gpt-4o3", 8223, 173)
+    thread_cache.ai_stats.on_ai_tool_call("openai", "gpt-4o", "search")
+    thread_cache.ai_stats.on_ai_tool_call("openai", "gpt-4o", "search")
+    thread_cache.ai_stats.on_ai_tool_call("openai", "gpt-4o2", "fetch")
 
     # Call renew
     with test_utils.patch_time(time_ms=-1):
@@ -472,6 +475,10 @@ def test_renew_called_with_correct_args(mock_get_ipc, thread_cache: ThreadCache)
                 },
             },
         ],
+        "ai_tools": [
+            {"provider": "openai", "model": "gpt-4o", "name": "search", "calls": 2},
+            {"provider": "openai", "model": "gpt-4o2", "name": "fetch", "calls": 1},
+        ],
         "middleware_installed": False,
         "hostnames": [],
         "users": [],
@@ -526,6 +533,7 @@ def test_sync_data_for_users(mock_get_ipc, thread_cache: ThreadCache):
         "middleware_installed": False,
         "hostnames": [],
         "ai_stats": [],
+        "ai_tools": [],
         "packages": [],
         "users": [
             {
@@ -579,6 +587,7 @@ def test_renew_called_with_empty_routes(mock_get_ipc, thread_cache: ThreadCache)
         "hostnames": [],
         "users": [],
         "ai_stats": [],
+        "ai_tools": [],
         "packages": [],
     }
 
@@ -960,5 +969,6 @@ def test_renew_called_with_no_requests(mock_get_ipc, thread_cache: ThreadCache):
         "hostnames": [],
         "users": [],
         "ai_stats": [],
+        "ai_tools": [],
         "packages": [],
     }

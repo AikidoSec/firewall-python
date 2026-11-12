@@ -36,6 +36,26 @@ CHAT_COMPLETION = {
     ],
     "usage": {"prompt_tokens": 11, "completion_tokens": 7, "total_tokens": 18},
 }
+CHAT_COMPLETION_WITH_TOOLS = {
+    **CHAT_COMPLETION,
+    "choices": [
+        {
+            "index": 0,
+            "finish_reason": "tool_calls",
+            "message": {
+                "role": "assistant",
+                "content": None,
+                "tool_calls": [
+                    {
+                        "id": "call_1",
+                        "type": "function",
+                        "function": {"name": "search", "arguments": "{}"},
+                    }
+                ],
+            },
+        }
+    ],
+}
 RESPONSE = {
     "id": "resp_1",
     "object": "response",
@@ -65,6 +85,7 @@ ORDER = {"order": 1, "items": ["a", "b"]}
 BODIES = {
     "/api/orders": ORDER,
     "/v1/chat/completions": CHAT_COMPLETION,
+    "/tools/v1/chat/completions": CHAT_COMPLETION_WITH_TOOLS,
     "/v1/responses": RESPONSE,
     "/v1/messages": MESSAGE,
     "/v1/plain": CHAT_COMPLETION,
@@ -193,6 +214,10 @@ def break_reporting(monkeypatch):
 
 def get_ai_stats():
     return get_cache().ai_stats.get_stats()
+
+
+def get_tool_stats():
+    return get_cache().ai_stats.get_tool_stats()
 
 
 def stats_row(url, model, input_tokens, output_tokens):

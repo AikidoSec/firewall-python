@@ -50,6 +50,7 @@ def process(connection_manager, request, queue):
 
     # Sync ai stats
     connection_manager.ai_stats.import_list(request.get("ai_stats", []))
+    connection_manager.ai_stats.import_tool_list(request.get("ai_tools", []))
 
     # Sync packages
     PackagesStore.import_list(request.get("packages", []))

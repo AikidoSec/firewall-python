@@ -552,3 +552,127 @@ def test_import_list_adds_cache_tokens(stats):
             },
         }
     ]
+
+
+def test_tracks_tool_calls_per_provider_model_and_name(stats):
+    stats.on_ai_tool_call("https://api.openai.com", "gpt-4o", "search")
+    stats.on_ai_tool_call("https://api.openai.com", "gpt-4o", "search")
+    stats.on_ai_tool_call("https://api.openai.com", "gpt-4o-mini", "search")
+    stats.on_ai_tool_call("http://localhost:4000", "gpt-4o", "search")
+    stats.on_ai_tool_call("https://api.openai.com", "gpt-4o", "fetch")
+
+    assert stats.get_tool_stats() == [
+        {
+            "provider": "https://api.openai.com",
+            "model": "gpt-4o",
+            "name": "search",
+            "calls": 2,
+        },
+        {
+            "provider": "https://api.openai.com",
+            "model": "gpt-4o-mini",
+            "name": "search",
+            "calls": 1,
+        },
+        {
+            "provider": "http://localhost:4000",
+            "model": "gpt-4o",
+            "name": "search",
+            "calls": 1,
+        },
+        {
+            "provider": "https://api.openai.com",
+            "model": "gpt-4o",
+            "name": "fetch",
+            "calls": 1,
+        },
+    ]
+    assert stats.empty() is False
+
+
+@pytest.mark.parametrize(
+    "provider, model, name",
+    [
+        ("", "gpt-4o", "search"),
+        ("https://api.openai.com", "", "search"),
+        ("https://api.openai.com", "gpt-4o", ""),
+        ("https://api.openai.com", "gpt-4o", None),
+        ("https://api.openai.com", "gpt-4o", 5),
+        ("https://api.openai.com", "gpt-4o", "x" * 256),
+    ],
+)
+def test_ignores_invalid_tool_calls(stats, provider, model, name):
+    stats.on_ai_tool_call(provider, model, name)
+
+    assert stats.get_tool_stats() == []
+    assert stats.empty() is True
+
+
+def test_keeps_a_tool_name_of_the_maximum_length(stats):
+    stats.on_ai_tool_call("https://api.openai.com", "gpt-4o", "x" * 255)
+
+    assert [tool["name"] for tool in stats.get_tool_stats()] == ["x" * 255]
+
+
+def test_keeps_at_most_1000_tools(stats):
+    for i in range(1001):
+        stats.on_ai_tool_call("https://api.openai.com", "gpt-4o", f"tool-{i}")
+    stats.on_ai_tool_call("https://api.openai.com", "gpt-4o", "tool-0")
+
+    tools = stats.get_tool_stats()
+    assert len(tools) == 1000
+    assert tools[0]["calls"] == 2
+    assert "tool-1000" not in [tool["name"] for tool in tools]
+
+
+def test_import_tool_list_adds_to_existing_tools(stats):
+    stats.on_ai_tool_call("https://api.openai.com", "gpt-4o", "search")
+
+    stats.import_tool_list(
+        [
+            {
+                "provider": "https://api.openai.com",
+                "model": "gpt-4o",
+                "name": "search",
+                "calls": 3,
+            },
+            {
+                "provider": "https://api.openai.com",
+                "model": "gpt-4o",
+                "name": "fetch",
+                "calls": 1,
+            },
+        ]
+    )
+
+    assert stats.get_tool_stats() == [
+        {
+            "provider": "https://api.openai.com",
+            "model": "gpt-4o",
+            "name": "search",
+            "calls": 4,
+        },
+        {
+            "provider": "https://api.openai.com",
+            "model": "gpt-4o",
+            "name": "fetch",
+            "calls": 1,
+        },
+    ]
+
+
+def test_clear_resets_tool_calls(stats):
+    stats.on_ai_tool_call("https://api.openai.com", "gpt-4o", "search")
+
+    stats.clear()
+
+    assert stats.get_tool_stats() == []
+    assert stats.empty() is True
+
+
+def test_get_tool_stats_returns_copies(stats):
+    stats.on_ai_tool_call("https://api.openai.com", "gpt-4o", "search")
+
+    stats.get_tool_stats()[0]["calls"] = 99
+
+    assert stats.get_tool_stats()[0]["calls"] == 1

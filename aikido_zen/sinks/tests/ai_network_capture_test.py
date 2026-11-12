@@ -23,6 +23,7 @@ from aikido_zen.test_utils.ai_network_capture import (
     assert_counted_once,
     enable_capture,
     get_ai_stats,
+    get_tool_stats,
     run_in_protected_app,
     serve_provider,
     stats_row,
@@ -147,6 +148,37 @@ def test_only_a_response_up_to_the_size_limit_is_counted(provider, pad, counted)
     response = requests.post(provider + f"/v1/chat/completions?pad={pad}", json={})
     assert response.json()["model"] == "gpt-4o-mini-2024-07-18"
     assert sum(s["calls"] for s in get_ai_stats()) == counted
+
+
+def test_http_clients_report_tool_calls_under_the_origin(provider):
+    url = provider + "/tools/v1/chat/completions"
+    requests.post(url, json={})
+    httpx.post(url, json={})
+    urllib3.PoolManager().request("POST", url, body=b"{}")
+    assert get_tool_stats() == [
+        {
+            "provider": provider,
+            "model": "gpt-4o-mini-2024-07-18",
+            "name": "search",
+            "calls": 3,
+        }
+    ]
+
+
+def test_openai_sdk_tool_calls_are_counted_once(provider):
+    client = openai.OpenAI(
+        api_key="test", base_url=provider + "/tools/v1", max_retries=0
+    )
+    response = client.chat.completions.create(model="gpt-4o-mini", messages=HELLO)
+    assert response.choices[0].message.tool_calls[0].function.name == "search"
+    assert get_tool_stats() == [
+        {
+            "provider": provider,
+            "model": "gpt-4o-mini-2024-07-18",
+            "name": "search",
+            "calls": 1,
+        }
+    ]
 
 
 def test_openai_sdk_call_is_counted_by_http_alongside_the_sdk_sink(provider):
