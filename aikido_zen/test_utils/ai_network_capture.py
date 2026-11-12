@@ -71,6 +71,20 @@ MESSAGE = {
     "content": [{"type": "text", "text": "Hi"}],
     "usage": {"input_tokens": 21, "output_tokens": 12},
 }
+BEDROCK_CONVERSE_WITH_TOOLS = {
+    "output": {
+        "message": {
+            "role": "assistant",
+            "content": [
+                {"text": "Checking."},
+                {"toolUse": {"toolUseId": "t1", "name": "get_weather", "input": {}}},
+            ],
+        }
+    },
+    "stopReason": "tool_use",
+    "usage": {"inputTokens": 30, "outputTokens": 12, "totalTokens": 42},
+    "metrics": {"latencyMs": 5},
+}
 GEMINI = {
     "candidates": [{"content": {"role": "model", "parts": [{"text": "Hi"}]}}],
     "usageMetadata": {"promptTokenCount": 70, "candidatesTokenCount": 8},
@@ -93,6 +107,7 @@ BODIES = {
     "/openai/deployments/gpt-4o-mini/chat/completions": CHAT_COMPLETION,
     "/v1beta/models/gemini-2.5-flash:generateContent": GEMINI,
     "/model/" + BEDROCK_MODEL + "/invoke": MESSAGE,
+    "/model/" + BEDROCK_MODEL + "/converse": BEDROCK_CONVERSE_WITH_TOOLS,
     "/model/" + INFERENCE_PROFILE_ARN + "/invoke": MESSAGE,
 }
 ENABLED_SINKS = set()
