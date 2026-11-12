@@ -54,19 +54,17 @@ class AIStatistics:
         if tool is None:
             if len(self.tools) >= MAX_TOOLS:
                 return
-            tool = self.tools[key] = {
-                "provider": provider,
-                "model": model,
-                "name": name,
-                "calls": 0,
-            }
+            row = {"provider": provider, "model": model, "name": name, "calls": 0}
+            # Another thread may have added the same row since the get() above.
+            tool = self.tools.setdefault(key, row)
         tool["calls"] += calls
 
     def get_stats(self):
-        return [copy.deepcopy(stats) for stats in self.calls.values()]
+        # Copy the rows first, because another thread may add one during the loop.
+        return [copy.deepcopy(stats) for stats in list(self.calls.values())]
 
     def get_tool_stats(self):
-        return [dict(tool) for tool in self.tools.values()]
+        return [dict(tool) for tool in list(self.tools.values())]
 
     def import_list(self, ai_stats_list):
         for new_entry in ai_stats_list:

@@ -1,3 +1,6 @@
+import sys
+import threading
+
 import pytest
 from .ai_statistics import AIStatistics
 
@@ -676,3 +679,51 @@ def test_get_tool_stats_returns_copies(stats):
     stats.get_tool_stats()[0]["calls"] = 99
 
     assert stats.get_tool_stats()[0]["calls"] == 1
+
+
+class ToolAddedByAnotherThread(dict):
+    def get(self, key, default=None):
+        row = super().get(key, default)
+        if row is None:
+            provider, model, name = key
+            self[key] = {"provider": provider, "model": model, "name": name, "calls": 1}
+        return row
+
+
+def test_keeps_a_tool_that_another_thread_adds_at_the_same_time(stats):
+    stats.tools = ToolAddedByAnotherThread()
+
+    stats.on_ai_tool_call("https://api.openai.com", "gpt-4o", "search")
+
+    assert stats.get_tool_stats()[0]["calls"] == 2
+
+
+@pytest.mark.parametrize("read", ["get_stats", "get_tool_stats"])
+def test_reading_while_other_threads_add_rows_does_not_fail(stats, read):
+    switch_interval = sys.getswitchinterval()
+    sys.setswitchinterval(1e-6)
+    barrier = threading.Barrier(9)
+    errors = []
+
+    def add_rows(thread):
+        barrier.wait(5)
+        for i in range(200):
+            stats.on_ai_call("https://api.openai.com", f"m-{thread}-{i}", 1, 1)
+            stats.on_ai_tool_call("https://api.openai.com", "m", f"t-{thread}-{i}")
+
+    writers = [threading.Thread(target=add_rows, args=(t,)) for t in range(8)]
+    try:
+        for writer in writers:
+            writer.start()
+        barrier.wait(5)
+        while any(writer.is_alive() for writer in writers):
+            try:
+                getattr(stats, read)()
+            except RuntimeError as error:
+                errors.append(error)
+    finally:
+        sys.setswitchinterval(switch_interval)
+        for writer in writers:
+            writer.join(5)
+            assert not writer.is_alive()
+    assert errors == []
