@@ -17,6 +17,7 @@ def send_heartbeat(connection_manager):
     routes = list(connection_manager.routes)
     outgoing_domains = connection_manager.hostnames.as_array()
     ai_stats = connection_manager.ai_stats.get_stats()
+    ai_tools = connection_manager.ai_stats.get_tool_stats()
     packages = PackagesStore.export()
 
     connection_manager.statistics.clear()
@@ -31,6 +32,7 @@ def send_heartbeat(connection_manager):
             "type": "heartbeat",
             "stats": stats,
             "ai": ai_stats,
+            "aiTools": ai_tools,
             "hostnames": outgoing_domains,
             "packages": packages,
             "routes": routes,

@@ -4,9 +4,11 @@ from collections import namedtuple
 from urllib.parse import unquote
 
 from aikido_zen.helpers.env_vars.feature_flags import is_feature_enabled
-from aikido_zen.helpers.on_ai_call import on_ai_call
+from aikido_zen.helpers.on_ai_call import on_ai_call, on_ai_tool_calls
 
-AICall = namedtuple("AICall", "model input_tokens output_tokens cache_read cache_write")
+AICall = namedtuple(
+    "AICall", "model input_tokens output_tokens cache_read cache_write tool_names"
+)
 
 # Where an API's usage keeps each token count, as dotted key paths that are added up.
 # The input is the provider's own count: OpenAI and Gemini include the cached tokens
@@ -42,6 +44,23 @@ BEDROCK_CONVERSE = TokenFields(
     cache_read=("cacheReadInputTokens",),
     cache_write=("cacheWriteInputTokens",),
 )
+
+# A tool call's type ends with this suffix and its result's does not (`_output`,
+# `_result`). Tools the provider runs itself, such as web search, count too.
+RESPONSES_TOOL_SUFFIX = "_call"
+ANTHROPIC_TOOL_SUFFIX = "_use"
+
+# The names the app declares these tools under, so one tool keeps one name.
+# `toolName` has no documented values and only names a type missing here.
+GEMINI_TOOL_NAMES = {
+    "GOOGLE_SEARCH_WEB": "google_search",
+    "GOOGLE_SEARCH_IMAGE": "google_search",
+    "URL_CONTEXT": "url_context",
+    "GOOGLE_MAPS": "google_maps",
+    "FILE_SEARCH": "file_search",
+}
+# MEDIA_PROCESSING is media analysis the server starts itself, not a requested tool.
+GEMINI_UNCOUNTED_TOOL_TYPES = ("TOOL_TYPE_UNSPECIFIED", "MEDIA_PROCESSING")
 
 AI_PATH_ENDINGS = (
     "/chat/completions",
@@ -79,7 +98,7 @@ def parse_ai_response(path, body):
     found = find_api(path, body) if isinstance(body, dict) else None
     if found is None:
         return None
-    model, usage, fields = found
+    model, usage, fields, tool_names = found
     if not isinstance(model, str) or not model:
         return None
     if not isinstance(usage, dict):
@@ -90,22 +109,34 @@ def parse_ai_response(path, body):
         count_tokens(usage, fields.output),
         count_tokens(usage, fields.cache_read),
         count_tokens(usage, fields.cache_write),
+        tuple(name for name in tool_names(body) if isinstance(name, str) and name),
     )
 
 
 def find_api(path, body):
-    """(model, usage, TokenFields) of the API that the path belongs to, or None."""
+    """(model, usage, TokenFields, tool names reader) of the API that the path belongs
+    to, or None."""
     if path.endswith("/chat/completions"):
-        return body.get("model"), body.get("usage"), CHAT_COMPLETIONS
+        return (
+            body.get("model"),
+            body.get("usage"),
+            CHAT_COMPLETIONS,
+            chat_completions_tool_names,
+        )
     if path.endswith("/responses"):
-        return body.get("model"), body.get("usage"), RESPONSES
+        return body.get("model"), body.get("usage"), RESPONSES, responses_tool_names
     if path.endswith("/v1/messages") or VERTEX_ANTHROPIC_PATH.search(path):
-        return body.get("model"), body.get("usage"), ANTHROPIC_MESSAGES
+        return (
+            body.get("model"),
+            body.get("usage"),
+            ANTHROPIC_MESSAGES,
+            anthropic_messages_tool_names,
+        )
     gemini = GEMINI_PATH.search(path)
     if gemini:
         version = body.get("modelVersion")
         model = version if isinstance(version, str) and version else gemini.group(1)
-        return model, body.get("usageMetadata"), GEMINI
+        return model, body.get("usageMetadata"), GEMINI, gemini_tool_names
     bedrock = BEDROCK_PATH.search(path)
     if bedrock:
         model = unquote(bedrock.group(1))
@@ -113,20 +144,85 @@ def find_api(path, body):
         if model.startswith("arn:"):
             model = body.get("model")
         if bedrock.group(2) == "converse":
-            return model, body.get("usage"), BEDROCK_CONVERSE
-        return model, body.get("usage"), ANTHROPIC_MESSAGES
+            return model, body.get("usage"), BEDROCK_CONVERSE, converse_tool_names
+        return (
+            model,
+            body.get("usage"),
+            ANTHROPIC_MESSAGES,
+            anthropic_messages_tool_names,
+        )
     return None
 
 
 def count_tokens(usage, fields):
     total = 0
     for field in fields:
-        value = usage
-        for key in field.split("."):
-            value = value.get(key) if isinstance(value, dict) else None
+        value = get_value(usage, *field.split("."))
         if isinstance(value, int) and value > 0:
             total += value
     return total
+
+
+def get_value(value, *keys):
+    for key in keys:
+        value = value.get(key) if isinstance(value, dict) else None
+    return value
+
+
+def get_list(value, *keys):
+    value = get_value(value, *keys)
+    return value if isinstance(value, list) else []
+
+
+def chat_completions_tool_names(body):
+    for choice in get_list(body, "choices"):
+        for tool_call in get_list(choice, "message", "tool_calls"):
+            yield get_value(tool_call, "function", "name") or get_value(
+                tool_call, "custom", "name"
+            )
+        yield get_value(choice, "message", "function_call", "name")
+
+
+def responses_tool_names(body):
+    return tool_names_by_type_suffix(get_list(body, "output"), RESPONSES_TOOL_SUFFIX)
+
+
+def anthropic_messages_tool_names(body):
+    return tool_names_by_type_suffix(get_list(body, "content"), ANTHROPIC_TOOL_SUFFIX)
+
+
+def tool_names_by_type_suffix(items, suffix):
+    for item in items:
+        item_type = item.get("type") if isinstance(item, dict) else None
+        if isinstance(item_type, str) and item_type.endswith(suffix):
+            name = item.get("name")
+            # Built-in tools have no name: `web_search_call` is the `web_search` tool.
+            yield item_type[: -len(suffix)] if name is None else name
+
+
+def gemini_tool_names(body):
+    for candidate in get_list(body, "candidates"):
+        for part in get_list(candidate, "content", "parts"):
+            if not isinstance(part, dict):
+                continue
+            if "functionCall" in part:
+                yield get_value(part["functionCall"], "name")
+            if "toolCall" in part:
+                yield gemini_server_tool_name(part["toolCall"])
+            if isinstance(part.get("executableCode"), dict):
+                yield "code_execution"
+
+
+def gemini_server_tool_name(tool_call):
+    tool_type = get_value(tool_call, "toolType")
+    if not isinstance(tool_type, str) or tool_type in GEMINI_UNCOUNTED_TOOL_TYPES:
+        return None
+    return GEMINI_TOOL_NAMES.get(tool_type) or get_value(tool_call, "toolName")
+
+
+def converse_tool_names(body):
+    for block in get_list(body, "output", "message", "content"):
+        yield get_value(block, "toolUse", "name")
 
 
 def request_origin(scheme, host, port):
@@ -151,11 +247,13 @@ def inspect_ai_response(response, *, method, scheme, host, port, path, status, b
     call = parse_ai_response(path, json.loads(body))
     if call is None:
         return
+    provider = request_origin(scheme, host, port)
     on_ai_call(
-        provider=request_origin(scheme, host, port),
+        provider=provider,
         model=call.model,
         input_tokens=call.input_tokens,
         output_tokens=call.output_tokens,
         cache_read=call.cache_read,
         cache_write=call.cache_write,
     )
+    on_ai_tool_calls(provider, call.model, call.tool_names)

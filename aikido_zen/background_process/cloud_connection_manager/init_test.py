@@ -43,6 +43,40 @@ def test_send_heartbeat_sets_the_time(setup_cloud_connection_manager):
     assert manager.report_api_event.call_args[0][0]["time"] == 111
 
 
+def test_send_heartbeat_reports_and_clears_ai_stats(setup_cloud_connection_manager):
+    manager = setup_cloud_connection_manager
+    manager.report_api_event = MagicMock(return_value={"success": True})
+    manager.ai_stats.on_ai_call("https://api.openai.com", "gpt-4o", 100, 20, 40, 0)
+    manager.ai_stats.on_ai_tool_call("https://api.openai.com", "gpt-4o", "search")
+
+    manager.send_heartbeat()
+
+    heartbeat = manager.report_api_event.call_args[0][0]
+    assert heartbeat["ai"] == [
+        {
+            "provider": "https://api.openai.com",
+            "model": "gpt-4o",
+            "calls": 1,
+            "tokens": {
+                "input": 100,
+                "output": 20,
+                "total": 120,
+                "cacheRead": 40,
+                "cacheWrite": 0,
+            },
+        }
+    ]
+    assert heartbeat["aiTools"] == [
+        {
+            "provider": "https://api.openai.com",
+            "model": "gpt-4o",
+            "name": "search",
+            "calls": 1,
+        }
+    ]
+    assert manager.ai_stats.empty() is True
+
+
 def test_cloud_connection_manager_initialization(setup_cloud_connection_manager):
     manager = setup_cloud_connection_manager
 

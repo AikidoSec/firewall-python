@@ -166,6 +166,89 @@ GEMINI_WITH_DOCUMENTED_FIELDS = {
     "modelVersion": "gemini-2.5-flash",
     "responseId": "mAitaLmkHPPlz7IPvtfUqQ4",
 }
+DOCUMENTED_VERTEX_GEMINI_CODE_EXECUTION = {
+    "candidates": [
+        {
+            "content": {
+                "role": "model",
+                "parts": [
+                    {
+                        "text": "Okay, I understand. You want me to calculate the sum of "
+                        "the first 10 positive integers and to use code to do so. "
+                        "Here's my plan: I will use a loop to add the numbers from 1 "
+                        "to 10 and then return the final sum.\n\n"
+                    },
+                    {
+                        "executableCode": {
+                            "language": "PYTHON",
+                            "code": "\ntotal = 0\nfor i in range(1, 11):\n"
+                            "    total += i\nprint(f'{total=}')\n",
+                        }
+                    },
+                    {
+                        "codeExecutionResult": {
+                            "outcome": "OUTCOME_OK",
+                            "output": "total=55\n",
+                        }
+                    },
+                    {"text": "The sum of the first 10 positive numbers is 55.\n"},
+                ],
+            },
+            "finishReason": "STOP",
+        }
+    ],
+    "usageMetadata": {
+        "promptTokenCount": 34,
+        "candidatesTokenCount": 110,
+        "totalTokenCount": 144,
+        "billablePromptUsage": {"textCount": 119},
+        "trafficType": "ON_DEMAND",
+    },
+    "modelVersion": "gemini-2.0-flash-001",
+    "createTime": "2024-12-09T23:33:47.842964Z",
+    "responseId": "W35XZ9S5M6acmecP3vDFkQU",
+}
+DOCUMENTED_VERTEX_GEMINI_PARALLEL_FUNCTION_CALLS = {
+    "candidates": [
+        {
+            "content": {
+                "role": "model",
+                "parts": [
+                    {
+                        "functionCall": {
+                            "name": "get_current_weather",
+                            "args": {"location": "Boston"},
+                        }
+                    },
+                    {
+                        "functionCall": {
+                            "name": "get_current_weather",
+                            "args": {"location": "San Francisco"},
+                        }
+                    },
+                ],
+            }
+        }
+    ]
+}
+RECORDED_GEMINI_SERVER_SIDE_SEARCH_PARTS = [
+    {
+        "thoughtSignature": "...",
+        "toolCall": {
+            "toolType": "GOOGLE_SEARCH_WEB",
+            "args": {"queries": ["..."]},
+            "id": "utWEB6L1",
+        },
+    },
+    {
+        "thoughtSignature": "...",
+        "toolResponse": {
+            "toolType": "GOOGLE_SEARCH_WEB",
+            "response": {"search_suggestions": "<div>...</div>"},
+            "id": "TnTtVb21",
+        },
+    },
+]
 MESSAGE = {
     "type": "message",
     "model": "claude-haiku-4-5-20251001",
@@ -183,6 +266,17 @@ def setup():
 
 def get_ai_stats():
     return get_cache().ai_stats.get_stats()
+
+
+def get_tool_stats():
+    return get_cache().ai_stats.get_tool_stats()
+
+
+def gemini_tool_call(tool_type, tool_name=None):
+    tool_call = {"id": "t1", "toolType": tool_type, "args": {}}
+    if tool_name is not None:
+        tool_call["toolName"] = tool_name
+    return {"toolCall": tool_call}
 
 
 def inspect(body, path="/v1/chat/completions", method="POST", status=200, **kwargs):
@@ -232,18 +326,18 @@ def test_is_ai_request_path(path, expected):
                 "model": "gpt-4o-mini",
                 "usage": {"prompt_tokens": 11, "completion_tokens": 7},
             },
-            ("gpt-4o-mini", 11, 7, 0, 0),
+            ("gpt-4o-mini", 11, 7, 0, 0, ()),
         ),
         (
             "/v1/responses",
             {"model": "gpt-4o", "usage": {"input_tokens": 20, "output_tokens": 9}},
-            ("gpt-4o", 20, 9, 0, 0),
+            ("gpt-4o", 20, 9, 0, 0, ()),
         ),
-        ("/v1/messages", MESSAGE, ("claude-haiku-4-5-20251001", 3, 4, 0, 0)),
+        ("/v1/messages", MESSAGE, ("claude-haiku-4-5-20251001", 3, 4, 0, 0, ())),
         (
             VERTEX_PATH + "claude-haiku-4-5@20251001:rawPredict",
             MESSAGE,
-            ("claude-haiku-4-5-20251001", 3, 4, 0, 0),
+            ("claude-haiku-4-5-20251001", 3, 4, 0, 0, ()),
         ),
         (VERTEX_PATH + "count-tokens:rawPredict", {"input_tokens": 12}, None),
         (
@@ -262,28 +356,32 @@ def test_is_ai_request_path(path, expected):
                     "thoughtsTokenCount": 500,
                 },
             },
-            ("gemini-2.5-flash-001", 100, 508, 0, 0),
+            ("gemini-2.5-flash-001", 100, 508, 0, 0, ()),
         ),
         (
             "/v1beta/models/gemini-2.5-flash:generateContent",
             {"candidates": []},
-            ("gemini-2.5-flash", 0, 0, 0, 0),
+            ("gemini-2.5-flash", 0, 0, 0, 0, ()),
         ),
         (
             "/model/" + BEDROCK_MODEL + "/converse",
             {"output": {}, "usage": {"inputTokens": 10, "outputTokens": 5}},
-            (BEDROCK_MODEL, 10, 5, 0, 0),
+            (BEDROCK_MODEL, 10, 5, 0, 0, ()),
         ),
-        ("/model/" + BEDROCK_MODEL + "/invoke", MESSAGE, (BEDROCK_MODEL, 3, 4, 0, 0)),
+        (
+            "/model/" + BEDROCK_MODEL + "/invoke",
+            MESSAGE,
+            (BEDROCK_MODEL, 3, 4, 0, 0, ()),
+        ),
         (
             "/model/us.anthropic.claude-haiku-4-5-20251001-v1%3A0/invoke",
             MESSAGE,
-            ("us.anthropic.claude-haiku-4-5-20251001-v1:0", 3, 4, 0, 0),
+            ("us.anthropic.claude-haiku-4-5-20251001-v1:0", 3, 4, 0, 0, ()),
         ),
         (
             "/model/" + quote(INFERENCE_PROFILE_ARN, safe="") + "/invoke",
             MESSAGE,
-            ("claude-haiku-4-5-20251001", 3, 4, 0, 0),
+            ("claude-haiku-4-5-20251001", 3, 4, 0, 0, ()),
         ),
         (
             "/model/" + quote(INFERENCE_PROFILE_ARN, safe="") + "/converse",
@@ -291,11 +389,15 @@ def test_is_ai_request_path(path, expected):
             None,
         ),
         ("/model/" + INFERENCE_PROFILE_ARN + "/invoke", MESSAGE, None),
-        ("/v1/chat/completions", {"id": "chatcmpl-1", "model": "m"}, ("m", 0, 0, 0, 0)),
+        (
+            "/v1/chat/completions",
+            {"id": "chatcmpl-1", "model": "m"},
+            ("m", 0, 0, 0, 0, ()),
+        ),
         (
             "/v1/chat/completions",
             {"model": "m", "usage": {"prompt_tokens": -1, "completion_tokens": "7"}},
-            ("m", 0, 0, 0, 0),
+            ("m", 0, 0, 0, 0, ()),
         ),
         ("/v1/chat/completions", {"usage": {"prompt_tokens": 1}}, None),
         ("/v1/chat/completions", {"model": ""}, None),
@@ -370,7 +472,7 @@ def test_parse_ai_response(path, body, expected):
     ],
 )
 def test_cache_tokens_per_format(path, usage, expected):
-    assert parse_ai_response(path, {"model": "m", "usage": usage})[1:] == expected
+    assert parse_ai_response(path, {"model": "m", "usage": usage})[1:5] == expected
 
 
 @pytest.mark.parametrize(
@@ -379,33 +481,397 @@ def test_cache_tokens_per_format(path, usage, expected):
         (
             "/model/anthropic.claude-3-sonnet-20240229-v1%3A0/converse",
             DOCUMENTED_BEDROCK_CONVERSE,
-            ("anthropic.claude-3-sonnet-20240229-v1:0", 30, 628, 0, 0),
+            ("anthropic.claude-3-sonnet-20240229-v1:0", 30, 628, 0, 0, ()),
         ),
         (
             "/model/anthropic.claude-3-sonnet-20240229-v1%3A0/converse",
             DOCUMENTED_BEDROCK_CONVERSE_CACHED,
-            ("anthropic.claude-3-sonnet-20240229-v1:0", 12, 40, 1024, 512),
+            ("anthropic.claude-3-sonnet-20240229-v1:0", 12, 40, 1024, 512, ()),
         ),
         (
             "/model/anthropic.claude-3-sonnet-20240229-v1%3A0/invoke",
             DOCUMENTED_BEDROCK_INVOKE_REFUSAL,
-            ("anthropic.claude-3-sonnet-20240229-v1:0", 106, 1, 0, 0),
+            ("anthropic.claude-3-sonnet-20240229-v1:0", 106, 1, 0, 0, ()),
         ),
         (
             "/v1/projects/my-project/locations/us-east5/publishers/anthropic/models/"
             "claude-3-opus@20240229:rawPredict",
             DOCUMENTED_VERTEX_ANTHROPIC_TOOL_USE,
-            ("claude-3-opus-20240229", 727, 308, 0, 0),
+            ("claude-3-opus-20240229", 727, 308, 0, 0, ("text_search_places_api",)),
         ),
         (
             "/v1beta/models/gemini-2.5-flash:generateContent",
             GEMINI_WITH_DOCUMENTED_FIELDS,
-            ("gemini-2.5-flash", 1230, 170, 1000, 0),
+            ("gemini-2.5-flash", 1230, 170, 1000, 0, ()),
+        ),
+        (
+            "/v1/projects/my-project/locations/us-central1/publishers/google/models/"
+            "gemini-2.0-flash-001:generateContent",
+            DOCUMENTED_VERTEX_GEMINI_CODE_EXECUTION,
+            ("gemini-2.0-flash-001", 34, 110, 0, 0, ("code_execution",)),
+        ),
+        (
+            "/v1/projects/my-project/locations/us-central1/publishers/google/models/"
+            "gemini-2.5-flash:generateContent",
+            DOCUMENTED_VERTEX_GEMINI_PARALLEL_FUNCTION_CALLS,
+            (
+                "gemini-2.5-flash",
+                0,
+                0,
+                0,
+                0,
+                ("get_current_weather", "get_current_weather"),
+            ),
+        ),
+        (
+            "/v1beta/models/gemini-2.5-flash:generateContent",
+            {
+                "candidates": [
+                    {
+                        "content": {
+                            "role": "model",
+                            "parts": [
+                                *RECORDED_GEMINI_SERVER_SIDE_SEARCH_PARTS,
+                                {"text": "..."},
+                                {"thoughtSignature": "..."},
+                            ],
+                        }
+                    }
+                ]
+            },
+            ("gemini-2.5-flash", 0, 0, 0, 0, ("google_search",)),
         ),
     ],
 )
 def test_documented_responses(path, body, expected):
     assert parse_ai_response(path, body) == expected
+
+
+@pytest.mark.parametrize(
+    "path, body, expected",
+    [
+        (
+            "/v1/chat/completions",
+            {
+                "choices": [
+                    {
+                        "message": {
+                            "tool_calls": [
+                                {"type": "function", "function": {"name": "search"}},
+                                {"type": "custom", "custom": {"name": "run_sql"}},
+                                {"type": "function", "function": {"name": "search"}},
+                            ]
+                        }
+                    }
+                ]
+            },
+            ("search", "run_sql", "search"),
+        ),
+        (
+            "/v1/chat/completions",
+            {"choices": [{"message": {"function_call": {"name": "legacy"}}}]},
+            ("legacy",),
+        ),
+        (
+            "/v1/chat/completions",
+            {
+                "choices": [
+                    {"message": {"tool_calls": [{"function": {"name": "search"}}]}},
+                    {"message": {"tool_calls": [{"function": {"name": "fetch"}}]}},
+                ]
+            },
+            ("search", "fetch"),
+        ),
+        (
+            "/v1/responses",
+            {
+                "output": [
+                    {"type": "function_call", "name": "search"},
+                    {"type": "custom_tool_call", "name": "run_sql"},
+                    {"type": "function_call", "name": "lookup", "namespace": "crm__"},
+                    {"type": "mcp_call", "name": "search", "server_label": "docs"},
+                    {"type": "web_search_call", "id": "ws_1"},
+                    {"type": "message", "content": []},
+                ]
+            },
+            ("search", "run_sql", "lookup", "search", "web_search"),
+        ),
+        (
+            "/v1/responses",
+            {
+                "output": [
+                    {"type": "code_interpreter_call", "id": "ci_1"},
+                    {"type": "file_search_call", "id": "fs_1"},
+                    {"type": "image_generation_call", "id": "ig_1"},
+                    {"type": "computer_call", "call_id": "c1"},
+                    {"type": "shell_call", "call_id": "c2"},
+                    {"type": "local_shell_call", "call_id": "c3"},
+                    {"type": "apply_patch_call", "call_id": "c4"},
+                    {"type": "tool_search_call", "call_id": "c5"},
+                    {"type": "some_new_tool_call", "id": "n1"},
+                ]
+            },
+            (
+                "code_interpreter",
+                "file_search",
+                "image_generation",
+                "computer",
+                "shell",
+                "local_shell",
+                "apply_patch",
+                "tool_search",
+                "some_new_tool",
+            ),
+        ),
+        (
+            "/v1/responses",
+            {
+                "output": [
+                    {"type": "function_call_output", "name": "search"},
+                    {"type": "custom_tool_call_output", "call_id": "c1"},
+                    {"type": "computer_call_output", "call_id": "c2"},
+                    {"type": "shell_call_output", "call_id": "c3"},
+                    {"type": "local_shell_call_output", "id": "c4"},
+                    {"type": "apply_patch_call_output", "call_id": "c5"},
+                    {"type": "tool_search_output", "call_id": "c6"},
+                    {"type": "mcp_approval_request", "name": "search"},
+                    {"type": "mcp_approval_response", "approve": True},
+                    {"type": "mcp_list_tools", "server_label": "docs"},
+                    {"type": "program", "code": "await search()"},
+                    {"type": "program_output", "call_id": "p1"},
+                    {"type": "reasoning", "summary": []},
+                    {"type": "compaction", "id": "cp_1"},
+                    {"type": "additional_tools", "tools": []},
+                    {"type": "function_call", "name": ""},
+                    {"type": "_call"},
+                    "web_search_call",
+                    None,
+                ]
+            },
+            (),
+        ),
+        (
+            "/v1/messages",
+            {
+                "content": [
+                    {"type": "text", "text": "Hi"},
+                    {"type": "tool_use", "name": "search"},
+                    {"type": "server_tool_use", "name": "web_search"},
+                    {"type": "mcp_tool_use", "name": "docs"},
+                    {"type": "browser_use", "id": "b1"},
+                ]
+            },
+            ("search", "web_search", "docs", "browser"),
+        ),
+        (
+            "/v1/messages",
+            {
+                "content": [
+                    {"type": "web_search_tool_result", "tool_use_id": "s1"},
+                    {"type": "web_fetch_tool_result", "tool_use_id": "s2"},
+                    {"type": "code_execution_tool_result", "tool_use_id": "s3"},
+                    {"type": "bash_code_execution_tool_result", "tool_use_id": "s4"},
+                    {
+                        "type": "text_editor_code_execution_tool_result",
+                        "tool_use_id": "s5",
+                    },
+                    {"type": "tool_search_tool_result", "tool_use_id": "s6"},
+                    {"type": "advisor_tool_result", "tool_use_id": "s7"},
+                    {"type": "mcp_tool_result", "tool_use_id": "m1"},
+                    {"type": "mcp_tool_listing", "server_name": "docs"},
+                    {"type": "container_upload", "file_id": "f1"},
+                    {"type": "thinking", "thinking": "..."},
+                    {"type": "redacted_thinking", "data": "..."},
+                    {"type": "compaction", "content": "..."},
+                    {"type": "fallback", "text": "..."},
+                    "tool_use",
+                    None,
+                ]
+            },
+            (),
+        ),
+        (
+            "/model/" + BEDROCK_MODEL + "/invoke",
+            {"content": [{"type": "tool_use", "name": "search"}]},
+            ("search",),
+        ),
+        (
+            "/model/" + BEDROCK_MODEL + "/converse",
+            {
+                "output": {
+                    "message": {
+                        "content": [
+                            {"text": "Hi"},
+                            {"toolUse": {"toolUseId": "t1", "name": "search"}},
+                            {
+                                "toolUse": {
+                                    "toolUseId": "t2",
+                                    "type": "server_tool_use",
+                                    "name": "web_search",
+                                }
+                            },
+                            {"toolResult": {"toolUseId": "t1", "content": []}},
+                            {"reasoningContent": {"reasoningText": {"text": "..."}}},
+                        ]
+                    }
+                }
+            },
+            ("search", "web_search"),
+        ),
+        (
+            "/v1beta/models/gemini-2.5-flash:generateContent",
+            {
+                "candidates": [
+                    {
+                        "content": {
+                            "parts": [
+                                {"text": "Hi"},
+                                {"functionCall": {"name": "search", "args": {}}},
+                            ]
+                        }
+                    }
+                ]
+            },
+            ("search",),
+        ),
+        (
+            "/v1beta/models/gemini-2.5-flash:generateContent",
+            {
+                "candidates": [
+                    {
+                        "content": {
+                            "parts": [
+                                gemini_tool_call("GOOGLE_SEARCH_WEB", "web_search"),
+                                gemini_tool_call("GOOGLE_SEARCH_IMAGE"),
+                                gemini_tool_call("URL_CONTEXT", "custom"),
+                                {"toolResponse": {"toolType": "URL_CONTEXT"}},
+                                gemini_tool_call("GOOGLE_MAPS"),
+                                gemini_tool_call("FILE_SEARCH"),
+                            ]
+                        }
+                    }
+                ]
+            },
+            (
+                "google_search",
+                "google_search",
+                "url_context",
+                "google_maps",
+                "file_search",
+            ),
+        ),
+        (
+            "/v1beta/models/gemini-2.5-flash:generateContent",
+            {
+                "candidates": [
+                    {
+                        "content": {
+                            "parts": [
+                                gemini_tool_call(
+                                    "MEDIA_PROCESSING", "GOOGLE_UNDERSTANDING_VIDEO"
+                                ),
+                                gemini_tool_call(
+                                    "TOOL_TYPE_UNSPECIFIED", "google_search"
+                                ),
+                                gemini_tool_call(None, "google_search"),
+                                gemini_tool_call({"type": "URL_CONTEXT"}, "custom"),
+                                gemini_tool_call("SOME_NEW_TOOL", "some_tool"),
+                                gemini_tool_call("SOME_NEW_TOOL"),
+                                {"toolCall": "GOOGLE_SEARCH_WEB"},
+                                "toolCall",
+                                None,
+                            ]
+                        }
+                    }
+                ]
+            },
+            ("some_tool",),
+        ),
+        (
+            "/v1beta/models/gemini-2.5-flash:generateContent",
+            {
+                "candidates": [
+                    {
+                        "content": {
+                            "parts": [
+                                {"executableCode": {"language": "PYTHON", "code": "1"}},
+                                {"codeExecutionResult": {"outcome": "OUTCOME_OK"}},
+                                {"executableCode": {"language": "PYTHON", "code": "2"}},
+                                gemini_tool_call("GOOGLE_SEARCH_WEB"),
+                                {"functionCall": {"name": "get_weather"}},
+                                {"functionResponse": {"name": "get_weather"}},
+                                {"executableCode": "print(1)"},
+                            ]
+                        },
+                        "groundingMetadata": {"webSearchQueries": ["python release"]},
+                    },
+                    {"content": {"parts": [{"functionCall": {"name": "fetch"}}]}},
+                ]
+            },
+            (
+                "code_execution",
+                "code_execution",
+                "google_search",
+                "get_weather",
+                "fetch",
+            ),
+        ),
+        (
+            "/v1/chat/completions",
+            {
+                "choices": [
+                    {
+                        "message": {
+                            "tool_calls": [
+                                {"function": {"name": ""}},
+                                {"function": {"name": 5}},
+                                {"function": None},
+                                "search",
+                            ]
+                        }
+                    },
+                    "search",
+                ]
+            },
+            (),
+        ),
+    ],
+)
+def test_tool_names_per_format(path, body, expected):
+    assert parse_ai_response(path, {"model": "m", **body}).tool_names == expected
+
+
+def test_tool_calls_are_reported_under_the_origin_and_model():
+    inspect(
+        {
+            "model": "gpt-4o",
+            "choices": [
+                {
+                    "message": {
+                        "tool_calls": [
+                            {"function": {"name": "search"}},
+                            {"function": {"name": "search"}},
+                            {"function": {"name": "fetch"}},
+                        ]
+                    }
+                }
+            ],
+        }
+    )
+    assert get_tool_stats() == [
+        {"provider": OPENAI_ORIGIN, "model": "gpt-4o", "name": "search", "calls": 2},
+        {"provider": OPENAI_ORIGIN, "model": "gpt-4o", "name": "fetch", "calls": 1},
+    ]
+
+
+def test_tool_calls_of_an_uncounted_response_are_not_reported():
+    tool_calls = {
+        "choices": [{"message": {"tool_calls": [{"function": {"name": "a"}}]}}]
+    }
+    inspect(tool_calls)
+    inspect({"model": "gpt-4o", **tool_calls}, status=500)
+    inspect({"model": "gpt-4o", **tool_calls}, method="GET")
+    assert get_tool_stats() == []
 
 
 def test_cache_tokens_are_reported_when_the_provider_has_them():

@@ -36,6 +36,26 @@ CHAT_COMPLETION = {
     ],
     "usage": {"prompt_tokens": 11, "completion_tokens": 7, "total_tokens": 18},
 }
+CHAT_COMPLETION_WITH_TOOLS = {
+    **CHAT_COMPLETION,
+    "choices": [
+        {
+            "index": 0,
+            "finish_reason": "tool_calls",
+            "message": {
+                "role": "assistant",
+                "content": None,
+                "tool_calls": [
+                    {
+                        "id": "call_1",
+                        "type": "function",
+                        "function": {"name": "search", "arguments": "{}"},
+                    }
+                ],
+            },
+        }
+    ],
+}
 RESPONSE = {
     "id": "resp_1",
     "object": "response",
@@ -51,6 +71,20 @@ MESSAGE = {
     "content": [{"type": "text", "text": "Hi"}],
     "usage": {"input_tokens": 21, "output_tokens": 12},
 }
+BEDROCK_CONVERSE_WITH_TOOLS = {
+    "output": {
+        "message": {
+            "role": "assistant",
+            "content": [
+                {"text": "Checking."},
+                {"toolUse": {"toolUseId": "t1", "name": "get_weather", "input": {}}},
+            ],
+        }
+    },
+    "stopReason": "tool_use",
+    "usage": {"inputTokens": 30, "outputTokens": 12, "totalTokens": 42},
+    "metrics": {"latencyMs": 5},
+}
 GEMINI = {
     "candidates": [{"content": {"role": "model", "parts": [{"text": "Hi"}]}}],
     "usageMetadata": {"promptTokenCount": 70, "candidatesTokenCount": 8},
@@ -65,6 +99,7 @@ ORDER = {"order": 1, "items": ["a", "b"]}
 BODIES = {
     "/api/orders": ORDER,
     "/v1/chat/completions": CHAT_COMPLETION,
+    "/tools/v1/chat/completions": CHAT_COMPLETION_WITH_TOOLS,
     "/v1/responses": RESPONSE,
     "/v1/messages": MESSAGE,
     "/v1/plain": CHAT_COMPLETION,
@@ -72,6 +107,7 @@ BODIES = {
     "/openai/deployments/gpt-4o-mini/chat/completions": CHAT_COMPLETION,
     "/v1beta/models/gemini-2.5-flash:generateContent": GEMINI,
     "/model/" + BEDROCK_MODEL + "/invoke": MESSAGE,
+    "/model/" + BEDROCK_MODEL + "/converse": BEDROCK_CONVERSE_WITH_TOOLS,
     "/model/" + INFERENCE_PROFILE_ARN + "/invoke": MESSAGE,
 }
 ENABLED_SINKS = set()
@@ -193,6 +229,10 @@ def break_reporting(monkeypatch):
 
 def get_ai_stats():
     return get_cache().ai_stats.get_stats()
+
+
+def get_tool_stats():
+    return get_cache().ai_stats.get_tool_stats()
 
 
 def stats_row(url, model, input_tokens, output_tokens):

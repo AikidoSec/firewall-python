@@ -19,10 +19,12 @@ import aikido_zen.sinks.anthropic
 import aikido_zen.sinks.botocore
 from aikido_zen.test_utils.ai_network_capture import (
     BEDROCK_MODEL,
+    FLAG,
     INFERENCE_PROFILE_ARN,
     assert_counted_once,
     enable_capture,
     get_ai_stats,
+    get_tool_stats,
     run_in_protected_app,
     serve_provider,
     stats_row,
@@ -149,6 +151,37 @@ def test_only_a_response_up_to_the_size_limit_is_counted(provider, pad, counted)
     assert sum(s["calls"] for s in get_ai_stats()) == counted
 
 
+def test_http_clients_report_tool_calls_under_the_origin(provider):
+    url = provider + "/tools/v1/chat/completions"
+    requests.post(url, json={})
+    httpx.post(url, json={})
+    urllib3.PoolManager().request("POST", url, body=b"{}")
+    assert get_tool_stats() == [
+        {
+            "provider": provider,
+            "model": "gpt-4o-mini-2024-07-18",
+            "name": "search",
+            "calls": 3,
+        }
+    ]
+
+
+def test_openai_sdk_tool_calls_are_counted_once(provider):
+    client = openai.OpenAI(
+        api_key="test", base_url=provider + "/tools/v1", max_retries=0
+    )
+    response = client.chat.completions.create(model="gpt-4o-mini", messages=HELLO)
+    assert response.choices[0].message.tool_calls[0].function.name == "search"
+    assert get_tool_stats() == [
+        {
+            "provider": provider,
+            "model": "gpt-4o-mini-2024-07-18",
+            "name": "search",
+            "calls": 1,
+        }
+    ]
+
+
 def test_openai_sdk_call_is_counted_by_http_alongside_the_sdk_sink(provider):
     client = openai.OpenAI(api_key="test", base_url=provider + "/v1", max_retries=0)
     client.chat.completions.create(model="gpt-4o-mini", messages=HELLO)
@@ -167,21 +200,44 @@ def test_anthropic_sdk_call_is_counted_by_http_alongside_the_sdk_sink(provider):
     ]
 
 
-def test_boto3_bedrock_call_is_counted_by_the_botocore_sink_only(provider):
+@pytest.fixture
+def bedrock(provider):
     boto3 = pytest.importorskip("boto3")
-    client = boto3.client(
+    return boto3.client(
         "bedrock-runtime",
         region_name="us-east-1",
         endpoint_url=provider,
         aws_access_key_id="test",
         aws_secret_access_key="test",
     )
-    response = client.invoke_model(
+
+
+def test_boto3_bedrock_call_is_counted_by_the_botocore_sink_only(bedrock):
+    response = bedrock.invoke_model(
         modelId=BEDROCK_MODEL,
         body=json.dumps({"messages": HELLO}),
     )
     assert json.loads(response["body"].read())["model"] == "claude-sonnet-4-20250514"
     assert get_ai_stats() == [stats_row("bedrock", BEDROCK_MODEL, 0, 0)]
+
+
+@pytest.mark.parametrize("flag, tools", [(None, []), ("true", ["get_weather"])])
+def test_boto3_converse_tool_calls_are_counted_with_the_flag(
+    bedrock, monkeypatch, flag, tools
+):
+    monkeypatch.delenv(FLAG, raising=False)
+    if flag:
+        monkeypatch.setenv(FLAG, flag)
+
+    bedrock.converse(
+        modelId=BEDROCK_MODEL, messages=[{"role": "user", "content": [{"text": "Hi"}]}]
+    )
+
+    assert get_ai_stats() == [stats_row("bedrock", BEDROCK_MODEL, 30, 12)]
+    assert get_tool_stats() == [
+        {"provider": "bedrock", "model": BEDROCK_MODEL, "name": name, "calls": 1}
+        for name in tools
+    ]
 
 
 @pytest.mark.parametrize("flag, patched", [(None, False), ("true", True)])

@@ -1,3 +1,6 @@
+import sys
+import threading
+
 import pytest
 from .ai_statistics import AIStatistics
 
@@ -552,3 +555,175 @@ def test_import_list_adds_cache_tokens(stats):
             },
         }
     ]
+
+
+def test_tracks_tool_calls_per_provider_model_and_name(stats):
+    stats.on_ai_tool_call("https://api.openai.com", "gpt-4o", "search")
+    stats.on_ai_tool_call("https://api.openai.com", "gpt-4o", "search")
+    stats.on_ai_tool_call("https://api.openai.com", "gpt-4o-mini", "search")
+    stats.on_ai_tool_call("http://localhost:4000", "gpt-4o", "search")
+    stats.on_ai_tool_call("https://api.openai.com", "gpt-4o", "fetch")
+
+    assert stats.get_tool_stats() == [
+        {
+            "provider": "https://api.openai.com",
+            "model": "gpt-4o",
+            "name": "search",
+            "calls": 2,
+        },
+        {
+            "provider": "https://api.openai.com",
+            "model": "gpt-4o-mini",
+            "name": "search",
+            "calls": 1,
+        },
+        {
+            "provider": "http://localhost:4000",
+            "model": "gpt-4o",
+            "name": "search",
+            "calls": 1,
+        },
+        {
+            "provider": "https://api.openai.com",
+            "model": "gpt-4o",
+            "name": "fetch",
+            "calls": 1,
+        },
+    ]
+    assert stats.empty() is False
+
+
+@pytest.mark.parametrize(
+    "provider, model, name",
+    [
+        ("", "gpt-4o", "search"),
+        ("https://api.openai.com", "", "search"),
+        ("https://api.openai.com", "gpt-4o", ""),
+        ("https://api.openai.com", "gpt-4o", None),
+        ("https://api.openai.com", "gpt-4o", 5),
+        ("https://api.openai.com", "gpt-4o", "x" * 256),
+    ],
+)
+def test_ignores_invalid_tool_calls(stats, provider, model, name):
+    stats.on_ai_tool_call(provider, model, name)
+
+    assert stats.get_tool_stats() == []
+    assert stats.empty() is True
+
+
+def test_keeps_a_tool_name_of_the_maximum_length(stats):
+    stats.on_ai_tool_call("https://api.openai.com", "gpt-4o", "x" * 255)
+
+    assert [tool["name"] for tool in stats.get_tool_stats()] == ["x" * 255]
+
+
+def test_keeps_at_most_1000_tools(stats):
+    for i in range(1001):
+        stats.on_ai_tool_call("https://api.openai.com", "gpt-4o", f"tool-{i}")
+    stats.on_ai_tool_call("https://api.openai.com", "gpt-4o", "tool-0")
+
+    tools = stats.get_tool_stats()
+    assert len(tools) == 1000
+    assert tools[0]["calls"] == 2
+    assert "tool-1000" not in [tool["name"] for tool in tools]
+
+
+def test_import_tool_list_adds_to_existing_tools(stats):
+    stats.on_ai_tool_call("https://api.openai.com", "gpt-4o", "search")
+
+    stats.import_tool_list(
+        [
+            {
+                "provider": "https://api.openai.com",
+                "model": "gpt-4o",
+                "name": "search",
+                "calls": 3,
+            },
+            {
+                "provider": "https://api.openai.com",
+                "model": "gpt-4o",
+                "name": "fetch",
+                "calls": 1,
+            },
+        ]
+    )
+
+    assert stats.get_tool_stats() == [
+        {
+            "provider": "https://api.openai.com",
+            "model": "gpt-4o",
+            "name": "search",
+            "calls": 4,
+        },
+        {
+            "provider": "https://api.openai.com",
+            "model": "gpt-4o",
+            "name": "fetch",
+            "calls": 1,
+        },
+    ]
+
+
+def test_clear_resets_tool_calls(stats):
+    stats.on_ai_tool_call("https://api.openai.com", "gpt-4o", "search")
+
+    stats.clear()
+
+    assert stats.get_tool_stats() == []
+    assert stats.empty() is True
+
+
+def test_get_tool_stats_returns_copies(stats):
+    stats.on_ai_tool_call("https://api.openai.com", "gpt-4o", "search")
+
+    stats.get_tool_stats()[0]["calls"] = 99
+
+    assert stats.get_tool_stats()[0]["calls"] == 1
+
+
+class ToolAddedByAnotherThread(dict):
+    def get(self, key, default=None):
+        row = super().get(key, default)
+        if row is None:
+            provider, model, name = key
+            self[key] = {"provider": provider, "model": model, "name": name, "calls": 1}
+        return row
+
+
+def test_keeps_a_tool_that_another_thread_adds_at_the_same_time(stats):
+    stats.tools = ToolAddedByAnotherThread()
+
+    stats.on_ai_tool_call("https://api.openai.com", "gpt-4o", "search")
+
+    assert stats.get_tool_stats()[0]["calls"] == 2
+
+
+@pytest.mark.parametrize("read", ["get_stats", "get_tool_stats"])
+def test_reading_while_other_threads_add_rows_does_not_fail(stats, read):
+    switch_interval = sys.getswitchinterval()
+    sys.setswitchinterval(1e-6)
+    barrier = threading.Barrier(9)
+    errors = []
+
+    def add_rows(thread):
+        barrier.wait(5)
+        for i in range(200):
+            stats.on_ai_call("https://api.openai.com", f"m-{thread}-{i}", 1, 1)
+            stats.on_ai_tool_call("https://api.openai.com", "m", f"t-{thread}-{i}")
+
+    writers = [threading.Thread(target=add_rows, args=(t,)) for t in range(8)]
+    try:
+        for writer in writers:
+            writer.start()
+        barrier.wait(5)
+        while any(writer.is_alive() for writer in writers):
+            try:
+                getattr(stats, read)()
+            except RuntimeError as error:
+                errors.append(error)
+    finally:
+        sys.setswitchinterval(switch_interval)
+        for writer in writers:
+            writer.join(5)
+            assert not writer.is_alive()
+    assert errors == []

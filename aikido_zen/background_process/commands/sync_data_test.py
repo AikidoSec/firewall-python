@@ -6,6 +6,7 @@ from . import sync_data
 from aikido_zen.background_process.routes import Routes
 from ..packages import PackagesStore
 from ...helpers.ip_matcher import IPMatcher
+from ...storage.ai_statistics import AIStatistics
 from ...storage.hostnames import Hostnames
 from ...storage.statistics import Statistics
 
@@ -283,3 +284,19 @@ def test_process_sync_data_no_routes(setup_connection_manager):
     assert len(connection_manager.routes) == 0
 
     # Check that the total requests remain unchanged
+
+
+def test_process_sync_data_imports_ai_tools(setup_connection_manager):
+    connection_manager = setup_connection_manager
+    connection_manager.ai_stats = AIStatistics()
+    tool = {
+        "provider": "https://api.openai.com",
+        "model": "gpt-4o",
+        "name": "search",
+        "calls": 2,
+    }
+
+    sync_data.process(connection_manager, {"ai_tools": [tool]}, None)
+    sync_data.process(connection_manager, {"ai_tools": [tool]}, None)
+
+    assert connection_manager.ai_stats.get_tool_stats() == [{**tool, "calls": 4}]

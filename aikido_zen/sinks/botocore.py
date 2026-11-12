@@ -1,5 +1,9 @@
+from aikido_zen.helpers.ai_network_capture import (
+    converse_tool_names,
+    is_ai_network_capture_enabled,
+)
 from aikido_zen.helpers.get_argument import get_argument
-from aikido_zen.helpers.on_ai_call import on_ai_call
+from aikido_zen.helpers.on_ai_call import on_ai_call, on_ai_tool_calls
 from aikido_zen.helpers.register_call import register_call
 from aikido_zen.sinks import after, on_import, patch_function
 
@@ -42,6 +46,9 @@ def make_api_call_after(func, instance, args, kwargs, return_value):
         input_tokens, output_tokens = get_tokens_from_invoke_model(return_value)
 
     on_ai_call("bedrock", model_id, input_tokens, output_tokens)
+    # InvokeModel's body is a stream that only the app may read.
+    if operation_name == "Converse" and is_ai_network_capture_enabled():
+        on_ai_tool_calls("bedrock", model_id, converse_tool_names(return_value))
 
 
 @on_import("botocore.client")
