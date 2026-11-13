@@ -48,7 +48,7 @@ def sent_event_with_cache(cache):
 
     if not ipc.send_message_async.called:
         return None
-    return ipc.send_message_async.call_args.args[0].request.event
+    return ipc.send_message_async.call_args.args[0].request
 
 
 def test_track_invalid_event_name(caplog):
@@ -106,7 +106,7 @@ def test_track_sends_event_over_ipc():
     ipc.send_message_async.assert_called_once()
     (message,) = ipc.send_message_async.call_args.args
     assert message.identifier == "PUT_EVENT"
-    assert message.request.event == {
+    assert message.request == {
         "type": "custom",
         "time": 111,
         "name": "my-custom-event",
@@ -172,7 +172,7 @@ def track_n_times(n, event_name="my-custom-event"):
         for _ in range(n):
             track(event_name)
 
-    return [c.args[0].request.event for c in ipc.send_message_async.call_args_list]
+    return [c.args[0].request for c in ipc.send_message_async.call_args_list]
 
 
 def test_track_sends_every_event_below_the_limit():
@@ -198,9 +198,7 @@ def test_all_event_names_share_one_budget():
             track("payment.failed")
         track("order.completed")
 
-    names = [
-        c.args[0].request.event["name"] for c in ipc.send_message_async.call_args_list
-    ]
+    names = [c.args[0].request["name"] for c in ipc.send_message_async.call_args_list]
     assert len(names) == track_module.MAX_EVENTS_PER_REQUEST
     assert "order.completed" not in names
 

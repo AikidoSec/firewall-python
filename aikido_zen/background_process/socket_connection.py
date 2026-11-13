@@ -6,7 +6,7 @@ from contextlib import contextmanager
 
 
 class SocketConnection(con.Connection):
-    # Keep Connection's framing and pickling while applying deadlines to partial I/O.
+    # Keep Connection's framing while applying deadlines to partial I/O.
     # pylint: disable=arguments-differ
     def __init__(self, sock, deadline):
         self._socket = sock

@@ -45,9 +45,10 @@ class ServiceConfig:
     def set_endpoints(self, endpoints):
         """Sets non-graphql endpoints"""
 
-        self.endpoints = [
+        self._endpoint_data = [
             endpoint for endpoint in endpoints if not endpoint.get("graphql")
         ]
+        self.endpoints = [dict(endpoint) for endpoint in self._endpoint_data]
 
         # Create an IPMatcher instance for each endpoint
         for endpoint in self.endpoints:
@@ -63,6 +64,40 @@ class ServiceConfig:
 
             endpoint["allowedIPAddresses"] = IPMatcher(endpoint["allowedIPAddresses"])
 
+    def to_dict(self):
+        return {
+            "endpoints": self._endpoint_data,
+            "last_updated_at": self.last_updated_at,
+            "blocked_uids": list(self.blocked_uids),
+            "bypassed_ips": self._bypassed_ip_data,
+            "received_any_stats": self.received_any_stats,
+            "revision": self.revision,
+            "block_new_outgoing_requests": self.block_new_outgoing_requests,
+            "outbound_domains": self.outbound_domains,
+            "excluded_user_ids_from_rate_limiting": list(
+                self.excluded_user_ids_from_rate_limiting
+            ),
+            "enabled_features": list(self.enabled_features),
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        config = cls(
+            endpoints=data["endpoints"],
+            last_updated_at=data["last_updated_at"],
+            blocked_uids=data["blocked_uids"],
+            bypassed_ips=data["bypassed_ips"],
+            received_any_stats=data["received_any_stats"],
+        )
+        config.revision = data["revision"]
+        config.set_block_new_outgoing_requests(data["block_new_outgoing_requests"])
+        config.outbound_domains = data["outbound_domains"]
+        config.update_excluded_user_ids_from_rate_limiting(
+            data["excluded_user_ids_from_rate_limiting"]
+        )
+        config.update_enabled_features(data["enabled_features"])
+        return config
+
     def get_endpoints(self, route_metadata):
         """
         Gets the endpoint that matches the current context
@@ -72,7 +107,8 @@ class ServiceConfig:
 
     def set_bypassed_ips(self, bypassed_ips):
         """Creates an IPMatcher from the given bypassed ip set"""
-        self.bypassed_ips = IPMatcher(bypassed_ips)
+        self._bypassed_ip_data = list(bypassed_ips)
+        self.bypassed_ips = IPMatcher(self._bypassed_ip_data)
 
     def is_bypassed_ip(self, ip):
         """Checks if the IP is on the bypass list"""

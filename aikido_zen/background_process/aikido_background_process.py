@@ -2,6 +2,7 @@
 Simply exports the aikido background process
 """
 
+import json
 import multiprocessing.connection as con
 import signal
 import time
@@ -54,7 +55,7 @@ class AikidoBackgroundProcess:
         while True:
             with listener.accept() as conn:
                 try:
-                    data = conn.recv()  #  because of this no sleep needed in thread
+                    data = json.loads(conn.recv_bytes())
                     logger.debug("Incoming data : %s", data)
                     process_incoming_command(
                         connection_manager=self.connection_manager,
