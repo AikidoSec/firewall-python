@@ -45,20 +45,41 @@ jobs:
       run: |
         make cov
 
-    - name: Upload coverage report to Codecov
-      uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+    - name: Upload Codecov artifact
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
-        fail_ci_if_error: true
-        files: ./coverage.xml
-        token: ${{ secrets.CODECOV_TOKEN }}
-        verbose: true
-    
+        name: codecov-${{ matrix.python-version }}
+        path: coverage.xml
+        if-no-files-found: error
+
     - name: Upload coverage artifact
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         name: coverage-${{ matrix.python-version }}
         path: lcov.info
         if-no-files-found: error
+
+  upload-coverage-to-codecov:
+    name: Upload coverage to Codecov
+    runs-on: ubuntu-24.04
+    needs: test
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14", "3.15"]
+    steps:
+    - name: Download coverage report
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      with:
+        name: codecov-${{ matrix.python-version }}
+        path: coverage-report
+    - name: Upload coverage report to Codecov
+      uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+      with:
+        fail_ci_if_error: true
+        files: ./coverage-report/coverage.xml
+        disable_search: true
+        token: ${{ secrets.CODECOV_TOKEN }}
+        verbose: true
 
   upload-coverage-to-aikido:
     runs-on: ubuntu-24.04
