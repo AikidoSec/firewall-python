@@ -42,10 +42,10 @@ jobs:
 
       - name: Setup safe-chain (Unix)
         if: runner.os != 'Windows'
-        run: curl -fsSL https://github.com/AikidoSec/safe-chain/releases/latest/download/install-safe-chain.sh | sh -s -- --ci
+        run: curl -fsSL https://github.com/AikidoSec/safe-chain/releases/download/1.5.29/install-safe-chain.sh | sh -s -- --ci
       - name: Setup safe-chain (Windows)
         if: runner.os == 'Windows'
-        run: iex "& { $(iwr 'https://github.com/AikidoSec/safe-chain/releases/latest/download/install-safe-chain.ps1' -UseBasicParsing) } -ci"
+        run: iex "& { $(iwr 'https://github.com/AikidoSec/safe-chain/releases/download/1.5.29/install-safe-chain.ps1' -UseBasicParsing) } -ci"
 
       - name: Install dependencies
         run: make install
@@ -76,7 +76,7 @@ jobs:
         run: |
           docker run --rm -v "$(pwd):/app" -w /app python:${{ matrix.python-version }}-alpine sh -eo pipefail -c "
             apk add --no-cache build-base curl
-            curl -fsSL https://github.com/AikidoSec/safe-chain/releases/latest/download/install-safe-chain.sh | sh -s -- --ci
+            curl -fsSL https://github.com/AikidoSec/safe-chain/releases/download/1.5.29/install-safe-chain.sh | sh -s -- --ci
             export PATH=\"\$HOME/.safe-chain/shims:\$HOME/.safe-chain/bin:\$PATH\"
             pip install --root-user-action=ignore . pytest
             python -m pytest aikido_zen/helpers/zen_internals_test.py
