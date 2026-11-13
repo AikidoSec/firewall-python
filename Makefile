@@ -1,5 +1,6 @@
 CACHE_DIR := .cache/binaries
 BUILD_DIR := dist/
+PYTHON ?= python3
 
 # Build/clean/lint/install :
 .PHONY: build
@@ -45,6 +46,7 @@ benchmark:
 
 # Binaries cache :
 BASE_URL = https://github.com/AikidoSec/zen-internals/releases/download/v0.1.74
+BINARY_CHECKSUMS = zen-internals.sha256
 FILES = \
     libzen_internals_aarch64-apple-darwin.dylib \
     libzen_internals_aarch64-apple-darwin.dylib.sha256sum \
@@ -63,14 +65,15 @@ FILES = \
     libzen_internals_x86_64-unknown-linux-musl.so \
     libzen_internals_x86_64-unknown-linux-musl.so.sha256sum
 
-binaries: binaries_make_dir $(addprefix .cache/binaries/, $(FILES))
+binaries: binaries_make_dir
+	@for file in $(FILES); do \
+		curl -fsSL -o "$(CACHE_DIR)/$$file" "$(BASE_URL)/$$file" || exit 1; \
+	done
+	$(PYTHON) scripts/verify_binaries.py $(CACHE_DIR) $(BINARY_CHECKSUMS)
 	echo "$(BASE_URL)" > $(CACHE_DIR)/.version
 binaries_make_dir:
 	rm -rf .cache/binaries
 	mkdir -p .cache/binaries/
-.cache/binaries/%:
-	@echo "Downloading $*..."
-	curl -L -o $@ $(BASE_URL)/$*
 
 # Binaries from another release may not match the Python bindings, so download them again.
 .PHONY: check_binaries
@@ -79,8 +82,9 @@ check_binaries:
   		echo "Directory $(CACHE_DIR) has the binaries from $(BASE_URL)."; \
 	else \
 		echo "Directory $(CACHE_DIR) is missing or outdated. Running 'make binaries'..."; \
-		$(MAKE) binaries; \
+		$(MAKE) binaries || exit 1; \
 	fi
+	$(PYTHON) scripts/verify_binaries.py $(CACHE_DIR) $(BINARY_CHECKSUMS)
 	cp -r $(CACHE_DIR)/* aikido_zen/libs
 
 
