@@ -1,5 +1,5 @@
+import json
 from collections import UserDict
-from copy import deepcopy
 
 import pytest
 from unittest.mock import MagicMock, patch
@@ -20,6 +20,10 @@ from ..background_process.packages import PackagesStore
 from ..background_process.service_config import ServiceConfig
 from ..context import Context, current_context
 from aikido_zen.helpers.ip_matcher import IPMatcher
+
+
+def over_ipc(value):
+    return json.loads(json.dumps(value))
 
 
 @pytest.fixture
@@ -51,7 +55,7 @@ def sync(monkeypatch):
     ipc = MagicMock()
     ipc.send_message.side_effect = lambda message: {
         "success": True,
-        "data": deepcopy(sync_data.process(manager, deepcopy(message.request), None)),
+        "data": over_ipc(sync_data.process(manager, over_ipc(message.request), None)),
     }
     generate_schema = MagicMock(wraps=get_api_info)
     monkeypatch.setattr("aikido_zen.background_process.ipc.IPCClient.get", lambda: ipc)
@@ -337,7 +341,7 @@ def test_renew_updates_config(mock_get_ipc, thread_cache: ThreadCache):
                 blocked_uids={"user123"},
                 last_updated_at=-1,
                 received_any_stats=True,
-            ),
+            ).to_dict(),
         },
     }
 

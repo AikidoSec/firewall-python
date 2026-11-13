@@ -90,7 +90,8 @@ class ThreadCache:
             return
 
         config = res["data"].get("config")
-        if isinstance(config, ServiceConfig):
+        if isinstance(config, dict):
+            config = ServiceConfig.from_dict(config)
             if config.revision != self.config.revision:
                 self.routes.reset_sampling()
             self.config = config

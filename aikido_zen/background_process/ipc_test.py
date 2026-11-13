@@ -1,4 +1,5 @@
 import gc
+import json
 import os
 import socket
 import struct
@@ -31,9 +32,9 @@ def reset_ipc_after_test():
     module.IPCClient.reset()
 
 
-class Payload:
+class Payload(dict):
     def __init__(self, size=256 * 1024):
-        self.body = bytearray(size)
+        super().__init__(body="x" * size)
 
 
 @pytest.fixture
@@ -110,7 +111,7 @@ class PeerServer:
                 request = None
                 if self.read_request:
                     with connection.Connection(peer.dup().detach()) as conn:
-                        request = conn.recv()
+                        request = json.loads(conn.recv_bytes())
                 if callable(self.reply):
                     self.reply(peer, request)
                 elif self.reply:
@@ -234,13 +235,13 @@ def test_completed_blocked_reply_is_kept_after_deadline(monkeypatch):
 
     def receive():
         clock.return_value = 0.02
-        return verdict
+        return json.dumps(verdict).encode()
 
     @contextmanager
     def completed_connection(address, deadline):
         assert address == "fixture"
         assert deadline == 0.01
-        yield SimpleNamespace(send=Mock(), recv=receive)
+        yield SimpleNamespace(send_bytes=Mock(), recv_bytes=receive)
 
     monkeypatch.setattr(module, "time", SimpleNamespace(monotonic=clock))
     monkeypatch.setattr(module, "open_connection", completed_connection)
@@ -331,14 +332,13 @@ def test_connect_failure_closes_socket(resources):
     assert_released(resources, [])
 
 
-def test_pickle_failure_releases_connection(resources, servers):
-    class Unpicklable:
-        def __reduce__(self):
-            raise ValueError("Cannot serialize payload")
+def test_unencodable_request_releases_connection(resources, servers):
+    class Unencodable:
+        pass
 
     server = servers(1)
     communications = module.IPCClient(server.address, b"fixture")
-    payload = Unpicklable()
+    payload = Unencodable()
     reference = weakref.ref(payload)
 
     result = communications.send_message(put_event.generate(payload, timeout_in_sec=1))
@@ -420,7 +420,7 @@ def test_reads_large_reply(resources, servers):
 
     def reply(peer, _request):
         with connection.Connection(peer.dup().detach()) as conn:
-            conn.send(response)
+            conn.send_bytes(json.dumps(response).encode())
 
     server = servers(1, reply=reply)
     communications = module.IPCClient(server.address, b"fixture")
@@ -487,8 +487,8 @@ def test_queued_connection_succeeds_if_backend_recovers_before_timeout(
                     peer.close()
                 peer, _ = listener.accept()
                 with peer, connection.Connection(peer.dup().detach()) as conn:
-                    assert conn.recv() == ("PING", ())
-                    conn.send("Received")
+                    assert json.loads(conn.recv_bytes()) == ["PING", []]
+                    conn.send_bytes(b'"Received"')
             except (OSError, AssertionError) as error:
                 server_errors.append(repr(error))
 
@@ -519,13 +519,15 @@ def test_concurrent_calls_match_out_of_order_responses():
 
     def respond():
         with listener.accept() as first_connection:
-            first_request = first_connection.recv()
+            first_request = json.loads(first_connection.recv_bytes())
             first_received.set()
             with listener.accept() as second_connection:
-                second_request = second_connection.recv()
-                second_connection.send(getattr(properties, second_request[1]))
+                second_request = json.loads(second_connection.recv_bytes())
+                second_response = getattr(properties, second_request[1])
+                second_connection.send_bytes(json.dumps(second_response).encode())
             if allow_first_reply.wait(3):
-                first_connection.send(getattr(properties, first_request[1]))
+                first_response = getattr(properties, first_request[1])
+                first_connection.send_bytes(json.dumps(first_response).encode())
 
     communications = module.IPCClient(listener.address, b"fixture")
 
@@ -599,7 +601,7 @@ def test_async_calls_return_while_delivery_is_stalled_and_share_one_worker(
     assert worker_ids == [first_worker.ident] * 20
     calls = ipc.send_message.call_args_list + other.send_message.call_args_list
     assert all(call.args[0].identifier == "PUT_EVENT" for call in calls)
-    assert [call.args[0].request.event for call in calls] == list(range(20))
+    assert [call.args[0].request for call in calls] == list(range(20))
     assert all(call.args[0].timeout_in_sec == 5 for call in calls)
 
 
@@ -649,13 +651,7 @@ def test_idle_worker_releases_payloads_after_delivery_or_failure(sender, fail):
 
     class Comms(module.IPCClient):
         def send_message(self, message):
-            delivered.append(
-                (
-                    weakref.ref(message),
-                    weakref.ref(message.request),
-                    weakref.ref(message.request.event),
-                )
-            )
+            delivered.append((weakref.ref(message), weakref.ref(message.request)))
             if fail:
                 raise OSError("closed socket")
 
