@@ -178,7 +178,7 @@ def test_sql_injection_with_ipc(caplog, get_context, monkeypatch):
         mock_ipc.send_message_async.assert_called_once()
         (message,) = mock_ipc.send_message_async.call_args.args
         assert message.identifier == "PUT_EVENT"
-        assert message.request.event["request"] == {
+        assert message.request["request"] == {
             "ipAddress": "198.51.100.23",
             "method": "GET",
             "route": "/hello",
@@ -186,8 +186,8 @@ def test_sql_injection_with_ipc(caplog, get_context, monkeypatch):
             "url": "http://localhost:8080/hello",
             "userAgent": None,
         }
-        del message.request.event["attack"]["stack"]  # Hard to test
-        assert message.request.event["attack"] == {
+        del message.request["attack"]["stack"]  # Hard to test
+        assert message.request["attack"] == {
             "blocked": True,
             "kind": "sql_injection",
             "metadata": {

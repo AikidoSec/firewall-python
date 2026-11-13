@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from .service_config import ServiceConfig
 from aikido_zen.helpers.ip_matcher import IPMatcher
@@ -371,3 +373,67 @@ def test_excluded_user_ids_from_rate_limiting():
     # Empty list clears all
     config.update_excluded_user_ids_from_rate_limiting([])
     assert config.is_user_excluded_from_rate_limiting("user3") is False
+
+
+def full_config():
+    config = ServiceConfig(
+        endpoints=[
+            {
+                "method": "GET",
+                "route": "/admin",
+                "graphql": None,
+                "forceProtectionOff": False,
+                "allowedIPAddresses": ["1.2.3.4"],
+                "rateLimiting": {
+                    "enabled": True,
+                    "maxRequests": 10,
+                    "windowSizeInMS": 1000,
+                },
+            },
+            {
+                "method": "POST",
+                "route": "/graphql",
+                "graphql": {"type": "query", "name": "user"},
+            },
+        ],
+        last_updated_at=1700000000000,
+        blocked_uids={"blocked-user"},
+        bypassed_ips=["10.0.0.0/8"],
+        received_any_stats=True,
+    )
+    config.revision = 3
+    config.set_block_new_outgoing_requests(True)
+    config.update_outbound_domains([{"hostname": "api.example.com", "mode": "allow"}])
+    config.update_excluded_user_ids_from_rate_limiting(["excluded-user"])
+    config.update_enabled_features(["realtime_updates"])
+    return config
+
+
+def test_to_dict_includes_every_setting():
+    config = full_config()
+
+    assert set(config.to_dict()) == set(vars(config)) - {
+        "_endpoint_data",
+        "_bypassed_ip_data",
+    }
+
+
+def test_config_rebuilt_from_json_matches_the_original():
+    config = full_config()
+
+    copy = ServiceConfig.from_dict(json.loads(json.dumps(config.to_dict())))
+
+    assert copy.to_dict() == config.to_dict()
+    assert copy.is_bypassed_ip("10.1.2.3")
+    assert not copy.is_bypassed_ip("1.2.3.4")
+    assert copy.blocked_uids == {"blocked-user"}
+    assert copy.is_user_excluded_from_rate_limiting("excluded-user")
+    assert copy.is_feature_enabled("realtime_updates")
+    assert copy.should_block_outgoing_request("other.example.com")
+    assert not copy.should_block_outgoing_request("api.example.com")
+    [endpoint] = copy.get_endpoints(
+        {"method": "GET", "route": "/admin", "url": "http://localhost/admin"}
+    )
+    assert endpoint["allowedIPAddresses"].has("1.2.3.4")
+    assert not endpoint["allowedIPAddresses"].has("5.6.7.8")
+    assert endpoint["rateLimiting"]["maxRequests"] == 10
