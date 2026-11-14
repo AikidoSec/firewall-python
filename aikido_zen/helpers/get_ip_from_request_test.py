@@ -87,7 +87,7 @@ def test_x_forwarded_for_with_trust_proxy_multiple_ips():
     # Test case 10: x-forwarded-for with trust proxy and multiple IPs
     headers = Headers()
     headers.store_header("x-forwarded-for", "9.9.9.9, 8.8.8.8, 7.7.7.7")
-    assert get_ip_from_request("1.2.3.4", headers) == "9.9.9.9"
+    assert get_ip_from_request("1.2.3.4", headers) == "7.7.7.7"
 
 
 def test_x_forwarded_for_with_trust_proxy_multiple_ips_ipv6():
@@ -99,7 +99,7 @@ def test_x_forwarded_for_with_trust_proxy_multiple_ips_ipv6():
     )
     assert (
         get_ip_from_request("df89:84af:85e0:c55f:960c:341a:2cc6:734d", headers)
-        == "a3ad:8f95:d2a8:454b:cf19:be6e:73c6:f880"
+        == "791d:967e:428a:90b9:8f6f:4fcc:5d88:015d"
     )
 
 
@@ -172,37 +172,65 @@ def test_invalid_ipv6():
     assert not is_ip("::g")  # Invalid IPv6
 
 
-#  Test `get_client_ip_from_header` function :
-def test_get_client_ip_from_header():
-    # Test cases with valid IPs
-    assert get_client_ip_from_header("192.168.1.1") == "192.168.1.1"
-    assert get_client_ip_from_header("192.168.1.1, 10.0.0.1") == "192.168.1.1"
-    assert get_client_ip_from_header("10.0.0.1, 192.168.1.1") == "10.0.0.1"
-    assert (
-        get_client_ip_from_header("2001:0db8:85a3:0000:0000:8a2e:0370:7334")
-        == "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
-    )
-    assert (
-        get_client_ip_from_header(
-            "2001:0db8:85a3:0000:0000:8a2e:0370:7334, 192.168.1.1"
-        )
-        == "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
-    )
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        ("192.168.1.1", None),
+        ("192.168.1.1, 10.0.0.1", None),
+        ("9.9.9.9, 8.8.8.8, 10.0.0.1, ::1", "8.8.8.8"),
+        ("9.9.9.9, invalid:8080, 256.256.256.256", "9.9.9.9"),
+        ("9.9.9.9:8080, 8.8.8.8:443", "8.8.8.8"),
+        ("9.9.9.9, [2606:4700::1111]:443", "2606:4700::1111"),
+        ("[2606:4700::1111], 192.168.1.1", "2606:4700::1111"),
+        ("::1, 2606:4700::1111", "2606:4700::1111"),
+        ("9.9.9.9, ::ffff:192.168.1.1", "9.9.9.9"),
+        ("abc.def.ghi.jkl, 256.256.256.256", None),
+        ("", None),
+    ],
+)
+def test_get_client_ip_from_header(value, expected):
+    assert get_client_ip_from_header(value) == expected
 
-    # Test cases with mixed valid and invalid IPs
-    assert (
-        get_client_ip_from_header("256.256.256.256, 192.168.1.1") == "192.168.1.1"
-    )  # Invalid IPv4 ignored
-    assert (
-        get_client_ip_from_header("192.168.1.1, abc.def.ghi.jkl") == "192.168.1.1"
-    )  # Invalid IPv4 ignored
-    assert (
-        get_client_ip_from_header("::1, 2001:0db8:85a3:0000:0000:8a2e:0370:7334")
-        == "::1"
-    )  # Valid IPv6 preferred
 
-    # Test cases with only invalid IPs
-    assert (
-        get_client_ip_from_header("abc.def.ghi.jkl, 256.256.256.256") is None
-    )  # All invalid
-    assert get_client_ip_from_header("") is None  # Empty string
+@pytest.mark.parametrize(
+    "setting, remote_address, value, expected",
+    [
+        ("true", "1.2.3.4", "10.0.0.1, ::1", "1.2.3.4"),
+        ("false", "1.2.3.4", "9.9.9.9", "1.2.3.4"),
+        ("unknown", "1.2.3.4", "9.9.9.9", "1.2.3.4"),
+        ("YES", "1.2.3.4", "9.9.9.9", "9.9.9.9"),
+        ("2", "1.2.3.4", "9.9.9.9, 8.8.8.8, 7.7.7.7", "8.8.8.8"),
+        ("2", "1.2.3.4", "9.9.9.9, 10.0.0.1, 7.7.7.7", "9.9.9.9"),
+        ("2", "1.2.3.4", "9.9.9.9, invalid, 7.7.7.7", "9.9.9.9"),
+        ("4", "1.2.3.4", "9.9.9.9, 8.8.8.8", "1.2.3.4"),
+        ("1.2.3.0/24", "1.2.3.4", "9.9.9.9, 1.2.3.5", "9.9.9.9"),
+        ("1.2.3.0/24", "8.8.8.8", "9.9.9.9", "8.8.8.8"),
+        ("1.2.3.0/24", None, "9.9.9.9", None),
+        ("1.2.3.0/24", "1.2.3.4", "1.2.3.5, 10.0.0.1", "1.2.3.4"),
+        ("1.2.3.4", "1.2.3.4", "9.9.9.9, 1.2.3.4", "9.9.9.9"),
+        (
+            " 1.2.3.0/24, 8.8.8.0/24, ",
+            "1.2.3.4",
+            "9.9.9.9, 8.8.8.8, 1.2.3.5",
+            "9.9.9.9",
+        ),
+        (
+            "2606:4700::/32",
+            "2606:4700::1111",
+            "9.9.9.9, [2606:4700::1001]:443",
+            "9.9.9.9",
+        ),
+        (
+            "1.2.3.0/24",
+            "::ffff:1.2.3.4",
+            "9.9.9.9, ::ffff:1.2.3.5",
+            "9.9.9.9",
+        ),
+        ("invalid.ip", "1.2.3.4", "9.9.9.9", "1.2.3.4"),
+    ],
+)
+def test_proxy_trust_modes(monkeypatch, setting, remote_address, value, expected):
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", setting)
+    headers = Headers()
+    headers.store_header("x-forwarded-for", value)
+    assert get_ip_from_request(remote_address, headers) == expected
