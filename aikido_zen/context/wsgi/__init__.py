@@ -3,6 +3,7 @@
 from urllib.parse import parse_qs
 from aikido_zen.helpers.get_ip_from_request import get_ip_from_request
 from aikido_zen.helpers.logging import logger
+from aikido_zen.helpers.trust_proxy import is_trusted_proxy_request
 from .extract_wsgi_headers import extract_wsgi_headers
 from .build_url_from_wsgi import build_url_from_wsgi
 from ..parse_cookies import parse_cookies
@@ -23,9 +24,9 @@ def set_wsgi_attributes_on_context(context, environ):
         context.cookies = {}
     context.url = build_url_from_wsgi(environ)
     context.query = parse_qs(environ["QUERY_STRING"])
-    context.remote_address = get_ip_from_request(
-        environ["REMOTE_ADDR"], context.headers
-    )
+    raw_ip = environ["REMOTE_ADDR"]
+    context.remote_address = get_ip_from_request(raw_ip, context.headers)
+    context.is_behind_trusted_proxy = is_trusted_proxy_request(raw_ip)
 
     # Content type is generally not included as a header, do include this as a header to simplify :
     if "CONTENT_TYPE" in environ:
