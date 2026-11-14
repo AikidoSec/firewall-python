@@ -58,6 +58,7 @@ class Context:
 
         # Parse WSGI/ASGI/... request :
         self.method = self.remote_address = self.url = None
+        self.is_behind_trusted_proxy = False
         if source in WSGI_SOURCES:
             set_wsgi_attributes_on_context(self, req)
         elif source in ASGI_SOURCES:
@@ -79,6 +80,7 @@ class Context:
                 {
                     "method": self.method,
                     "remote_address": self.remote_address,
+                    "is_behind_trusted_proxy": self.is_behind_trusted_proxy,
                     "url": self.url,
                     "body": self.body,
                     "headers": self.headers,
