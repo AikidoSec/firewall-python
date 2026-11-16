@@ -3,6 +3,7 @@ Simply exports the aikido background process
 """
 
 import json
+import os
 import multiprocessing.connection as con
 import signal
 import time
@@ -22,7 +23,13 @@ from aikido_zen.helpers.token import get_token_from_env
 from aikido_zen.background_process.api.http_api import ReportingApiHTTP
 from aikido_zen.helpers.urls.get_api_url import get_api_url
 from .commands import process_incoming_command
-from .message_auth import REQUEST, InvalidSignature, ReplyConnection, unseal
+from .message_auth import (
+    CHALLENGE_SIZE,
+    REQUEST,
+    InvalidSignature,
+    ReplyConnection,
+    unseal,
+)
 
 EMPTY_QUEUE_INTERVAL = 5  # 5 seconds
 
@@ -57,12 +64,16 @@ class AikidoBackgroundProcess:
         while True:
             with listener.accept() as conn:
                 try:
-                    data = json.loads(unseal(self.key, REQUEST, conn.recv_bytes()))
+                    challenge = os.urandom(CHALLENGE_SIZE)
+                    conn.send_bytes(challenge)
+                    data = json.loads(
+                        unseal(self.key, REQUEST, challenge, conn.recv_bytes())
+                    )
                     logger.debug("Incoming data : %s", data)
                     process_incoming_command(
                         connection_manager=self.connection_manager,
                         obj=data,
-                        conn=ReplyConnection(conn, self.key),
+                        conn=ReplyConnection(conn, self.key, challenge),
                         queue=self.queue,
                     )
                 except InvalidSignature:

@@ -25,6 +25,7 @@ from aikido_zen.background_process.commands import (
 )
 from aikido_zen.background_process.commands import process_incoming_command
 from aikido_zen.background_process.message_auth import (
+    CHALLENGE_SIZE,
     REQUEST,
     RESPONSE,
     ReplyConnection,
@@ -115,11 +116,16 @@ class PeerServer:
                 except socket.timeout:
                     continue
                 self.peers.append(peer)
+                self.challenge = os.urandom(CHALLENGE_SIZE)
+                with connection.Connection(peer.dup().detach()) as conn:
+                    conn.send_bytes(self.challenge)
                 request = None
                 if self.read_request:
                     with connection.Connection(peer.dup().detach()) as conn:
                         request = json.loads(
-                            unseal(b"fixture", REQUEST, conn.recv_bytes())
+                            unseal(
+                                b"fixture", REQUEST, self.challenge, conn.recv_bytes()
+                            )
                         )
                 if callable(self.reply):
                     self.reply(peer, request)
@@ -223,7 +229,7 @@ def test_commands_return_results_or_acknowledgments(
             process_incoming_command(
                 SimpleNamespace(block=True),
                 request,
-                ReplyConnection(conn, b"fixture"),
+                ReplyConnection(conn, b"fixture", server.challenge),
                 events,
             )
 
@@ -247,9 +253,20 @@ def test_completed_blocked_reply_is_kept_after_deadline(monkeypatch):
     clock = Mock(return_value=0.0)
     verdict = {"blocked": True, "type": "bot-blocking"}
 
+    challenge = b"c" * CHALLENGE_SIZE
+    pending = [
+        challenge,
+        seal(
+            b"fixture",
+            RESPONSE,
+            challenge,
+            json.dumps(verdict).encode(),
+        ),
+    ]
+
     def receive():
         clock.return_value = 0.02
-        return seal(b"fixture", RESPONSE, json.dumps(verdict).encode())
+        return pending.pop(0)
 
     @contextmanager
     def completed_connection(address, deadline):
@@ -364,7 +381,7 @@ def test_unencodable_request_releases_connection(resources, servers):
 def test_reply_signed_with_another_key_is_rejected(resources, servers):
     def reply(peer, _request):
         with connection.Connection(peer.dup().detach()) as conn:
-            conn.send_bytes(seal(b"other", RESPONSE, b'"Received"'))
+            conn.send_bytes(seal(b"other", RESPONSE, server.challenge, b'"Received"'))
 
     server = servers(1, reply=reply)
     communications = module.IPCClient(server.address, b"fixture")
@@ -449,7 +466,9 @@ def test_reads_large_reply(resources, servers):
 
     def reply(peer, _request):
         with connection.Connection(peer.dup().detach()) as conn:
-            ReplyConnection(conn, b"fixture").send_bytes(json.dumps(response).encode())
+            ReplyConnection(conn, b"fixture", server.challenge).send_bytes(
+                json.dumps(response).encode()
+            )
 
     server = servers(1, reply=reply)
     communications = module.IPCClient(server.address, b"fixture")
@@ -516,13 +535,17 @@ def test_queued_connection_succeeds_if_backend_recovers_before_timeout(
                     peer.close()
                 peer, _ = listener.accept()
                 with peer, connection.Connection(peer.dup().detach()) as conn:
+                    challenge = os.urandom(CHALLENGE_SIZE)
+                    conn.send_bytes(challenge)
                     assert json.loads(
-                        unseal(b"fixture", REQUEST, conn.recv_bytes())
+                        unseal(b"fixture", REQUEST, challenge, conn.recv_bytes())
                     ) == [
                         "PING",
                         [],
                     ]
-                    ReplyConnection(conn, b"fixture").send_bytes(b'"Received"')
+                    ReplyConnection(conn, b"fixture", challenge).send_bytes(
+                        b'"Received"'
+                    )
             except (OSError, AssertionError) as error:
                 server_errors.append(repr(error))
 
@@ -553,23 +576,34 @@ def test_concurrent_calls_match_out_of_order_responses():
 
     def respond():
         with listener.accept() as first_connection:
+            first_challenge = os.urandom(CHALLENGE_SIZE)
+            first_connection.send_bytes(first_challenge)
             first_request = json.loads(
-                unseal(b"fixture", REQUEST, first_connection.recv_bytes())
+                unseal(
+                    b"fixture", REQUEST, first_challenge, first_connection.recv_bytes()
+                )
             )
             first_received.set()
             with listener.accept() as second_connection:
+                second_challenge = os.urandom(CHALLENGE_SIZE)
+                second_connection.send_bytes(second_challenge)
                 second_request = json.loads(
-                    unseal(b"fixture", REQUEST, second_connection.recv_bytes())
+                    unseal(
+                        b"fixture",
+                        REQUEST,
+                        second_challenge,
+                        second_connection.recv_bytes(),
+                    )
                 )
                 second_response = getattr(properties, second_request[1])
-                ReplyConnection(second_connection, b"fixture").send_bytes(
-                    json.dumps(second_response).encode()
-                )
+                ReplyConnection(
+                    second_connection, b"fixture", second_challenge
+                ).send_bytes(json.dumps(second_response).encode())
             if allow_first_reply.wait(3):
                 first_response = getattr(properties, first_request[1])
-                ReplyConnection(first_connection, b"fixture").send_bytes(
-                    json.dumps(first_response).encode()
-                )
+                ReplyConnection(
+                    first_connection, b"fixture", first_challenge
+                ).send_bytes(json.dumps(first_response).encode())
 
     communications = module.IPCClient(listener.address, b"fixture")
 

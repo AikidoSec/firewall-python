@@ -90,14 +90,18 @@ class IPCClient:
             deadline = time.monotonic() + message.timeout_in_sec
 
             with open_connection(self.address, deadline) as conn:
+                challenge = conn.recv_bytes()
                 conn.send_bytes(
                     seal(
                         self.key,
                         REQUEST,
+                        challenge,
                         json.dumps((message.identifier, message.request)).encode(),
                     )
                 )
-                result = json.loads(unseal(self.key, RESPONSE, conn.recv_bytes()))
+                result = json.loads(
+                    unseal(self.key, RESPONSE, challenge, conn.recv_bytes())
+                )
         except Exception as e:
             logger.debug("Exception occurred in IPC call : %s", e)
             return {"success": False, "error": "timeout"}

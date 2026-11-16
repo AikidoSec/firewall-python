@@ -1,6 +1,7 @@
 import importlib
 import json
 import socket
+import threading
 from multiprocessing import connection
 from types import SimpleNamespace
 from unittest.mock import Mock
@@ -9,6 +10,24 @@ import pytest
 
 from aikido_zen.background_process.commands import process_incoming_command
 from aikido_zen.background_process.message_auth import REQUEST, RESPONSE, seal, unseal
+
+
+def exchange(client, payload):
+    result = {}
+
+    def run():
+        try:
+            challenge = client.recv_bytes()
+            if payload is not None:
+                client.send_bytes(seal(b"fixture", REQUEST, challenge, payload))
+            result["challenge"] = challenge
+            result["body"] = client.recv_bytes()
+        except EOFError:
+            result["eof"] = True
+
+    thread = threading.Thread(target=run)
+    thread.start()
+    return thread, result
 
 
 def test_event_is_acknowledged_after_enqueueing():
@@ -80,24 +99,30 @@ def test_receiver_closes_failed_connection_before_accepting_next(monkeypatch, fa
     monkeypatch.setattr(background, "add_exit_handlers", lambda: None)
     monkeypatch.setattr(background, "set_agent_session_id", lambda value: None)
     try:
+        threads = []
         if failure == "unsigned":
             failed_client.send_bytes(b'["PING", []]')
-        elif failure != "receive":
-            request = None if failure == "command" else ["PING", []]
-            failed_client.send_bytes(
-                seal(b"fixture", REQUEST, json.dumps(request).encode())
-            )
-        if failure != "unsigned":
+        elif failure == "receive":
             failed_client.close()
-        next_client.send_bytes(seal(b"fixture", REQUEST, b'["PING", []]'))
+        else:
+            request = None if failure == "command" else ["PING", []]
+            threads.append(exchange(failed_client, json.dumps(request).encode())[0])
+        next_thread, next_result = exchange(next_client, b'["PING", []]')
+        threads.append(next_thread)
 
         with pytest.raises(ListenerFinished):
             background.AikidoBackgroundProcess(("127.0.0.1", 0), b"fixture", "fixture")
 
+        for thread in threads:
+            thread.join(2)
         if failure == "unsigned":
+            failed_client.recv_bytes()
             with pytest.raises(EOFError):
                 failed_client.recv_bytes()
-        assert unseal(b"fixture", RESPONSE, next_client.recv_bytes()) == b'"Received"'
+        assert (
+            unseal(b"fixture", RESPONSE, next_result["challenge"], next_result["body"])
+            == b'"Received"'
+        )
         assert failed.closed and next_peer.closed
     finally:
         for peer in (failed, failed_client, next_peer, next_client):
