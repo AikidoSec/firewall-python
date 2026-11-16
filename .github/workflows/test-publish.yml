@@ -66,6 +66,7 @@ jobs:
     - name: Set the version for this release
       env:
         RELEASE_VERSION: ${{ github.ref_name }}
+        RELEASE_PREFIX: dev-v
       run: python set_release_version.py
     - name: Install dependencies
       run: poetry install
