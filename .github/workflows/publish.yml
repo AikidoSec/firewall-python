@@ -63,8 +63,8 @@ jobs:
       run: pip install poetry
     - name: Set the version for this release
       run: |
-        TAG_NAME=${GITHUB_REF##*/}
-        make replace_version version=${TAG_NAME#v}
+        TAG_NAME="${GITHUB_REF##*/}"
+        version="${TAG_NAME#v}" make replace_version
     - name: Download binaries & build
       run: make build
     - name: Publish package distributions to PyPI
