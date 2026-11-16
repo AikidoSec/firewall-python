@@ -4,6 +4,7 @@ import threading
 import time
 from queue import Full, Queue
 
+from aikido_zen.background_process.message_auth import REQUEST, RESPONSE, seal, unseal
 from aikido_zen.background_process.socket_connection import open_connection
 from aikido_zen.helpers.ipc.command_types import Payload
 from aikido_zen.helpers.logging import logger
@@ -89,10 +90,18 @@ class IPCClient:
             deadline = time.monotonic() + message.timeout_in_sec
 
             with open_connection(self.address, deadline) as conn:
+                challenge = conn.recv_bytes()
                 conn.send_bytes(
-                    json.dumps((message.identifier, message.request)).encode()
+                    seal(
+                        self.key,
+                        REQUEST,
+                        challenge,
+                        json.dumps((message.identifier, message.request)).encode(),
+                    )
                 )
-                result = json.loads(conn.recv_bytes())
+                result = json.loads(
+                    unseal(self.key, RESPONSE, challenge, conn.recv_bytes())
+                )
         except Exception as e:
             logger.debug("Exception occurred in IPC call : %s", e)
             return {"success": False, "error": "timeout"}

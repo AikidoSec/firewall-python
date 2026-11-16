@@ -1,4 +1,5 @@
 import json
+import os
 import socket
 import threading
 from multiprocessing.connection import Connection
@@ -12,6 +13,12 @@ from aikido_zen.background_process.cloud_connection_manager import (
     CloudConnectionManager,
 )
 from aikido_zen.background_process.commands import sync_data
+from aikido_zen.background_process.message_auth import (
+    CHALLENGE_SIZE,
+    REQUEST,
+    ReplyConnection,
+    unseal,
+)
 from aikido_zen.background_process.routes import Routes
 import aikido_zen.thread.process_worker as process_worker
 import aikido_zen.thread.thread_cache as thread_cache
@@ -94,11 +101,17 @@ def test_periodic_sync_delivers_large_batch_after_receiver_stall(monkeypatch):
             try:
                 peer, _ = listener.accept()
                 with peer, Connection(peer.dup().detach()) as connection:
+                    challenge = os.urandom(CHALLENGE_SIZE)
+                    connection.send_bytes(challenge)
                     threading.Event().wait(0.3)
-                    action, payload = json.loads(connection.recv_bytes())
+                    action, payload = json.loads(
+                        unseal(b"fixture", REQUEST, challenge, connection.recv_bytes())
+                    )
                     assert action == "SYNC_DATA"
                     response = sync_data.process(manager, payload, None)
-                    connection.send_bytes(json.dumps(response).encode())
+                    ReplyConnection(connection, b"fixture", challenge).send_bytes(
+                        json.dumps(response).encode()
+                    )
             except (OSError, EOFError, AssertionError) as error:
                 errors.append(error)
 

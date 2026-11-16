@@ -3,6 +3,7 @@ Simply exports the aikido background process
 """
 
 import json
+import os
 import multiprocessing.connection as con
 import signal
 import time
@@ -22,6 +23,13 @@ from aikido_zen.helpers.token import get_token_from_env
 from aikido_zen.background_process.api.http_api import ReportingApiHTTP
 from aikido_zen.helpers.urls.get_api_url import get_api_url
 from .commands import process_incoming_command
+from .message_auth import (
+    CHALLENGE_SIZE,
+    REQUEST,
+    InvalidSignature,
+    ReplyConnection,
+    unseal,
+)
 
 EMPTY_QUEUE_INTERVAL = 5  # 5 seconds
 
@@ -36,6 +44,7 @@ class AikidoBackgroundProcess:
     def __init__(self, address, key, session_id):
         # Spawn re-imports this module and would otherwise create another session id.
         set_agent_session_id(session_id)
+        self.key = key
         try:
             listener = con.Listener(address, authkey=None)
         except OSError:
@@ -55,13 +64,21 @@ class AikidoBackgroundProcess:
         while True:
             with listener.accept() as conn:
                 try:
-                    data = json.loads(conn.recv_bytes())
+                    challenge = os.urandom(CHALLENGE_SIZE)
+                    conn.send_bytes(challenge)
+                    data = json.loads(
+                        unseal(self.key, REQUEST, challenge, conn.recv_bytes())
+                    )
                     logger.debug("Incoming data : %s", data)
                     process_incoming_command(
                         connection_manager=self.connection_manager,
                         obj=data,
-                        conn=conn,
+                        conn=ReplyConnection(conn, self.key, challenge),
                         queue=self.queue,
+                    )
+                except InvalidSignature:
+                    logger.debug(
+                        "Ignored an IPC message that failed the signature check"
                     )
                 except Exception as e:
                     logger.error("Exception occurred in server thread : %s", e)
