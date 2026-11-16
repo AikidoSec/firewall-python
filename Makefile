@@ -84,28 +84,6 @@ check_binaries:
 	cp -r $(CACHE_DIR)/* aikido_zen/libs
 
 
-# Replace version number automatically on publish :
-# version is an environment variable, so the recipe uses $$version.
-.PHONY: check_version
-check_version:
-	@if [ -z "$$version" ]; then \
-		echo "Error: No version specified. Use 'version=<new_version> make replace_version'."; \
-		exit 1; \
-	fi
-	@case "$$version" in \
-		*[!0-9A-Za-z.-]*|[!0-9]*) \
-			echo "Error: invalid version '$$version'."; \
-			exit 1 ;; \
-	esac
-
-.PHONY: replace_version
-replace_version: check_version
-	poetry version "$$version"
-	sed -i.bak "s/1.0-REPLACE-VERSION/$$version/g" aikido_zen/config.py
-	rm aikido_zen/config.py.bak
-
-
-
 relock_sample_apps:
 	@for f in sample-apps/**/; do \
   		echo "Entering $$f"; \
