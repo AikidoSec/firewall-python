@@ -64,9 +64,9 @@ jobs:
     - name: Install poetry
       run: pip install poetry
     - name: Set the version for this release
-      run: |
-        TAG_NAME="${GITHUB_REF##*/}"
-        version="${TAG_NAME#dev-v}" make replace_version
+      env:
+        RELEASE_VERSION: ${{ github.ref_name }}
+      run: python set_release_version.py
     - name: Install dependencies
       run: poetry install
     - name: Download binaries & build
