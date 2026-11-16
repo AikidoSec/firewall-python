@@ -56,7 +56,7 @@ class AikidoBackgroundProcess:
             with listener.accept() as conn:
                 try:
                     data = json.loads(conn.recv_bytes())
-                    logger.debug("Incoming data : %s", data)
+                    logger.debug("Incoming IPC command: %s", data[0])
                     process_incoming_command(
                         connection_manager=self.connection_manager,
                         obj=data,
