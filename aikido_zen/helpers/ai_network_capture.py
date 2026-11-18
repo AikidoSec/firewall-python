@@ -9,8 +9,8 @@ from aikido_zen.helpers.on_ai_call import on_ai_call
 AICall = namedtuple("AICall", "model input_tokens output_tokens cache_read cache_write")
 
 # Where an API's usage keeps each token count, as dotted key paths that are added up.
-# The input is the provider's own count: OpenAI and Gemini include the cached tokens
-# in it, Anthropic and Bedrock report them next to it.
+# The input includes the cached tokens, because the server prices them apart from the
+# rest of it. OpenAI and Gemini count them in their input; Anthropic and Bedrock do not.
 TokenFields = namedtuple("TokenFields", "input output cache_read cache_write")
 CHAT_COMPLETIONS = TokenFields(
     input=("prompt_tokens",),
@@ -25,7 +25,7 @@ RESPONSES = TokenFields(
     cache_write=("input_tokens_details.cache_write_tokens",),
 )
 ANTHROPIC_MESSAGES = TokenFields(
-    input=("input_tokens",),
+    input=("input_tokens", "cache_read_input_tokens", "cache_creation_input_tokens"),
     output=("output_tokens",),
     cache_read=("cache_read_input_tokens",),
     cache_write=("cache_creation_input_tokens",),
@@ -37,7 +37,7 @@ GEMINI = TokenFields(
     cache_write=(),
 )
 BEDROCK_CONVERSE = TokenFields(
-    input=("inputTokens",),
+    input=("inputTokens", "cacheReadInputTokens", "cacheWriteInputTokens"),
     output=("outputTokens",),
     cache_read=("cacheReadInputTokens",),
     cache_write=("cacheWriteInputTokens",),

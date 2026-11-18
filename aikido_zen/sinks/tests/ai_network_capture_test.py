@@ -2,20 +2,15 @@ import json
 from types import SimpleNamespace
 from urllib.parse import quote
 
-import anthropic
 import httpx
-import openai
 import pytest
 import requests
 import urllib3
 
 import aikido_zen.helpers.ai_network_capture
 import aikido_zen.sinks.httpx
-import aikido_zen.sinks.httpx2
 import aikido_zen.sinks.requests
 import aikido_zen.sinks.urllib3
-import aikido_zen.sinks.openai
-import aikido_zen.sinks.anthropic
 import aikido_zen.sinks.botocore
 from aikido_zen.test_utils.ai_network_capture import (
     BEDROCK_MODEL,
@@ -34,11 +29,8 @@ HELLO = [{"role": "user", "content": "Hi"}]
 
 @pytest.fixture(scope="module", autouse=True)
 def enable_the_flag():
-    # Newer openai and anthropic versions send their calls through httpx2, which only
-    # gets patched here if those SDKs have already imported it.
     enable_capture(
         aikido_zen.sinks.httpx,
-        aikido_zen.sinks.httpx2,
         aikido_zen.sinks.requests,
         aikido_zen.sinks.urllib3,
     )
@@ -149,21 +141,42 @@ def test_only_a_response_up_to_the_size_limit_is_counted(provider, pad, counted)
     assert sum(s["calls"] for s in get_ai_stats()) == counted
 
 
-def test_openai_sdk_call_is_counted_by_http_alongside_the_sdk_sink(provider):
-    client = openai.OpenAI(api_key="test", base_url=provider + "/v1", max_retries=0)
-    client.chat.completions.create(model="gpt-4o-mini", messages=HELLO)
-    assert get_ai_stats() == [
-        stats_row(provider, "gpt-4o-mini-2024-07-18", 11, 7),
-        stats_row("openai", "gpt-4o-mini-2024-07-18", 11, 7),
-    ]
+SDK_CALLS = {
+    "openai": 'client = openai.OpenAI(api_key="test", base_url=url + "/v1", max_retries=0)\n'
+    'client.chat.completions.create(model="gpt-4o-mini", messages=HELLO)',
+    "anthropic": 'client = anthropic.Anthropic(api_key="test", base_url=url, max_retries=0)\n'
+    'client.messages.create(model="claude-sonnet-4", max_tokens=5, messages=HELLO)',
+    "mistralai": 'client = mistralai.Mistral(api_key="test", server_url=url + "/mistral")\n'
+    'client.chat.complete(model="mistral-small-latest", messages=HELLO)',
+}
 
 
-def test_anthropic_sdk_call_is_counted_by_http_alongside_the_sdk_sink(provider):
-    client = anthropic.Anthropic(api_key="test", base_url=provider, max_retries=0)
-    client.messages.create(model="claude-sonnet-4", max_tokens=5, messages=HELLO)
-    assert get_ai_stats() == [
-        stats_row(provider, "claude-sonnet-4-20250514", 21, 12),
-        stats_row("anthropic", "claude-sonnet-4-20250514", 21, 12),
+@pytest.mark.parametrize(
+    "sdk, model, input_tokens, output_tokens",
+    [
+        ("openai", "gpt-4o-mini-2024-07-18", 11, 7),
+        ("anthropic", "claude-sonnet-4-20250514", 21, 12),
+        ("mistralai", "mistral-small-latest", 11, 7),
+    ],
+)
+@pytest.mark.parametrize("flag", [None, "true"])
+def test_an_sdk_call_is_counted_once(
+    provider, flag, sdk, model, input_tokens, output_tokens
+):
+    pytest.importorskip(sdk)
+    script = f"""
+import json, sys
+import {sdk}
+from aikido_zen.thread.thread_cache import get_cache
+
+url = sys.argv[1]
+HELLO = {HELLO!r}
+{SDK_CALLS[sdk]}
+print(json.dumps(get_cache().ai_stats.get_stats()))
+"""
+    reported_by = provider if flag else sdk
+    assert run_in_protected_app(script, flag, provider) == [
+        stats_row(reported_by, model, input_tokens, output_tokens)
     ]
 
 

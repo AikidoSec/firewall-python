@@ -311,9 +311,9 @@ def test_parse_ai_response(path, body, expected):
     "path, usage, expected",
     [
         ("/v1/chat/completions", RECORDED_OPENAI_CACHE_HIT, (8413, 5, 8320, 0)),
-        ("/v1/messages", RECORDED_ANTHROPIC_CACHE_WRITE, (8, 5, 0, 9601)),
-        ("/v1/messages", RECORDED_ANTHROPIC_CACHE_READ, (8, 5, 9601, 0)),
-        ("/v1/messages", DOCUMENTED_ANTHROPIC_MIXED_TTL_USAGE, (2048, 503, 1800, 248)),
+        ("/v1/messages", RECORDED_ANTHROPIC_CACHE_WRITE, (9609, 5, 0, 9601)),
+        ("/v1/messages", RECORDED_ANTHROPIC_CACHE_READ, (9609, 5, 9601, 0)),
+        ("/v1/messages", DOCUMENTED_ANTHROPIC_MIXED_TTL_USAGE, (4096, 503, 1800, 248)),
         (
             "/v1/chat/completions",
             {
@@ -340,7 +340,7 @@ def test_parse_ai_response(path, body, expected):
                 "cache_read_input_tokens": 40,
                 "cache_creation_input_tokens": 5,
             },
-            (60, 20, 40, 5),
+            (105, 20, 40, 5),
         ),
         (
             "/model/" + BEDROCK_MODEL + "/invoke",
@@ -350,7 +350,7 @@ def test_parse_ai_response(path, body, expected):
                 "cache_read_input_tokens": 40,
                 "cache_creation_input_tokens": 5,
             },
-            (60, 20, 40, 5),
+            (105, 20, 40, 5),
         ),
         (
             "/model/" + BEDROCK_MODEL + "/converse",
@@ -360,7 +360,7 @@ def test_parse_ai_response(path, body, expected):
                 "cacheReadInputTokens": 40,
                 "cacheWriteInputTokens": 5,
             },
-            (60, 20, 40, 5),
+            (105, 20, 40, 5),
         ),
         (
             "/v1/chat/completions",
@@ -384,7 +384,7 @@ def test_cache_tokens_per_format(path, usage, expected):
         (
             "/model/anthropic.claude-3-sonnet-20240229-v1%3A0/converse",
             DOCUMENTED_BEDROCK_CONVERSE_CACHED,
-            ("anthropic.claude-3-sonnet-20240229-v1:0", 12, 40, 1024, 512),
+            ("anthropic.claude-3-sonnet-20240229-v1:0", 1548, 40, 1024, 512),
         ),
         (
             "/model/anthropic.claude-3-sonnet-20240229-v1%3A0/invoke",
@@ -422,9 +422,9 @@ def test_cache_tokens_are_reported_when_the_provider_has_them():
         host="api.anthropic.com",
     )
     assert get_ai_stats()[0]["tokens"] == {
-        "input": 20,
+        "input": 50020,
         "output": 300,
-        "total": 320,
+        "total": 50320,
         "cacheRead": 50000,
         "cacheWrite": 0,
     }

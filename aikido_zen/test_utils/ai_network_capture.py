@@ -36,6 +36,7 @@ CHAT_COMPLETION = {
     ],
     "usage": {"prompt_tokens": 11, "completion_tokens": 7, "total_tokens": 18},
 }
+MISTRAL_CHAT_COMPLETION = {**CHAT_COMPLETION, "model": "mistral-small-latest"}
 RESPONSE = {
     "id": "resp_1",
     "object": "response",
@@ -70,6 +71,7 @@ BODIES = {
     "/v1/plain": CHAT_COMPLETION,
     "/openai/v1/chat/completions": CHAT_COMPLETION,
     "/openai/deployments/gpt-4o-mini/chat/completions": CHAT_COMPLETION,
+    "/mistral/v1/chat/completions": MISTRAL_CHAT_COMPLETION,
     "/v1beta/models/gemini-2.5-flash:generateContent": GEMINI,
     "/model/" + BEDROCK_MODEL + "/invoke": MESSAGE,
     "/model/" + INFERENCE_PROFILE_ARN + "/invoke": MESSAGE,
