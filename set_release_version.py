@@ -20,10 +20,7 @@ def version_from_tag(tag, prefix="v"):
 
 
 def main():
-    version = version_from_tag(
-        os.environ.get("RELEASE_VERSION", ""),
-        os.environ.get("RELEASE_PREFIX", "v"),
-    )
+    version = version_from_tag(os.environ.get("RELEASE_VERSION", ""))
     config_path = ROOT / "aikido_zen" / "config.py"
     config = config_path.read_text()
     if PLACEHOLDER not in config:
