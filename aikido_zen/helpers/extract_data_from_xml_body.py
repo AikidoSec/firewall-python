@@ -59,11 +59,12 @@ class BodyMatcher:
 
     def continues_body(self, data, final):
         # Decoding the same way Context does keeps non-UTF-8 bodies matching.
+        text = data
         if not isinstance(data, str):
-            data = self.decoder.decode(bytes(data), final)
-        if not self.body.startswith(data, self.fed):
+            text = self.decoder.decode(bytes(data), final)
+        if not self.body.startswith(text, self.fed):
             return False
-        self.fed += len(data)
+        self.fed += len(text)
         return True
 
     def is_whole_body(self):
