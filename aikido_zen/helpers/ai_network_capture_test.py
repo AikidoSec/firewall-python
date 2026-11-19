@@ -286,9 +286,14 @@ def test_is_ai_request_path(path, expected):
             ("claude-haiku-4-5-20251001", 3, 4, 0, 0),
         ),
         (
+            "/model/" + quote(INFERENCE_PROFILE_ARN, safe="") + "/invoke",
+            {"usage": {"input_tokens": 10, "output_tokens": 5}},
+            (INFERENCE_PROFILE_ARN, 10, 5, 0, 0),
+        ),
+        (
             "/model/" + quote(INFERENCE_PROFILE_ARN, safe="") + "/converse",
             {"output": {}, "usage": {"inputTokens": 10, "outputTokens": 5}},
-            None,
+            (INFERENCE_PROFILE_ARN, 10, 5, 0, 0),
         ),
         ("/model/" + INFERENCE_PROFILE_ARN + "/invoke", MESSAGE, None),
         ("/v1/chat/completions", {"id": "chatcmpl-1", "model": "m"}, ("m", 0, 0, 0, 0)),

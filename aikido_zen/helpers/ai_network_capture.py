@@ -109,9 +109,9 @@ def find_api(path, body):
     bedrock = BEDROCK_PATH.search(path)
     if bedrock:
         model = unquote(bedrock.group(1))
-        # An inference profile ARN does not name the model, so the body's is used.
+        # An ARN may not name the model, so the response's model is preferred.
         if model.startswith("arn:"):
-            model = body.get("model")
+            model = body.get("model") or model
         if bedrock.group(2) == "converse":
             return model, body.get("usage"), BEDROCK_CONVERSE
         return model, body.get("usage"), ANTHROPIC_MESSAGES
