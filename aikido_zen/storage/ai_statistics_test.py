@@ -528,13 +528,25 @@ def test_import_list_adds_cache_tokens(stats):
                 "provider": "openai",
                 "model": "gpt-4",
                 "calls": 2,
-                "tokens": {"input": 30, "output": 20, "total": 50, "cacheWrite": 7},
+                "tokens": {
+                    "input": 30,
+                    "output": 20,
+                    "total": 50,
+                    "cacheRead": 0,
+                    "cacheWrite": 7,
+                },
             },
             {
                 "provider": "openai",
                 "model": "gpt-4",
                 "calls": 1,
-                "tokens": {"input": 10, "output": 5, "total": 15, "cacheRead": 4},
+                "tokens": {
+                    "input": 10,
+                    "output": 5,
+                    "total": 15,
+                    "cacheRead": 4,
+                    "cacheWrite": 0,
+                },
             },
         ]
     )
