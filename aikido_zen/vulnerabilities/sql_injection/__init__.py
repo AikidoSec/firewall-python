@@ -17,7 +17,7 @@ def detect_sql_injection(query, user_input, dialect):
         query_l = query.lower()
         userinput_l = user_input.lower().strip()
         if should_return_early(query_l, userinput_l):
-            return False
+            return 0
 
         # Parse input variables for rust function
         query_bytes = encode_safely(query_l)
@@ -33,17 +33,12 @@ def detect_sql_injection(query, user_input, dialect):
             logger.debug(
                 "Unable to check for SQL Injection, an error occurred in the library"
             )
-            return False
+            return 0
 
-        # This means that the library failed to tokenize the SQL query
-        if c_int_res == 3:
-            logger.debug("Unable to check for SQL Injection, SQL tokenization failed")
-            return False
-
-        return c_int_res == 1
+        return c_int_res
     except Exception as e:
         logger.debug("Exception in SQL algo: %s", e)
-    return False
+    return 0
 
 
 def should_return_early(query, user_input):

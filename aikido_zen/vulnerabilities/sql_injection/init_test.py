@@ -75,8 +75,17 @@ def is_sql_injection(sql, input, dialect="all"):
         if dialect == "all" or dialect == current:
             result = detect_sql_injection(sql, input, current)
             assert (
-                result == True
+                result == 1
             ), f"Expected SQL injection for SQL: {sql} and input: {input} in {current} dialect"
+
+
+def is_invalid_sql(sql, input, dialect="all"):
+    for current in DIALECTS:
+        if dialect == "all" or dialect == current:
+            result = detect_sql_injection(sql, input, current)
+            assert (
+                result == 3
+            ), f"Expected failed tokenization for SQL: {sql} and input: {input} in {current} dialect"
 
 
 def is_not_sql_injection(sql, input, dialect="all"):
@@ -84,7 +93,7 @@ def is_not_sql_injection(sql, input, dialect="all"):
         if dialect == "all" or dialect == current:
             result = detect_sql_injection(sql, input, current)
             assert (
-                result == False
+                result == 0
             ), f"Expected no SQL injection for SQL: {sql} and input: {input} in {current} dialect"
 
 
@@ -184,9 +193,6 @@ to is_not_sql_injection. Reason : Invalid SQL.
 
 
 def test_allow_escape_sequences():
-    # Invalid queries :
-    is_not_sql_injection("SELECT * FROM users WHERE id = 'users\\'", "users\\")
-
     is_not_sql_injection("SELECT * FROM users WHERE id = 'users\\\\'", "users\\\\")
     is_not_sql_injection("SELECT * FROM users WHERE id = '\nusers'", "\nusers")
     is_not_sql_injection("SELECT * FROM users WHERE id = '\rusers'", "\rusers")
@@ -224,10 +230,6 @@ def test_check_string_safely_escaped():
     )
     is_not_sql_injection(
         'SELECT * FROM comments WHERE comment = "I`m writting you"', "I`m writting you"
-    )
-    # Invalid query (strings don't terminate)
-    is_not_sql_injection(
-        "SELECT * FROM comments WHERE comment = 'I'm writting you'", "I'm writting you"
     )
     # Positive example of same query :
     is_sql_injection(
@@ -404,6 +406,14 @@ is_not_sql_injection("foobar)", "foobar)")
 is_not_sql_injection("foobar      )", "foobar      )")
 is_not_sql_injection("€foobar()", "€foobar()")
 """
+
+
+def test_block_invalid_sql_queries():
+    # These are invalid queries (e.g. unterminated strings) that fail tokenization
+    is_invalid_sql("SELECT * FROM users WHERE id = 'users\\'", "users\\", "mysql")
+    is_invalid_sql(
+        "SELECT * FROM comments WHERE comment = 'I'm writting you'", "I'm writting you"
+    )
 
 
 def test_function_calls_as_sql_injections():
