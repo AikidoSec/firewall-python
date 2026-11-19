@@ -166,6 +166,27 @@ GEMINI_WITH_DOCUMENTED_FIELDS = {
     "modelVersion": "gemini-2.5-flash",
     "responseId": "mAitaLmkHPPlz7IPvtfUqQ4",
 }
+DOCUMENTED_GEMINI_INTERACTION = {
+    "model": "gemini-3.8-flash",
+    "status": "completed",
+    "usage": {
+        "total_cached_tokens": 0,
+        "total_input_tokens": 7,
+        "total_output_tokens": 20,
+        "total_thought_tokens": 22,
+        "total_tokens": 49,
+        "total_tool_use_tokens": 0,
+    },
+}
+DOCUMENTED_GEMINI_AGENT_INTERACTION = {
+    "status": "completed",
+    "usage": {
+        "total_input_tokens": 48984,
+        "total_output_tokens": 769,
+        "total_thought_tokens": 1379,
+        "total_tokens": 51132,
+    },
+}
 MESSAGE = {
     "type": "message",
     "model": "claude-haiku-4-5-20251001",
@@ -208,6 +229,7 @@ def inspect(body, path="/v1/chat/completions", method="POST", status=200, **kwar
         ("/v1/responses", True),
         ("/v1/messages", True),
         ("/v1beta/models/gemini-2.5-flash:generateContent", True),
+        ("/v1beta/interactions", True),
         (VERTEX_PATH + "claude-haiku-4-5@20251001:rawPredict", True),
         ("/model/" + BEDROCK_MODEL + "/converse", True),
         ("/model/" + BEDROCK_MODEL + "/invoke", True),
@@ -216,6 +238,7 @@ def inspect(body, path="/v1/chat/completions", method="POST", status=200, **kwar
         ("/v1/completions", False),
         ("/v1beta/models/gemini-2.5-flash:streamGenerateContent", False),
         ("/model/" + BEDROCK_MODEL + "/invoke-with-response-stream", False),
+        ("/v1beta/interactions/v1_abc/cancel", False),
         ("/api/orders", False),
     ],
 )
@@ -372,6 +395,17 @@ def test_parse_ai_response(path, body, expected):
             {"prompt_tokens": 100, "prompt_tokens_details": None},
             (100, 0, 0, 0),
         ),
+        (
+            "/v1beta/interactions",
+            {
+                "total_input_tokens": 100,
+                "total_tool_use_tokens": 5,
+                "total_output_tokens": 20,
+                "total_thought_tokens": 10,
+                "total_cached_tokens": 40,
+            },
+            (105, 30, 40, 0),
+        ),
     ],
 )
 def test_cache_tokens_per_format(path, usage, expected):
@@ -407,6 +441,17 @@ def test_cache_tokens_per_format(path, usage, expected):
             GEMINI_WITH_DOCUMENTED_FIELDS,
             ("gemini-2.5-flash", 1230, 170, 1000, 0),
         ),
+        (
+            "/v1beta/interactions",
+            DOCUMENTED_GEMINI_INTERACTION,
+            ("gemini-3.8-flash", 7, 42, 0, 0),
+        ),
+        (
+            "/v1/projects/my-project/locations/global/interactions",
+            DOCUMENTED_GEMINI_INTERACTION,
+            ("gemini-3.8-flash", 7, 42, 0, 0),
+        ),
+        ("/v1beta/interactions", DOCUMENTED_GEMINI_AGENT_INTERACTION, None),
     ],
 )
 def test_documented_responses(path, body, expected):

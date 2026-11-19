@@ -57,6 +57,16 @@ GEMINI = {
     "usageMetadata": {"promptTokenCount": 70, "candidatesTokenCount": 8},
     "modelVersion": "gemini-2.5-flash-001",
 }
+GEMINI_INTERACTION = {
+    "id": "v1_abc",
+    "model": "gemini-3.8-flash",
+    "status": "completed",
+    "usage": {
+        "total_input_tokens": 9,
+        "total_output_tokens": 4,
+        "total_thought_tokens": 3,
+    },
+}
 SSE_BODY = (
     b'data: {"id":"chatcmpl-1","object":"chat.completion.chunk","model":"gpt-4o-mini",'
     b'"choices":[{"index":0,"delta":{"content":"Hi"}}]}\n\n'
@@ -73,6 +83,7 @@ BODIES = {
     "/openai/deployments/gpt-4o-mini/chat/completions": CHAT_COMPLETION,
     "/mistral/v1/chat/completions": MISTRAL_CHAT_COMPLETION,
     "/v1beta/models/gemini-2.5-flash:generateContent": GEMINI,
+    "/v1beta/interactions": GEMINI_INTERACTION,
     "/model/" + BEDROCK_MODEL + "/invoke": MESSAGE,
     "/model/" + INFERENCE_PROFILE_ARN + "/invoke": MESSAGE,
 }

@@ -61,6 +61,7 @@ def setup():
             "/v1beta/models/gemini-2.5-flash:generateContent?key=secret",
             ("gemini-2.5-flash-001", 70, 8),
         ),
+        ("/v1beta/interactions", ("gemini-3.8-flash", 9, 7)),
     ],
 )
 def test_ai_path_is_counted_under_the_origin(provider, path, expected):

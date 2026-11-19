@@ -36,6 +36,12 @@ GEMINI = TokenFields(
     cache_read=("cachedContentTokenCount",),
     cache_write=(),
 )
+GEMINI_INTERACTION = TokenFields(
+    input=("total_input_tokens", "total_tool_use_tokens"),
+    output=("total_output_tokens", "total_thought_tokens"),
+    cache_read=("total_cached_tokens",),
+    cache_write=(),
+)
 BEDROCK_CONVERSE = TokenFields(
     input=("inputTokens", "cacheReadInputTokens", "cacheWriteInputTokens"),
     output=("outputTokens",),
@@ -48,6 +54,7 @@ AI_PATH_ENDINGS = (
     "/responses",
     "/v1/messages",
     ":generateContent",
+    "/interactions",
     ":rawPredict",
     "/converse",
     "/invoke",
@@ -106,6 +113,8 @@ def find_api(path, body):
         version = body.get("modelVersion")
         model = version if isinstance(version, str) and version else gemini.group(1)
         return model, body.get("usageMetadata"), GEMINI
+    if path.endswith("/interactions"):
+        return body.get("model"), body.get("usage"), GEMINI_INTERACTION
     bedrock = BEDROCK_PATH.search(path)
     if bedrock:
         model = unquote(bedrock.group(1))
