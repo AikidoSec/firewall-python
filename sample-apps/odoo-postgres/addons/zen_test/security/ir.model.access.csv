@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_zen_test_side_effect_system,zen.test.side.effect.system,model_zen_test_side_effect,base.group_system,1,1,1,1
