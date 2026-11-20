@@ -78,6 +78,40 @@ def test_load_falls_back_to_the_musl_build_when_the_glibc_build_fails(
     assert zen_internals._load() is not None
 
 
+def test_ip_matcher_round_trip():
+    handle = zen_internals.ip_matcher_create(b"10.0.0.0/8\n2001:db8::/32\nfoobar")
+    assert handle is not None
+    assert zen_internals.ip_matcher_has(handle, b"10.1.2.3") is True
+    assert zen_internals.ip_matcher_has(handle, b"2001:db8::1") is True
+    assert zen_internals.ip_matcher_has(handle, b"8.8.8.8") is False
+    assert zen_internals.ip_matcher_rejected_count(handle) == 1
+    zen_internals.ip_matcher_free(handle)
+
+
+def test_ip_matcher_rejected_count_returns_0_when_function_is_not_loaded(
+    monkeypatch,
+):
+    handle = zen_internals.ip_matcher_create(b"foobar")
+    monkeypatch.setattr(
+        "aikido_zen.helpers.zen_internals._ip_matcher_rejected_count", None
+    )
+
+    assert zen_internals.ip_matcher_rejected_count(handle) == 0
+    zen_internals.ip_matcher_free(handle)
+
+
+@pytest.mark.parametrize(
+    "function", ["_ip_matcher_create", "_ip_matcher_has", "_ip_matcher_free"]
+)
+def test_ip_matcher_create_returns_none_when_function_is_not_loaded(
+    monkeypatch, function
+):
+    monkeypatch.setattr(f"aikido_zen.helpers.zen_internals.{function}", None)
+
+    assert zen_internals.has_ip_matcher() is False
+    assert zen_internals.ip_matcher_create(b"10.0.0.0/8") is None
+
+
 def test_bind_returns_none_when_library_is_not_loaded():
     assert zen_internals._bind(None, "detect_sql_injection", [], ctypes.c_int) is None
 
@@ -115,6 +149,7 @@ def test_warns_once_per_disabled_feature_when_library_fails_to_load():
     assert "Failed to load the zen-internals library" in output
     assert "cannot open shared object file" in output
     assert "Zen will NOT block SQL injection attacks." in output
+    assert "Zen will NOT apply IP lists or block SSRF attacks." in output
 
 
 def test_warns_about_the_missing_function_when_library_is_loaded():
