@@ -117,6 +117,9 @@ class Context:
     def set_body_internal(self, body):
         """Sets the body and checks if it's possibly JSON"""
         self.body = body
+        # An escape decodes to different text. Keep the text from before this parse,
+        # which the app may hold: the raw body, or a JSON string a framework decoded.
+        self.body_before_parse = None
         if isinstance(self.body, (str, bytes)) and len(body) == 0:
             # Make sure that empty bodies like b"" don't get sent.
             self.body = None
@@ -127,6 +130,10 @@ class Context:
             try:
                 parsed_body = json.loads(self.body)
                 if parsed_body:
+                    if b"\\" in self.body:
+                        self.body_before_parse = self.body.decode(
+                            "utf-8", errors="replace"
+                        )
                     self.body = parsed_body
                     return
             except (JSONDecodeError, ValueError, RecursionError):
@@ -141,6 +148,8 @@ class Context:
             # Might be JSON, but might not have been parsed correctly by server because of wrong headers
             parsed_body = json.loads(self.body)
             if parsed_body:
+                if "\\" in self.body:
+                    self.body_before_parse = self.body
                 self.body = parsed_body
 
     def get_route_metadata(self):

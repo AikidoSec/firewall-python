@@ -1,4 +1,6 @@
 import os
+import sys
+from unittest.mock import patch
 import pytest
 from aikido_zen.helpers import zen_internals
 from aikido_zen.vulnerabilities.sql_injection import (
@@ -290,6 +292,29 @@ def test_user_input_contains_unsafe_unicode():
 
 def test_user_input_is_longer_than_query():
     is_not_sql_injection("SELECT * FROM users", "SELECT * FROM users WHERE id = 'a'")
+
+
+def test_input_too_long_for_the_query_is_skipped_before_lowercasing():
+    with patch(
+        "aikido_zen.vulnerabilities.sql_injection.should_return_early",
+        wraps=should_return_early,
+    ) as early:
+        assert detect_sql_injection("SELECT 1", "a" * 17, "mysql") is False
+    early.assert_not_called()
+
+
+def test_input_up_to_twice_the_query_length_is_still_checked():
+    with patch(
+        "aikido_zen.vulnerabilities.sql_injection.should_return_early",
+        wraps=should_return_early,
+    ) as early:
+        detect_sql_injection("SELECT 1", "a" * 16, "mysql")
+    early.assert_called_once()
+
+
+def test_lowercasing_never_shortens_a_character_or_more_than_doubles_it():
+    lengths = {len(chr(c).lower()) for c in range(sys.maxunicode + 1)}
+    assert lengths == {1, 2}
 
 
 def test_sqlite_dollar_placeholder():
