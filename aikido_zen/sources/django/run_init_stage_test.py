@@ -67,6 +67,15 @@ def test_run_init_stage_with_json(mock_request):
     assert {} == context.cookies
 
 
+def test_run_init_stage_with_json_string_keeps_the_value_the_app_decodes(mock_request):
+    mock_request.body = '"\\"1\\\\u0027\\""'
+    run_init_stage(mock_request)
+
+    context: Context = get_current_context()
+    assert context.body == "1'"
+    assert context.body_before_parse == '"1\\u0027"'
+
+
 def test_run_init_stage_with_the_multi_value_dict(mock_request):
     """Test run_init_stage with a JSON request."""
     mock_request.POST = MultiValueDict({"a": [1, 2], "b": [2, 3]})

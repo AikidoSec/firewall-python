@@ -63,6 +63,7 @@ def test_wsgi_context_1():
         "url": "https://example.com/hello",
         "query": {"user": ["JohnDoe"], "age": ["30", "35"]},
         "body": 123,
+        "body_before_parse": None,
         "route": "/hello",
         "subdomains": [],
         "user": None,
@@ -97,6 +98,7 @@ def test_wsgi_context_2():
         "url": "http://localhost:8080/hello",
         "query": {"user": ["JohnDoe"], "age": ["30", "35"]},
         "body": {"test": True},
+        "body_before_parse": None,
         "route": "/hello",
         "subdomains": [],
         "user": None,
@@ -292,6 +294,28 @@ def test_set_valid_json_with_special_characters_bytes():
     context = Context(req=basic_wsgi_req, body=None, source="flask")
     context.set_body(b'{"key": "value with special characters !@#$%^&*()"}')
     assert context.body == {"key": "value with special characters !@#$%^&*()"}
+
+
+def test_set_json_bytes_with_an_escape_keeps_the_raw_text():
+    context = Context(req=basic_wsgi_req, body=b'{"id": "1\\u0027"}', source="flask")
+    assert context.body == {"id": "1'"}
+    assert context.body_before_parse == '{"id": "1\\u0027"}'
+
+
+def test_set_json_string_with_an_escape_keeps_the_text_before_the_second_decode():
+    context = Context(req=basic_wsgi_req, body='"1\\u0027"', source="django")
+    assert context.body == "1'"
+    assert context.body_before_parse == '"1\\u0027"'
+
+
+@pytest.mark.parametrize(
+    "body",
+    [b'{"id": "1"}', '{"id": "1"}', '"1"', "not json \\u0027", b"plain \\u0027"],
+    ids=["json_bytes", "json_text", "json_string", "text", "text_bytes"],
+)
+def test_set_body_keeps_no_second_reading_without_a_parsed_escape(body):
+    context = Context(req=basic_wsgi_req, body=body, source="flask")
+    assert context.body_before_parse is None
 
 
 def test_set_protection_forced_off():
