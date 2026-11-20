@@ -38,6 +38,7 @@ import os
 # Re-export functions :
 from aikido_zen.context.users import set_user
 from aikido_zen.context.track import track
+from aikido_zen.helpers.ai_network_capture import is_ai_network_capture_enabled
 from aikido_zen.helpers.check_gevent import check_gevent
 from aikido_zen.helpers.gil_not_enabled import gil_not_enabled
 from aikido_zen.helpers.python_version_not_supported import python_version_not_supported
@@ -124,9 +125,16 @@ def protect(mode="daemon", token=""):
     import aikido_zen.sinks.subprocess
 
     # Import AI sinks
-    import aikido_zen.sinks.openai
-    import aikido_zen.sinks.anthropic
-    import aikido_zen.sinks.mistralai
+    if not is_ai_network_capture_enabled():
+        import aikido_zen.sinks.openai
+        import aikido_zen.sinks.anthropic
+        import aikido_zen.sinks.mistralai
     import aikido_zen.sinks.botocore
+
+    # Import HTTP client sinks
+    import aikido_zen.sinks.httpx
+    import aikido_zen.sinks.httpx2
+    import aikido_zen.sinks.requests
+    import aikido_zen.sinks.urllib3
 
     logger.info("Zen by Aikido v%s starting.", PKG_VERSION)
