@@ -114,7 +114,9 @@ def find_api(path, body):
         model = version if isinstance(version, str) and version else gemini.group(1)
         return model, body.get("usageMetadata"), GEMINI
     if path.endswith("/interactions"):
-        return body.get("model"), body.get("usage"), GEMINI_INTERACTION
+        # An interaction run by an agent names the agent instead of a model.
+        model = body.get("model") or body.get("agent")
+        return model, body.get("usage"), GEMINI_INTERACTION
     bedrock = BEDROCK_PATH.search(path)
     if bedrock:
         model = unquote(bedrock.group(1))

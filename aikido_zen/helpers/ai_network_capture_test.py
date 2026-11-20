@@ -178,14 +178,30 @@ DOCUMENTED_GEMINI_INTERACTION = {
         "total_tool_use_tokens": 0,
     },
 }
-DOCUMENTED_GEMINI_AGENT_INTERACTION = {
+DOCUMENTED_GEMINI_DEEP_RESEARCH_INTERACTION = {
+    "id": "v1_ChdPU0F4YWFtNkFwS2kxZThQZ05lbXdROBIXT1NBeGFhbTZBcEtpMWU4UGdOZW13UTg",
+    "agent": "deep-research-preview-04-2026",
+    "status": "completed",
+    "object": "interaction",
+    "usage": {
+        "total_cached_tokens": 0,
+        "total_input_tokens": 20,
+        "total_output_tokens": 1000,
+        "total_thought_tokens": 500,
+        "total_tokens": 1520,
+        "total_tool_use_tokens": 0,
+    },
+}
+DOCUMENTED_GEMINI_ANTIGRAVITY_COMPLETION = {
+    "id": "1234567890",
     "status": "completed",
     "usage": {
+        "total_tokens": 51132,
         "total_input_tokens": 48984,
         "total_output_tokens": 769,
         "total_thought_tokens": 1379,
-        "total_tokens": 51132,
     },
+    "object": "interaction",
 }
 MESSAGE = {
     "type": "message",
@@ -451,7 +467,12 @@ def test_cache_tokens_per_format(path, usage, expected):
             DOCUMENTED_GEMINI_INTERACTION,
             ("gemini-3.8-flash", 7, 42, 0, 0),
         ),
-        ("/v1beta/interactions", DOCUMENTED_GEMINI_AGENT_INTERACTION, None),
+        (
+            "/v1beta/interactions",
+            DOCUMENTED_GEMINI_DEEP_RESEARCH_INTERACTION,
+            ("deep-research-preview-04-2026", 20, 1500, 0, 0),
+        ),
+        ("/v1beta/interactions", DOCUMENTED_GEMINI_ANTIGRAVITY_COMPLETION, None),
     ],
 )
 def test_documented_responses(path, body, expected):
