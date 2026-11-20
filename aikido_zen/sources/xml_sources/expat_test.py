@@ -24,7 +24,7 @@ XML_STRING = """<?xml version="1.0"?>
 </root>
 """
 
-PAYLOAD = "1' OR 1=1 -- "
+PAYLOAD = "1' OR 1=1 -- -"
 
 
 def set_context(body):
@@ -156,9 +156,9 @@ def test_file_read_in_chunks_by_the_library_is_collected():
     [
         f"<xml><id>{PAYLOAD}</id></xml>",
         f"<xml><id><![CDATA[{PAYLOAD}]]></id></xml>",
-        "<xml><id>1&apos; OR 1=1 -- </id></xml>",
+        "<xml><id>1&apos; OR 1=1 -- -</id></xml>",
         "<xml><id>" + "".join(f"&#{ord(c)};" for c in PAYLOAD) + "</id></xml>",
-        "<xml><id>1'\nOR 1=1 -- </id></xml>",
+        "<xml><id>1'\nOR 1=1 -- -</id></xml>",
     ],
 )
 def test_element_text_the_app_reads_is_reported(library, body):
@@ -181,11 +181,11 @@ def test_text_split_by_a_comment_is_reported_for_each_reading():
 
 
 def test_text_split_by_a_child_element_is_reported_joined():
-    body = "<xml><id>1' OR <b/>1=1 -- </id></xml>"
+    body = "<xml><id>1' OR <b/>1=1 -- -</id></xml>"
     set_context(body=body)
     joined_text = xmltodict.parse(body)["xml"]["id"]["#text"]
 
-    assert joined_text == "1' OR 1=1 --"
+    assert joined_text == "1' OR 1=1 -- -"
     assert is_reported(joined_text)
 
 
