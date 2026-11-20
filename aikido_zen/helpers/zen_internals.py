@@ -122,3 +122,53 @@ def detect_sql_injection(query: bytes, user_input: bytes, dialect: int) -> int:
     return _detect_sql_injection(
         query_buffer, len(query), user_input_buffer, len(user_input), dialect
     )
+
+
+_ip_matcher_create = _bind(
+    _internals_lib,
+    "ip_matcher_create",
+    [ctypes.c_char_p, ctypes.c_size_t],
+    ctypes.c_void_p,
+)
+_ip_matcher_has = _bind(
+    _internals_lib,
+    "ip_matcher_has",
+    [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_size_t],
+    ctypes.c_int,
+)
+_ip_matcher_free = _bind(_internals_lib, "ip_matcher_free", [ctypes.c_void_p], None)
+_ip_matcher_rejected_count = _bind(
+    _internals_lib, "ip_matcher_rejected_count", [ctypes.c_void_p], ctypes.c_size_t
+)
+
+
+def has_ip_matcher() -> bool:
+    return None not in (_ip_matcher_create, _ip_matcher_has, _ip_matcher_free)
+
+
+if not has_ip_matcher():
+    logger.warning("Zen will NOT apply IP lists or block SSRF attacks.")
+
+
+def ip_matcher_create(networks: bytes):
+    """Builds a matcher from newline-separated networks. Returns None on failure."""
+    # A handle is only useful when has and free exist too, so ip_matcher_has and
+    # ip_matcher_free never need their own check.
+    if not has_ip_matcher():
+        return None
+    return _ip_matcher_create(networks, len(networks))
+
+
+def ip_matcher_has(handle, network: bytes) -> bool:
+    return _ip_matcher_has(handle, network, len(network)) == 1
+
+
+def ip_matcher_free(handle) -> None:
+    _ip_matcher_free(handle)
+
+
+def ip_matcher_rejected_count(handle) -> int:
+    """Returns how many networks the library could not parse, or 0 when not loaded."""
+    if _ip_matcher_rejected_count is None:
+        return 0
+    return _ip_matcher_rejected_count(handle)
