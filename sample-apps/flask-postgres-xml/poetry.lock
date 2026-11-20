@@ -11,8 +11,6 @@ files = []
 develop = true
 
 [package.dependencies]
-packaging = "^24.1"
-pytricia = {version = "^1.3.0", markers = "sys_platform != \"win32\""}
 regex = [
     {version = ">=2024.5.15,<2025.0.0", markers = "python_version < \"3.13\""},
     {version = ">=2026.8.31,<2027.0.0", markers = "python_version >= \"3.13\""},
@@ -761,18 +759,6 @@ files = [
 ]
 
 [[package]]
-name = "packaging"
-version = "24.2"
-description = "Core utilities for Python packages"
-optional = false
-python-versions = ">=3.8"
-groups = ["main"]
-files = [
-    {file = "packaging-24.2-py3-none-any.whl", hash = "sha256:09abb1bccd265c01f4a3aa3f7a7db064b36514d2cba19a2f694fe6150451a759"},
-    {file = "packaging-24.2.tar.gz", hash = "sha256:c228a6dc5e932d346bc5739379109d49e8853dd8223571c7c5b55260edc0b97f"},
-]
-
-[[package]]
 name = "psycopg2-binary"
 version = "2.9.12"
 description = "psycopg2 - Python-PostgreSQL Database Adapter"
@@ -939,18 +925,6 @@ markers = "platform_python_implementation != \"PyPy\" and implementation_name !=
 files = [
     {file = "pycparser-2.22-py3-none-any.whl", hash = "sha256:c3702b6d3dd8c7abc1afa565d7e63d53a1d0bd86cdc24edd75470f4de499cfcc"},
     {file = "pycparser-2.22.tar.gz", hash = "sha256:491c8be9c040f5390f5bf44a5b07752bd07f56edf992381b05c701439eec10f6"},
-]
-
-[[package]]
-name = "pytricia"
-version = "1.3.0"
-description = "An efficient IP address storage and lookup module for Python."
-optional = false
-python-versions = "*"
-groups = ["main"]
-markers = "sys_platform != \"win32\""
-files = [
-    {file = "pytricia-1.3.0.tar.gz", hash = "sha256:1c3a3d6909e10d4c9c2f0fe4542a2481e109d29aab99cc027ca7fe93f8c8853f"},
 ]
 
 [[package]]
