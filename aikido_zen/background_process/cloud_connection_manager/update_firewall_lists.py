@@ -28,14 +28,14 @@ def update_firewall_lists(connection_manager):
         if not isinstance(blocked_user_agents, str):
             return
 
-        connection_manager.firewall_lists.set_blocked_ips(blocked_ips)
-        connection_manager.firewall_lists.set_allowed_ips(allowed_ips)
-        connection_manager.firewall_lists.set_blocked_user_agents(blocked_user_agents)
-        connection_manager.firewall_lists.set_monitored_ips(monitored_ips)
-        connection_manager.firewall_lists.set_monitored_user_agents(
-            monitored_user_agents
+        connection_manager.firewall_lists.update(
+            blocked_ips,
+            allowed_ips,
+            blocked_user_agents,
+            monitored_ips,
+            monitored_user_agents,
+            user_agent_details,
         )
-        connection_manager.firewall_lists.set_user_agent_details(user_agent_details)
 
     except Exception as e:
         logger.debug("Exception in update_firewall_lists: %s", e)
