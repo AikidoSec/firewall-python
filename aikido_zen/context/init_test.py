@@ -348,3 +348,9 @@ def test_set_framework_query_adds_nothing_when_both_readings_agree():
     context = context_with_query("a=1&a=2&b=")
     context.set_framework_query({"a": ["1", "2"], "b": [""]})
     assert context.query == {"a": ["1", "2"], "b": [""]}
+
+
+def test_set_framework_query_adds_a_repeated_value_once():
+    context = context_with_query("a=%ff&a=%ff")
+    context.set_framework_query({"a": ["%FF", "%FF"]})
+    assert context.query == {"a": ["%FF", "%FF", "\ufffd"]}

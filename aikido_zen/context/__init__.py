@@ -113,9 +113,13 @@ class Context:
         # An app can read the query either way, so both readings are kept.
         for key, raw_values in self.query.items():
             values = query.setdefault(key, [])
-            if values != raw_values:
-                seen = set(values)
-                values.extend(value for value in raw_values if value not in seen)
+            if values == raw_values:
+                continue
+            seen = set(values)
+            for value in raw_values:
+                if value not in seen:
+                    seen.add(value)
+                    values.append(value)
         self.query = query
 
     def set_body(self, body):
