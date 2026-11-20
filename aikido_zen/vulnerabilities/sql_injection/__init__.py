@@ -14,6 +14,9 @@ def detect_sql_injection(query, user_input, dialect):
     Execute this to check if the query is actually a SQL injection
     """
     try:
+        # Too long to be in the query, even if lowercasing doubles the query.
+        if len(user_input.strip()) > 2 * len(query):
+            return False
         query_l = query.lower()
         userinput_l = user_input.lower().strip()
         if should_return_early(query_l, userinput_l):
