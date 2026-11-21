@@ -40,6 +40,7 @@ async def _handle_request_before(func, instance, args, kwargs):
         logger.debug("Exception occurred whilst reading quart body : %s", e)
         context.set_body(await request.get_data())
     context.cookies = request.cookies.to_dict()
+    context.set_framework_query(request.args.to_dict(flat=False))
     context.set_as_current_context()
 
 

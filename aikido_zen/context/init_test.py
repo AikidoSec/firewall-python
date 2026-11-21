@@ -330,3 +330,27 @@ def test_set_bytes_with_json_prefix_too_deep_to_parse(opening):
     context = Context(req=basic_wsgi_req, body=body, source="flask")
     assert isinstance(context.body, str)
     assert context.body.endswith("1' OR 1=1 -- ")
+
+
+def context_with_query(query_string):
+    return Context(req={**basic_wsgi_req, "QUERY_STRING": query_string}, source="flask")
+
+
+def test_set_framework_query_keeps_both_readings_of_an_invalid_escape():
+    context = context_with_query("username=1%ff;echo%20injected")
+    context.set_framework_query({"username": ["1%FF;echo injected"]})
+    assert context.query == {
+        "username": ["1%FF;echo injected", "1\ufffd;echo injected"]
+    }
+
+
+def test_set_framework_query_adds_nothing_when_both_readings_agree():
+    context = context_with_query("a=1&a=2&b=")
+    context.set_framework_query({"a": ["1", "2"], "b": [""]})
+    assert context.query == {"a": ["1", "2"], "b": [""]}
+
+
+def test_set_framework_query_adds_a_repeated_value_once():
+    context = context_with_query("a=%ff&a=%ff")
+    context.set_framework_query({"a": ["%FF", "%FF"]})
+    assert context.query == {"a": ["%FF", "%FF", "\ufffd"]}

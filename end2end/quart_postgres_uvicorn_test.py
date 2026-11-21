@@ -6,6 +6,7 @@ from .server.check_events_from_mock import fetch_events_from_mock, validate_star
 # e2e tests for flask_postgres sample app
 post_url_fw = "http://localhost:8096/create"
 post_url_nofw = "http://localhost:8097/create"
+query_url_fw = "http://localhost:8096/create/via_query"
 
 def test_firewall_started_okay():
     events = fetch_events_from_mock("http://localhost:5000")
@@ -49,6 +50,23 @@ def test_dangerous_response_with_firewall():
     assert attacks[0]["request"]["source"] == "quart"
     assert attacks[0]["request"]["route"] == "/create"
     assert attacks[0]["request"]["userAgent"] == "python-requests/2.32.3"
+
+
+def test_dangerous_response_with_firewall_query_params():
+    res = requests.get(query_url_fw + "?dog_name=Dangerous%20Bobby'%2C%20TRUE)%3B%20--%20%ff")
+    assert res.status_code == 500
+
+    time.sleep(5) # Wait for attack to be reported
+    events = fetch_events_from_mock("http://localhost:5000")
+    attacks = filter_on_event_type(events, "detected_attack")
+
+    assert len(attacks) == 2
+    assert attacks[1]["attack"]["blocked"] == True
+    assert attacks[1]["attack"]["kind"] == "sql_injection"
+    assert attacks[1]["attack"]["operation"] == "asyncpg.connection.Connection.execute"
+    assert attacks[1]["attack"]["pathToPayload"] == '.dog_name.[0]'
+    assert attacks[1]["attack"]["payload"] == "\"Dangerous Bobby', TRUE); -- %FF\""
+    assert attacks[1]["attack"]["source"] == "query"
 
 
 def test_dangerous_response_without_firewall():
