@@ -1,7 +1,8 @@
 import time
 import pytest
 import requests
-from .server.check_events_from_mock import fetch_events_from_mock, validate_started_event, filter_on_event_type
+from .server.check_events_from_mock import fetch_events_from_mock, validate_started_event, filter_on_event_type, \
+    clear_events_from_mock
 
 # e2e tests for flask_postgres sample app
 post_url_fw = "http://localhost:8096/create"
@@ -55,4 +56,22 @@ def test_dangerous_response_without_firewall():
     dog_name = "Dangerous Bobby', TRUE); -- "
     res = requests.post(post_url_nofw, data={'dog_name': dog_name})
     assert res.status_code == 201
+
+
+def test_dangerous_response_with_firewall_json_body_sent_as_form():
+    clear_events_from_mock("http://localhost:5000")
+    body = '{"dog_name": "Dangerous Bobby\', TRUE); -- "}'
+    res = requests.post(post_url_fw + "/via_json", data=body, headers={"Content-Type": "application/x-www-form-urlencoded"})
+    assert res.status_code == 500
+
+    time.sleep(5) # Wait for attack to be reported
+    events = fetch_events_from_mock("http://localhost:5000")
+    attacks = filter_on_event_type(events, "detected_attack")
+
+    assert len(attacks) == 1
+    assert attacks[0]["attack"]["blocked"] == True
+    assert attacks[0]["attack"]["kind"] == "sql_injection"
+    assert attacks[0]["attack"]["pathToPayload"] == '.[0].dog_name'
+    assert attacks[0]["attack"]["source"] == "body"
+    assert attacks[0]["request"]["route"] == "/create/via_json"
 

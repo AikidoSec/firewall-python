@@ -132,6 +132,26 @@ def test_dangerous_response_with_firewall_via_headers_with_latin1_byte():
     assert attacks[0]["request"]["route"] == "/create_dog_from_headers"
 
 
+def test_dangerous_response_with_firewall_form_field_in_json_body():
+    body = '{"a":"&dog_name=Dangerous Bobby\', TRUE)%3B -- &b="}'
+    res = requests.post(post_url_fw, data=body, headers={"Content-Type": "application/x-www-form-urlencoded"})
+    assert res.status_code == 500
+
+    time.sleep(5)
+
+    events = fetch_events_from_mock("http://localhost:5000")
+    attacks = filter_on_event_type(events, "detected_attack")
+
+    assert len(attacks) == 4
+    assert attacks[3]["attack"]["blocked"] == True
+    assert attacks[3]["attack"]["kind"] == "sql_injection"
+    assert attacks[3]["attack"]["metadata"]["sql"] == "INSERT INTO dogs (dog_name, isAdmin) VALUES ('Dangerous Bobby', TRUE); -- ', FALSE)"
+    assert attacks[3]["attack"]["pathToPayload"] == ".[1].dog_name"
+    assert attacks[3]["attack"]["payload"] == "\"Dangerous Bobby', TRUE); -- \""
+    assert attacks[3]["attack"]["source"] == "body"
+    assert attacks[3]["request"]["route"] == "/create"
+
+
 def test_sync_route_with_firewall():
     res = requests.get(sync_route_fw)
     assert res.status_code == 200
