@@ -3,8 +3,10 @@ aikido_zen.protect()
 import os
 
 dont_add_middleware = os.getenv("DONT_ADD_MIDDLEWARE")
+import io
 import time
 import asyncpg
+import xml.etree.ElementTree as ET
 from starlette.applications import Starlette
 from starlette.responses import HTMLResponse, JSONResponse
 from starlette.routing import Route
@@ -52,6 +54,16 @@ async def create_dog(request: Request):
         await conn.close()
 
     return JSONResponse({"message": f'Dog {dog_name} created successfully'}, status_code=201)
+
+async def create_dog_xml(request: Request):
+    root = ET.parse(io.BytesIO(await request.body())).getroot()
+    conn = await get_db_connection()
+    try:
+        for dog in root.iter('dog'):
+            await conn.execute(f"INSERT INTO dogs (dog_name, isAdmin) VALUES ('%s', FALSE)" % (dog.text))
+    finally:
+        await conn.close()
+    return JSONResponse({"message": "Dogs created successfully"}, status_code=201)
 
 async def create_dog_from_headers(request: Request):
     dog_name = request.headers.get('X-Dog-Name')
@@ -102,6 +114,7 @@ routes = [
     Route("/dogpage/{dog_id:int}", get_dogpage),
     Route("/create", show_create_dog_form, methods=["GET"]),
     Route("/create", create_dog, methods=["POST"]),
+    Route("/create_xml", create_dog_xml, methods=["POST"]),
     Route("/create_dog_from_headers", create_dog_from_headers, methods=["GET"]),
     Route("/sync_route", sync_route),
     Route("/benchmark", benchmark_route, methods=["GET"]),

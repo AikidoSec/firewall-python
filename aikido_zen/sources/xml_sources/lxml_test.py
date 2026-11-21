@@ -68,9 +68,12 @@ def test_parse_xml_with_set_context():
     context = get_current_context()
     assert context.xml == {
         "attr": {"chill"},
+        "name": {"Test Name"},
+        "ok": {"boomer"},
         "smth": {"2"},
         "smthelse": {"2"},
-        "test": {"test1"},
+        "test": {"test1", "test2"},
+        "value": {"42"},
     }
 
 
@@ -84,7 +87,27 @@ def test_parse_xml_bytes_with_set_context():
     context = get_current_context()
     assert context.xml == {
         "attr": {"chill"},
+        "name": {"Test Name"},
+        "ok": {"boomer"},
         "smth": {"2"},
         "smthelse": {"2"},
-        "test": {"test1"},
+        "test": {"test1", "test2"},
+        "value": {"42"},
     }
+
+
+XML_WITH_COMMENT = """<?xml version="1.0"?>
+<root>
+    <name>Test<!-- --> Name</name>
+</root>
+"""
+
+
+def test_parse_xml_keeps_the_text_after_a_comment():
+    set_context(body=XML_WITH_COMMENT)
+    root = parse_xml(XML_WITH_COMMENT)
+
+    assert "".join(root.find("name").itertext()) == "Test Name"
+
+    context = get_current_context()
+    assert context.xml == {"name": {"Test", " Name", "Name"}}

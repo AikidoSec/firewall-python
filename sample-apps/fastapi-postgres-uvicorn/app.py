@@ -1,8 +1,10 @@
 import aikido_zen  # Aikido package import
 aikido_zen.protect()
 
+import io
 import time
 import asyncpg
+import xml.etree.ElementTree as ET
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
@@ -71,6 +73,18 @@ async def create_dog(request: Request):
         await conn.close()
 
     return JSONResponse({"message": f'Dog {dog_name} created successfully'}, status_code=201)
+
+@app.post("/create_xml")
+async def create_dog_xml(request: Request):
+    root = ET.parse(io.BytesIO(await request.body())).getroot()
+    conn = await get_db_connection()
+    try:
+        for dog in root.iter('dog'):
+            await conn.execute(f"INSERT INTO dogs (dog_name, isAdmin) VALUES ('%s', FALSE)" % (dog.text))
+    finally:
+        await conn.close()
+
+    return JSONResponse({"message": "Dogs created successfully"}, status_code=201)
 
 @app.get("/just")
 async def just():

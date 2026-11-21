@@ -94,6 +94,11 @@ motor = "^3.6.0"
 flask = "^3.0.3"
 pygments = "^2.18.0"
 lxml = "^6.1.1"
+xmltodict = [
+    { version = "^0.14.2", python = "<3.9" },
+    { version = "^1.0.4", python = ">=3.9" },
+]
+defusedxml = "^0.7.1"
 clickhouse-driver = "^0.2.9"
 openai = "^1.85.0"
 anthropic = "^0.69.0"

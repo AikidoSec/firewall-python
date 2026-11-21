@@ -4,6 +4,8 @@ from django.template import loader
 from .models import Dogs
 from django.db import connection
 from django.views.decorators.csrf import csrf_exempt
+import io
+import xml.etree.ElementTree as ET
 # Create your views here.
 
 
@@ -43,5 +45,15 @@ def create_dogpage_cookies(request):
         query = f"INSERT INTO sample_app_Dogs (dog_name, is_admin) VALUES ('%s', FALSE)" % (dog_name)
         print("QUERY : ", query)
         cursor.execute(query)
+
+    return HttpResponse("Dog page created")
+
+@csrf_exempt
+def create_dogpage_xml(request):
+    root = ET.parse(io.BytesIO(request.body)).getroot()
+    with connection.cursor() as cursor:
+        for dog in root.iter('dog'):
+            query = f"INSERT INTO sample_app_Dogs (dog_name, is_admin) VALUES ('%s', FALSE)" % (dog.text)
+            cursor.execute(query)
 
     return HttpResponse("Dog page created")

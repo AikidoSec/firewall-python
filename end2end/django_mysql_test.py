@@ -154,3 +154,29 @@ def test_bypass_surrogate_bytes_sql_injection():
     assert attacks[3]["attack"]["kind"] == "sql_injection"
     assert attacks[3]["attack"]["blocked"] is True
     assert attacks[3]["attack"]["source"] == "body"
+
+
+def test_dangerous_xml_body_with_firewall():
+    xml_data = '<dogs><dog>Malicious dog", "Injected boss"); -- </dog></dogs>'
+    res = requests.post(base_url_fw + "/xml-sql", data=xml_data, headers={"Content-Type": "application/xml"})
+    assert res.status_code == 500
+
+    time.sleep(5)  # Wait for attack to be reported
+    events = fetch_events_from_mock("http://localhost:5000")
+    attacks = [
+        a for a in filter_on_event_type(events, "detected_attack")
+        if a["request"]["route"] == "/app/xml-sql"
+    ]
+
+    assert len(attacks) == 1
+    assert attacks[0]["attack"]["blocked"] == True
+    assert attacks[0]["attack"]["kind"] == "sql_injection"
+    assert attacks[0]["attack"]["operation"] == "MySQLdb.Cursor.execute"
+    assert attacks[0]["attack"]["pathToPayload"] == ".dog.[0]"
+    assert attacks[0]["attack"]["source"] == "xml"
+
+
+def test_dangerous_xml_body_without_firewall():
+    xml_data = '<dogs><dog>Malicious dog", "Injected boss"); -- </dog></dogs>'
+    res = requests.post(base_url_nofw + "/xml-sql", data=xml_data, headers={"Content-Type": "application/xml"})
+    assert res.status_code == 200
