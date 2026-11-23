@@ -170,6 +170,34 @@ def test_start_does_not_enable_sse_for_unrelated_flag(
     mock_listen_for_config_updates.assert_not_called()
 
 
+def test_first_poll_after_a_failed_start_loads_the_config_and_firewall_lists():
+    api = ReportingApiHTTP(None)
+    api.report = MagicMock(return_value={"success": False, "error": "timeout"})
+    api.fetch_firewall_lists = MagicMock(
+        return_value={
+            "success": True,
+            "blockedIPAddresses": [
+                {"source": "example", "description": "Example", "ips": ["1.2.3.4"]}
+            ],
+            "allowedIPAddresses": [],
+            "blockedUserAgents": "",
+        }
+    )
+    manager = CloudConnectionManager(None, api, Token("AIK_TOKEN_TEST"), None)
+
+    with patch(
+        "aikido_zen.background_process.realtime.get_config_last_updated_at",
+        return_value=1000,
+    ), patch(
+        "aikido_zen.background_process.realtime.get_config",
+        return_value={"configUpdatedAt": 1000, "blockedUserIds": ["blocked-user"]},
+    ):
+        manager.start(event_scheduler=MagicMock())
+
+    assert manager.conf.blocked_uids == {"blocked-user"}
+    assert manager.firewall_lists.is_blocked_ip("1.2.3.4")
+
+
 @pytest.fixture
 def reporting_manager(setup_cloud_connection_manager):
     manager = setup_cloud_connection_manager

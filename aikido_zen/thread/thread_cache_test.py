@@ -730,18 +730,20 @@ def test_config_is_sent_once_per_worker_per_cloud_response(sync):
     assert manager.statistics.get_record()["requests"]["total"] == 4
 
 
-def test_initial_config_is_sent_after_failed_cloud_startup(sync):
+def test_config_is_sent_once_it_arrives_after_failed_cloud_startup(sync):
     cache, manager, _, _, _ = sync
     manager.conf.last_updated_at = -1
-    cache.renew()
-    assert cache.config.revision == -1
-    assert cache.config.last_updated_at == -1
 
     on_start(manager)
     assert manager.conf.revision == 0
     cache.renew()
-    assert cache.config.revision == 0
-    assert cache.config.last_updated_at > 0
+    assert cache.config.revision == -1
+    assert cache.config.last_updated_at == -1
+
+    manager.update_service_config({"success": True, "configUpdatedAt": 1})
+    cache.renew()
+    assert cache.config.revision == manager.conf.revision
+    assert cache.config.last_updated_at == 1
     assert (
         sync_data.process(manager, {"config_revision": cache.config.revision}, None)
         == {}
