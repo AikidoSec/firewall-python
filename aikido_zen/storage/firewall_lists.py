@@ -35,7 +35,11 @@ class FirewallLists:
                 )
                 return
         blocked_ips = list(map(parse_ip_entry, blocked_ip_entries))
-        monitored_ips = list(map(parse_ip_entry, monitored_ip_entries))
+        monitored_ips = [
+            parse_ip_entry(entry)
+            for entry in monitored_ip_entries
+            if isinstance(entry, dict)
+        ]
         # An allowlist without IPs would block every visitor, so it is skipped.
         allowed_ips = [
             entry
