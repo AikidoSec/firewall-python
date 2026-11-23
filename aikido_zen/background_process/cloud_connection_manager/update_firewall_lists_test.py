@@ -452,3 +452,19 @@ def test_update_firewall_lists_skips_invalid_monitored_networks(
     assert connection_manager.firewall_lists.get_matching_monitored_ip_list_keys(
         "9.9.9.9"
     ) == ["tor/exit_nodes"]
+
+
+def test_update_firewall_lists_skips_a_monitored_entry_that_is_not_an_object(
+    connection_manager,
+):
+    connection_manager.api = MockApiMonitoredLists()
+    lists = connection_manager.api.fetch_firewall_lists("token")
+    lists["monitoredIPAddresses"].insert(0, None)
+    connection_manager.api.fetch_firewall_lists = lambda token: lists
+    update_firewall_lists(connection_manager)
+    firewall_lists = connection_manager.firewall_lists
+
+    assert firewall_lists.is_blocked_ip("1.2.3.4")
+    assert firewall_lists.get_matching_monitored_ip_list_keys("9.9.9.9") == [
+        "tor/exit_nodes"
+    ]
