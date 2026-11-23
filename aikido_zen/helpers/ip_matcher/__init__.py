@@ -19,7 +19,11 @@ class IPMatcher:
             "\n".join(self._networks).encode()
         )
         if self._handle is not None:
-            weakref.finalize(self, zen_internals.ip_matcher_free, self._handle)
+            finalizer = weakref.finalize(
+                self, zen_internals.ip_matcher_free, self._handle
+            )
+            # Exit handlers that run later can still check IPs, so don't free at exit.
+            finalizer.atexit = False
 
     def is_built(self):
         return self._handle is not None

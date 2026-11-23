@@ -1,5 +1,7 @@
 import gc
 import pickle
+import subprocess
+import sys
 
 import pytest
 from . import IPMatcher
@@ -260,6 +262,24 @@ def test_frees_the_matcher_when_it_is_dropped(monkeypatch):
     gc.collect()
 
     assert freed == [handle]
+
+
+def test_keeps_a_matcher_that_is_alive_when_python_exits():
+    script = (
+        "import atexit\n"
+        "freed = []\n"
+        "atexit.register(lambda: print(len(freed)))\n"
+        "from aikido_zen.helpers import zen_internals\n"
+        "zen_internals.ip_matcher_free = freed.append\n"
+        "from aikido_zen.helpers.ip_matcher import IPMatcher\n"
+        "dropped = IPMatcher(['192.168.0.0/24'])\n"
+        "del dropped\n"
+        "alive = IPMatcher(['10.0.0.0/8'])\n"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", script], capture_output=True, text=True, check=True
+    )
+    assert result.stdout.splitlines()[-1] == "1"
 
 
 def test_matches_nothing_without_the_library(monkeypatch):
