@@ -205,6 +205,28 @@ def test_update_firewall_lists_skips_an_allowlist_entry_without_ips(
     assert connection_manager.firewall_lists.is_user_agent_blocked("NewBot")
 
 
+def test_update_firewall_lists_skips_an_allowlist_entry_with_only_invalid_ips(
+    connection_manager, caplog
+):
+    connection_manager.firewall_lists.update(
+        [],
+        [
+            {
+                "source": "list1",
+                "description": "Example",
+                "ips": ["foobar", "1.2.3.4/99"],
+            }
+        ],
+        "",
+        [],
+        "",
+        [],
+    )
+
+    assert "IP list list1 has 2 invalid network(s)" in caplog.text
+    assert connection_manager.firewall_lists.is_allowed_ip("8.8.8.8")
+
+
 @pytest.mark.parametrize("ips", ["5.6.7.8", {"a": 1}, 5, True])
 @pytest.mark.parametrize("list_type", ["blocked", "allowed"])
 def test_update_firewall_lists_keeps_all_lists_when_ips_is_not_a_list(

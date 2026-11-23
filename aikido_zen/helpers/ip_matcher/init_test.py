@@ -243,6 +243,13 @@ def test_rejected_count():
     assert IPMatcher(ip for ip in ["192.168.0.0/24", "foobar"]).rejected_count() == 1
 
 
+def test_is_empty_counts_only_accepted_networks():
+    assert IPMatcher().is_empty() == True
+    assert IPMatcher([""]).is_empty() == True
+    assert IPMatcher(["foobar", "1.2.3.4/99", None]).is_empty() == True
+    assert IPMatcher(["foobar", "10.0.0.0/8"]).is_empty() == False
+
+
 def test_pickle_round_trip():
     matcher = pickle.loads(pickle.dumps(IPMatcher(["192.168.0.0/24", "2001:db8::/32"])))
     assert matcher.has("192.168.0.42") == True

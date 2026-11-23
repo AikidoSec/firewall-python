@@ -7,12 +7,16 @@ class IPMatcher:
     def __init__(self, networks=None):
         # json.loads can return lone surrogates such as "\udc80", and .encode() raises on
         # them, which would fail the whole list update. Valid networks are ASCII.
-        # The library splits on newlines, so a newline would turn one entry into two.
+        # The library splits on newlines, so a newline would turn one entry into two,
+        # and an empty string sent alone would not count as a rejected entry.
         networks = list(networks or [])
         self._networks = [
             network
             for network in networks
-            if isinstance(network, str) and network.isascii() and "\n" not in network
+            if isinstance(network, str)
+            and network
+            and network.isascii()
+            and "\n" not in network
         ]
         self._skipped_count = len(networks) - len(self._networks)
         self._handle = zen_internals.ip_matcher_create(
@@ -43,7 +47,8 @@ class IPMatcher:
         return zen_internals.ip_matcher_has(self._handle, network.encode())
 
     def is_empty(self):
-        return len(self._networks) == 0
+        # Networks the library rejected match nothing, so they do not count.
+        return self.rejected_count() == len(self._networks) + self._skipped_count
 
     def __reduce__(self):
         return self.__class__, (self._networks,)

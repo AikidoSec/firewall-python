@@ -40,12 +40,7 @@ class FirewallLists:
             for entry in monitored_ip_entries
             if isinstance(entry, dict)
         ]
-        # An allowlist without IPs would block every visitor, so it is skipped.
-        allowed_ips = [
-            entry
-            for entry in map(parse_ip_entry, allowed_ip_entries)
-            if not entry["iplist"].is_empty()
-        ]
+        allowed_ips = list(map(parse_ip_entry, allowed_ip_entries))
         ip_lists = blocked_ips + monitored_ips + allowed_ips
         # Aikido only sends valid networks, so an invalid one means the data is broken.
         for entry in ip_lists:
@@ -56,6 +51,8 @@ class FirewallLists:
                     entry["source"],
                     rejected_count,
                 )
+        # An allowlist without valid IPs would block every visitor, so it is skipped.
+        allowed_ips = [e for e in allowed_ips if not e["iplist"].is_empty()]
         # A list that failed to build matches no IP, so the current lists stay in place.
         failed = [e for e in blocked_ips + allowed_ips if not e["iplist"].is_built()]
         if failed:
