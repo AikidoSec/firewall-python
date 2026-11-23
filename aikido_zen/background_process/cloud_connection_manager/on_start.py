@@ -8,11 +8,7 @@ def on_start(connection_manager):
     event = {"type": "started", "time": get_unixtime_ms()}
     res = connection_manager.report_api_event(event)
 
-    if not res.get("success", True):
-        connection_manager.conf.last_updated_at = (
-            get_unixtime_ms()
-        )  # Update config time even in failure
-    else:
+    if res.get("success", True):
         connection_manager.update_service_config(res)
         connection_manager.update_firewall_lists()
         logger.info("Established connection with Aikido Server")
