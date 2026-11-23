@@ -132,6 +132,5 @@ This will output debug information to the console (e.g. no token was found, unsu
 
 - Odoo Online is not supported, because it does not allow installing Python packages.
 - Odoo's gevent server, used for live chat, websocket and long-polling traffic, is not protected. Zen does not start in a process that has already imported `gevent`.
-- XML-RPC calls (`/xmlrpc/2/...`) are not checked yet.
 - Uploaded file names are checked. Uploaded file contents are not.
 - If `odoo.http` lacks a method Zen hooks, Zen logs a warning and does not protect Odoo requests.

@@ -12,7 +12,7 @@ from aikido_zen.helpers.logging import logger
 import aikido_zen.sources.functions.request_handler as funcs
 from aikido_zen.sources.functions.request_handler import pre_response as should_block
 
-from .extract_request import save_parsed_request, save_route_args
+from .extract_request import save_parsed_request, save_route_args, save_rpc_params
 
 
 def _plain_wsgi(start_response, message, status_code):
@@ -134,15 +134,17 @@ def patch_server(module):
 
 
 @before
-def _xmlrpc(func, instance, args, kwargs):
-    # xmlrpc.client.loads parses the XML only once the body is on the context.
-    from odoo.http import request
-
-    httprequest = getattr(request, "httprequest", None)
-    if httprequest is not None:
-        save_parsed_request(httprequest, body=httprequest.get_data(as_text=True))
+def _dispatch_rpc(func, instance, args, kwargs):
+    # XML-RPC passes the values Odoo parsed from the body.
+    save_rpc_params(get_argument(args, kwargs, 2, "params"))
 
 
 @on_import("odoo.addons.base.controllers.rpc")
 def patch_rpc(module):
-    patch_function(module, "RPC._xmlrpc", _xmlrpc)
+    patch_function(module, "dispatch_rpc", _dispatch_rpc)
+
+
+@on_import("odoo.addons.rpc.controllers.xmlrpc")
+def patch_xmlrpc(module):
+    # Odoo 19 moved XML-RPC into its own addon.
+    patch_function(module, "dispatch_rpc", _dispatch_rpc)

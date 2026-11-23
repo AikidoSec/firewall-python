@@ -1,4 +1,3 @@
-import sys
 import types
 import uuid
 
@@ -126,6 +125,26 @@ def test_framework_query_is_kept_after_an_earlier_scan(context):
     updated = get_current_context()
     assert _scan(_sql(WSGI_PAYLOAD), updated)["kind"] == "sql_injection"
     assert _scan(_sql(ODOO_PAYLOAD), updated)["source"] == "query"
+
+
+def test_parsing_the_same_request_again_keeps_the_cached_strings(context):
+    save_parsed_request(_HttpRequest(), body={"params": {"dog_name": ODOO_PAYLOAD}})
+    _scan("SELECT 1", context)
+    cached = dict(context.parsed_userinput)
+
+    save_parsed_request(_HttpRequest(), body={"params": {"dog_name": ODOO_PAYLOAD}})
+
+    assert "body" in cached
+    assert context.parsed_userinput == cached
+
+
+def test_changed_body_is_scanned_after_an_earlier_scan(context):
+    save_parsed_request(_HttpRequest(), body={"params": {"dog_name": "Bobby"}})
+    assert _scan(_sql(PAYLOAD), context) == {}
+
+    save_parsed_request(_HttpRequest(), body={"params": {"dog_name": PAYLOAD}})
+
+    assert _scan(_sql(PAYLOAD), get_current_context())["source"] == "body"
 
 
 def test_form_body_is_detected(context):
@@ -291,6 +310,64 @@ def test_request_runs_once_when_odoo_raises(context, monkeypatch):
     assert len(calls) == 1
 
 
+def test_blocked_request_gets_a_plain_response_without_odoo(context, monkeypatch):
+    calls = []
+    statuses = []
+
+    def odoo_call(self, environ, start_response):
+        calls.append(environ)
+
+    module = _odoo_http()
+    module.Application.__call__ = odoo_call
+    odoo_source.patch_odoo_http(module)
+    monkeypatch.setattr(
+        odoo_source, "should_block", lambda: ("You are blocked by Zen.", 403)
+    )
+
+    body = module.Application()(
+        ENVIRON, lambda status, headers: statuses.append(status)
+    )
+
+    assert body == [b"You are blocked by Zen."]
+    assert statuses == ["403 Forbidden"]
+    assert calls == []
+
+
+@pytest.mark.parametrize("status, status_code", [("404 NOT FOUND", 404), ("bad", 0)])
+def test_post_response_gets_the_status_odoo_sent(
+    context, monkeypatch, status, status_code
+):
+    stages = []
+
+    def odoo_call(self, environ, start_response):
+        start_response(status, [])
+        return [b"ok"]
+
+    module = _odoo_http()
+    module.Application.__call__ = odoo_call
+    odoo_source.patch_odoo_http(module)
+    monkeypatch.setattr(odoo_source, "should_block", lambda: None)
+    monkeypatch.setattr(
+        odoo_source.funcs, "request_handler", lambda **kwargs: stages.append(kwargs)
+    )
+
+    assert module.Application()(ENVIRON, lambda *args: None) == [b"ok"]
+    assert stages == [
+        {"stage": "init"},
+        {"stage": "post_response", "status_code": status_code},
+    ]
+
+
+def test_prefork_worker_starts_zen(monkeypatch):
+    import aikido_zen
+
+    started = []
+    monkeypatch.setattr(aikido_zen, "protect", lambda: started.append(True))
+
+    assert odoo_source._worker_http_start(lambda: "running", None, (), {}) == "running"
+    assert started == [True]
+
+
 def test_odoo_http_import_hook_is_registered():
     import aikido_zen.sources.odoo
     from wrapt.importer import _post_import_hooks
@@ -298,24 +375,27 @@ def test_odoo_http_import_hook_is_registered():
     assert "odoo.http" in _post_import_hooks
     assert "odoo.service.server" in _post_import_hooks
     assert "odoo.addons.base.controllers.rpc" in _post_import_hooks
+    assert "odoo.addons.rpc.controllers.xmlrpc" in _post_import_hooks
 
 
-def test_xmlrpc_body_is_stored_before_odoo_parses_it(context, monkeypatch):
-    xml_body = (
-        "<?xml version='1.0'?><methodCall><methodName>execute_kw</methodName>"
-        f"<params><param><value><string>{PAYLOAD}</string></value></param>"
-        "</params></methodCall>"
+def test_xmlrpc_params_are_detected(context):
+    params = ("zenpoc", 2, "admin", "zen.dog", "create_unsafe", [PAYLOAD])
+
+    odoo_source._dispatch_rpc(
+        lambda *args: None, None, ("object", "execute_kw", params), {}
+    )
+    found = _scan(_sql(PAYLOAD), get_current_context())
+
+    assert found["kind"] == "sql_injection"
+    assert found["source"] == "body"
+
+
+def test_jsonrpc_body_is_kept_when_dispatch_rpc_runs(context):
+    body = {"params": {"service": "object", "method": "execute_kw", "args": [1]}}
+    context.set_body(body)
+
+    odoo_source._dispatch_rpc(
+        lambda *args: None, None, ("object", "execute_kw", [1]), {}
     )
 
-    class _XmlHttpRequest(_HttpRequest):
-        def get_data(self, as_text=False):
-            return xml_body if as_text else xml_body.encode()
-
-    odoo_http = types.ModuleType("odoo.http")
-    odoo_http.request = types.SimpleNamespace(httprequest=_XmlHttpRequest())
-    monkeypatch.setitem(sys.modules, "odoo", types.ModuleType("odoo"))
-    monkeypatch.setitem(sys.modules, "odoo.http", odoo_http)
-
-    odoo_source._xmlrpc(lambda: None, None, (), {})
-
-    assert get_current_context().body == xml_body
+    assert get_current_context().body == body

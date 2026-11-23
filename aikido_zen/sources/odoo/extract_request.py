@@ -127,21 +127,32 @@ def save_parsed_request(httprequest, body=None, include_form=False):
     if not context or httprequest is None:
         return
     try:
-        context.query = merge_listed_values(
+        query = merge_listed_values(
             context.query, _mapping(getattr(httprequest, "args", None))
         )
-        context.cookies = merge_cookies(
+        cookies = merge_cookies(
             context.cookies, _cookie_mapping(getattr(httprequest, "cookies", None))
         )
-        _drop_cached_strings(context, "query", "cookies")
-        if body is not None:
+        # Odoo parses a request more than once, so most calls change nothing
+        # and the cached strings stay valid.
+        if query != context.query or cookies != context.cookies:
+            context.query = query
+            context.cookies = cookies
+            _drop_cached_strings(context, "query", "cookies")
+        if body is None and include_form:
+            body = _form_body(httprequest) or None
+        if body is not None and body != context.body:
             context.set_body(body)
             _drop_cached_strings(context, "body")
-        elif include_form:
-            form_body = _form_body(httprequest)
-            if form_body:
-                context.set_body(form_body)
-                _drop_cached_strings(context, "body")
         context.set_as_current_context()
     except Exception as exc:
         logger.debug("Exception occurred whilst extracting odoo request data: %s", exc)
+
+
+def save_rpc_params(params):
+    context = get_current_context()
+    # JSON-RPC has stored its whole body through get_json_data already.
+    if not context or params is None or context.body is not None:
+        return
+    context.set_body(params)
+    context.set_as_current_context()
