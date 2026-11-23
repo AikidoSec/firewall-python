@@ -134,12 +134,13 @@ def peek(stream, size=0):
 
 def read_up_to(stream, size):
     chunks = []
-    while size > 0:
-        chunk = stream.read(min(size, READ_CHUNK_SIZE))
+    remaining = size
+    while remaining > 0:
+        chunk = stream.read(min(remaining, READ_CHUNK_SIZE))
         if not chunk:
             break
         chunks.append(chunk)
-        size -= len(chunk)
+        remaining -= len(chunk)
     return b"".join(chunks)
 
 
