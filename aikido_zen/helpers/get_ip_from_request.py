@@ -7,7 +7,6 @@ import os
 from typing import Optional
 
 from aikido_zen.helpers.headers import Headers
-from aikido_zen.helpers.ip_matcher import preparse
 from aikido_zen.helpers.logging import logger
 from aikido_zen.helpers.net.is_private_ip import is_private_ip
 from aikido_zen.helpers.trust_proxy import (
@@ -52,10 +51,9 @@ def get_client_ip_from_header(value):
         ip = normalize_ip(forwarded_ips[index].strip())
         if not is_ip(ip):
             continue
-        normalized_ip = preparse(ip)
-        if is_private_ip(normalized_ip):
+        if is_private_ip(ip):
             continue
-        if isinstance(config, CIDRTrustProxy) and config.matcher.has(normalized_ip):
+        if isinstance(config, CIDRTrustProxy) and config.matcher.has(ip):
             continue
         return ip
     return None

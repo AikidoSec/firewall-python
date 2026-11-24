@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 from typing import Optional, Union
 
-from aikido_zen.helpers.ip_matcher import IPMatcher, preparse
+from aikido_zen.helpers.ip_matcher import IPMatcher
 
 
 @dataclass(frozen=True)
@@ -53,5 +53,5 @@ def is_trusted_proxy_request(remote_address: Optional[str]) -> bool:
     if isinstance(config, BooleanTrustProxy):
         return config.value
     if isinstance(config, CIDRTrustProxy):
-        return bool(remote_address) and config.matcher.has(preparse(remote_address))
+        return bool(remote_address) and config.matcher.has(remote_address)
     return True
