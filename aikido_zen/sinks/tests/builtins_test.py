@@ -1,6 +1,8 @@
 import pytest
 from unittest.mock import patch
 import aikido_zen.sinks.builtins
+import aikido_zen.test_utils as test_utils
+from aikido_zen.errors import AikidoPathTraversal
 from pathlib import Path, PurePath
 
 kind = "path_traversal"
@@ -69,6 +71,24 @@ def test_open_with_builtins_import():
             builtins.open(b"shleklelkwge.py")
         args = (b"shleklelkwge.py",)
         mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
+
+def test_open_with_file_keyword():
+    with patch(
+        "aikido_zen.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        with pytest.raises(FileNotFoundError):
+            open(file="test_file")
+        args = ("test_file",)
+        mock_run_vulnerability_scan.assert_called_with(kind=kind, op=op, args=args)
+
+
+def test_open_with_file_keyword_blocks_path_traversal(monkeypatch):
+    monkeypatch.setenv("AIKIDO_BLOCK", "1")
+    file_path = "../../../not_a_real_file.txt"
+    test_utils.generate_and_set_context(file_path)
+    with pytest.raises(AikidoPathTraversal):
+        open(file=file_path)
 
 
 def test_open_invalid_input():
