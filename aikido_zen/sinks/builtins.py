@@ -11,7 +11,7 @@ from aikido_zen.sinks import patch_function, on_import, before
 
 @before
 def _open(func, instance, args, kwargs):
-    filename = get_argument(args, kwargs, 0, "filename")
+    filename = get_argument(args, kwargs, 0, "file")
     if not isinstance(filename, (str, bytes, PurePath)):
         return
 
