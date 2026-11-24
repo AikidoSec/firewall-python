@@ -160,6 +160,26 @@ def test_proxy_trust_in_request_context(
     assert restored.is_behind_trusted_proxy is trusted
 
 
+@pytest.mark.parametrize("setting", ["true", "2"])
+def test_client_ip_is_read_from_every_forwarded_header_line(monkeypatch, setting):
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", setting)
+    request = {
+        "method": "GET",
+        "headers": [
+            (b"x-forwarded-for", b"9.9.9.9"),
+            (b"x-forwarded-for", b"10.0.0.2"),
+        ],
+        "query_string": b"",
+        "client": ("10.0.0.3", 1234),
+        "server": ("localhost", 8080),
+        "scheme": "http",
+        "root_path": "",
+        "path": "/hello",
+    }
+    context = Context(req=request, source="starlette")
+    assert context.remote_address == "9.9.9.9"
+
+
 def test_set_as_current_context(mocker):
     # Test set_as_current_context() method
     context = Context(req=basic_wsgi_req, body=12, source="flask")

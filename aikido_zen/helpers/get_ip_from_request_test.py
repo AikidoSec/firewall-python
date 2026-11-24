@@ -272,6 +272,14 @@ def test_proxy_trust_modes(monkeypatch, setting, remote_address, value, expected
     assert get_ip_from_request(remote_address, headers) == expected
 
 
+def test_forwarded_header_lines_are_counted_in_arrival_order(monkeypatch):
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "2")
+    headers = Headers()
+    headers.store_header("x-forwarded-for", "9.9.9.9")
+    headers.store_header("x-forwarded-for", "10.0.0.2")
+    assert get_ip_from_request("10.0.0.3", headers) == "9.9.9.9"
+
+
 @pytest.mark.parametrize(
     "setting, warning",
     [

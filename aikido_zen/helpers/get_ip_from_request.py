@@ -21,7 +21,7 @@ def get_ip_from_request(remote_address: str, headers: Headers) -> Optional[str]:
     """
     Tries and get the IP address from the request, checking for x-forwarded-for
     """
-    ip_header = headers.get_header(get_ip_header_name())
+    ip_header = ", ".join(headers.get(get_ip_header_name(), []))
     if ip_header and is_trusted_proxy_request(remote_address):
         ip_header_value = get_client_ip_from_header(ip_header)
 
