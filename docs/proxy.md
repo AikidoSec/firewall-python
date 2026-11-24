@@ -48,3 +48,7 @@ flowchart TD
     linkStyle default stroke:#6551f3,stroke-width:1.5px
     linkStyle 1,2 stroke:#6551f3,stroke-width:3px
 ```
+
+## Servers that rewrite the client address
+
+With CIDR ranges, Zen checks the address of the connection against them. Some ASGI servers replace that address with one from `x-forwarded-for` before Zen sees the request: Uvicorn does this for the proxies in `--forwarded-allow-ips` (by default `127.0.0.1` and `::1`), and Hypercorn does it with `ProxyFixMiddleware`. Turn this off (`uvicorn --no-proxy-headers`, or remove `ProxyFixMiddleware`), or use the number-of-proxies mode instead of CIDR ranges.

@@ -1,6 +1,7 @@
 import pytest
 import pickle
 import json
+from werkzeug.middleware.proxy_fix import ProxyFix
 from aikido_zen.context import Context, get_current_context, current_context
 
 LEVELS_TOO_DEEP_TO_PARSE = 1_000_000
@@ -178,6 +179,27 @@ def test_client_ip_is_read_from_every_forwarded_header_line(monkeypatch, setting
     }
     context = Context(req=request, source="starlette")
     assert context.remote_address == "9.9.9.9"
+
+
+@pytest.mark.parametrize("forwarded", ["9.9.9.9", "9.9.9.9:1234"])
+def test_proxy_trust_checks_the_connection_address_behind_proxy_fix(
+    monkeypatch, forwarded
+):
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "1.2.3.0/24")
+    environs = []
+
+    def app(environ, start_response):
+        environs.append(environ)
+        return []
+
+    request = dict(
+        basic_wsgi_req, REMOTE_ADDR="1.2.3.4", HTTP_X_FORWARDED_FOR=forwarded
+    )
+    ProxyFix(app)(request, None)
+
+    context = Context(req=environs[0], source="flask")
+    assert context.remote_address == "9.9.9.9"
+    assert context.is_behind_trusted_proxy is True
 
 
 def test_set_as_current_context(mocker):

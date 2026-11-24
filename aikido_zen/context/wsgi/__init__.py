@@ -25,8 +25,13 @@ def set_wsgi_attributes_on_context(context, environ):
     context.url = build_url_from_wsgi(environ)
     context.query = parse_qs(environ["QUERY_STRING"])
     raw_ip = environ["REMOTE_ADDR"]
-    context.remote_address = get_ip_from_request(raw_ip, context.headers)
-    context.is_behind_trusted_proxy = is_trusted_proxy_request(raw_ip)
+    # Werkzeug's ProxyFix replaces REMOTE_ADDR with the forwarded client address and keeps
+    # the connection address here, which is the address the trusted proxy check needs.
+    connection_ip = (
+        environ.get("werkzeug.proxy_fix.orig", {}).get("REMOTE_ADDR") or raw_ip
+    )
+    context.remote_address = get_ip_from_request(raw_ip, context.headers, connection_ip)
+    context.is_behind_trusted_proxy = is_trusted_proxy_request(connection_ip)
 
     # Content type is generally not included as a header, do include this as a header to simplify :
     if "CONTENT_TYPE" in environ:
