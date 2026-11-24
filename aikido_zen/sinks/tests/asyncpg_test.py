@@ -40,6 +40,27 @@ async def test_conn_execute(database_conn):
 
 
 @pytest.mark.asyncio
+async def test_conn_executemany_with_command_keyword(database_conn):
+    IPCClient.reset()
+    with patch(
+        "aikido_zen.vulnerabilities.run_vulnerability_scan"
+    ) as mock_run_vulnerability_scan:
+        conn = await database_conn
+        query = "SELECT $1::text"
+        await conn.executemany(command=query, args=[("a",)])
+
+        called_with_args = mock_run_vulnerability_scan.call_args[1]["args"]
+        called_with_op = mock_run_vulnerability_scan.call_args[1]["op"]
+        called_with_kind = mock_run_vulnerability_scan.call_args[1]["kind"]
+        assert called_with_args[0] == query
+        assert called_with_args[1] == "postgres"
+        assert called_with_op == "asyncpg.connection.Connection.executemany"
+        assert called_with_kind == "sql_injection"
+
+        await conn.close()
+
+
+@pytest.mark.asyncio
 async def test_conn_fetchrow(database_conn):
     IPCClient.reset()
     with patch(
