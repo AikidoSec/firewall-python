@@ -1,13 +1,17 @@
 import sys
+import threading
+import time
 
 import pytest
+from . import trust_proxy
 from .get_ip_from_request import (
     get_ip_from_request,
     is_ip,
     get_client_ip_from_header,
 )
 from .headers import Headers
-from .trust_proxy import is_trusted_proxy_request
+from .ip_matcher import IPMatcher
+from .trust_proxy import is_trusted_proxy_request, parse_trust_proxy
 
 
 @pytest.fixture(autouse=True)
@@ -238,7 +242,13 @@ def test_get_client_ip_from_header(value, expected):
             "9.9.9.9, ::ffff:1.2.3.5",
             "9.9.9.9",
         ),
+        ("::ffff:1.2.3.0/120", "1.2.3.4", "9.9.9.9, 1.2.3.5", "9.9.9.9"),
+        ("::ffff:1.2.3.4", "1.2.3.4", "9.9.9.9, 1.2.3.4", "9.9.9.9"),
         ("invalid.ip", "1.2.3.4", "9.9.9.9", "1.2.3.4"),
+        ("1.2.3.0/2 4", "9.9.9.9", "77.77.77.77", "9.9.9.9"),
+        ("1.2.3.0/24oops, 8.8.8.0/24", "1.2.3.4", "9.9.9.9", "1.2.3.4"),
+        ("1.2.3.0/24oops, 8.8.8.0/24", "8.8.8.8", "9.9.9.9, 8.8.8.9", "9.9.9.9"),
+        (" 2 ", "1.2.3.4", "9.9.9.9, 8.8.8.8, 7.7.7.7", "8.8.8.8"),
     ],
 )
 def test_proxy_trust_modes(monkeypatch, setting, remote_address, value, expected):
@@ -246,6 +256,53 @@ def test_proxy_trust_modes(monkeypatch, setting, remote_address, value, expected
     headers = Headers()
     headers.store_header("x-forwarded-for", value)
     assert get_ip_from_request(remote_address, headers) == expected
+
+
+def test_proxy_trust_warns_once_about_invalid_ranges(caplog):
+    parse_trust_proxy.cache_clear()
+
+    parse_trust_proxy("1.2.3.0/2 4, 8.8.8.0/24, oops.example")
+
+    assert [record.getMessage() for record in caplog.records] == [
+        "Ignoring invalid trusted proxy ranges."
+    ]
+
+
+@pytest.mark.parametrize(
+    "setting", ["true", "false", "unknown", "2", "8.8.8.0/24, ::1", "1.2.3.0/24, "]
+)
+def test_proxy_trust_does_not_warn_about_other_values(caplog, setting):
+    parse_trust_proxy.cache_clear()
+
+    parse_trust_proxy(setting)
+
+    assert caplog.records == []
+
+
+def test_concurrent_first_requests_parse_the_setting_once(monkeypatch):
+    built = []
+
+    def slow_matcher(ranges):
+        built.append(ranges)
+        time.sleep(0.05)
+        return IPMatcher(ranges)
+
+    monkeypatch.setattr(trust_proxy, "IPMatcher", slow_matcher)
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "8.8.8.0/24")
+    parse_trust_proxy.cache_clear()
+    start = threading.Barrier(8)
+
+    def first_request():
+        start.wait()
+        is_trusted_proxy_request("8.8.8.8")
+
+    threads = [threading.Thread(target=first_request) for _ in range(8)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    assert built == [["8.8.8.0/24"]]
 
 
 @pytest.mark.skipif(
