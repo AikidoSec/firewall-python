@@ -3,6 +3,7 @@ import threading
 import time
 
 import pytest
+from . import get_ip_from_request as get_ip_module
 from . import trust_proxy
 from .get_ip_from_request import (
     get_ip_from_request,
@@ -197,6 +198,20 @@ def test_invalid_ipv6():
 )
 def test_get_client_ip_from_header(value, expected):
     assert get_client_ip_from_header(value) == expected
+
+
+def test_each_forwarded_entry_is_checked_once(monkeypatch):
+    checked = []
+
+    def counting_is_ip(value):
+        checked.append(value)
+        return is_ip(value)
+
+    monkeypatch.setattr(get_ip_module, "is_ip", counting_is_ip)
+
+    get_client_ip_from_header("junk, 10.0.0.1, [::1]:443, x")
+
+    assert checked == ["x", "::1", "10.0.0.1", "junk"]
 
 
 @pytest.mark.parametrize(

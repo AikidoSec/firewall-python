@@ -60,8 +60,6 @@ def get_client_ip_from_header(value):
 
 
 def normalize_ip(ip: str) -> str:
-    if is_ip(ip):
-        return ip
     if ip.startswith("["):
         if ip.endswith("]"):
             return ip[1:-1]
