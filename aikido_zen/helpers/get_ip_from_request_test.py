@@ -1,6 +1,5 @@
 import sys
 import threading
-import time
 
 import pytest
 from . import get_ip_from_request as get_ip_module
@@ -273,51 +272,59 @@ def test_proxy_trust_modes(monkeypatch, setting, remote_address, value, expected
     assert get_ip_from_request(remote_address, headers) == expected
 
 
-def test_proxy_trust_warns_once_about_invalid_ranges(caplog):
-    parse_trust_proxy.cache_clear()
-
-    parse_trust_proxy("1.2.3.0/2 4, 8.8.8.0/24, oops.example")
-
-    assert [record.getMessage() for record in caplog.records] == [
-        "Ignoring invalid trusted proxy ranges."
-    ]
-
-
 @pytest.mark.parametrize(
-    "setting", ["true", "false", "unknown", "2", "8.8.8.0/24, ::1", "1.2.3.0/24, "]
+    "setting, warning",
+    [
+        (
+            "1.2.3.0/2 4, 8.8.8.0/24, oops.example",
+            "Ignoring invalid trusted proxy ranges.",
+        ),
+        ("unknown", "Ignoring an invalid trusted proxy setting."),
+        ("-1", "Ignoring an invalid trusted proxy setting."),
+    ],
 )
-def test_proxy_trust_does_not_warn_about_other_values(caplog, setting):
+def test_proxy_trust_warns_once_about_invalid_settings(caplog, setting, warning):
     parse_trust_proxy.cache_clear()
 
     parse_trust_proxy(setting)
 
-    assert caplog.records == []
+    assert caplog.text.count(warning) == 1
 
 
-def test_concurrent_first_requests_parse_the_setting_once(monkeypatch):
-    built = []
+@pytest.mark.parametrize(
+    "setting", ["true", "false", "0", "off", "2", "8.8.8.0/24, ::1", "1.2.3.0/24, "]
+)
+def test_proxy_trust_does_not_warn_about_supported_values(caplog, setting):
+    parse_trust_proxy.cache_clear()
+
+    parse_trust_proxy(setting)
+
+    assert caplog.text == ""
+
+
+def test_reading_the_setting_does_not_wait_for_another_thread(monkeypatch):
+    first_inside = threading.Event()
+    second_done = threading.Event()
+    second_finished_in_time = []
 
     def slow_matcher(ranges):
-        built.append(ranges)
-        time.sleep(0.05)
+        if not first_inside.is_set():
+            first_inside.set()
+            second_finished_in_time.append(second_done.wait(timeout=5))
         return IPMatcher(ranges)
 
     monkeypatch.setattr(trust_proxy, "IPMatcher", slow_matcher)
     monkeypatch.setenv("AIKIDO_TRUST_PROXY", "8.8.8.0/24")
     parse_trust_proxy.cache_clear()
-    start = threading.Barrier(8)
+    first = threading.Thread(target=trust_proxy.get_trust_proxy_config)
+    first.start()
+    first_inside.wait()
 
-    def first_request():
-        start.wait()
-        is_trusted_proxy_request("8.8.8.8")
+    trust_proxy.get_trust_proxy_config()
+    second_done.set()
+    first.join()
 
-    threads = [threading.Thread(target=first_request) for _ in range(8)]
-    for thread in threads:
-        thread.start()
-    for thread in threads:
-        thread.join()
-
-    assert built == [["8.8.8.0/24"]]
+    assert second_finished_in_time == [True]
 
 
 @pytest.mark.skipif(

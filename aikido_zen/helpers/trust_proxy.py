@@ -1,7 +1,6 @@
 import ipaddress
 import os
 import re
-import threading
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import Optional, Union
@@ -28,13 +27,8 @@ class CIDRTrustProxy:
 TrustProxyConfig = Union[BooleanTrustProxy, CountTrustProxy, CIDRTrustProxy]
 
 
-# Without the lock, requests that arrive together all parse the setting and warn.
-_parse_lock = threading.Lock()
-
-
 def get_trust_proxy_config() -> TrustProxyConfig:
-    with _parse_lock:
-        return parse_trust_proxy(os.getenv("AIKIDO_TRUST_PROXY"))
+    return parse_trust_proxy(os.getenv("AIKIDO_TRUST_PROXY"))
 
 
 @lru_cache(maxsize=1)
@@ -57,6 +51,8 @@ def parse_trust_proxy(value: Optional[str]) -> TrustProxyConfig:
         if len(ranges) < len(entries):
             logger.warning("Ignoring invalid trusted proxy ranges.")
         return CIDRTrustProxy(IPMatcher(ranges))
+    if value.lower() not in ("false", "0", "no", "n", "off"):
+        logger.warning("Ignoring an invalid trusted proxy setting.")
     return BooleanTrustProxy(False)
 
 

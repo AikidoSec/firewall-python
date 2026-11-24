@@ -10,6 +10,7 @@ import aikido_zen
 from aikido_zen import protect
 from aikido_zen.background_process.ipc import IPCClient
 from aikido_zen.helpers.token import get_token_from_env
+from aikido_zen.helpers.trust_proxy import parse_trust_proxy
 
 
 def test_protect_with_django(monkeypatch, caplog):
@@ -35,6 +36,15 @@ def test_protect_does_not_start_without_gil(monkeypatch):
 
     check_socket_access.assert_not_called()
     start_background_process.assert_not_called()
+
+
+def test_protect_reports_an_invalid_trust_proxy_setting(monkeypatch, caplog):
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "unknown")
+    parse_trust_proxy.cache_clear()
+
+    protect(mode="daemon_disabled")
+
+    assert "Ignoring an invalid trusted proxy setting." in caplog.text
 
 
 class FakeLazyImports:
