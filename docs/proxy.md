@@ -49,6 +49,6 @@ flowchart TD
     linkStyle 1,2 stroke:#6551f3,stroke-width:3px
 ```
 
-## Servers that rewrite the client address
+## Servers that resolve the client IP
 
-With CIDR ranges, Zen checks the address of the connection against them. Some ASGI servers replace that address with one from `x-forwarded-for` before Zen sees the request: Uvicorn does this for the proxies in `--forwarded-allow-ips` (by default `127.0.0.1` and `::1`), and Hypercorn does it with `ProxyFixMiddleware`. Turn this off (`uvicorn --no-proxy-headers`, or remove `ProxyFixMiddleware`), or use the number-of-proxies mode instead of CIDR ranges.
+If Uvicorn (`--forwarded-allow-ips`, by default `127.0.0.1`) or Hypercorn's `ProxyFixMiddleware` resolves the client IP, set `AIKIDO_TRUST_PROXY=false` so that Zen uses that IP, and configure it to trust only your own proxies. Behind Werkzeug's `ProxyFix`, Zen uses the IP that `ProxyFix` chose, so set the number of proxies there.

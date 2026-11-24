@@ -181,25 +181,46 @@ def test_client_ip_is_read_from_every_forwarded_header_line(monkeypatch, setting
     assert context.remote_address == "9.9.9.9"
 
 
-@pytest.mark.parametrize("forwarded", ["9.9.9.9", "9.9.9.9:1234"])
-def test_proxy_trust_checks_the_connection_address_behind_proxy_fix(
-    monkeypatch, forwarded
-):
-    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "1.2.3.0/24")
+def context_behind_proxy_fix(request, **proxy_fix_args):
     environs = []
 
     def app(environ, start_response):
         environs.append(environ)
         return []
 
+    ProxyFix(app, **proxy_fix_args)(request, None)
+    return Context(req=environs[0], source="flask")
+
+
+@pytest.mark.parametrize(
+    "x_for, forwarded, client_ip",
+    [
+        (1, "9.9.9.9", "9.9.9.9"),
+        (1, "9.9.9.9:1234", "9.9.9.9"),
+        (2, "9.9.9.9, 8.8.8.8", "9.9.9.9"),
+        (0, "9.9.9.9", "9.9.9.9"),
+        (1, "unknown", None),
+    ],
+)
+def test_client_ip_behind_proxy_fix(monkeypatch, x_for, forwarded, client_ip):
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "1.2.3.0/24")
     request = dict(
         basic_wsgi_req, REMOTE_ADDR="1.2.3.4", HTTP_X_FORWARDED_FOR=forwarded
     )
-    ProxyFix(app)(request, None)
-
-    context = Context(req=environs[0], source="flask")
-    assert context.remote_address == "9.9.9.9"
+    context = context_behind_proxy_fix(request, x_for=x_for)
+    assert context.remote_address == client_ip
     assert context.is_behind_trusted_proxy is True
+
+
+def test_custom_client_ip_header_is_read_behind_proxy_fix(monkeypatch):
+    monkeypatch.setenv("AIKIDO_CLIENT_IP_HEADER", "do-connecting-ip")
+    request = dict(
+        basic_wsgi_req,
+        REMOTE_ADDR="1.2.3.4",
+        HTTP_X_FORWARDED_FOR="8.8.8.8",
+        HTTP_DO_CONNECTING_IP="9.9.9.9",
+    )
+    assert context_behind_proxy_fix(request).remote_address == "9.9.9.9"
 
 
 def test_set_as_current_context(mocker):
