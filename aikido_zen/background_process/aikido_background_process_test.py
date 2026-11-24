@@ -1,4 +1,5 @@
 import importlib
+import json
 import socket
 from multiprocessing import connection
 from types import SimpleNamespace
@@ -7,7 +8,6 @@ from unittest.mock import Mock
 import pytest
 
 from aikido_zen.background_process.commands import process_incoming_command
-from aikido_zen.background_process.commands.put_event import PutEventReq
 
 
 def test_event_is_acknowledged_after_enqueueing():
@@ -15,15 +15,13 @@ def test_event_is_acknowledged_after_enqueueing():
     events = Mock()
     events.put.side_effect = lambda event: operations.append(("queued", event))
     connection = Mock()
-    connection.send.side_effect = lambda value: operations.append(("reply", value))
+    connection.send_bytes.side_effect = lambda data: operations.append(("reply", data))
     event = {"name": "login.failed"}
 
-    process_incoming_command(
-        None, ("PUT_EVENT", PutEventReq(event)), connection, events
-    )
+    process_incoming_command(None, ("PUT_EVENT", event), connection, events)
 
-    assert operations == [("queued", event), ("reply", None)]
-    connection.send.assert_called_once_with(None)
+    assert operations == [("queued", event), ("reply", b"null")]
+    connection.send_bytes.assert_called_once_with(b"null")
 
 
 def test_event_is_not_acknowledged_when_enqueueing_fails():
@@ -34,12 +32,12 @@ def test_event_is_not_acknowledged_when_enqueueing_fails():
     with pytest.raises(RuntimeError, match="Queue unavailable"):
         process_incoming_command(
             None,
-            ("PUT_EVENT", PutEventReq({"name": "login.failed"})),
+            ("PUT_EVENT", {"name": "login.failed"}),
             connection,
             events,
         )
 
-    connection.send.assert_not_called()
+    connection.send_bytes.assert_not_called()
 
 
 @pytest.mark.parametrize("failure", ["receive", "reply", "command"])
@@ -82,14 +80,15 @@ def test_receiver_closes_failed_connection_before_accepting_next(monkeypatch, fa
     monkeypatch.setattr(background, "set_agent_session_id", lambda value: None)
     try:
         if failure != "receive":
-            failed_client.send(None if failure == "command" else ("PING", ()))
+            request = None if failure == "command" else ["PING", []]
+            failed_client.send_bytes(json.dumps(request).encode())
         failed_client.close()
-        next_client.send(("PING", ()))
+        next_client.send_bytes(b'["PING", []]')
 
         with pytest.raises(ListenerFinished):
             background.AikidoBackgroundProcess(("127.0.0.1", 0), b"fixture", "fixture")
 
-        assert next_client.recv() == "Received"
+        assert next_client.recv_bytes() == b'"Received"'
         assert failed.closed and next_peer.closed
     finally:
         for peer in (failed, failed_client, next_peer, next_client):

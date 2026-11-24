@@ -44,7 +44,7 @@ benchmark:
 
 
 # Binaries cache :
-BASE_URL = https://github.com/AikidoSec/zen-internals/releases/download/v0.1.74
+BASE_URL = https://github.com/AikidoSec/zen-internals/releases/download/v0.1.75
 FILES = \
     libzen_internals_aarch64-apple-darwin.dylib \
     libzen_internals_aarch64-apple-darwin.dylib.sha256sum \
@@ -82,19 +82,6 @@ check_binaries:
 		$(MAKE) binaries; \
 	fi
 	cp -r $(CACHE_DIR)/* aikido_zen/libs
-
-
-# Replace version number automatically on publish :
-replace_version:
-	@if [ -z "$(version)" ]; then \
-		echo "Error: No version specified. Use 'make replace_version version=<new_version>'."; \
-		exit 1; \
-	fi;
-
-	poetry version $(version)
-	sed -i.bak "s/1.0-REPLACE-VERSION/$$version/g" aikido_zen/config.py
-	rm aikido_zen/config.py.bak
-
 
 
 relock_sample_apps:

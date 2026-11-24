@@ -1,6 +1,11 @@
+import json
+
 import pytest
 from .service_config import ServiceConfig
 from aikido_zen.helpers.ip_matcher import IPMatcher
+from aikido_zen.sources.functions.ip_allowed_to_access_route import (
+    ip_allowed_to_access_route,
+)
 
 
 def test_service_config_outbound_blocking_initialization():
@@ -323,6 +328,30 @@ def test_service_config_with_empty_allowlist():
     assert len(admin_endpoint["allowedIPAddresses"]) == 0
 
 
+def test_service_config_skips_allowlist_that_failed_to_build(monkeypatch):
+    monkeypatch.setattr("aikido_zen.helpers.zen_internals._ip_matcher_create", None)
+    endpoints = [
+        {
+            "graphql": False,
+            "method": "GET",
+            "route": "/admin",
+            "rate_limiting": {
+                "enabled": False,
+                "max_requests": 10,
+                "window_size_in_ms": 1000,
+            },
+            "allowedIPAddresses": ["1.2.3.4"],
+            "force_protection_off": False,
+        },
+    ]
+    service_config = ServiceConfig(endpoints, "2023-10-01", [], [], True)
+
+    route_metadata = {"method": "GET", "route": "/admin", "url": "/admin"}
+    admin_endpoints = service_config.get_endpoints(route_metadata)
+    assert admin_endpoints[0]["allowedIPAddresses"] == ["1.2.3.4"]
+    assert ip_allowed_to_access_route("8.8.8.8", route_metadata, admin_endpoints)
+
+
 def test_service_config_enabled_features():
     """Test the update_enabled_features and is_feature_enabled methods"""
     config = ServiceConfig(
@@ -371,3 +400,67 @@ def test_excluded_user_ids_from_rate_limiting():
     # Empty list clears all
     config.update_excluded_user_ids_from_rate_limiting([])
     assert config.is_user_excluded_from_rate_limiting("user3") is False
+
+
+def full_config():
+    config = ServiceConfig(
+        endpoints=[
+            {
+                "method": "GET",
+                "route": "/admin",
+                "graphql": None,
+                "forceProtectionOff": False,
+                "allowedIPAddresses": ["1.2.3.4"],
+                "rateLimiting": {
+                    "enabled": True,
+                    "maxRequests": 10,
+                    "windowSizeInMS": 1000,
+                },
+            },
+            {
+                "method": "POST",
+                "route": "/graphql",
+                "graphql": {"type": "query", "name": "user"},
+            },
+        ],
+        last_updated_at=1700000000000,
+        blocked_uids={"blocked-user"},
+        bypassed_ips=["10.0.0.0/8"],
+        received_any_stats=True,
+    )
+    config.revision = 3
+    config.set_block_new_outgoing_requests(True)
+    config.update_outbound_domains([{"hostname": "api.example.com", "mode": "allow"}])
+    config.update_excluded_user_ids_from_rate_limiting(["excluded-user"])
+    config.update_enabled_features(["realtime_updates"])
+    return config
+
+
+def test_to_dict_includes_every_setting():
+    config = full_config()
+
+    assert set(config.to_dict()) == set(vars(config)) - {
+        "_endpoint_data",
+        "_bypassed_ip_data",
+    }
+
+
+def test_config_rebuilt_from_json_matches_the_original():
+    config = full_config()
+
+    copy = ServiceConfig.from_dict(json.loads(json.dumps(config.to_dict())))
+
+    assert copy.to_dict() == config.to_dict()
+    assert copy.is_bypassed_ip("10.1.2.3")
+    assert not copy.is_bypassed_ip("1.2.3.4")
+    assert copy.blocked_uids == {"blocked-user"}
+    assert copy.is_user_excluded_from_rate_limiting("excluded-user")
+    assert copy.is_feature_enabled("realtime_updates")
+    assert copy.should_block_outgoing_request("other.example.com")
+    assert not copy.should_block_outgoing_request("api.example.com")
+    [endpoint] = copy.get_endpoints(
+        {"method": "GET", "route": "/admin", "url": "http://localhost/admin"}
+    )
+    assert endpoint["allowedIPAddresses"].has("1.2.3.4")
+    assert not endpoint["allowedIPAddresses"].has("5.6.7.8")
+    assert endpoint["rateLimiting"]["maxRequests"] == 10

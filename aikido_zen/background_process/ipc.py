@@ -1,3 +1,4 @@
+import json
 import os
 import threading
 import time
@@ -88,8 +89,10 @@ class IPCClient:
             deadline = time.monotonic() + message.timeout_in_sec
 
             with open_connection(self.address, deadline) as conn:
-                conn.send((message.identifier, message.request))
-                result = conn.recv()
+                conn.send_bytes(
+                    json.dumps((message.identifier, message.request)).encode()
+                )
+                result = json.loads(conn.recv_bytes())
         except Exception as e:
             logger.debug("Exception occurred in IPC call : %s", e)
             return {"success": False, "error": "timeout"}

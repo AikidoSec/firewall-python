@@ -99,7 +99,7 @@ def test_process_sync_data_initialization(setup_connection_manager):
     }
 
     # Check that the return value is correct
-    assert result == {"config": connection_manager.conf}
+    assert result == {"config": connection_manager.conf.to_dict()}
     assert connection_manager.middleware_installed == False
     assert connection_manager.hostnames.as_array() == [
         {"hits": 15, "hostname": "example2.com", "port": 443},
@@ -269,7 +269,7 @@ def test_process_sync_data_existing_route_and_hostnames(setup_connection_manager
     ]
 
     # Check that the return value is correct
-    assert result == {"config": connection_manager.conf}
+    assert result == {"config": connection_manager.conf.to_dict()}
 
 
 def test_process_sync_data_no_routes(setup_connection_manager):

@@ -1,3 +1,5 @@
+import json
+
 from aikido_zen.helpers.logging import logger
 from . import (
     check_firewall_lists,
@@ -23,7 +25,8 @@ def process_incoming_command(connection_manager, obj, conn, queue):
     inbound_request = obj[1]
     if inbound_identifier in commands_map:
         func = commands_map[inbound_identifier]
-        return conn.send(func(connection_manager, inbound_request, queue))
+        response = func(connection_manager, inbound_request, queue)
+        return conn.send_bytes(json.dumps(response).encode())
 
     logger.debug("Command : `%s` not found - did not execute", inbound_identifier)
     return None

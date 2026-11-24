@@ -58,5 +58,5 @@ def process(connection_manager, request, queue):
         connection_manager.conf.last_updated_at > 0
         and request.get("config_revision") != connection_manager.conf.revision
     ):
-        return {"config": connection_manager.conf}
+        return {"config": connection_manager.conf.to_dict()}
     return {}
