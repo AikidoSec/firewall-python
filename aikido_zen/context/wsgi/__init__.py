@@ -8,7 +8,11 @@ from aikido_zen.helpers.get_ip_from_request import (
     normalize_ip,
 )
 from aikido_zen.helpers.logging import logger
-from aikido_zen.helpers.trust_proxy import is_trusted_proxy_request
+from aikido_zen.helpers.trust_proxy import (
+    CIDRTrustProxy,
+    get_trust_proxy_config,
+    is_trusted_proxy_request,
+)
 from .extract_wsgi_headers import extract_wsgi_headers
 from .build_url_from_wsgi import build_url_from_wsgi
 from ..parse_cookies import parse_cookies
@@ -35,12 +39,16 @@ def set_wsgi_attributes_on_context(context, environ):
     connection_ip = (
         environ.get("werkzeug.proxy_fix.orig", {}).get("REMOTE_ADDR") or raw_ip
     )
+    context.is_behind_trusted_proxy = is_trusted_proxy_request(connection_ip)
     if connection_ip != raw_ip and get_ip_header_name() == "X_FORWARDED_FOR":
         client_ip = normalize_ip(raw_ip)
+        cidr_mode = isinstance(get_trust_proxy_config(), CIDRTrustProxy)
+        if cidr_mode and not context.is_behind_trusted_proxy:
+            # In CIDR mode, an unlisted connection is the client, as without ProxyFix.
+            client_ip = connection_ip
         context.remote_address = client_ip if is_ip(client_ip) else None
     else:
         context.remote_address = get_ip_from_request(raw_ip, context.headers)
-    context.is_behind_trusted_proxy = is_trusted_proxy_request(connection_ip)
 
     # Content type is generally not included as a header, do include this as a header to simplify :
     if "CONTENT_TYPE" in environ:

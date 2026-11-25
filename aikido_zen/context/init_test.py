@@ -223,6 +223,21 @@ def test_custom_client_ip_header_is_read_behind_proxy_fix(monkeypatch):
     assert context_behind_proxy_fix(request).remote_address == "9.9.9.9"
 
 
+@pytest.mark.parametrize(
+    "setting, client_ip", [("1.2.3.0/24", "5.5.5.5"), ("false", "6.6.6.6")]
+)
+def test_connection_from_an_unlisted_address_behind_proxy_fix(
+    monkeypatch, setting, client_ip
+):
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", setting)
+    request = dict(
+        basic_wsgi_req, REMOTE_ADDR="5.5.5.5", HTTP_X_FORWARDED_FOR="6.6.6.6"
+    )
+    context = context_behind_proxy_fix(request)
+    assert context.remote_address == client_ip
+    assert context.is_behind_trusted_proxy is False
+
+
 def test_set_as_current_context(mocker):
     # Test set_as_current_context() method
     context = Context(req=basic_wsgi_req, body=12, source="flask")
