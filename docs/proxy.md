@@ -51,4 +51,4 @@ flowchart TD
 
 ## Servers that resolve the client IP
 
-If Uvicorn (`--forwarded-allow-ips`, by default `127.0.0.1`) or Hypercorn's `ProxyFixMiddleware` resolves the client IP, set `AIKIDO_TRUST_PROXY=false` so that Zen uses that IP, and configure it to trust only your own proxies. Behind Werkzeug's `ProxyFix`, Zen uses the IP that `ProxyFix` chose, so set the number of proxies there.
+If Uvicorn (`--forwarded-allow-ips`, by default `127.0.0.1`) or Hypercorn's `ProxyFixMiddleware` resolves the client IP, set `AIKIDO_TRUST_PROXY=false` so that Zen uses that IP, and configure the server to trust only your own proxies. When Zen reads `x-forwarded-for` behind Werkzeug's `ProxyFix`, it uses the IP that `ProxyFix` chose, so set the number of proxies there.

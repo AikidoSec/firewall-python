@@ -199,7 +199,7 @@ def context_behind_proxy_fix(request, **proxy_fix_args):
         (1, "9.9.9.9:1234", "9.9.9.9"),
         (2, "9.9.9.9, 8.8.8.8", "9.9.9.9"),
         (0, "9.9.9.9", "9.9.9.9"),
-        (1, "unknown", None),
+        (1, "unknown", "1.2.3.4"),
     ],
 )
 def test_client_ip_behind_proxy_fix(monkeypatch, x_for, forwarded, client_ip):
