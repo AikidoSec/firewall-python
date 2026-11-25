@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_zen_test_dog_system,zen.test.dog.system,model_zen_test_dog,base.group_system,1,1,1,1
