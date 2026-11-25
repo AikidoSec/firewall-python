@@ -13,7 +13,7 @@ from aikido_zen.helpers.try_parse_url import try_parse_url
 
 @before
 def _putrequest(func, instance, args, kwargs):
-    # putrequest(...) is called with path argument, store this on the HTTPConnection
+    # putrequest(...) is called with the url argument, store this on the HTTPConnection
     # instance for later use in the getresponse(...) function.
     path = get_argument(args, kwargs, 1, "url")
     setattr(instance, "_aikido_var_path", path)
