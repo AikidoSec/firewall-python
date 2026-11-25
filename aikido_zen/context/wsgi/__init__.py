@@ -43,8 +43,9 @@ def set_wsgi_attributes_on_context(context, environ):
     if connection_ip != raw_ip and get_ip_header_name() == "X_FORWARDED_FOR":
         client_ip = normalize_ip(raw_ip)
         cidr_mode = isinstance(get_trust_proxy_config(), CIDRTrustProxy)
+        unlisted_connection = cidr_mode and not context.is_behind_trusted_proxy
         # The same fallbacks as without ProxyFix.
-        if not is_ip(client_ip) or (cidr_mode and not context.is_behind_trusted_proxy):
+        if unlisted_connection or not is_ip(client_ip):
             client_ip = connection_ip
         context.remote_address = client_ip if is_ip(client_ip) else None
     else:
