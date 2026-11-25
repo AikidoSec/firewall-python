@@ -19,3 +19,8 @@ def test_malformed_punycode_does_not_raise():
 
 def test_malformed_punycode_subdomain_does_not_raise():
     assert get_hostname_options("xn--a.attacker.com") == ["xn--a.attacker.com"]
+
+
+def test_punycode_with_non_ascii_label_does_not_raise():
+    hostname = "xn--pp-oia.äikido.dev"
+    assert get_hostname_options(hostname) == [hostname]

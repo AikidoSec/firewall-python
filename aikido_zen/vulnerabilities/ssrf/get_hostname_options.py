@@ -11,7 +11,7 @@ def get_hostname_options(raw_hostname: str) -> List[str]:
     # Add a case when the hostname is in punycode (like xn--pp-oia.aikido.dev)
     if "xn--" in raw_hostname:
         try:
-            hostname_decoded = raw_hostname.encode("ascii", errors="").decode("idna")
+            hostname_decoded = raw_hostname.encode("ascii").decode("idna")
         except UnicodeError:
             # Malformed punycode (e.g. xn--a.attacker.com): keep the raw form only,
             # so the SSRF scan still runs against the requested hostname instead
