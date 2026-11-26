@@ -75,6 +75,13 @@ class ZenAttackController(http.Controller):
         )
         return dog_name
 
+    if release.version_info[0] >= 19:
+
+        @http.route("/zen/dog/json2", type="json2", auth="public")
+        def dog_json2(self, dog_name):
+            request.env.cr.execute(INSERT_UNSAFE % dog_name)
+            return dog_name
+
     @http.route(
         "/zen/dog/owner/<string:owner>/<string:dog_name>",
         type="http",

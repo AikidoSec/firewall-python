@@ -116,7 +116,7 @@ This will output debug information to the console (e.g. no token was found, unsu
 ## Limitations
 
 - Odoo Online is not supported, because it does not allow installing Python packages.
-- Odoo's gevent server (live chat, websocket and long-polling traffic) is not protected.
+- Odoo's gevent server (port 8072 in prefork mode) is not protected, and it answers every route. Send only `/websocket` to it, as [Odoo's deployment guide](https://www.odoo.com/documentation/20.0/administration/on_premise/deploy.html) does.
 - Uploaded file names are checked, file contents are not.
 - Zen picks the client IP as `AIKIDO_TRUST_PROXY` sets it, not from Odoo's `--proxy-mode` (see [proxy settings](proxy.md)).
 - If `odoo.http` lacks a method Zen hooks, Zen logs a warning and does not protect Odoo requests.

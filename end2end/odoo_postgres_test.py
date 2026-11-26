@@ -46,6 +46,11 @@ def file_exists(base_url, name):
     return requests.get(base_url + "/zen/files/" + name).text == "yes"
 
 
+def odoo_major_version():
+    info = jsonrpc(base_url_fw, "/web/webclient/version_info", {})["result"]
+    return info["server_version_info"][0]
+
+
 def test_firewall_started_okay():
     events = fetch_events_from_mock(mock_url)
     started_events = filter_on_event_type(events, "started")
@@ -98,6 +103,25 @@ def test_sql_injection_over_jsonrpc():
     before = dog_count(base_url_nofw)
     body = jsonrpc(base_url_nofw, "/zen/dog", {"dog_name": dog_name})
     assert body["result"] == dog_name
+    assert dog_count(base_url_nofw) == before + 1
+
+
+def test_sql_injection_over_json2():
+    if odoo_major_version() < 19:
+        pytest.skip("JSON-2 exists from Odoo 19")
+    path = "/zen/dog/json2"
+    safe = requests.post(base_url_fw + path, json={"dog_name": "Bobby"})
+    assert safe.json() == "Bobby"
+
+    before = dog_count(base_url_fw)
+    res = requests.post(base_url_fw + path, json={"dog_name": dog_name})
+    assert res.status_code == 500
+    assert res.json()["name"] == "aikido_zen.errors.AikidoSQLInjection"
+    assert dog_count(base_url_fw) == before
+
+    before = dog_count(base_url_nofw)
+    res = requests.post(base_url_nofw + path, json={"dog_name": dog_name})
+    assert res.json() == dog_name
     assert dog_count(base_url_nofw) == before + 1
 
 
