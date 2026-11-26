@@ -6,7 +6,7 @@ from aikido_zen.helpers.logging import logger
 PLAIN_ROUTE_TYPES = (str, int, float, bool)
 
 
-def _store(context, source, value):
+def _update_context(context, source, value):
     if source == "body":
         context.set_body(value)
     else:
@@ -49,7 +49,7 @@ def _save_query_and_cookies(context, httprequest):
     for key, values in httprequest.args.lists():
         query[key] = _merged(query.get(key, []), values)
     if query != context.query:
-        _store(context, "query", query)
+        _update_context(context, "query", query)
 
     cookies = dict(context.cookies or {})
     for key, values in httprequest.cookies.lists():
@@ -59,7 +59,7 @@ def _save_query_and_cookies(context, httprequest):
         merged = _merged(previous, values)
         cookies[key] = merged[0] if len(merged) == 1 else merged
     if cookies != context.cookies:
-        _store(context, "cookies", cookies)
+        _update_context(context, "cookies", cookies)
 
 
 def save_route_args(route_args):
@@ -79,9 +79,9 @@ def save_route_args(route_args):
             # Their URL text is still scanned as a URL segment.
             if type(value) in PLAIN_ROUTE_TYPES:
                 _add_value(merged, key, value)
-        _store(context, "route_params", merged)
+        _update_context(context, "route_params", merged)
     except Exception as exc:
-        logger.debug("Exception occurred whilst extracting odoo route args: %s", exc)
+        logger.debug("Exception occurred whilst extracting Odoo route args: %s", exc)
 
 
 def save_body(httprequest, data):
@@ -93,24 +93,24 @@ def save_body(httprequest, data):
         form = httprequest.__dict__.get("form")
         files = httprequest.__dict__.get("files")
         if form or files:
-            body = form.to_dict(flat=False) if form else {}
-            if files:
-                for key, upload in files.items(multi=True):
-                    if upload.filename:
-                        body.setdefault(key, []).append(upload.filename)
+            body = form.to_dict(flat=False)
+            for key, upload in files.items(multi=True):
+                if upload.filename:
+                    body.setdefault(key, []).append(upload.filename)
         elif context.body is None:
             body = data
         else:
             return
         if body != context.body:
-            _store(context, "body", body)
+            _update_context(context, "body", body)
     except Exception as exc:
-        logger.debug("Exception occurred whilst extracting odoo request data: %s", exc)
+        logger.debug("Exception occurred whilst extracting Odoo request data: %s", exc)
 
 
 def save_rpc_params(params):
     context = get_current_context()
+    if not context or params is None:
+        return
     # A text body is the raw XML-RPC request; JSON-RPC stored its parsed body already.
-    raw_or_empty = context and (context.body is None or isinstance(context.body, str))
-    if raw_or_empty and params is not None:
-        _store(context, "body", params)
+    if context.body is None or isinstance(context.body, str):
+        _update_context(context, "body", params)
