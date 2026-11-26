@@ -181,6 +181,25 @@ def test_client_ip_is_read_from_every_forwarded_header_line(monkeypatch, setting
     assert context.remote_address == "9.9.9.9"
 
 
+def test_hop_count_counts_a_non_ascii_forwarded_line_once(monkeypatch):
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "3")
+    request = {
+        "method": "GET",
+        "headers": [
+            (b"x-forwarded-for", b"9.9.9.9"),
+            (b"x-forwarded-for", "café, 8.8.8.8".encode()),
+        ],
+        "query_string": b"",
+        "client": ("10.0.0.3", 1234),
+        "server": ("localhost", 8080),
+        "scheme": "http",
+        "root_path": "",
+        "path": "/hello",
+    }
+    context = Context(req=request, source="starlette")
+    assert context.remote_address == "9.9.9.9"
+
+
 def context_behind_proxy_fix(request, **proxy_fix_args):
     environs = []
 

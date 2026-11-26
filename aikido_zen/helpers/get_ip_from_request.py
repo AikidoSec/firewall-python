@@ -21,11 +21,11 @@ def get_ip_from_request(remote_address: str, headers: Headers) -> Optional[str]:
     """
     Tries and get the IP address from the request, checking for x-forwarded-for
     """
-    ip_header = ", ".join(headers.get(get_ip_header_name(), []))
+    ip_header = ", ".join(headers.get_fields(get_ip_header_name()))
     if ip_header and is_trusted_proxy_request(remote_address):
         ip_header_value = get_client_ip_from_header(ip_header)
 
-        if ip_header_value and is_ip(ip_header_value):
+        if ip_header_value:
             return ip_header_value
 
     if remote_address and is_ip(remote_address):
@@ -47,11 +47,9 @@ def get_client_ip_from_header(value):
         ip = normalize_ip(forwarded_ips[index].strip())
         return ip if is_ip(ip) else None
 
-    for index in range(len(forwarded_ips) - 1, -1, -1):
-        ip = normalize_ip(forwarded_ips[index].strip())
-        if not is_ip(ip):
-            continue
-        if is_private_ip(ip):
+    for entry in reversed(forwarded_ips):
+        ip = normalize_ip(entry.strip())
+        if not is_ip(ip) or is_private_ip(ip):
             continue
         if isinstance(config, CIDRTrustProxy) and config.matcher.has(ip):
             continue

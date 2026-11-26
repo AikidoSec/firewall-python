@@ -1,6 +1,6 @@
 """Mainly exports normalize_asgi_headers"""
 
-from aikido_zen.helpers.headers import Headers
+from aikido_zen.helpers.headers import AlternateReading, Headers
 
 
 def normalize_asgi_headers(headers) -> Headers:
@@ -27,4 +27,4 @@ def decoded_header_values(raw):
         return [as_framework]
     if as_utf8 == as_framework:
         return [as_framework]
-    return [as_utf8, as_framework]
+    return [AlternateReading(as_utf8), as_framework]

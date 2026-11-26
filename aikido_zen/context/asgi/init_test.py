@@ -258,6 +258,24 @@ def test_sql_injection_in_any_cookie_value_the_app_can_read_is_detected(
     )
 
 
+@pytest.mark.parametrize("app_value", ["café' OR '1'='1", "cafÃ©' OR '1'='1"])
+def test_sql_injection_in_either_decoding_of_a_header_is_detected(app_value):
+    scope = {
+        "type": "http",
+        "method": "GET",
+        "headers": [(b"x-dog-name", "café' OR '1'='1".encode())],
+        "query_string": b"",
+        "client": ["6.6.6.6"],
+        "server": ["192.168.0.6", 80],
+        "scheme": "http",
+        "root_path": "",
+        "path": "/users",
+    }
+    context = ZenContext(req=scope, source="starlette")
+    query = f"SELECT * FROM users WHERE name = '{app_value}'"
+    assert context_contains_sql_injection(query, "select", context, "sqlite")
+
+
 def test_valid_utf8_query_matches_strict_decode():
     raw = "q=café' OR 1=1 --&b=d".encode("utf-8")
     scope = {
