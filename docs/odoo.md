@@ -68,7 +68,7 @@ You can enable blocking mode by setting the environment variable `AIKIDO_BLOCK` 
 AIKIDO_BLOCK=true
 ```
 
-A blocked JSON-RPC call returns HTTP 200 with a JSON-RPC error, as Odoo does for every failed call.
+An attack blocked in a JSON-RPC call returns HTTP 200 with a JSON-RPC error, as Odoo does for every failed call.
 
 ## Rate limiting and user blocking
 
