@@ -91,3 +91,42 @@ jobs:
           sleep 20
       - name: Run end2end tests for application
         run: tail -f  ./sample-apps/${{ matrix.app.name }}/output.log & poetry run pytest ./${{ matrix.app.testfile }}
+
+  odoo-end2end-test:
+    runs-on: ubuntu-24.04
+    continue-on-error: true
+    timeout-minutes: 20
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        odoo-version: ["16.0", "17.0", "18.0", "19.0", "20.0"]
+        workers: [0, 2]
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: pkg-build
+
+      - name: Start Odoo with and without Zen
+        working-directory: ./sample-apps/odoo-postgres
+        env:
+          ODOO_VERSION: ${{ matrix.odoo-version }}
+          ODOO_WORKERS: ${{ matrix.workers }}
+        run: docker compose up --build --detach --wait --wait-timeout 300
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: Setup safe-chain
+        run: curl -fsSL https://github.com/AikidoSec/safe-chain/releases/download/1.5.29/install-safe-chain.sh | sh -s -- --ci
+      - name: Install test dependencies
+        run: python -m pip install pytest requests
+
+      - name: Run end2end tests for Odoo
+        run: python -m pytest end2end/odoo_postgres_test.py
+      - name: Show Odoo logs
+        if: failure()
+        working-directory: ./sample-apps/odoo-postgres
+        run: docker compose logs --no-color

@@ -35,6 +35,7 @@ Zen for Python 3 is compatible with:
 ### WSGI
 * ✅ [Django](docs/django.md)
 * ✅ [Flask](docs/flask.md) >=2.2.4 (tested: 2.2.4, 2.3.3, 3.0.0, 3.1.0, 3.1.3)
+* ✅ [Odoo](docs/odoo.md) >=16 (tested: 16, 17, 18, 19, 20)
 #### WSGI Servers
 * ✅ [Gunicorn](docs/gunicorn.md)
 * ✅ [uWSGI](docs/uwsgi.md)

@@ -54,3 +54,6 @@ Overview :
   - it runs 4 processes, called workers, (**multi-process**) which handles requests using ASGI protocol
   - This application uses **ASGI** (Asynchronous Server Gateway Interface)
   - Runs on 8114. Without Aikido runs on 8115
+- `odoo-postgres/` is an Odoo app using Postgres, running in Docker.
+  - It runs Odoo's threaded mode by default, or prefork with `ODOO_WORKERS=2`
+  - Runs on 8120. Without Aikido runs on 8121
