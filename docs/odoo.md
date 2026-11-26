@@ -45,7 +45,7 @@ Add the addon directory to `addons_path` and the addon to the server-wide module
 odoo --addons-path=/usr/lib/python3/dist-packages/odoo/addons,/mnt/extra-addons \
   --load=base,web,aikido_zen_bootstrap
 
-# Odoo 19
+# Odoo 19 and 20
 odoo --addons-path=/usr/lib/python3/dist-packages/odoo/addons,/mnt/extra-addons \
   --load=base,rpc,web,aikido_zen_bootstrap
 ```

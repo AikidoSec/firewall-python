@@ -296,12 +296,26 @@ def _is_patched(owner, name):
     return isinstance(vars(owner).get(name), wrapt.FunctionWrapper)
 
 
-def test_every_hook_is_patched_when_odoo_has_them(odoo_http):
-    werkzeug_request = odoo_http.werkzeug.wrappers.Request
+def _odoo_20_http(classes):
+    module = types.ModuleType("fake_odoo_http")
+    module.router = types.SimpleNamespace(
+        Application=classes.Application, werkzeug=classes.werkzeug
+    )
+    module.dispatcher = types.SimpleNamespace(Dispatcher=classes.Dispatcher)
+    module.requestlib = types.SimpleNamespace(Request=classes.Request)
+    return module
 
-    assert _is_patched(odoo_http.Application, "__call__")
-    assert _is_patched(odoo_http.Dispatcher, "pre_dispatch")
-    assert _is_patched(odoo_http.Request, "get_json_data")
+
+@pytest.mark.parametrize("odoo_20", [False, True], ids=["odoo_16_to_19", "odoo_20"])
+def test_every_hook_is_patched_when_odoo_has_them(odoo_20):
+    classes = _odoo_http()
+    werkzeug_request = classes.werkzeug.wrappers.Request
+
+    odoo_source.patch_odoo_http(_odoo_20_http(classes) if odoo_20 else classes)
+
+    assert _is_patched(classes.Application, "__call__")
+    assert _is_patched(classes.Dispatcher, "pre_dispatch")
+    assert _is_patched(classes.Request, "get_json_data")
     assert _is_patched(werkzeug_request, "get_data")
     assert _is_patched(werkzeug_request, "_load_form_data")
 

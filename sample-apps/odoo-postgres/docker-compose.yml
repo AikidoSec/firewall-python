@@ -17,7 +17,7 @@ services:
       - "127.0.0.1:5000:5000"
 
   postgres:
-    image: postgres:15@sha256:9b1d34adbce1dd07ee6e94b4a2cf698884b89bd44a6c9c12f5da8f3acbfe4957
+    image: postgres:16@sha256:07abc3f43c9395b0bdbbab36bc25ddb0e8d83cd4fcafb5fb7d6abe14ff156dd8
     environment:
       POSTGRES_DB: postgres
       POSTGRES_USER: odoo

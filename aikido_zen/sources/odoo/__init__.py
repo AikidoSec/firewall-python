@@ -100,6 +100,15 @@ HOOKS = {
     "werkzeug.wrappers.Request._load_form_data": _body_read,
 }
 
+# Odoo 20 moved these into odoo.http submodules. The router builds the request.
+ODOO_20_HOOKS = {
+    "router.Application.__call__": _call,
+    "dispatcher.Dispatcher.pre_dispatch": _pre_dispatch,
+    "requestlib.Request.get_json_data": _get_json_data,
+    "router.werkzeug.wrappers.Request.get_data": _body_read,
+    "router.werkzeug.wrappers.Request._load_form_data": _body_read,
+}
+
 
 def _has_method(module, path):
     target = module
@@ -109,7 +118,8 @@ def _has_method(module, path):
 
 
 def patch_odoo_http(module):
-    missing = [path for path in HOOKS if not _has_method(module, path)]
+    hooks = HOOKS if hasattr(module, "Application") else ODOO_20_HOOKS
+    missing = [path for path in hooks if not _has_method(module, path)]
     if missing:
         # Patching only some hooks would build a context without the body.
         logger.warning(
@@ -117,7 +127,7 @@ def patch_odoo_http(module):
             ", ".join(missing),
         )
         return
-    for path, wrapper in HOOKS.items():
+    for path, wrapper in hooks.items():
         patch_function(module, path, wrapper)
 
 

@@ -3,7 +3,7 @@ FROM ${ODOO_IMAGE}
 
 USER root
 
-# Odoo 18 and 19 refuse system-wide pip installs without this. Older pip ignores it.
+# Odoo 18 and later refuse system-wide pip installs without this. Older pip ignores it.
 ENV PIP_BREAK_SYSTEM_PACKAGES=1
 
 COPY dist/*.whl /tmp/aikido-zen/

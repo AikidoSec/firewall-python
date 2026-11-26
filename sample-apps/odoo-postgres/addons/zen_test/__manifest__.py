@@ -4,5 +4,4 @@
     "author": "Aikido Security",
     "license": "AGPL-3",
     "depends": ["base", "web"],
-    "data": ["security/ir.model.access.csv"],
 }
