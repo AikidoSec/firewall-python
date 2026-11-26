@@ -38,15 +38,19 @@ def post_load():
     aikido_zen.protect()
 ```
 
-Add the addon directory to `addons_path` and add the addon to the server-wide modules Odoo already loads, then restart Odoo. Odoo loads `base,web` by default, and `base,rpc,web` from Odoo 19:
+Add the addon directory to `addons_path` and the addon to the server-wide modules Odoo already loads (`--load`), then restart Odoo:
 
 ```sh
-odoo \
-  --addons-path=/usr/lib/python3/dist-packages/odoo/addons,/mnt/extra-addons \
+# Odoo 16 to 18
+odoo --addons-path=/usr/lib/python3/dist-packages/odoo/addons,/mnt/extra-addons \
   --load=base,web,aikido_zen_bootstrap
+
+# Odoo 19
+odoo --addons-path=/usr/lib/python3/dist-packages/odoo/addons,/mnt/extra-addons \
+  --load=base,rpc,web,aikido_zen_bootstrap
 ```
 
-In prefork mode, each worker starts Zen again after it is forked.
+Prefork mode (`--workers`) needs no extra setup.
 
 3. Setting your environment variables :
 Make sure to set your token in order to communicate with Aikido's servers
@@ -64,11 +68,11 @@ You can enable blocking mode by setting the environment variable `AIKIDO_BLOCK` 
 AIKIDO_BLOCK=true
 ```
 
-A blocked JSON-RPC call returns HTTP 200 with a JSON-RPC error, because that is how Odoo reports a failed call. The blocked operation does not run.
+A blocked JSON-RPC call returns HTTP 200 with a JSON-RPC error, as Odoo does for every failed call.
 
 ## Rate limiting and user blocking
 
-Zen does not enable rate limiting or user blocking automatically. To enable them, add a post-authentication policy check to an addon installed in each protected database.
+To add rate limiting and user blocking, add this check to an addon installed in each database:
 
 `your_addon/models/ir_http.py`:
 
@@ -97,7 +101,7 @@ class IrHttp(models.AbstractModel):
             abort(request.make_response("Blocked by Zen.", status=status))
 ```
 
-Set the user identity that matches your authorization model before calling `should_block_request()`. You can also call `set_rate_limit_group()` there for group-based rate limits. See [users and rate limiting](user.md) for the available APIs.
+See [users and rate limiting](user.md) for `set_user` and `set_rate_limit_group`.
 
 ## Debug mode
 
@@ -112,7 +116,7 @@ This will output debug information to the console (e.g. no token was found, unsu
 ## Limitations
 
 - Odoo Online is not supported, because it does not allow installing Python packages.
-- Odoo's gevent server, used for live chat, websocket and long-polling traffic, is not protected. Zen does not start in a process that has already imported `gevent`.
-- Uploaded file names are checked. Uploaded file contents are not.
-- With `--proxy-mode`, Odoo reads the client IP from `X-Forwarded-For` after Zen has checked its IP lists. Zen picks the client IP itself, as `AIKIDO_TRUST_PROXY` sets it (see [proxy settings](proxy.md)).
+- Odoo's gevent server (live chat, websocket and long-polling traffic) is not protected.
+- Uploaded file names are checked, file contents are not.
+- Zen picks the client IP as `AIKIDO_TRUST_PROXY` sets it, not from Odoo's `--proxy-mode` (see [proxy settings](proxy.md)).
 - If `odoo.http` lacks a method Zen hooks, Zen logs a warning and does not protect Odoo requests.

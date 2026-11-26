@@ -21,7 +21,7 @@ def _call(func, instance, args, kwargs):
 
     try:
         context = Context(req=environ, source="odoo")
-        environ["aikido_zen.context"] = ref(context)
+        environ["aikido_zen.odoo_context"] = ref(context)
         context.set_as_current_context()
         funcs.request_handler(stage="init")
         blocked = should_block()

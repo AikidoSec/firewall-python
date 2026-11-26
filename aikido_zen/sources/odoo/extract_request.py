@@ -23,26 +23,41 @@ def _add_value(merged, key, value):
         merged[key] = values + [value]
 
 
+def _merged(values, more):
+    if more == values:
+        return values
+    # A set keeps this linear, because a client can repeat one name thousands of times.
+    known = set(values)
+    merged = list(values)
+    for value in more:
+        if value not in known:
+            known.add(value)
+            merged.append(value)
+    return merged
+
+
 def _request_context(httprequest):
-    # The body read of another request in the same thread must not land in this one.
-    context_ref = getattr(httprequest, "environ", {}).get("aikido_zen.context")
+    # The Werkzeug hook also runs for Flask requests and another request's body read.
+    context_ref = getattr(httprequest, "environ", {}).get("aikido_zen.odoo_context")
     context = context_ref() if context_ref is not None else None
     return context if context is get_current_context() else None
 
 
 def _save_query_and_cookies(context, httprequest):
     """Adds Odoo's parse of the query and cookies next to Zen's own parse."""
-    query = {key: list(values) for key, values in (context.query or {}).items()}
-    for key, value in httprequest.args.items(multi=True):
-        values = query.setdefault(key, [])
-        if value not in values:
-            values.append(value)
+    query = dict(context.query or {})
+    for key, values in httprequest.args.lists():
+        query[key] = _merged(query.get(key, []), values)
     if query != context.query:
         _store(context, "query", query)
 
     cookies = dict(context.cookies or {})
-    for key, value in httprequest.cookies.items(multi=True):
-        _add_value(cookies, key, value)
+    for key, values in httprequest.cookies.lists():
+        previous = cookies.get(key, [])
+        if isinstance(previous, str):
+            previous = [previous]
+        merged = _merged(previous, values)
+        cookies[key] = merged[0] if len(merged) == 1 else merged
     if cookies != context.cookies:
         _store(context, "cookies", cookies)
 

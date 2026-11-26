@@ -96,11 +96,18 @@ def stored_bodies(monkeypatch):
     return stored
 
 
-def _httprequest(module, data=None, content_type=None, context=None, **request):
+def _httprequest(
+    module,
+    data=None,
+    content_type=None,
+    context=None,
+    key="aikido_zen.odoo_context",
+    **request,
+):
     environ = EnvironBuilder(
         method="POST", data=data, content_type=content_type, **request
     ).get_environ()
-    environ["aikido_zen.context"] = ref(context or get_current_context())
+    environ[key] = ref(context or get_current_context())
     return module.werkzeug.wrappers.Request(environ)
 
 
@@ -193,12 +200,27 @@ def test_body_of_another_request_is_not_stored(context, odoo_http):
     assert other.body is None
 
 
+def test_flask_request_in_the_same_process_is_not_changed(odoo_http):
+    flask_context = Context(req=ENVIRON, source="flask")
+    flask_context.set_as_current_context()
+    upload = {"photo": (io.BytesIO(b"x"), "../../etc/passwd")}
+
+    flask_request = _httprequest(
+        odoo_http, upload, context=flask_context, key="aikido_zen.context"
+    )
+
+    _ = flask_request.form
+
+    assert flask_context.body is None
+    current_context.set(None)
+
+
 def test_odoo_query_and_every_cookie_value_are_added_to_zens_parse(context, odoo_http):
     _scan("SELECT 1", context)
     httprequest = _httprequest(
         odoo_http,
         query_string={"dog_name": ODOO_PAYLOAD},
-        headers={"Cookie": "session_id=odoo1; session_id=odoo2"},
+        headers={"Cookie": "session_id=odoo1; session_id=odoo2; lang=en"},
     )
 
     _ = httprequest.form
@@ -206,7 +228,34 @@ def test_odoo_query_and_every_cookie_value_are_added_to_zens_parse(context, odoo
 
     assert updated.query["dog_name"] == [WSGI_PAYLOAD, ODOO_PAYLOAD]
     assert updated.cookies["session_id"] == ["abc123", "odoo1", "odoo2"]
+    assert updated.cookies["lang"] == "en"
     assert _scan(_sql(ODOO_PAYLOAD), updated)["source"] == "query"
+
+
+class _CountingStr(str):
+    comparisons = 0
+
+    def __eq__(self, other):
+        _CountingStr.comparisons += 1
+        return str.__eq__(self, other)
+
+    __hash__ = str.__hash__
+
+
+def test_repeated_query_and_cookie_values_are_compared_once(context, odoo_http):
+    values = [_CountingStr(i) for i in range(1000)]
+    context.query = {"tag": values}
+    context.cookies = {"tag": values}
+    httprequest = _httprequest(
+        odoo_http,
+        query_string=[("tag", value) for value in reversed(values)],
+        headers={"Cookie": "; ".join(f"tag={value}" for value in reversed(values))},
+    )
+    _CountingStr.comparisons = 0
+
+    _ = httprequest.form
+
+    assert _CountingStr.comparisons < 4 * len(values)
 
 
 def test_route_args_are_detected_next_to_the_url_segments():
@@ -293,7 +342,7 @@ def test_request_environ_points_to_its_context(monkeypatch):
     seen = []
 
     def odoo_call(self, environ, start_response):
-        seen.append(environ["aikido_zen.context"]() is get_current_context())
+        seen.append(environ["aikido_zen.odoo_context"]() is get_current_context())
 
     _application(monkeypatch, odoo_call)(dict(ENVIRON), lambda *args: None)
 
