@@ -1,7 +1,7 @@
 """Exports set_asgi_attributes_on_context"""
 
 from urllib.parse import parse_qs
-from aikido_zen.helpers.get_ip_from_request import get_ip_from_request
+from aikido_zen.helpers.get_ip_from_request import get_ip_header_name, resolve_client_ip
 from aikido_zen.helpers.logging import logger
 from ..parse_cookies import parse_cookies
 from .normalize_asgi_headers import normalize_asgi_headers
@@ -10,12 +10,13 @@ from .build_url_from_asgi import build_url_from_asgi
 
 def set_asgi_attributes_on_context(context, scope):
     """
-    This extracts ASGI Scope attributes, described in :
+    This extracts ASGI Scope attributes, described in:
     https://asgi.readthedocs.io/en/latest/specs/www.html#http-connection-scope
     """
     logger.debug("Setting ASGI attributes")
     context.method = scope["method"]
-    context.headers = normalize_asgi_headers(scope["headers"])
+    raw_headers = tuple(scope["headers"])
+    context.headers = normalize_asgi_headers(raw_headers)
 
     # Parse every Cookie header in both its decoded readings, so no value is missed.
     context.cookies = parse_cookies(*context.headers.get("COOKIE", []))
@@ -24,4 +25,14 @@ def set_asgi_attributes_on_context(context, scope):
     context.query = parse_qs(scope["query_string"].decode("utf-8", errors="replace"))
 
     raw_ip = scope["client"][0] if scope["client"] else ""
-    context.remote_address = get_ip_from_request(raw_ip, context.headers)
+    ip_header = get_asgi_client_ip_header(raw_headers)
+    context.remote_address = resolve_client_ip(raw_ip, ip_header)
+
+
+def get_asgi_client_ip_header(headers):
+    name = get_ip_header_name().lower()
+    return ", ".join(
+        value.decode("latin-1")
+        for key, value in headers
+        if key.decode("latin-1").lower() == name
+    )

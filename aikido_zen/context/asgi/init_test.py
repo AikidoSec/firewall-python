@@ -1,7 +1,10 @@
 import pytest
 from urllib.parse import parse_qs
 from aikido_zen.context import Context as ZenContext
-from aikido_zen.context.asgi import set_asgi_attributes_on_context
+from aikido_zen.context.asgi import (
+    get_asgi_client_ip_header,
+    set_asgi_attributes_on_context,
+)
 from aikido_zen.vulnerabilities.sql_injection.context_contains_sql_injection import (
     context_contains_sql_injection,
 )
@@ -28,6 +31,31 @@ TEST_ASGI_SCOPE_1 = {
     "root_path": "192.168.0.1",
     "path": "192.168.0.1/a/b/c/d",
 }
+
+
+@pytest.mark.parametrize("custom_header", [None, "X-Client-IP"])
+def test_client_ip_uses_repeated_fields_in_order(monkeypatch, custom_header):
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "true")
+    monkeypatch.delenv("AIKIDO_CLIENT_IP_HEADER", raising=False)
+    if custom_header:
+        monkeypatch.setenv("AIKIDO_CLIENT_IP_HEADER", custom_header)
+    field = (custom_header or "X-Forwarded-For").encode("ascii")
+    headers = [
+        (field.lower(), b"192.0.2.1, 192.0.2.2"),
+        (b"other-header", b"192.0.2.3"),
+        (field.upper(), b"192.0.2.4"),
+    ]
+    scope = dict(TEST_ASGI_SCOPE_1, headers=iter(headers))
+    context = Context()
+    set_asgi_attributes_on_context(context, scope)
+    assert context.remote_address == "192.0.2.1"
+
+
+def test_client_ip_header_keeps_each_wire_value_once(monkeypatch):
+    monkeypatch.setenv("AIKIDO_CLIENT_IP_HEADER", "X-Client-IP")
+    field = (b"x-client-ip", "café".encode("utf-8"))
+    headers = [field, (b"x_client_ip", b"unrelated"), field, (b"x-client-ip", b"")]
+    assert get_asgi_client_ip_header(headers) == "cafÃ©, cafÃ©, "
 
 
 def test_asgi_scope_1():

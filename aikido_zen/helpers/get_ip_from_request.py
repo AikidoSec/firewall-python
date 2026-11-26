@@ -14,7 +14,11 @@ def get_ip_from_request(remote_address: str, headers: Headers) -> Optional[str]:
     """
     Tries and get the IP address from the request, checking for x-forwarded-for
     """
-    ip_header = headers.get_header(get_ip_header_name())
+    header_name = Headers.normalize_header_key(get_ip_header_name())
+    return resolve_client_ip(remote_address, headers.get_header(header_name))
+
+
+def resolve_client_ip(remote_address: str, ip_header: Optional[str]) -> Optional[str]:
     if ip_header and trust_proxy():
         ip_header_value = get_client_ip_from_header(ip_header)
 
@@ -60,13 +64,7 @@ def trust_proxy():
 
 
 def get_ip_header_name():
-    # Allows for custom headers, which is useful depending on the proxy setup.
-    if os.getenv("AIKIDO_CLIENT_IP_HEADER", None):
-        client_ip_header = os.getenv("AIKIDO_CLIENT_IP_HEADER")
-        return Headers.normalize_header_key(client_ip_header)
-
-    # Default is the X-Forwarded-For header.
-    return "X_FORWARDED_FOR"
+    return os.getenv("AIKIDO_CLIENT_IP_HEADER") or "X-Forwarded-For"
 
 
 def is_ip(value):
