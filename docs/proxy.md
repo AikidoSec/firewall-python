@@ -61,4 +61,4 @@ If you use [Werkzeug's `ProxyFix`](https://werkzeug.palletsprojects.com/en/stabl
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=2)  # with AIKIDO_TRUST_PROXY=2
 ```
 
-Zen reads the client IP before a `ProxyFix` inside `app.wsgi_app` runs, so it selects the IP from the header itself. The same number makes Zen select the same entry as `ProxyFix`, and use the remote address of the request socket when the header has fewer entries. Use the same setting when `ProxyFix` wraps the whole app.
+Zen selects the client IP from the header itself, also when `ProxyFix` wraps the whole app. The same number makes Zen select the same entry as `ProxyFix`, and use the remote address of the request socket when the header has fewer entries.

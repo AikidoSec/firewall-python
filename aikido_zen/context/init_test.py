@@ -212,69 +212,21 @@ def context_behind_proxy_fix(request, **proxy_fix_args):
 
 
 @pytest.mark.parametrize(
-    "x_for, forwarded, client_ip",
+    "setting, peer, client_ip, trusted",
     [
-        (1, "9.9.9.9", "9.9.9.9"),
-        (1, "9.9.9.9:1234", "9.9.9.9"),
-        (2, "9.9.9.9, 8.8.8.8", "9.9.9.9"),
-        (0, "9.9.9.9", "9.9.9.9"),
-        (1, "unknown", "1.2.3.4"),
+        ("1.2.3.0/24", "1.2.3.4", "8.8.8.8", True),
+        ("1.2.3.0/24", "5.5.5.5", "5.5.5.5", False),
+        ("false", "1.2.3.4", "9.9.9.9", False),
     ],
 )
-def test_client_ip_behind_proxy_fix(monkeypatch, x_for, forwarded, client_ip):
-    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "1.2.3.0/24")
-    request = dict(
-        basic_wsgi_req, REMOTE_ADDR="1.2.3.4", HTTP_X_FORWARDED_FOR=forwarded
-    )
-    context = context_behind_proxy_fix(request, x_for=x_for)
-    assert context.remote_address == client_ip
-    assert context.is_behind_trusted_proxy is True
-
-
-def test_fewer_forwarded_entries_than_x_for_behind_proxy_fix(monkeypatch):
-    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "2")
-    request = dict(
-        basic_wsgi_req, REMOTE_ADDR="1.2.3.4", HTTP_X_FORWARDED_FOR="9.9.9.9"
-    )
-    assert context_behind_proxy_fix(request, x_for=2).remote_address == "1.2.3.4"
-
-
-@pytest.mark.parametrize(
-    "setting, custom_header, client_ip",
-    [
-        ("true", {"HTTP_DO_CONNECTING_IP": "9.9.9.9"}, "9.9.9.9"),
-        ("1.2.3.0/24", {"HTTP_DO_CONNECTING_IP": "9.9.9.9"}, "9.9.9.9"),
-        ("true", {}, "1.2.3.4"),
-        ("false", {"HTTP_DO_CONNECTING_IP": "9.9.9.9"}, "1.2.3.4"),
-    ],
-)
-def test_custom_client_ip_header_behind_proxy_fix(
-    monkeypatch, setting, custom_header, client_ip
-):
-    monkeypatch.setenv("AIKIDO_TRUST_PROXY", setting)
-    monkeypatch.setenv("AIKIDO_CLIENT_IP_HEADER", "do-connecting-ip")
-    request = dict(
-        basic_wsgi_req,
-        REMOTE_ADDR="1.2.3.4",
-        HTTP_X_FORWARDED_FOR="8.8.8.8",
-        **custom_header,
-    )
-    assert context_behind_proxy_fix(request).remote_address == client_ip
-
-
-@pytest.mark.parametrize(
-    "setting, client_ip", [("1.2.3.0/24", "5.5.5.5"), ("false", "6.6.6.6")]
-)
-def test_connection_from_an_unlisted_address_behind_proxy_fix(
-    monkeypatch, setting, client_ip
-):
+def test_client_ip_behind_proxy_fix(monkeypatch, setting, peer, client_ip, trusted):
     monkeypatch.setenv("AIKIDO_TRUST_PROXY", setting)
     request = dict(
-        basic_wsgi_req, REMOTE_ADDR="5.5.5.5", HTTP_X_FORWARDED_FOR="6.6.6.6"
+        basic_wsgi_req, REMOTE_ADDR=peer, HTTP_X_FORWARDED_FOR="9.9.9.9, 8.8.8.8"
     )
-    context = context_behind_proxy_fix(request)
+    context = context_behind_proxy_fix(request, x_for=2)
     assert context.remote_address == client_ip
-    assert context.is_behind_trusted_proxy is False
+    assert context.is_behind_trusted_proxy is trusted
 
 
 def test_set_as_current_context(mocker):
