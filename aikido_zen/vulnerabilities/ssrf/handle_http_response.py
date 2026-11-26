@@ -53,7 +53,9 @@ def add_redirect_to_context(source, destination, context):
         # Get initial source of the redirect chain (first redirect), if url
         # is part of a redirect chain
         redirect_origin = get_redirect_origin(
-            redirects=context.outgoing_req_redirects, url=source
+            redirects=context.outgoing_req_redirects,
+            hostname=source.hostname,
+            port=source.port,
         )
 
     # Get existing redirects or create a new array
