@@ -231,6 +231,14 @@ def test_client_ip_behind_proxy_fix(monkeypatch, x_for, forwarded, client_ip):
     assert context.is_behind_trusted_proxy is True
 
 
+def test_fewer_forwarded_entries_than_x_for_behind_proxy_fix(monkeypatch):
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "2")
+    request = dict(
+        basic_wsgi_req, REMOTE_ADDR="1.2.3.4", HTTP_X_FORWARDED_FOR="9.9.9.9"
+    )
+    assert context_behind_proxy_fix(request, x_for=2).remote_address == "1.2.3.4"
+
+
 @pytest.mark.parametrize(
     "setting, custom_header, client_ip",
     [

@@ -51,4 +51,14 @@ flowchart TD
 
 ## Servers that resolve the client IP
 
-If Uvicorn (`--forwarded-allow-ips`, by default `127.0.0.1`) or Hypercorn's `ProxyFixMiddleware` resolves the client IP, set `AIKIDO_TRUST_PROXY=false` so that Zen uses that IP, and configure the server to trust only your own proxies. When Zen reads `x-forwarded-for` behind Werkzeug's `ProxyFix`, it uses the IP that `ProxyFix` chose, so set the number of proxies there.
+If Uvicorn (`--forwarded-allow-ips`, by default `127.0.0.1`) or Hypercorn's `ProxyFixMiddleware` resolves the client IP, set `AIKIDO_TRUST_PROXY=false` so that Zen uses that IP, and configure the server to trust only your own proxies.
+
+## Flask and Werkzeug's `ProxyFix`
+
+If you use [Werkzeug's `ProxyFix`](https://werkzeug.palletsprojects.com/en/stable/middleware/proxy_fix/), set `AIKIDO_TRUST_PROXY` to the same number as its `x_for` (`1` by default):
+
+```python
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=2)  # with AIKIDO_TRUST_PROXY=2
+```
+
+Zen reads the client IP before a `ProxyFix` inside `app.wsgi_app` runs, so it selects the IP from the header itself. The same number makes Zen select the same entry as `ProxyFix`, and use the remote address of the request socket when the header has fewer entries. Use the same setting when `ProxyFix` wraps the whole app.

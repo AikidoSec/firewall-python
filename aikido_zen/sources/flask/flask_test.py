@@ -323,6 +323,34 @@ def test_blocked_before_flask_releases_outer_request(body_app, monkeypatch):
     assert request_ref() is None
 
 
+def test_ip_checks_use_the_proxy_fix_client_ip_with_a_matching_hop_count(
+    body_app, monkeypatch
+):
+    from flask import request
+    from werkzeug.middleware.proxy_fix import ProxyFix
+
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "2")
+    body_app.wsgi_app = ProxyFix(body_app.wsgi_app, x_for=2)
+    checked_ips = []
+
+    def should_block():
+        checked_ips.append(get_current_context().remote_address)
+
+    monkeypatch.setattr(aikido_zen.sources.flask, "should_block", should_block)
+
+    @body_app.get("/")
+    def view():
+        return request.remote_addr
+
+    response = body_app.test_client().get(
+        "/",
+        headers={"X-Forwarded-For": "6.6.6.6, 8.8.8.8, 1.1.1.1"},
+        environ_overrides={"REMOTE_ADDR": "192.0.2.10"},
+    )
+    assert response.get_data(as_text=True) == "8.8.8.8"
+    assert checked_ips == ["8.8.8.8"]
+
+
 def test_streaming_response_keeps_flask_context_and_body(body_app):
     from flask import request, stream_with_context
 
