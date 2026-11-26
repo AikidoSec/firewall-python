@@ -5,6 +5,7 @@ from aikido_zen.sinks import on_import, patch_function, before_modify_return, af
 from .extract_cookies import extract_cookies_from_flask_request_and_save_data
 from .extract_query import extract_query_from_flask_request_and_save_data
 from .extract_view_args import extract_view_args_from_flask_request_and_save_data
+from .buffered_wsgi_input import buffer_wsgi_input
 import aikido_zen.sources.functions.request_handler as funcs
 from aikido_zen.sources.functions.request_handler import pre_response as should_block
 
@@ -54,6 +55,7 @@ def _call(func, instance, args, kwargs):
     context1 = Context(req=environ, source="flask")
     # Old requests may outlive their response; avoid retaining our captured data.
     environ["aikido_zen.context"] = ref(context1)
+    buffer_wsgi_input(environ, context1)
     context1.set_as_current_context()
     funcs.request_handler(stage="init")
 
