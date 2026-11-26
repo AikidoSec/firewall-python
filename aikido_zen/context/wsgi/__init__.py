@@ -3,6 +3,11 @@
 from urllib.parse import parse_qs
 from aikido_zen.helpers.get_ip_from_request import get_ip_from_request
 from aikido_zen.helpers.logging import logger
+from aikido_zen.helpers.trust_proxy import (
+    BooleanTrustProxy,
+    get_trust_proxy_config,
+    is_trusted_proxy_request,
+)
 from .extract_wsgi_headers import extract_wsgi_headers
 from .build_url_from_wsgi import build_url_from_wsgi
 from ..parse_cookies import parse_cookies
@@ -23,8 +28,18 @@ def set_wsgi_attributes_on_context(context, environ):
         context.cookies = {}
     context.url = build_url_from_wsgi(environ)
     context.query = parse_qs(environ["QUERY_STRING"])
+    remote_addr = environ["REMOTE_ADDR"]
+    # A ProxyFix around the app keeps the connection address here.
+    connection_ip = (
+        environ.get("werkzeug.proxy_fix.orig", {}).get("REMOTE_ADDR") or remote_addr
+    )
+    context.is_behind_trusted_proxy = is_trusted_proxy_request(connection_ip)
+    # Only an untrusted request can have proxy trust off, so read the setting only then.
+    trust_off = not context.is_behind_trusted_proxy and (
+        get_trust_proxy_config() == BooleanTrustProxy(False)
+    )
     context.remote_address = get_ip_from_request(
-        environ["REMOTE_ADDR"], context.headers
+        remote_addr if trust_off else connection_ip, context.headers
     )
 
     # Content type is generally not included as a header, do include this as a header to simplify :

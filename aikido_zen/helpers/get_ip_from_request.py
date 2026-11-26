@@ -8,17 +8,24 @@ from typing import Optional
 
 from aikido_zen.helpers.headers import Headers
 from aikido_zen.helpers.logging import logger
+from aikido_zen.helpers.net.is_private_ip import is_private_ip
+from aikido_zen.helpers.trust_proxy import (
+    CIDRTrustProxy,
+    CountTrustProxy,
+    get_trust_proxy_config,
+    is_trusted_proxy_request,
+)
 
 
 def get_ip_from_request(remote_address: str, headers: Headers) -> Optional[str]:
     """
     Tries and get the IP address from the request, checking for x-forwarded-for
     """
-    ip_header = headers.get_header(get_ip_header_name())
-    if ip_header and trust_proxy():
+    ip_header = ", ".join(headers.get_fields(get_ip_header_name()))
+    if ip_header and is_trusted_proxy_request(remote_address):
         ip_header_value = get_client_ip_from_header(ip_header)
 
-        if ip_header_value and is_ip(ip_header_value):
+        if ip_header_value:
             return ip_header_value
 
     if remote_address and is_ip(remote_address):
@@ -31,32 +38,36 @@ def get_client_ip_from_header(value):
     """
     Fetches the IP out of the X-Forwarder-For headers
     """
-    forwarded_ips = [ip.strip() for ip in value.split(",")]
+    config = get_trust_proxy_config()
+    forwarded_ips = value.split(",")
+    if isinstance(config, CountTrustProxy):
+        index = len(forwarded_ips) - config.value
+        if index < 0:
+            return None
+        ip = normalize_ip(forwarded_ips[index].strip())
+        return ip if is_ip(ip) else None
 
-    for ip in forwarded_ips:
-        if ":" in ip:
-            parts = ip.split(":")
-            if len(parts) == 2:
-                return parts[0]
-
-    for ip in forwarded_ips:
-        if is_ip(ip):
-            return ip
-
+    for entry in reversed(forwarded_ips):
+        ip = normalize_ip(entry.strip())
+        if not is_ip(ip) or is_private_ip(ip):
+            continue
+        if isinstance(config, CIDRTrustProxy) and config.matcher.has(ip):
+            continue
+        return ip
     return None
 
 
-def trust_proxy():
-    """
-    Checks the environment variables for `AIKIDO_TRUST_PROXY`, Defaults to true.
-    """
-    trust_proxy_env = os.getenv("AIKIDO_TRUST_PROXY")
-    if not trust_proxy_env:
-        return True  # default to trusting proxy
-
-    if trust_proxy_env.lower() in ["0", "false"]:
-        return False
-    return True
+def normalize_ip(ip: str) -> str:
+    if ip.startswith("["):
+        if ip.endswith("]"):
+            return ip[1:-1]
+        closing_bracket = ip.find("]:")
+        if closing_bracket > 0:
+            return ip[1:closing_bracket]
+    parts = ip.split(":")
+    if len(parts) == 2:
+        return parts[0]
+    return ip
 
 
 def get_ip_header_name():

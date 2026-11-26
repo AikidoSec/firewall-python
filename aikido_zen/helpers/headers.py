@@ -1,6 +1,10 @@
 from typing import List, Optional
 
 
+class AlternateReading(str):
+    """A second decoding of the same header field. get_fields skips it."""
+
+
 class Headers(dict):
     def store_headers(self, key: str, values: List[str]):
         normalized_key = self.normalize_header_key(key)
@@ -17,6 +21,9 @@ class Headers(dict):
         if self.get(key, []):
             return self.get(key)[-1]
         return None
+
+    def get_fields(self, key: str) -> List[str]:
+        return [v for v in self.get(key, []) if not isinstance(v, AlternateReading)]
 
     @staticmethod
     def validate_header_key(key: str):

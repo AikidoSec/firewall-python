@@ -3,6 +3,7 @@
 from urllib.parse import parse_qs
 from aikido_zen.helpers.get_ip_from_request import get_ip_from_request
 from aikido_zen.helpers.logging import logger
+from aikido_zen.helpers.trust_proxy import is_trusted_proxy_request
 from ..parse_cookies import parse_cookies
 from .normalize_asgi_headers import normalize_asgi_headers
 from .build_url_from_asgi import build_url_from_asgi
@@ -25,3 +26,4 @@ def set_asgi_attributes_on_context(context, scope):
 
     raw_ip = scope["client"][0] if scope["client"] else ""
     context.remote_address = get_ip_from_request(raw_ip, context.headers)
+    context.is_behind_trusted_proxy = is_trusted_proxy_request(raw_ip)

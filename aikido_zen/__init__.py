@@ -53,6 +53,7 @@ from aikido_zen.background_process import check_socket_access, start_background_
 # Load environment variables and constants
 from aikido_zen.config import PKG_VERSION
 from aikido_zen.helpers.aikido_disabled_flag_active import aikido_disabled_flag_active
+from aikido_zen.helpers.trust_proxy import get_trust_proxy_config
 
 
 def protect(mode="daemon", token=""):
@@ -130,3 +131,4 @@ def protect(mode="daemon", token=""):
     import aikido_zen.sinks.botocore
 
     logger.info("Zen by Aikido v%s starting.", PKG_VERSION)
+    get_trust_proxy_config()

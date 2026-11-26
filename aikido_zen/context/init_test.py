@@ -1,6 +1,7 @@
 import pytest
 import pickle
 import json
+from werkzeug.middleware.proxy_fix import ProxyFix
 from aikido_zen.context import Context, get_current_context, current_context
 
 LEVELS_TOO_DEEP_TO_PARSE = 1_000_000
@@ -50,6 +51,7 @@ def test_wsgi_context_1():
     }
     context = Context(req=wsgi_request, body=123, source="django")
     assert context.__dict__ == {
+        "is_behind_trusted_proxy": True,
         "source": "django",
         "method": "POST",
         "headers": {
@@ -83,6 +85,7 @@ def test_wsgi_context_1():
 def test_wsgi_context_2():
     context = Context(req=basic_wsgi_req, body={"test": True}, source="flask")
     assert context.__dict__ == {
+        "is_behind_trusted_proxy": True,
         "source": "flask",
         "method": "GET",
         "headers": {
@@ -114,6 +117,118 @@ def test_wsgi_context_2():
     assert context.get_user_agent() == "Mozilla/5.0"
 
 
+@pytest.mark.parametrize("source", ["flask", "starlette"])
+@pytest.mark.parametrize(
+    "setting, peer, trusted, client_ip",
+    [
+        ("1.2.3.0/24", "1.2.3.4", True, "9.9.9.9"),
+        ("1.2.3.0/24", "8.8.8.8", False, "8.8.8.8"),
+        ("false", "1.2.3.4", False, "1.2.3.4"),
+        ("2", "1.2.3.4", True, "9.9.9.9"),
+    ],
+)
+def test_proxy_trust_in_request_context(
+    monkeypatch, source, setting, peer, trusted, client_ip
+):
+    from aikido_zen.vulnerabilities.ssrf.find_hostname_in_context import (
+        find_hostname_in_context,
+    )
+
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", setting)
+    if source == "flask":
+        request = dict(basic_wsgi_req)
+        request["REMOTE_ADDR"] = peer
+        request["HTTP_X_FORWARDED_FOR"] = "9.9.9.9, 1.2.3.5"
+    else:
+        request = {
+            "method": "GET",
+            "headers": [
+                (b"host", b"localhost:8080"),
+                (b"x-forwarded-for", b"9.9.9.9, 1.2.3.5"),
+            ],
+            "query_string": b"",
+            "client": (peer, 1234),
+            "server": ("localhost", 8080),
+            "scheme": "http",
+            "root_path": "",
+            "path": "/hello",
+        }
+    context = Context(req=request, body={"url": "http://localhost:8080"}, source=source)
+    assert context.remote_address == client_ip
+    assert context.is_behind_trusted_proxy is trusted
+    assert (find_hostname_in_context("localhost", context, 8080) is None) is trusted
+    restored = pickle.loads(pickle.dumps(context))
+    assert restored.is_behind_trusted_proxy is trusted
+
+
+@pytest.mark.parametrize("setting", ["true", "2"])
+def test_client_ip_is_read_from_every_forwarded_header_line(monkeypatch, setting):
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", setting)
+    request = {
+        "method": "GET",
+        "headers": [
+            (b"x-forwarded-for", b"9.9.9.9"),
+            (b"x-forwarded-for", b"10.0.0.2"),
+        ],
+        "query_string": b"",
+        "client": ("10.0.0.3", 1234),
+        "server": ("localhost", 8080),
+        "scheme": "http",
+        "root_path": "",
+        "path": "/hello",
+    }
+    context = Context(req=request, source="starlette")
+    assert context.remote_address == "9.9.9.9"
+
+
+def test_hop_count_counts_a_non_ascii_forwarded_line_once(monkeypatch):
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "3")
+    request = {
+        "method": "GET",
+        "headers": [
+            (b"x-forwarded-for", b"9.9.9.9"),
+            (b"x-forwarded-for", "café, 8.8.8.8".encode()),
+        ],
+        "query_string": b"",
+        "client": ("10.0.0.3", 1234),
+        "server": ("localhost", 8080),
+        "scheme": "http",
+        "root_path": "",
+        "path": "/hello",
+    }
+    context = Context(req=request, source="starlette")
+    assert context.remote_address == "9.9.9.9"
+
+
+def context_behind_proxy_fix(request, **proxy_fix_args):
+    environs = []
+
+    def app(environ, start_response):
+        environs.append(environ)
+        return []
+
+    ProxyFix(app, **proxy_fix_args)(request, None)
+    return Context(req=environs[0], source="flask")
+
+
+@pytest.mark.parametrize(
+    "setting, peer, client_ip, trusted",
+    [
+        ("1.2.3.0/24", "1.2.3.4", "8.8.8.8", True),
+        ("1.2.3.0/24", "5.5.5.5", "5.5.5.5", False),
+        ("false", "1.2.3.4", "9.9.9.9", False),
+    ],
+)
+def test_client_ip_behind_proxy_fix(monkeypatch, setting, peer, client_ip, trusted):
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", setting)
+    request = dict(
+        basic_wsgi_req, REMOTE_ADDR=peer, HTTP_X_FORWARDED_FOR="9.9.9.9, 8.8.8.8"
+    )
+    context = context_behind_proxy_fix(request, x_for=2)
+    assert context.remote_address == client_ip
+    assert context.is_behind_trusted_proxy is trusted
+
+
 def test_set_as_current_context(mocker):
     # Test set_as_current_context() method
     context = Context(req=basic_wsgi_req, body=12, source="flask")
@@ -135,6 +250,7 @@ def test_context_is_picklable(mocker):
     assert unpickled_obj.source == "flask"
     assert unpickled_obj.method == "GET"
     assert unpickled_obj.remote_address == "198.51.100.23"
+    assert unpickled_obj.is_behind_trusted_proxy is True
     assert unpickled_obj.url == "http://localhost:8080/hello"
     assert unpickled_obj.body == 123
     assert unpickled_obj.headers == {
