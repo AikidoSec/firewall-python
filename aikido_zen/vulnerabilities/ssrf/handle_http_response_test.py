@@ -86,15 +86,24 @@ def test_resolves_a_relative_location_against_the_request_url(location, destinat
     assert recorded["destination"].geturl() == destination
 
 
-def test_reports_private_ip_after_a_protocol_relative_redirect():
-    generate_and_set_context(value="http://a.example.com/start")
-    redirect("http://a.example.com:80/start", "//c.example.org/admin")
+@pytest.mark.parametrize(
+    "user_input, source, port",
+    [
+        ("http://a.example.com/start", "http://a.example.com:80/start", 80),
+        ("https://a.example.com/start", "http://a.example.com:443/start", 443),
+    ],
+)
+def test_reports_private_ip_after_a_protocol_relative_redirect(
+    user_input, source, port
+):
+    generate_and_set_context(value=user_input)
+    redirect(source, "//c.example.org/admin")
 
     result = inspect_getaddrinfo_result(
-        dns_results=[(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("10.0.0.5", 80))],
+        dns_results=[(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("10.0.0.5", port))],
         hostname="c.example.org",
-        port=80,
+        port=port,
     )
 
     assert result["kind"] == "ssrf"
-    assert result["payload"] == "http://a.example.com/start"
+    assert result["payload"] == user_input
