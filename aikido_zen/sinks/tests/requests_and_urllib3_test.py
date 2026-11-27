@@ -83,6 +83,12 @@ def ssrf_check(monkeypatch, url, requests_only=False):
         "http://firewallssrfredirects-env-2.eba-7ifve22q.eu-north-1.elasticbeanstalk.com/ssrf-test",
         # cross domain test twice
         "http://firewallssrfredirects-env-2.eba-7ifve22q.eu-north-1.elasticbeanstalk.com/ssrf-test-domain-twice",
+        # redirect chain across domains test
+        "http://ssrf-redirects.testssandbox.com/ssrf-test-absolute",
+        # redirect chain across domains to a domain test
+        "http://ssrf-redirects.testssandbox.com/ssrf-test-absolute-domain",
+        # Punycode redirect chain across domains test
+        "http://ssrf-rédirects.testssandbox.com/ssrf-test-absolute",
         # loopback ipv6
         "http://[::1]:8081",
         "http://[::1]:8081/",
