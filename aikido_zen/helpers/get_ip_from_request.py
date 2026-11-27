@@ -50,13 +50,12 @@ def trust_proxy():
     """
     Checks the environment variables for `AIKIDO_TRUST_PROXY`, Defaults to true.
     """
-    trust_proxy_env = os.getenv("AIKIDO_TRUST_PROXY")
-    if not trust_proxy_env:
-        return True  # default to trusting proxy
-
-    if trust_proxy_env.lower() in ["0", "false"]:
-        return False
-    return True
+    value = os.getenv("AIKIDO_TRUST_PROXY", "").strip().lower()
+    if value in ("", "true", "yes", "y", "on"):
+        return True
+    # Hop counts and proxy ranges trust the header, but don't change which IP is picked.
+    is_hop_count = value.isdecimal() and value != "0"
+    return is_hop_count or "." in value or ":" in value
 
 
 def get_ip_header_name():
