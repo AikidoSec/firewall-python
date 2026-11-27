@@ -1,5 +1,7 @@
 """Exports handle_http_response function"""
 
+from urllib.parse import urljoin
+
 from aikido_zen.context import get_current_context
 from aikido_zen.helpers.is_redirect_status_code import is_redirect_status_code
 from aikido_zen.helpers.try_parse_url import try_parse_url
@@ -29,7 +31,8 @@ def handle_http_response(http_response, source):
     if not isinstance(location, str):
         return
 
-    parsed_location = try_parse_url(location)
+    # The location can be relative (/path) or protocol-relative (//host/path)
+    parsed_location = try_parse_url(urljoin(source.geturl(), location))
     if not parsed_location:
         return
 

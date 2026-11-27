@@ -70,3 +70,31 @@ def test_reports_private_ip_at_the_end_of_a_chain_across_hosts():
     assert result["kind"] == "ssrf"
     assert result["source"] == "body"
     assert result["payload"] == "http://a.example.com/start"
+
+
+@pytest.mark.parametrize(
+    "location, destination",
+    [
+        ("//b.example.net/next", "http://b.example.net/next"),
+        ("/next", "http://a.example.com:80/next"),
+    ],
+)
+def test_resolves_a_relative_location_against_the_request_url(location, destination):
+    generate_and_set_context(value="http://a.example.com/start")
+    redirect("http://a.example.com:80/start", location)
+    (recorded,) = get_current_context().outgoing_req_redirects
+    assert recorded["destination"].geturl() == destination
+
+
+def test_reports_private_ip_after_a_protocol_relative_redirect():
+    generate_and_set_context(value="http://a.example.com/start")
+    redirect("http://a.example.com:80/start", "//c.example.org/admin")
+
+    result = inspect_getaddrinfo_result(
+        dns_results=[(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("10.0.0.5", 80))],
+        hostname="c.example.org",
+        port=80,
+    )
+
+    assert result["kind"] == "ssrf"
+    assert result["payload"] == "http://a.example.com/start"
