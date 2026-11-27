@@ -53,10 +53,12 @@ def ssrf_check(monkeypatch, url, requests_only=False):
     IPCClient.reset()
     set_context_and_lifecycle(url)
     monkeypatch.setenv("AIKIDO_BLOCK", "1")
+    # requests reads HTTPS_PROXY, which CI sets, again for every redirect it follows.
+    # Behind a proxy the app never resolves the target, so ignore the environment.
+    session = requests.Session()
+    session.trust_env = False
     with pytest.raises(AikidoSSRF):
-        # requests reads HTTPS_PROXY, which CI sets. Behind a proxy the app never
-        # resolves the target, so connect directly like an app without a proxy.
-        requests.get(url, proxies={"http": None, "https": None})
+        session.get(url)
     if requests_only:
         return
     with pytest.raises(AikidoSSRF):
