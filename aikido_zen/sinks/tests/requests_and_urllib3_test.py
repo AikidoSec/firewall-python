@@ -69,6 +69,14 @@ def ssrf_check(monkeypatch, url, requests_only=False):
         "http://ssrf-redirects.testssandbox.com/ssrf-test",
         # twice ssrf test
         "http://ssrf-redirects.testssandbox.com/ssrf-test-twice",
+        # protocol-relative ssrf test
+        "http://ssrf-redirects.testssandbox.com/ssrf-test-protocol-relative",
+        # protocol-relative twice ssrf test
+        "http://ssrf-redirects.testssandbox.com/ssrf-test-protocol-relative-twice",
+        # protocol-relative over https ssrf test
+        "https://ssrf-redirects.testssandbox.com/ssrf-test-protocol-relative",
+        # protocol-relative twice over https ssrf test
+        "https://ssrf-redirects.testssandbox.com/ssrf-test-protocol-relative-twice",
         # domain test
         "http://ssrf-redirects.testssandbox.com/ssrf-test-domain",
         # domain twice test
