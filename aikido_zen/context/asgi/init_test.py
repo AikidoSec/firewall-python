@@ -30,6 +30,34 @@ TEST_ASGI_SCOPE_1 = {
 }
 
 
+@pytest.mark.parametrize("custom_header", [None, "X-Client-IP"])
+def test_client_ip_uses_the_last_field(monkeypatch, custom_header):
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "true")
+    monkeypatch.delenv("AIKIDO_CLIENT_IP_HEADER", raising=False)
+    if custom_header:
+        monkeypatch.setenv("AIKIDO_CLIENT_IP_HEADER", custom_header)
+    field = (custom_header or "X-Forwarded-For").encode("ascii")
+    headers = [
+        (field.lower(), b"192.0.2.1, 192.0.2.2"),
+        (b"other-header", b"192.0.2.3"),
+        (field.upper(), b"192.0.2.4"),
+    ]
+    scope = dict(TEST_ASGI_SCOPE_1, headers=iter(headers))
+    context = Context()
+    set_asgi_attributes_on_context(context, scope)
+    assert context.remote_address == "192.0.2.4"
+
+
+def test_client_ip_ignores_a_field_with_underscores(monkeypatch):
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", "true")
+    monkeypatch.delenv("AIKIDO_CLIENT_IP_HEADER", raising=False)
+    headers = [(b"x-forwarded-for", b"192.0.2.1"), (b"x_forwarded_for", b"192.0.2.9")]
+    scope = dict(TEST_ASGI_SCOPE_1, headers=headers)
+    context = Context()
+    set_asgi_attributes_on_context(context, scope)
+    assert context.remote_address == "192.0.2.1"
+
+
 def test_asgi_scope_1():
     context1 = Context()
     set_asgi_attributes_on_context(context1, TEST_ASGI_SCOPE_1)
