@@ -89,6 +89,10 @@ def ssrf_check(monkeypatch, url, requests_only=False):
         "http://ssrf-redirects.testssandbox.com/ssrf-test-absolute-domain",
         # Punycode redirect chain across domains test
         "http://ssrf-rédirects.testssandbox.com/ssrf-test-absolute",
+        # redirect to ipv6 test
+        "http://ssrf-redirects.testssandbox.com/ssrf-test-ipv6",
+        # redirect to ipv6 twice test
+        "http://ssrf-redirects.testssandbox.com/ssrf-test-ipv6-twice",
         # loopback ipv6
         "http://[::1]:8081",
         "http://[::1]:8081/",
