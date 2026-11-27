@@ -206,3 +206,22 @@ def test_get_client_ip_from_header():
         get_client_ip_from_header("abc.def.ghi.jkl, 256.256.256.256") is None
     )  # All invalid
     assert get_client_ip_from_header("") is None  # Empty string
+
+
+@pytest.mark.parametrize(
+    "setting, expected",
+    [
+        (" YES ", "9.9.9.9"),
+        (" ", "9.9.9.9"),
+        ("no", "1.2.3.4"),
+        ("off", "1.2.3.4"),
+        ("unknown", "1.2.3.4"),
+        ("2", "9.9.9.9"),
+        ("1.2.3.0/24", "9.9.9.9"),
+    ],
+)
+def test_trust_proxy_values(monkeypatch, setting, expected):
+    monkeypatch.setenv("AIKIDO_TRUST_PROXY", setting)
+    headers = Headers()
+    headers.store_header("x-forwarded-for", "9.9.9.9")
+    assert get_ip_from_request("1.2.3.4", headers) == expected
