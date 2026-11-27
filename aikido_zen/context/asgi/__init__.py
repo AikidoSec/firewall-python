@@ -32,6 +32,8 @@ def set_asgi_attributes_on_context(context, scope):
 def get_asgi_client_ip_header(headers):
     # context.headers maps - to _, so a client's x_forwarded_for would count as well.
     name = get_ip_header_name().lower().encode("latin-1", "replace")
-    lines = [value for key, value in headers if key.lower() == name]
     # A proxy adds its own line at the end, and earlier lines can come from the client.
-    return lines[-1].decode("latin-1") if lines else None
+    for key, value in reversed(headers):
+        if key.lower() == name:
+            return value.decode("latin-1")
+    return None
