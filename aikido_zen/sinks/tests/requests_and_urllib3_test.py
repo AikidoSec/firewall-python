@@ -54,7 +54,9 @@ def ssrf_check(monkeypatch, url, requests_only=False):
     set_context_and_lifecycle(url)
     monkeypatch.setenv("AIKIDO_BLOCK", "1")
     with pytest.raises(AikidoSSRF):
-        requests.get(url)
+        # requests reads HTTPS_PROXY, which CI sets. Behind a proxy the app never
+        # resolves the target, so connect directly like an app without a proxy.
+        requests.get(url, proxies={"http": None, "https": None})
     if requests_only:
         return
     with pytest.raises(AikidoSSRF):
@@ -73,6 +75,10 @@ def ssrf_check(monkeypatch, url, requests_only=False):
         "http://ssrf-redirects.testssandbox.com/ssrf-test-protocol-relative",
         # protocol-relative twice ssrf test
         "http://ssrf-redirects.testssandbox.com/ssrf-test-protocol-relative-twice",
+        # protocol-relative over https ssrf test
+        "https://ssrf-redirects.testssandbox.com/ssrf-test-protocol-relative",
+        # protocol-relative twice over https ssrf test
+        "https://ssrf-redirects.testssandbox.com/ssrf-test-protocol-relative-twice",
         # domain test
         "http://ssrf-redirects.testssandbox.com/ssrf-test-domain",
         # domain twice test
@@ -83,6 +89,16 @@ def ssrf_check(monkeypatch, url, requests_only=False):
         "http://xn--ssrf-rdirects-ghb.testssandbox.com/ssrf-test",
         # Punycode domain twice test
         "http://ssrf-rédirects.testssandbox.com/ssrf-test-domain-twice",
+        # Punycode over https test
+        "https://ssrf-rédirects.testssandbox.com/ssrf-test",
+        # Punycode twice over https test
+        "https://ssrf-rédirects.testssandbox.com/ssrf-test-twice",
+        # Punycode domain over https test
+        "https://ssrf-rédirects.testssandbox.com/ssrf-test-domain",
+        # Punycode domain twice over https test
+        "https://ssrf-rédirects.testssandbox.com/ssrf-test-domain-twice",
+        # Punycode redirect chain across domains to a domain over https test
+        "https://ssrf-rédirects.testssandbox.com/ssrf-test-absolute-domain",
         # cross domain test
         "http://firewallssrfredirects-env-2.eba-7ifve22q.eu-north-1.elasticbeanstalk.com/ssrf-test",
         # cross domain test twice
