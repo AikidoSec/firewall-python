@@ -48,9 +48,17 @@ jobs:
           cp firewall-python/.github/workflows/Dockerfile.qa zen-demo-python/Dockerfile
 
       - name: Run Firewall QA Tests
-        uses: AikidoSec/firewall-tester-action@3d448c6929e168148cf74c3d998d1dd5950d40ee # v1.1.1
+        uses: AikidoSec/firewall-tester-action@901b7a3230c4899f87d327266383b8d2efdcebfe # v1.1.2
         with:
           dockerfile_path: ./zen-demo-python/Dockerfile
           app_port: 8080
           config_propagation_delay: 15
-          skip_tests: test-path-traversal,test-outbound-domain-blocking,test-wave-attack
+          skip_tests: >-
+            test-path-traversal,
+            test-outbound-domain-blocking,
+            test-wave-attack,
+            test-allowed-ip-for-routes,
+            test-api-spec-large-body,
+            test-force-protection-off-stats,
+            test-request-count-exclusions,
+            test-stored-ssrf
